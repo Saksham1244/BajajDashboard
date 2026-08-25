@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-brand-bg text-brand-dark font-sans antialiased;
+    overflow-x: hidden;
+  }
+}
+
+@layer components {
+  /* LUNO inspired soft card */
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-slate-200 p-2;
+  }
+  
+  /* TV Monitor Solid KPI Blocks */
+  .kpi-block {
+    @apply flex flex-col justify-center items-center text-white rounded p-3 shadow-md;
+  }
+  .kpi-block-green { @apply bg-[#15803d]; }
+  .kpi-block-blue-1 { @apply bg-[#0284c7]; }
+  .kpi-block-blue-2 { @apply bg-[#0369a1]; }
+  .kpi-block-blue-3 { @apply bg-[#075985]; }
+  
+  .btn-primary {
+    @apply bg-brand-primary text-white px-3 py-1.5 rounded hover:opacity-90 transition-opacity font-medium;
+  }
+  
+  .btn-secondary {
+    @apply bg-slate-100 text-brand-primary px-3 py-1.5 rounded hover:bg-slate-200 transition-colors font-medium;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
