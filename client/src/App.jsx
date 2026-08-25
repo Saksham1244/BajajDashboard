@@ -45,34 +45,34 @@ function App() {
         {/* Process Monitoring Module */}
         <Route path="process">
           <Route index element={<Navigate to="pokayoke" replace />} />
-          <Route path="pokayoke" element={<PokaYokeReport />} />
-          <Route path="bypass" element={<PokaYokeBypassReport />} />
-          <Route path="torque" element={<TorqueReport />} />
-          <Route path="conveyor" element={<ConveyorReport />} />
+          <Route path="pokayoke" element={<UnderConstruction />} />
+          <Route path="bypass" element={<UnderConstruction />} />
+          <Route path="torque" element={<UnderConstruction />} />
+          <Route path="conveyor" element={<UnderConstruction />} />
         </Route>
 
         {/* Track & Trace Module */}
         <Route path="trace">
           <Route index element={<Navigate to="genealogy" replace />} />
-          <Route path="genealogy" element={<GenealogyReport />} />
-          <Route path="wip" element={<WIPReport />} />
-          <Route path="rework" element={<ReworkStatusReport />} />
-          <Route path="engine-rework" element={<EngineReworkReport />} />
+          <Route path="genealogy" element={<UnderConstruction />} />
+          <Route path="wip" element={<UnderConstruction />} />
+          <Route path="rework" element={<UnderConstruction />} />
+          <Route path="engine-rework" element={<UnderConstruction />} />
         </Route>
 
         {/* Quality Module */}
         <Route path="quality">
           <Route index element={<Navigate to="defect" replace />} />
-          <Route path="defect" element={<DefectReport />} />
-          <Route path="pqca" element={<PQCAReport />} />
+          <Route path="defect" element={<UnderConstruction />} />
+          <Route path="pqca" element={<UnderConstruction />} />
           
-          <Route path="iqc-checklist" element={<GenericChecklistReport title="IQC Checklist Report" typeStr="IQC" />} />
-          <Route path="ipqc-checklist" element={<GenericChecklistReport title="IPQC Checklist Report" typeStr="IPQC" />} />
-          <Route path="fqc-checklist" element={<GenericChecklistReport title="FQC Checklist Report" typeStr="FQC" />} />
+          <Route path="iqc-checklist" element={<UnderConstruction />} />
+          <Route path="ipqc-checklist" element={<UnderConstruction />} />
+          <Route path="fqc-checklist" element={<UnderConstruction />} />
           
-          <Route path="iqc-checkpoint" element={<GenericChecklistReport title="IQC Checkpoint Report" typeStr="IQC-CHK" />} />
-          <Route path="ipqc-checkpoint" element={<GenericChecklistReport title="IPQC Checkpoint Report" typeStr="IPQC-CHK" />} />
-          <Route path="fqc-checkpoint" element={<GenericChecklistReport title="FQC Checkpoint Report" typeStr="FQC-CHK" />} />
+          <Route path="iqc-checkpoint" element={<UnderConstruction />} />
+          <Route path="ipqc-checkpoint" element={<UnderConstruction />} />
+          <Route path="fqc-checkpoint" element={<UnderConstruction />} />
         </Route>
 
         {/* Catch-all for unbuilt routes mapped in the Sidebar */}
