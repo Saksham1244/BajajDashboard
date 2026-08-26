@@ -14,18 +14,15 @@ export default function PokaYokeBypassReport() {
   const customFilters = [];
 
   React.useEffect(() => {
-    setLoading(true);
-    // You can share the pokayoke endpoint or use a specific bypass one if it exists.
+        // You can share the pokayoke endpoint or use a specific bypass one if it exists.
     fetch(`http://localhost:5000/api/process/bypass?period=${period}&shift=${shift}`)
       .then(res => res.json())
       .then(data => {
         setDbData(data);
-        setLoading(false);
-      })
+              })
       .catch(err => {
         console.error(err);
-        setLoading(false);
-      });
+              });
   }, [period, shift]);
 
   const tableData = React.useMemo(() => {

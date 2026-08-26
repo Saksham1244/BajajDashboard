@@ -17,20 +17,16 @@ export default function PokaYokeReport() {
   ];
 
   const [dbData, setDbData] = useState({ hourlyOkNotOk: [], hourlyBypass: [] });
-  const [loading, setLoading] = useState(false);
-
+  
   React.useEffect(() => {
-    setLoading(true);
-    fetch(`http://localhost:5000/api/process/pokayoke?period=${period}&shift=${shift}`)
+        fetch(`http://localhost:5000/api/process/pokayoke?period=${period}&shift=${shift}`)
       .then(res => res.json())
       .then(data => {
         setDbData(data);
-        setLoading(false);
-      })
+              })
       .catch(err => {
         console.error(err);
-        setLoading(false);
-      });
+              });
   }, [period, shift]);
 
   const hourlyData = useMemo(() => {

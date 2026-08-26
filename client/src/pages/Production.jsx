@@ -15,10 +15,10 @@ export default function Production() {
 
   const [dbData, setDbData] = useState([]);
   const [kpis, setKpis] = useState({ totalProd: 58089, shortfall: 842, wip: 142, rollover: 85 });
-  const [loading, setLoading] = useState(false);
+  
 
   React.useEffect(() => {
-    setLoading(true);
+    
     fetch(`http://localhost:5000/api/dashboard/production?period=${period}&shift=${shift}`)
       .then(res => res.json())
       .then(data => {
@@ -30,11 +30,11 @@ export default function Production() {
           totalProd: total,
           shortfall: planTotal > total ? planTotal - total : 0
         }));
-        setLoading(false);
+        
       })
       .catch(err => {
         console.error(err);
-        setLoading(false);
+        
       });
   }, [period, shift]);
 

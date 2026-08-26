@@ -18,17 +18,14 @@ export default function TorqueReport() {
   ];
 
   React.useEffect(() => {
-    setLoading(true);
-    fetch(`http://localhost:5000/api/process/torque?period=${period}&shift=${shift}`)
+        fetch(`http://localhost:5000/api/process/torque?period=${period}&shift=${shift}`)
       .then(res => res.json())
       .then(data => {
         setDbData(data);
-        setLoading(false);
-      })
+              })
       .catch(err => {
         console.error(err);
-        setLoading(false);
-      });
+              });
   }, [period, shift]);
 
   const torqueData = React.useMemo(() => {

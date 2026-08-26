@@ -14,11 +14,9 @@ export default function StraightPassReport() {
 
   const [dbData, setDbData] = useState([]);
   const [kpis, setKpis] = useState({ total: 410, straight: 392, rework: 18 });
-  const [loading, setLoading] = useState(false);
-
+  
   React.useEffect(() => {
-    setLoading(true);
-    fetch(`http://localhost:5000/api/dashboard/production?period=${period}&shift=${shift}`)
+        fetch(`http://localhost:5000/api/dashboard/production?period=${period}&shift=${shift}`)
       .then(res => res.json())
       .then(data => {
         setDbData(data.straightPass || []);
@@ -29,12 +27,10 @@ export default function StraightPassReport() {
           straight: straightTotal,
           rework: reworkTotal
         });
-        setLoading(false);
-      })
+              })
       .catch(err => {
         console.error(err);
-        setLoading(false);
-      });
+              });
   }, [period, shift]);
 
   const hourlyData = useMemo(() => {

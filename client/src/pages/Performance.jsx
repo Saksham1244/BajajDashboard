@@ -39,19 +39,19 @@ const GaugeChart = ({ title, value, color }) => {
 export default function Performance() {
   const { period, shift, getBaseFilters } = useReportFilters();
   const [dbData, setDbData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  
 
   React.useEffect(() => {
-    setLoading(true);
+    
     fetch(`http://localhost:5000/api/dashboard/performance?period=${period}&shift=${shift}`)
       .then(res => res.json())
       .then(data => {
         setDbData(data);
-        setLoading(false);
+        
       })
       .catch(err => {
         console.error(err);
-        setLoading(false);
+        
       });
   }, [period, shift]);
 

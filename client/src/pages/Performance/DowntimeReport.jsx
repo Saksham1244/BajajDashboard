@@ -18,20 +18,16 @@ export default function DowntimeReport() {
   const [sku, setSku] = useState('All');
 
   const [dbData, setDbData] = useState([]);
-  const [loading, setLoading] = useState(false);
-
+  
   React.useEffect(() => {
-    setLoading(true);
-    fetch(`http://localhost:5000/api/dashboard/performance?period=${period}&shift=${shift}`)
+        fetch(`http://localhost:5000/api/dashboard/performance?period=${period}&shift=${shift}`)
       .then(res => res.json())
       .then(data => {
         setDbData(data.downtime || []);
-        setLoading(false);
-      })
+              })
       .catch(err => {
         console.error(err);
-        setLoading(false);
-      });
+              });
   }, [period, shift]);
 
   const totalDowntime = dbData.reduce((acc, curr) => acc + curr.duration, 0) || 420;

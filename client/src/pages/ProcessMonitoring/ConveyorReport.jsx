@@ -15,17 +15,14 @@ export default function ConveyorReport() {
   const customFilters = [];
 
   React.useEffect(() => {
-    setLoading(true);
-    fetch(`http://localhost:5000/api/process/conveyor?period=${period}&shift=${shift}`)
+        fetch(`http://localhost:5000/api/process/conveyor?period=${period}&shift=${shift}`)
       .then(res => res.json())
       .then(data => {
         setDbData(data);
-        setLoading(false);
-      })
+              })
       .catch(err => {
         console.error(err);
-        setLoading(false);
-      });
+              });
   }, [period, shift]);
 
   const affectedStationsData = React.useMemo(() => {
