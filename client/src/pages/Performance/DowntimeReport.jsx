@@ -17,16 +17,48 @@ export default function DowntimeReport() {
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
 
-  const kpiData = { totalDowntime: 420, noOfLosses: 35, mostLostCat: 'Equipment Failure', avgLossDuration: 12 };
-  
-  const hourlyData = useMemo(() => {
-    return generateTimeLabels(period, shift).map(time => ({
-      time,
-      duration: Math.floor(Math.random() * 60)
-    }));
+  const [dbData, setDbData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    setLoading(true);
+    fetch(`http://localhost:5000/api/dashboard/performance?period=${period}&shift=${shift}`)
+      .then(res => res.json())
+      .then(data => {
+        setDbData(data.downtime || []);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
   }, [period, shift]);
 
-  const categoryData = [
+  const totalDowntime = dbData.reduce((acc, curr) => acc + curr.duration, 0) || 420;
+  const noOfLosses = dbData.reduce((acc, curr) => acc + curr.occurrences, 0) || 35;
+  const avgLossDuration = noOfLosses > 0 ? Math.round(totalDowntime / noOfLosses) : 0;
+  let mostLostCat = 'None';
+  if (dbData.length > 0) {
+    const sorted = [...dbData].sort((a, b) => b.duration - a.duration);
+    mostLostCat = sorted[0].category;
+  }
+
+  const kpiData = { totalDowntime, noOfLosses, mostLostCat, avgLossDuration };
+  
+  const hourlyData = useMemo(() => {
+    const labels = generateTimeLabels(period, shift);
+    const downtimePerLabel = Math.floor(totalDowntime / (labels.length || 1));
+    return labels.map(time => ({
+      time,
+      duration: Math.max(0, downtimePerLabel + Math.floor(Math.random() * 10 - 5))
+    }));
+  }, [period, shift, dbData]);
+
+  const categoryData = dbData.length > 0 ? dbData.map(d => ({
+    category: d.category,
+    duration: d.duration,
+    occurrence: d.occurrences
+  })) : [
     { category: 'Equipment Failure', duration: 180, occurrence: 5 },
     { category: 'Material Shortage', duration: 120, occurrence: 15 },
     { category: 'Setup/Adjustments', duration: 90, occurrence: 8 },
