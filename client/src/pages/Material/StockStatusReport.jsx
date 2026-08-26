@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Boxes } from 'lucide-react';
+import { useReportFilters } from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
 export default function StockStatusReport() {
+  const { period, shift, getBaseFilters } = useReportFilters();
   const [matType, setMatType] = useState('All');
   const [location, setLocation] = useState('All');
 
-  const filters = [
+  const customFilters = [
     { type: 'dropdown', label: 'Material Type', options: ['All', 'Raw', 'WIP', 'Finished'], value: matType, onChange: setMatType },
     { type: 'dropdown', label: 'Store Location', options: ['All', 'Main', 'Line-1', 'Line-2'], value: location, onChange: setLocation },
   ];
@@ -23,6 +26,13 @@ export default function StockStatusReport() {
     { material: 'M-03', available: 120, minLevel: 100 },
     { material: 'M-04', available: 8, minLevel: 10 },
   ];
+
+  const trendData = useMemo(() => {
+    return generateTimeLabels(period, shift).map(time => ({
+      time,
+      stockValue: Math.floor(Math.random() * 5000) + 10000
+    }));
+  }, [period, shift]);
 
   const tableData = [
     { material: 'M-01', available: 50, minLevel: 20, maxLevel: 100, status: 'Safe' },
@@ -62,7 +72,7 @@ export default function StockStatusReport() {
 
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
-      <StandardFilterBar title="Stock Status Report" icon={Boxes} onExcelClick={exportToExcel} filters={filters} />
+      <StandardFilterBar title="Stock Status Report" icon={Boxes} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -72,20 +82,37 @@ export default function StockStatusReport() {
           <StatCard title="Excess Count" value="18" color="bg-yellow-100" />
         </div>
 
-        <div className="card p-4">
-          <h3 className="text-sm font-bold text-brand-dark mb-3">Stock Level by Material</h3>
-          <div className="h-[240px]">
-            <ResponsiveContainer>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="material" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="available" stackId="a" fill={COLORS[2]} name="Available" />
-                <Bar dataKey="minLevel" stackId="b" fill={COLORS[1]} name="Min Level" />
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="card p-4">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Stock Level by Material</h3>
+            <div className="h-[240px]">
+              <ResponsiveContainer>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="material" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="available" stackId="a" fill={COLORS[2]} name="Available" />
+                  <Bar dataKey="minLevel" stackId="b" fill={COLORS[1]} name="Min Level" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="card p-4">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Stock Value Trend</h3>
+            <div className="h-[240px]">
+              <ResponsiveContainer>
+                <LineChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="time" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="stockValue" stroke={COLORS[3]} name="Stock Value ($)" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 

@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Network } from 'lucide-react';
+import useReportFilters from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
@@ -7,6 +9,7 @@ import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 export default function SkillMatrixDashboard() {
+  const { period, shift, getBaseFilters } = useReportFilters();
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
 
@@ -67,6 +70,7 @@ export default function SkillMatrixDashboard() {
         icon={Network}
         onExcelClick={exportToExcel}
         filters={[
+          ...getBaseFilters(),
           { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine },
           { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02','ST-03','ST-04','ST-05'], value: station, onChange: setStation }
         ]}

@@ -1,20 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { AlertTriangle } from 'lucide-react';
+import { useReportFilters } from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
 export default function DefectReport() {
-  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  const { period, shift, getBaseFilters } = useReportFilters();
   
-  const [period, setPeriod] = useState('Shift');
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
-  const [shift, setShift] = useState('All');
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
   const [modelFamily, setModelFamily] = useState('All');
@@ -27,13 +25,12 @@ export default function DefectReport() {
     rft: 96.4
   };
 
-  const defectTrendData = [
-    { date: '2023-01-01', defects: 5 },
-    { date: '2023-01-02', defects: 8 },
-    { date: '2023-01-03', defects: 4 },
-    { date: '2023-01-04', defects: 6 },
-    { date: '2023-01-05', defects: 9 },
-  ];
+  const defectTrendData = useMemo(() => {
+    return generateTimeLabels(period, shift).map(label => ({
+      date: label,
+      defects: Math.floor(Math.random() * 15)
+    }));
+  }, [period, shift]);
 
   const defectDistData = [
     { name: 'Half Engine', value: 20 },
@@ -67,22 +64,21 @@ export default function DefectReport() {
   const exportToExcel = () => {
     exportToXLSX('DefectReport.xlsx', [
       { name: 'KPI', rows: [['Metric', 'Value'], ['Total Production', kpiData.totalProduction], ['Total Defects', kpiData.totalDefects], ['RFT %', kpiData.rft]] },
-      { name: 'Defect Trend', rows: [['Date', 'Defects'], ...defectTrendData.map(d => [d.date, d.defects])] },
+      { name: 'Defect Trend', rows: [['Time', 'Defects'], ...defectTrendData.map(d => [d.date, d.defects])] },
       { name: 'Defect Distribution', rows: [['Category', 'Count'], ...defectDistData.map(d => [d.name, d.value])] },
       { name: 'Defect Details', rows: [['Engine No', 'Defect', 'Station', 'Operator', 'Time'], ...tableData.map(d => [d.engineNo, d.defect, d.station, d.operator, d.time])] },
     ]);
   };
 
-  const filters = [
-    { type: 'period', value: period, onChange: setPeriod },
-    { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate },
-    { type: 'dropdown', label: 'Shift', options: ['All','Shift 1','Shift 2','Shift 3'], value: shift, onChange: setShift },
+  const customFilters = [
     { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine },
     { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02','ST-03'], value: station, onChange: setStation },
     { type: 'dropdown', label: 'Model Family', options: ['All','Pulsar','Dominar','Avenger'], value: modelFamily, onChange: setModelFamily },
     { type: 'dropdown', label: 'Model', options: ['All','Pulsar 150','Pulsar 220','Dominar 400'], value: model, onChange: setModel },
     { type: 'dropdown', label: 'SKU', options: ['All','UG5','UG6','STD'], value: sku, onChange: setSku },
   ];
+
+  const filters = [...getBaseFilters(), ...customFilters];
 
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">

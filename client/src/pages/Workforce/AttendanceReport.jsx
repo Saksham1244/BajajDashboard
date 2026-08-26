@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { CalendarCheck2 } from 'lucide-react';
+import useReportFilters from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
@@ -7,24 +9,18 @@ import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 export default function AttendanceReport() {
-  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  const { period, shift, getBaseFilters } = useReportFilters();
   
   const [line, setLine] = useState('All');
-  const [shift, setShift] = useState('All');
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
 
   const kpiData = { scheduled: 150, present: 142, absent: 8, attendancePct: 94.6 };
   
-  const trendData = [
-    { date: '2023-10-01', pct: 95 },
-    { date: '2023-10-02', pct: 96 },
-    { date: '2023-10-03', pct: 92 },
-    { date: '2023-10-04', pct: 98 },
-    { date: '2023-10-05', pct: 94 },
-    { date: '2023-10-06', pct: 97 },
-    { date: '2023-10-07', pct: 95 }
-  ];
+  const trendData = useMemo(() => {
+    return generateTimeLabels(period, shift).map(label => ({
+      date: label,
+      pct: Math.floor(Math.random() * (100 - 85 + 1)) + 85
+    }));
+  }, [period, shift]);
 
   const tableData = [
     { operator: 'John Doe', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
@@ -66,9 +62,8 @@ export default function AttendanceReport() {
         icon={CalendarCheck2}
         onExcelClick={exportToExcel}
         filters={[
-          { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine },
-          { type: 'dropdown', label: 'Shift', options: ['All','Shift 1','Shift 2','Shift 3'], value: shift, onChange: setShift },
-          { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate }
+          ...getBaseFilters(),
+          { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine }
         ]}
       />
       <div className="flex-1 flex flex-col gap-3">

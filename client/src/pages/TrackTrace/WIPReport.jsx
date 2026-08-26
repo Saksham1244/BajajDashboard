@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Layers } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { exportToXLSX } from '../../utils/exportExcel';
+import useReportFilters from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function WIPReport() {
-  const [line, setLine] = useState('All');
+  const { period, shift, getBaseFilters } = useReportFilters();
   const [wipStatus, setWipStatus] = useState('All');
 
   const COLORS = ['#0369a1', '#f97316', '#f43f5e', '#8b5cf6'];
@@ -52,7 +54,7 @@ export default function WIPReport() {
         icon={Layers}
         onExcelClick={exportToExcel}
         filters={[
-          { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2', 'Sub-Assy'], value: line, onChange: setLine },
+          ...getBaseFilters(),
           { type: 'dropdown', label: 'WIP Status', options: ['All', 'In-Process', 'Rework', 'Blocked', 'Idle'], value: wipStatus, onChange: setWipStatus }
         ]}
       />
@@ -93,3 +95,4 @@ export default function WIPReport() {
     </div>
   );
 }
+

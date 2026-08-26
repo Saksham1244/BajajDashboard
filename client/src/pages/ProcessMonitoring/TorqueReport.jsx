@@ -5,17 +5,13 @@ import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { useReportFilters } from '../../hooks/useReportFilters';
 
 export default function TorqueReport() {
-  const [modelFamily, setModelFamily] = useState('All');
-  const [model, setModel] = useState('All');
-  const [sku, setSku] = useState('All');
+  const { getBaseFilters } = useReportFilters();
   const [device, setDevice] = useState('All');
 
-  const filters = [
-    { type: 'dropdown', label: 'Model Family', options: ['All', 'Pulsar', 'Dominar'], value: modelFamily, onChange: setModelFamily },
-    { type: 'dropdown', label: 'Model', options: ['All', 'Pulsar 150', 'Dominar 400'], value: model, onChange: setModel },
-    { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'STD'], value: sku, onChange: setSku },
+  const customFilters = [
     { type: 'dropdown', label: 'Torque Device', options: ['All', 'TD-01', 'TD-02', 'TD-03'], value: device, onChange: setDevice },
   ];
 
@@ -54,7 +50,7 @@ export default function TorqueReport() {
         title="Torque Report"
         icon={Settings2}
         onExcelClick={exportToExcel}
-        filters={filters}
+        filters={[...getBaseFilters(), ...customFilters]}
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

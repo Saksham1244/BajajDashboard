@@ -1,18 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Timer } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ComposedChart } from 'recharts';
+import useReportFilters from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function DowntimeReport() {
-  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  const { period, shift, getBaseFilters } = useReportFilters();
   
-  const [period, setPeriod] = useState('Shift');
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
-  const [shift, setShift] = useState('All');
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
   const [modelFamily, setModelFamily] = useState('All');
@@ -21,15 +19,12 @@ export default function DowntimeReport() {
 
   const kpiData = { totalDowntime: 420, noOfLosses: 35, mostLostCat: 'Equipment Failure', avgLossDuration: 12 };
   
-  const hourlyData = [
-    { hour: '06:00', duration: 15 },
-    { hour: '07:00', duration: 0 },
-    { hour: '08:00', duration: 45 },
-    { hour: '09:00', duration: 20 },
-    { hour: '10:00', duration: 10 },
-    { hour: '11:00', duration: 60 },
-    { hour: '12:00', duration: 0 }
-  ];
+  const hourlyData = useMemo(() => {
+    return generateTimeLabels(period, shift).map(time => ({
+      time,
+      duration: Math.floor(Math.random() * 60)
+    }));
+  }, [period, shift]);
 
   const categoryData = [
     { category: 'Equipment Failure', duration: 180, occurrence: 5 },
@@ -60,6 +55,7 @@ export default function DowntimeReport() {
   const exportToExcel = () => {
     exportToXLSX('DowntimeReport.xlsx', [
       { name: 'KPI', rows: [['Metric', 'Value'], ['Overall Downtime (mins)', kpiData.totalDowntime], ['No. of Losses', kpiData.noOfLosses], ['Most Lost Category', kpiData.mostLostCat], ['Avg Loss Duration', kpiData.avgLossDuration]] },
+      { name: 'Hourly Downtime', rows: [['Time', 'Duration (mins)'], ...hourlyData.map(d => [d.time, d.duration])] },
       { name: 'Category Downtime', rows: [['Category', 'Duration (mins)', 'Occurrence'], ...categoryData.map(d => [d.category, d.duration, d.occurrence])] },
       { name: 'Downtime Details', rows: [['Category', 'Sub-Category', 'Start Time', 'End Time', 'Duration (mins)', 'Occurrence', 'Machine', 'Reason'], ...tableData.map(d => [d.category, d.subCategory, d.startTime, d.endTime, d.duration, d.occurrence, d.machine, d.reason])] }
     ]);
@@ -72,9 +68,7 @@ export default function DowntimeReport() {
         icon={Timer}
         onExcelClick={exportToExcel}
         filters={[
-          { type: 'period', value: period, onChange: setPeriod },
-          { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate },
-          { type: 'dropdown', label: 'Shift', options: ['All','Shift 1','Shift 2','Shift 3'], value: shift, onChange: setShift },
+          ...getBaseFilters(),
           { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine },
           { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02','ST-03'], value: station, onChange: setStation },
           { type: 'dropdown', label: 'Model Family', options: ['All','Pulsar','Dominar','Avenger'], value: modelFamily, onChange: setModelFamily },
@@ -96,7 +90,7 @@ export default function DowntimeReport() {
             <ResponsiveContainer>
               <BarChart data={hourlyData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="hour" />
+                <XAxis dataKey="time" />
                 <YAxis />
                 <Tooltip />
                 <Legend />

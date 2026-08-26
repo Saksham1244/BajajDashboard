@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { UserCheck } from 'lucide-react';
+import useReportFilters from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
@@ -7,12 +9,9 @@ import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 export default function WorkforceAllocationReport() {
-  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  const { period, shift, getBaseFilters } = useReportFilters();
   
   const [line, setLine] = useState('All');
-  const [shift, setShift] = useState('All');
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
 
   const kpiData = { totalStations: 25, fullyStaffed: 20, underStaffed: 4, overStaffed: 1 };
   
@@ -60,9 +59,8 @@ export default function WorkforceAllocationReport() {
         icon={UserCheck}
         onExcelClick={exportToExcel}
         filters={[
-          { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine },
-          { type: 'dropdown', label: 'Shift', options: ['All','Shift 1','Shift 2','Shift 3'], value: shift, onChange: setShift },
-          { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate }
+          ...getBaseFilters(),
+          { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine }
         ]}
       />
       <div className="flex-1 flex flex-col gap-3">

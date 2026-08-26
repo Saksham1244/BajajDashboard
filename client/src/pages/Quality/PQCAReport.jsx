@@ -1,20 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { ClipboardCheck } from 'lucide-react';
+import { useReportFilters } from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
 export default function PQCAReport() {
-  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  const { period, shift, getBaseFilters } = useReportFilters();
   
-  const [period, setPeriod] = useState('Shift');
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
-  const [shift, setShift] = useState('All');
   const [line, setLine] = useState('All');
   const [modelFamily, setModelFamily] = useState('All');
   const [model, setModel] = useState('All');
@@ -38,13 +36,12 @@ export default function PQCAReport() {
     { name: 'Measurement', value: 5 },
   ];
 
-  const ncTrendData = [
-    { date: '2023-01-01', nc: 2 },
-    { date: '2023-01-02', nc: 5 },
-    { date: '2023-01-03', nc: 3 },
-    { date: '2023-01-04', nc: 6 },
-    { date: '2023-01-05', nc: 4 },
-  ];
+  const ncTrendData = useMemo(() => {
+    return generateTimeLabels(period, shift).map(label => ({
+      date: label,
+      nc: Math.floor(Math.random() * 8)
+    }));
+  }, [period, shift]);
 
   const tableData = [
     { checkpoint: 'Oil Level', category: 'Visual', status: 'OK', why: '-', action: '-', repeated: 'No', model: 'Pulsar 150' },
@@ -76,19 +73,18 @@ export default function PQCAReport() {
     exportToXLSX('PQCAReport.xlsx', [
       { name: 'KPI', rows: [['Metric', 'Value'], ['Total Checkpoints', kpiData.totalCheckpoints], ['OK', kpiData.ok], ['NC', kpiData.nc], ['Single Occurrence NC', kpiData.singleNc], ['Double Occurrence NC', kpiData.doubleNc]] },
       { name: 'Compliance', rows: [['Status', 'Count'], ...complianceData.map(d => [d.name, d.value])] },
-      { name: 'NC Trend', rows: [['Date', 'NC'], ...ncTrendData.map(d => [d.date, d.nc])] },
+      { name: 'NC Trend', rows: [['Time', 'NC'], ...ncTrendData.map(d => [d.date, d.nc])] },
       { name: 'Checkpoint Details', rows: [['Checkpoint', 'Category', 'Status', 'Why', 'Immediate Action', 'Repeated', 'Model'], ...tableData.map(d => [d.checkpoint, d.category, d.status, d.why, d.action, d.repeated, d.model])] },
     ]);
   };
 
-  const filters = [
-    { type: 'period', value: period, onChange: setPeriod },
-    { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate },
-    { type: 'dropdown', label: 'Shift', options: ['All','Shift 1','Shift 2','Shift 3'], value: shift, onChange: setShift },
+  const customFilters = [
     { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine },
     { type: 'dropdown', label: 'Model Family', options: ['All','Pulsar','Dominar','Avenger'], value: modelFamily, onChange: setModelFamily },
     { type: 'dropdown', label: 'Model', options: ['All','Pulsar 150','Pulsar 220','Dominar 400'], value: model, onChange: setModel },
   ];
+
+  const filters = [...getBaseFilters(), ...customFilters];
 
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">

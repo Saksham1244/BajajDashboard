@@ -1,34 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Workflow } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { useReportFilters } from '../../hooks/useReportFilters';
 
 export default function ConveyorReport() {
-  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
-  
-  const [period, setPeriod] = useState('Shift');
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
-  const [shift, setShift] = useState('All');
-  const [line, setLine] = useState('All');
-  const [station, setStation] = useState('All');
-  const [modelFamily, setModelFamily] = useState('All');
-  const [model, setModel] = useState('All');
-  const [sku, setSku] = useState('All');
+  const { getBaseFilters } = useReportFilters();
 
-  const filters = [
-    { type: 'period', value: period, onChange: setPeriod },
-    { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate },
-    { type: 'dropdown', label: 'Shift', options: ['All', 'Shift 1', 'Shift 2', 'Shift 3'], value: shift, onChange: setShift },
-    { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2'], value: line, onChange: setLine },
-    { type: 'dropdown', label: 'Station', options: ['All', 'ST-01', 'ST-02'], value: station, onChange: setStation },
-    { type: 'dropdown', label: 'Model Family', options: ['All', 'Pulsar', 'Dominar'], value: modelFamily, onChange: setModelFamily },
-    { type: 'dropdown', label: 'Model', options: ['All', 'Pulsar 150', 'Dominar 400'], value: model, onChange: setModel },
-    { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'STD'], value: sku, onChange: setSku },
-  ];
+  const customFilters = [];
 
   const affectedStationsData = [
     { station: 'ST-05', downtime: 45 },
@@ -78,7 +60,7 @@ export default function ConveyorReport() {
         title="Conveyor Report"
         icon={Workflow}
         onExcelClick={exportToExcel}
-        filters={filters}
+        filters={[...getBaseFilters(), ...customFilters]}
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

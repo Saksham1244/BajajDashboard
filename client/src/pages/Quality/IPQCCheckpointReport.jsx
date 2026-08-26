@@ -1,17 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import { ScanLine } from 'lucide-react';
+import { useReportFilters } from '../../hooks/useReportFilters';
 
 export default function IPQCCheckpointReport() {
-  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
-  
-  const [period, setPeriod] = useState('Shift');
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
-  const [shift, setShift] = useState('All');
+  const { getBaseFilters } = useReportFilters();
 
   const kpiData = {
     totalCheckpoints: 3000,
@@ -59,11 +55,7 @@ export default function IPQCCheckpointReport() {
     ]);
   };
 
-  const filters = [
-    { type: 'period', value: period, onChange: setPeriod },
-    { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate },
-    { type: 'dropdown', label: 'Shift', options: ['All','Shift 1','Shift 2','Shift 3'], value: shift, onChange: setShift },
-  ];
+  const filters = [...getBaseFilters()];
 
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
@@ -88,3 +80,4 @@ export default function IPQCCheckpointReport() {
     </div>
   );
 }
+

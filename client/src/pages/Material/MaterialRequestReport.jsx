@@ -1,22 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { ClipboardList } from 'lucide-react';
+import { useReportFilters } from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
 export default function MaterialRequestReport() {
-  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
+  const { period, shift, getBaseFilters } = useReportFilters();
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
 
-  const filters = [
-    { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate },
+  const customFilters = [
     { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2'], value: line, onChange: setLine },
     { type: 'dropdown', label: 'Station', options: ['All', 'ST-01', 'ST-02', 'ST-03'], value: station, onChange: setStation },
   ];
@@ -27,6 +26,13 @@ export default function MaterialRequestReport() {
     { station: 'ST-03', requests: 15 },
     { station: 'ST-04', requests: 5 },
   ];
+
+  const trendData = useMemo(() => {
+    return generateTimeLabels(period, shift).map(time => ({
+      time,
+      requests: Math.floor(Math.random() * 15) + 2
+    }));
+  }, [period, shift]);
 
   const tableData = [
     { reqId: 'REQ-001', station: 'ST-01', material: 'Bolt M8', reqTime: '10:00', fullTime: '10:15', status: 'Fulfilled' },
@@ -65,7 +71,7 @@ export default function MaterialRequestReport() {
 
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
-      <StandardFilterBar title="Material Request Report" icon={ClipboardList} onExcelClick={exportToExcel} filters={filters} />
+      <StandardFilterBar title="Material Request Report" icon={ClipboardList} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -75,19 +81,36 @@ export default function MaterialRequestReport() {
           <StatCard title="Avg Fulfillment Time (mins)" value="12" color="bg-purple-100" />
         </div>
 
-        <div className="card p-4">
-          <h3 className="text-sm font-bold text-brand-dark mb-3">Requests by Station</h3>
-          <div className="h-[240px]">
-            <ResponsiveContainer>
-              <BarChart data={reqData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="station" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="requests" fill={COLORS[0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="card p-4">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Requests by Station</h3>
+            <div className="h-[240px]">
+              <ResponsiveContainer>
+                <BarChart data={reqData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="station" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="requests" fill={COLORS[0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="card p-4">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Requests Over Time</h3>
+            <div className="h-[240px]">
+              <ResponsiveContainer>
+                <LineChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="time" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="requests" stroke={COLORS[1]} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 

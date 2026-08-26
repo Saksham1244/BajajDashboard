@@ -1,29 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Shield } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { useReportFilters } from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function PokaYokeReport() {
-  const [line, setLine] = useState('All');
-  const [station, setStation] = useState('All');
+  const { period, shift, getBaseFilters } = useReportFilters();
   const [device, setDevice] = useState('All');
 
-  const filters = [
-    { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2'], value: line, onChange: setLine },
-    { type: 'dropdown', label: 'Station', options: ['All', 'ST-01', 'ST-02'], value: station, onChange: setStation },
+  const customFilters = [
     { type: 'dropdown', label: 'Poka Yoke Device', options: ['All', 'PY-01 Torque', 'PY-02 Vision', 'PY-03 Sensor'], value: device, onChange: setDevice },
   ];
 
-  const hourlyData = [
-    { hour: '08:00', ok: 120, nok: 2, bypass: 0 },
-    { hour: '09:00', ok: 135, nok: 1, bypass: 1 },
-    { hour: '10:00', ok: 140, nok: 3, bypass: 0 },
-    { hour: '11:00', ok: 110, nok: 0, bypass: 2 },
-    { hour: '12:00', ok: 150, nok: 4, bypass: 0 },
-  ];
+  const hourlyData = useMemo(() => {
+    const labels = generateTimeLabels(period, shift);
+    return labels.map(label => ({
+      hour: label,
+      ok: Math.floor(Math.random() * 50) + 100,
+      nok: Math.floor(Math.random() * 5),
+      bypass: Math.floor(Math.random() * 3),
+    }));
+  }, [period, shift]);
 
   const bypassLogData = [
     { startTime: '09:15', endTime: '09:20', duration: 5, station: 'ST-01', device: 'PY-01 Torque', operator: 'John Doe', reason: 'Sensor malfunction' },
@@ -46,7 +47,7 @@ export default function PokaYokeReport() {
   const exportToExcel = () => {
     exportToXLSX('PokaYokeReport.xlsx', [
       { name: 'KPI Summary', rows: [['Total Checks', 'OK Count', 'NOT-OK Count', 'Bypass Count'], [665, 655, 10, 3]] },
-      { name: 'Hourly OK_NOK', rows: [['Hour', 'OK Count', 'NOT-OK Count', 'Bypass Count'], ...hourlyData.map(d => [d.hour, d.ok, d.nok, d.bypass])] },
+      { name: 'Hourly OK_NOK', rows: [['Time', 'OK Count', 'NOT-OK Count', 'Bypass Count'], ...hourlyData.map(d => [d.hour, d.ok, d.nok, d.bypass])] },
       { name: 'Bypass Log', rows: [['Start Time', 'End Time', 'Duration', 'Station', 'Device', 'Operator', 'Reason'], ...bypassLogData.map(d => [d.startTime, d.endTime, d.duration, d.station, d.device, d.operator, d.reason])] }
     ]);
   };
@@ -57,7 +58,7 @@ export default function PokaYokeReport() {
         title="Poka Yoke Report"
         icon={Shield}
         onExcelClick={exportToExcel}
-        filters={filters}
+        filters={[...getBaseFilters(), ...customFilters]}
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -69,7 +70,7 @@ export default function PokaYokeReport() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="card p-4">
-            <h3 className="text-sm font-bold text-brand-dark mb-3">Hour-wise OK vs NOT-OK</h3>
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Time-wise OK vs NOT-OK</h3>
             <div className="h-[240px]">
               <ResponsiveContainer>
                 <BarChart data={hourlyData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -86,7 +87,7 @@ export default function PokaYokeReport() {
           </div>
           
           <div className="card p-4">
-            <h3 className="text-sm font-bold text-brand-dark mb-3">Hour-wise Bypass Events</h3>
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Time-wise Bypass Events</h3>
             <div className="h-[240px]">
               <ResponsiveContainer>
                 <BarChart data={hourlyData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>

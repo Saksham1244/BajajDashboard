@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Users } from 'lucide-react';
+import useReportFilters from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
@@ -7,13 +9,10 @@ import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 export default function WorkforceDashboard() {
-  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  const { period, shift, getBaseFilters } = useReportFilters();
   
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
-  const [shift, setShift] = useState('All');
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
 
   const kpiData = { assigned: 150, present: 142, absent: 8, skillMatch: 95, utilization: 88, idleTime: 12, overtime: 24 };
   
@@ -65,10 +64,9 @@ export default function WorkforceDashboard() {
         icon={Users}
         onExcelClick={exportToExcel}
         filters={[
+          ...getBaseFilters(),
           { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine },
-          { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02','ST-03','ST-04','ST-05'], value: station, onChange: setStation },
-          { type: 'dropdown', label: 'Shift', options: ['All','Shift 1','Shift 2','Shift 3'], value: shift, onChange: setShift },
-          { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate }
+          { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02','ST-03','ST-04','ST-05'], value: station, onChange: setStation }
         ]}
       />
       <div className="flex-1 flex flex-col gap-3">

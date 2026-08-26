@@ -5,15 +5,15 @@ import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import useReportFilters from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function MTTRMTBFReport() {
-  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  const { period, shift, getBaseFilters } = useReportFilters();
   
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
   const [machine, setMachine] = useState('All');
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
 
   const colors = ['#0369a1','#f97316'];
 
@@ -61,7 +61,7 @@ export default function MTTRMTBFReport() {
         icon={Activity}
         onExcelClick={exportToExcel}
         filters={[
-          { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate },
+          ...getBaseFilters(),
           { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2'], value: line, onChange: setLine },
           { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02'], value: station, onChange: setStation },
           { type: 'dropdown', label: 'Machine', options: ['All','M-01','M-02'], value: machine, onChange: setMachine },

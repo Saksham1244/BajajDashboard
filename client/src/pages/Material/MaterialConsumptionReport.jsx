@@ -1,23 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { TrendingDown } from 'lucide-react';
+import { useReportFilters } from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
 export default function MaterialConsumptionReport() {
-  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
+  const { period, shift, getBaseFilters } = useReportFilters();
   const [line, setLine] = useState('All');
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
 
-  const filters = [
-    { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate },
+  const customFilters = [
     { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2'], value: line, onChange: setLine },
     { type: 'dropdown', label: 'Model', options: ['All', 'Pulsar 150', 'Dominar 400'], value: model, onChange: setModel },
     { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'UG6'], value: sku, onChange: setSku },
@@ -30,6 +29,14 @@ export default function MaterialConsumptionReport() {
     { material: 'Washer', variance: -1.5 },
     { material: 'Screw', variance: -2.2 },
   ];
+
+  const trendData = useMemo(() => {
+    return generateTimeLabels(period, shift).map(time => ({
+      time,
+      expected: Math.floor(Math.random() * 100) + 200,
+      consumed: Math.floor(Math.random() * 100) + 200,
+    }));
+  }, [period, shift]);
 
   const tableData = [
     { material: 'Bolt M8', consumed: 526, expected: 500, variance: 26, variancePct: 5.2 },
@@ -74,7 +81,7 @@ export default function MaterialConsumptionReport() {
 
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
-      <StandardFilterBar title="Material Consumption Report" icon={TrendingDown} onExcelClick={exportToExcel} filters={filters} />
+      <StandardFilterBar title="Material Consumption Report" icon={TrendingDown} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -84,19 +91,37 @@ export default function MaterialConsumptionReport() {
           <StatCard title="Under-consumed" value="8" color="bg-green-100" />
         </div>
 
-        <div className="card p-4">
-          <h3 className="text-sm font-bold text-brand-dark mb-3">Top 5 Materials by Variance</h3>
-          <div className="h-[240px]">
-            <ResponsiveContainer>
-              <BarChart data={varianceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="material" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="variance" fill={COLORS[4]} name="Variance %" />
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="card p-4">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Top 5 Materials by Variance</h3>
+            <div className="h-[240px]">
+              <ResponsiveContainer>
+                <BarChart data={varianceData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="material" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="variance" fill={COLORS[4]} name="Variance %" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="card p-4">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Consumption Trend</h3>
+            <div className="h-[240px]">
+              <ResponsiveContainer>
+                <LineChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="time" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="expected" stroke={COLORS[0]} name="Expected" />
+                  <Line type="monotone" dataKey="consumed" stroke={COLORS[4]} name="Consumed" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 

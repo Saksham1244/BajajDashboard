@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { GraduationCap } from 'lucide-react';
+import useReportFilters from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 
 export default function SkillMatrixReport() {
+  const { period, shift, getBaseFilters } = useReportFilters();
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
 
@@ -55,6 +58,7 @@ export default function SkillMatrixReport() {
         icon={GraduationCap}
         onExcelClick={exportToExcel}
         filters={[
+          ...getBaseFilters(),
           { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine },
           { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02','ST-03','ST-04','ST-05'], value: station, onChange: setStation }
         ]}

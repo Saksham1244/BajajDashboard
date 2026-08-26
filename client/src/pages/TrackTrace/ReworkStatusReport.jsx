@@ -1,22 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { RotateCcw } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { exportToXLSX } from '../../utils/exportExcel';
+import useReportFilters from '../../hooks/useReportFilters';
+import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function ReworkStatusReport() {
-  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
-  const [period, setPeriod] = useState('Shift');
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
-  const [shift, setShift] = useState('All');
-  const [line, setLine] = useState('All');
-  const [station, setStation] = useState('All');
-  const [modelFamily, setModelFamily] = useState('All');
-  const [model, setModel] = useState('All');
-  const [sku, setSku] = useState('All');
+  const { period, shift, getBaseFilters } = useReportFilters();
   const [status, setStatus] = useState('All');
 
   const topDefectsData = [
@@ -71,14 +64,7 @@ export default function ReworkStatusReport() {
         icon={RotateCcw}
         onExcelClick={exportToExcel}
         filters={[
-          { type: 'period', value: period, onChange: setPeriod },
-          { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate },
-          { type: 'dropdown', label: 'Shift', options: ['All', 'Shift 1', 'Shift 2', 'Shift 3'], value: shift, onChange: setShift },
-          { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2', 'Sub-Assy'], value: line, onChange: setLine },
-          { type: 'dropdown', label: 'Station', options: ['All', 'ST-01', 'ST-02', 'ST-03'], value: station, onChange: setStation },
-          { type: 'dropdown', label: 'Model Family', options: ['All', 'Pulsar', 'Dominar', 'Avenger'], value: modelFamily, onChange: setModelFamily },
-          { type: 'dropdown', label: 'Model', options: ['All', 'Pulsar 150', 'Pulsar 220', 'Dominar 400'], value: model, onChange: setModel },
-          { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'UG6', 'STD'], value: sku, onChange: setSku },
+          ...getBaseFilters(),
           { type: 'dropdown', label: 'Status', options: ['All', 'Pending', 'In-Progress', 'Completed', 'Rejected'], value: status, onChange: setStatus },
         ]}
       />
