@@ -56,6 +56,14 @@ export default function WIPReport() {
     ]);
   };
 
+  const filteredDistData = (dbData?.kpis?.distribution || wipDistData).filter(
+    item => wipStatus === 'All' || item.name === wipStatus
+  );
+
+  const filteredTableData = (dbData?.table || mockData).filter(
+    row => wipStatus === 'All' || row.status === wipStatus
+  );
+
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
       <StandardFilterBar
@@ -82,9 +90,9 @@ export default function WIPReport() {
             <div className="h-[240px]">
               <ResponsiveContainer>
                 <PieChart>
-                  <Pie data={dbData?.kpis?.distribution || wipDistData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                    {(dbData?.kpis?.distribution || wipDistData).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Pie data={filteredDistData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                    {filteredDistData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[wipDistData.findIndex(d => d.name === entry.name) % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -96,7 +104,7 @@ export default function WIPReport() {
           <div className="card p-4 col-span-2 flex flex-col">
             <h3 className="text-sm font-bold text-brand-dark mb-3">WIP Engine Details</h3>
             <div className="flex-1">
-              <DataTable columns={columns} data={dbData?.table || mockData} />
+              <DataTable columns={columns} data={filteredTableData} />
             </div>
           </div>
         </div>
