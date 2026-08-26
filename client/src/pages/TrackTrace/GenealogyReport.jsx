@@ -6,7 +6,7 @@ import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 
 export default function GenealogyReport() {
-  const [searchUID, setSearchUID] = useState('');
+  const [searchUID, setSearchUID] = useState('ENG-2026-00123');
 
   const mockHistoryData = [
     { id: 1, station: 'ST-01', operation: 'Block Assembly', startTime: '10:00:00', endTime: '10:05:00', duration: '5m', operator: 'OP-001', result: 'OK', remarks: '-' },

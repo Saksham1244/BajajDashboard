@@ -159,7 +159,6 @@ export default function Performance() {
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 flex-1">
-          <FilterSection title="Year" options={['2023', '2024', '2025', '2026']} active={activeYear} onChange={setActiveYear} isDropdown={true} />
           <FilterSection title="Month" options={['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']} active={activeMonth} onChange={setActiveMonth} isDropdown={true} />
           <FilterSection title="Date" active={activeDate} onChange={setActiveDate} isDate={true} />
           <div className="ml-auto flex items-center gap-2 flex-shrink-0">

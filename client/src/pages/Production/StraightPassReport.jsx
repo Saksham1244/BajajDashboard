@@ -181,9 +181,9 @@ export default function StraightPassReport() {
         </div>
 
         {/* Chart */}
-        <div className="card flex-1 min-h-[280px]">
-          <h3 className="text-sm font-bold text-brand-dark mb-4 border-b border-dashed border-slate-200 pb-2 p-3">Hourly Straight Pass vs Reworked Pass</h3>
-          <div className="flex-1 min-h-[220px] px-3 pb-3">
+        <div className="card">
+          <h3 className="text-sm font-bold text-brand-dark mb-3 border-b border-dashed border-slate-200 pb-2">Hourly Straight Pass vs Reworked Pass</h3>
+          <div className="h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={hourlyData} margin={{ top: 10, right: 10, left: -20, bottom: 15 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />

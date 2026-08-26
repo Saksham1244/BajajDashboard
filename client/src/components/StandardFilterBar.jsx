@@ -38,8 +38,8 @@ export default function StandardFilterBar({ title, icon: Icon, onExcelClick, fil
           if (f.type === 'period') return (
             <div key={i} className="flex flex-col gap-1">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Period</span>
-              <div className="flex rounded overflow-hidden border border-slate-200">
-                {['Shift', 'Day', 'Month'].map(p => (
+                <div className="flex rounded overflow-hidden border border-slate-200">
+                {['Shift', 'Day', 'Week', 'Month'].map(p => (
                   <button key={p} onClick={() => f.onChange(p)}
                     className={`px-3 py-1.5 text-[11px] font-bold transition-colors ${f.value === p ? 'bg-[#0369a1] text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
                     {p}
