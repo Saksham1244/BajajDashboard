@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
@@ -15,6 +15,14 @@ export default function KittingDashboard() {
   const [line, setLine] = useState('All');
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
+  const [dbData, setDbData] = useState(null);
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/material/kitting?period=${period}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period]);
 
   const customFilters = [
     { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2'], value: line, onChange: setLine },
@@ -41,7 +49,7 @@ export default function KittingDashboard() {
     }));
   }, [period, shift]);
 
-  const tableData = [
+  const tableData = dbData?.table || [
     { kitId: 'KIT-101', model: 'Pulsar 150', sku: 'UG5', status: 'Prepared', preparedAt: '10:00', accuracy: '100%', defect: '-' },
     { kitId: 'KIT-102', model: 'Dominar 400', sku: 'UG6', status: 'Pending', preparedAt: '-', accuracy: '-', defect: '-' },
     { kitId: 'KIT-103', model: 'Pulsar 150', sku: 'UG5', status: 'Rejected', preparedAt: '11:15', accuracy: '95%', defect: 'Missing Bolt' },
@@ -69,12 +77,12 @@ export default function KittingDashboard() {
     exportToXLSX('KittingDashboard.xlsx', [
       { name: 'KPI', rows: [
         ['Metric', 'Value'],
-        ['Total Kits Planned', '100'],
-        ['Kits Prepared', '85'],
-        ['Kits Pending', '10'],
-        ['Kit Accuracy %', '98%'],
-        ['Rejected Kits', '5'],
-        ['Preparation Status', 'On Track']
+        ['Total Kits Planned', dbData?.kpis?.totalKitsPlanned || '100'],
+        ['Kits Prepared', dbData?.kpis?.kitsPrepared || '85'],
+        ['Kits Pending', dbData?.kpis?.kitsPending || '10'],
+        ['Kit Accuracy %', dbData?.kpis?.kitAccuracy || '98%'],
+        ['Rejected Kits', dbData?.kpis?.rejectedKits || '5'],
+        ['Preparation Status', dbData?.kpis?.preparationStatus || 'On Track']
       ]},
       { name: 'Kit Status', rows: [
         ['Status', 'Count'],
@@ -93,12 +101,12 @@ export default function KittingDashboard() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <StatCard title="Kits Planned" value="100" color="bg-blue-100" />
-          <StatCard title="Kits Prepared" value="85" color="bg-green-100" />
-          <StatCard title="Kits Pending" value="10" color="bg-orange-100" />
-          <StatCard title="Kit Accuracy %" value="98%" color="bg-purple-100" />
-          <StatCard title="Rejected Kits" value="5" color="bg-red-100" />
-          <StatCard title="Preparation Status" value="On Track" color="bg-green-100" />
+          <StatCard title="Kits Planned" value={dbData?.kpis?.totalKitsPlanned || "100"} color="bg-blue-100" />
+          <StatCard title="Kits Prepared" value={dbData?.kpis?.kitsPrepared || "85"} color="bg-green-100" />
+          <StatCard title="Kits Pending" value={dbData?.kpis?.kitsPending || "10"} color="bg-orange-100" />
+          <StatCard title="Kit Accuracy %" value={dbData?.kpis?.kitAccuracy || "98%"} color="bg-purple-100" />
+          <StatCard title="Rejected Kits" value={dbData?.kpis?.rejectedKits || "5"} color="bg-red-100" />
+          <StatCard title="Preparation Status" value={dbData?.kpis?.preparationStatus || "On Track"} color="bg-green-100" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

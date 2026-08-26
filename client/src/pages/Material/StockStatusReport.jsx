@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
@@ -14,6 +14,14 @@ export default function StockStatusReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
   const [matType, setMatType] = useState('All');
   const [location, setLocation] = useState('All');
+  const [dbData, setDbData] = useState(null);
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/material/stock?period=${period}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period]);
 
   const customFilters = [
     { type: 'dropdown', label: 'Material Type', options: ['All', 'Raw', 'WIP', 'Finished'], value: matType, onChange: setMatType },
@@ -34,7 +42,7 @@ export default function StockStatusReport() {
     }));
   }, [period, shift]);
 
-  const tableData = [
+  const tableData = dbData?.table || [
     { material: 'M-01', available: 50, minLevel: 20, maxLevel: 100, status: 'Safe' },
     { material: 'M-02', available: 10, minLevel: 15, maxLevel: 50, status: 'Critical' },
     { material: 'M-03', available: 120, minLevel: 100, maxLevel: 110, status: 'Excess' },
@@ -58,10 +66,10 @@ export default function StockStatusReport() {
   const exportToExcel = () => {
     exportToXLSX('StockStatusReport.xlsx', [
       { name: 'KPI', rows: [
-        ['Total Materials', '115'],
-        ['Critical Count', '12'],
-        ['Safe Count', '85'],
-        ['Excess Count', '18']
+        ['Total Materials', dbData?.kpis?.totalMaterials || '115'],
+        ['Critical Count', dbData?.kpis?.criticalCount || '12'],
+        ['Safe Count', dbData?.kpis?.safeCount || '85'],
+        ['Excess Count', dbData?.kpis?.excessCount || '18']
       ]},
       { name: 'Stock Details', rows: [
         ['Material', 'Available Qty', 'Min Level', 'Max Level', 'Status'],
@@ -76,10 +84,10 @@ export default function StockStatusReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Materials" value="115" color="bg-blue-100" />
-          <StatCard title="Critical Count" value="12" color="bg-red-100" />
-          <StatCard title="Safe Count" value="85" color="bg-green-100" />
-          <StatCard title="Excess Count" value="18" color="bg-yellow-100" />
+          <StatCard title="Total Materials" value={dbData?.kpis?.totalMaterials || "115"} color="bg-blue-100" />
+          <StatCard title="Critical Count" value={dbData?.kpis?.criticalCount || "12"} color="bg-red-100" />
+          <StatCard title="Safe Count" value={dbData?.kpis?.safeCount || "85"} color="bg-green-100" />
+          <StatCard title="Excess Count" value={dbData?.kpis?.excessCount || "18"} color="bg-yellow-100" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -121,3 +129,4 @@ export default function StockStatusReport() {
     </div>
   );
 }
+
