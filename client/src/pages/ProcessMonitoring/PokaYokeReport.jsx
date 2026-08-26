@@ -1,67 +1,112 @@
-import ReportLayout from '../../components/ReportLayout'
-import { useEffect, useState } from 'react'
-
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { motion } from 'framer-motion'
+import React, { useState } from 'react';
+import { Shield } from 'lucide-react';
+import StandardFilterBar from '../../components/StandardFilterBar';
+import DataTable from '../../components/DataTable';
+import StatCard from '../../components/StatCard';
+import { exportToXLSX } from '../../utils/exportExcel';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 export default function PokaYokeReport() {
-  const [data, setData] = useState(null)
+  const [line, setLine] = useState('All');
+  const [station, setStation] = useState('All');
+  const [device, setDevice] = useState('All');
 
-  useEffect(() => {
-    fetch('http://localhost:5000/api/process/pokayoke')
-      .then(res => res.json())
-      .then(data => setData(data))
-  }, [])
+  const filters = [
+    { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2'], value: line, onChange: setLine },
+    { type: 'dropdown', label: 'Station', options: ['All', 'ST-01', 'ST-02'], value: station, onChange: setStation },
+    { type: 'dropdown', label: 'Poka Yoke Device', options: ['All', 'PY-01 Torque', 'PY-02 Vision', 'PY-03 Sensor'], value: device, onChange: setDevice },
+  ];
 
-  if (!data) return <div className="p-8 text-center text-brand-secondary">Loading...</div>
+  const hourlyData = [
+    { hour: '08:00', ok: 120, nok: 2, bypass: 0 },
+    { hour: '09:00', ok: 135, nok: 1, bypass: 1 },
+    { hour: '10:00', ok: 140, nok: 3, bypass: 0 },
+    { hour: '11:00', ok: 110, nok: 0, bypass: 2 },
+    { hour: '12:00', ok: 150, nok: 4, bypass: 0 },
+  ];
+
+  const bypassLogData = [
+    { startTime: '09:15', endTime: '09:20', duration: 5, station: 'ST-01', device: 'PY-01 Torque', operator: 'John Doe', reason: 'Sensor malfunction' },
+    { startTime: '11:30', endTime: '11:45', duration: 15, station: 'ST-02', device: 'PY-02 Vision', operator: 'Jane Smith', reason: 'Calibration error' },
+    { startTime: '13:00', endTime: '13:10', duration: 10, station: 'ST-01', device: 'PY-01 Torque', operator: 'Alice Bob', reason: 'Maintenance' },
+    { startTime: '14:20', endTime: '14:25', duration: 5, station: 'ST-02', device: 'PY-02 Vision', operator: 'Charlie Green', reason: 'Software glitch' },
+    { startTime: '15:10', endTime: '15:30', duration: 20, station: 'ST-01', device: 'PY-01 Torque', operator: 'Bob Brown', reason: 'Sensor malfunction' },
+  ];
+
+  const tableColumns = [
+    { header: 'Start Time', accessor: 'startTime' },
+    { header: 'End Time', accessor: 'endTime' },
+    { header: 'Duration (mins)', accessor: 'duration' },
+    { header: 'Station', accessor: 'station' },
+    { header: 'Device', accessor: 'device' },
+    { header: 'Operator', accessor: 'operator' },
+    { header: 'Reason', accessor: 'reason' },
+  ];
+
+  const exportToExcel = () => {
+    exportToXLSX('PokaYokeReport.xlsx', [
+      { name: 'KPI Summary', rows: [['Total Checks', 'OK Count', 'NOT-OK Count', 'Bypass Count'], [665, 655, 10, 3]] },
+      { name: 'Hourly OK_NOK', rows: [['Hour', 'OK Count', 'NOT-OK Count', 'Bypass Count'], ...hourlyData.map(d => [d.hour, d.ok, d.nok, d.bypass])] },
+      { name: 'Bypass Log', rows: [['Start Time', 'End Time', 'Duration', 'Station', 'Device', 'Operator', 'Reason'], ...bypassLogData.map(d => [d.startTime, d.endTime, d.duration, d.station, d.device, d.operator, d.reason])] }
+    ]);
+  };
 
   return (
-    <ReportLayout title="Poka Yoke Report" moduleType="process">
-      
-      <div className="grid grid-cols-1 gap-3">
+    <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
+      <StandardFilterBar
+        title="Poka Yoke Report"
+        icon={Shield}
+        onExcelClick={exportToExcel}
+        filters={filters}
+      />
+      <div className="flex-1 flex flex-col gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard title="Total Checks" value="665" />
+          <StatCard title="OK Count" value="655" color="text-green-600" />
+          <StatCard title="NOT-OK Count" value="10" color="text-red-600" />
+          <StatCard title="Bypass Count" value="3" color="text-orange-600" />
+        </div>
         
-        {/* OK/Not OK Chart */}
-        <motion.div className="card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-lg font-semibold text-brand-dark">Hour wise OK/NotOk chart</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="card p-4">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Hour-wise OK vs NOT-OK</h3>
+            <div className="h-[240px]">
+              <ResponsiveContainer>
+                <BarChart data={hourlyData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hour" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="ok" name="OK" fill="#10b981" />
+                  <Bar dataKey="nok" name="NOT-OK" fill="#f43f5e" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="h-[240px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.hourlyOkNotOk} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{fill: '#1A3D63', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#1A3D63', fontSize: 12}} />
-                <Tooltip cursor={{fill: '#F6FAFD'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 20px rgba(10,25,49,0.08)'}} />
-                <Legend iconType="circle" wrapperStyle={{paddingTop: '20px', fontSize: '12px', color: '#0A1931'}} />
-                <Bar dataKey="ok" name="OK Count" fill="#4A7FA7" radius={[4, 4, 0, 0]} maxBarSize={50} />
-                <Bar dataKey="notOk" name="Not OK Count" fill="#FA5D29" radius={[4, 4, 0, 0]} maxBarSize={50} />
-              </BarChart>
-            </ResponsiveContainer>
+          
+          <div className="card p-4">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Hour-wise Bypass Events</h3>
+            <div className="h-[240px]">
+              <ResponsiveContainer>
+                <BarChart data={hourlyData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hour" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="bypass" name="Bypass Count" fill="#f97316" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Bypass Chart */}
-        <motion.div className="card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-lg font-semibold text-brand-dark">Hour wise bypass chart (Start, End, Duration)</h2>
-          </div>
-          <div className="h-[240px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data.hourlyBypass} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{fill: '#1A3D63', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#1A3D63', fontSize: 12}} />
-                <Tooltip cursor={{fill: '#F6FAFD'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 20px rgba(10,25,49,0.08)'}} />
-                <Legend iconType="circle" wrapperStyle={{paddingTop: '20px', fontSize: '12px', color: '#0A1931'}} />
-                <Line type="monotone" dataKey="duration" name="Bypass Duration (Mins)" stroke="#1A3D63" strokeWidth={3} dot={{r: 4, strokeWidth: 2}} activeDot={{r: 6}} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
-
+        <div className="card p-4 flex-1 flex flex-col">
+          <h3 className="text-sm font-bold text-brand-dark mb-3">Bypass Log</h3>
+          <DataTable columns={tableColumns} data={bypassLogData} />
+        </div>
       </div>
-    </ReportLayout>
-  )
+    </div>
+  );
 }
-
-

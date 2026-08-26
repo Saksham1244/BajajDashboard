@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { CheckCircle2, RotateCcw } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { CheckCircle2, FileSpreadsheet, RotateCcw , Download } from 'lucide-react';
 
 const FilterSection = ({ title, options, active, onChange, isDropdown = false, isDate = false }) => (
   <div className="flex flex-col gap-1 flex-1 min-w-[120px]">
@@ -65,7 +66,7 @@ const FilterSection = ({ title, options, active, onChange, isDropdown = false, i
 };
 
 export default function StraightPassReport() {
-  const [activeDate, setActiveDate] = useState('2026-08-25');
+  const [activeDate, setActiveDate] = useState(new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]);
   const [activeYear, setActiveYear] = useState('2026');
   const [activeMonth, setActiveMonth] = useState('Aug');
   const [activeShift, setActiveShift] = useState('Shift 1');
@@ -100,11 +101,33 @@ export default function StraightPassReport() {
     { engineNo: 'ENG-2026-00132', sku: 'Dominar 400', date: '2026-08-25', shift: 'Shift 1', status: 'Reworked Pass', time: '09:21 AM' },
   ];
 
+  const exportToExcel = () => {
+    const wb = XLSX.utils.book_new();
+
+    const kpiData = [
+      ['Metric', 'Current', 'Last Month', 'Trend'],
+      ['Straight Pass Ratio', '94.2%', '91.8%', 'UP'],
+      ['Total Engines Tested', '450', '420', 'UP'],
+      ['Rework Loop Count', '26', '34', 'DOWN'],
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(kpiData), 'KPI Summary');
+
+    const hourlySheet = [['Time', 'Straight Pass', 'Rework']];
+    hourlyData.forEach(row => hourlySheet.push([row.time, row.straight, row.rework]));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hourlySheet), 'Hourly Trend');
+
+    const tableSheet = [['Engine No', 'SKU', 'Date', 'Shift', 'Status', 'Time']];
+    tableData.forEach(row => tableSheet.push([row.engineNo, row.sku, row.date, row.shift, row.status, row.time]));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tableSheet), 'Traceability Log');
+
+    XLSX.writeFile(wb, 'Straight_Pass_Report.xlsx');
+  };
+
   return (
         <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col h-full gap-3">
       
       {/* Top Horizontal Filter Bar */}
-      <div className="w-full bg-white border border-slate-200 rounded-lg shadow-sm p-3 sticky top-0 z-10 flex flex-wrap items-center gap-4">
+      <div className="print:hidden w-full bg-white border border-slate-200 rounded-lg shadow-sm p-3 sticky top-0 z-10 flex flex-wrap items-center gap-4">
         
         {/* Title Section */}
         <div className="flex items-center gap-2 pr-4 border-r border-slate-200">
@@ -122,11 +145,21 @@ export default function StraightPassReport() {
           <FilterSection title="Shift" options={['All', 'Shift 1', 'Shift 2', 'Shift 3']} active={activeShift} onChange={setActiveShift} isDropdown={true} />
           <FilterSection title="Line" options={['All', 'Line 1', 'Line 2', 'Sub-Assy']} active={activeLine} onChange={setActiveLine} isDropdown={true} />
           <FilterSection title="Model Family" options={['All', 'Pulsar', 'Dominar', 'Avenger']} active={'All'} onChange={()=>{}} isDropdown={true} />
+          <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+            <button onClick={exportToExcel} className="flex items-center justify-center gap-2 bg-green-700 text-white px-4 py-2 rounded shadow hover:bg-green-800 transition-colors h-[38px]">
+              <FileSpreadsheet className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Excel</span>
+            </button>
+            <button onClick={() => window.print()} className="flex items-center justify-center gap-2 bg-[#0369a1] text-white px-4 py-2 rounded shadow hover:bg-[#02517d] transition-colors h-[38px] self-end flex-shrink-0">
+              <Download className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">PDF</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col gap-3"><div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="flex-1 flex flex-col gap-3"><div className="grid grid-cols-1 md:grid-cols-3 print:grid-cols-1 gap-3">
           <KPICard 
             title="Total Engines Produced" 
             trend={12.5} 
@@ -166,7 +199,7 @@ export default function StraightPassReport() {
         </div>
 
         {/* Table */}
-        <div className="card overflow-hidden">
+        <div className="card print:overflow-visible">
           <h3 className="text-sm font-bold text-brand-dark mb-3">Recent Engine Dispatches</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -206,5 +239,15 @@ export default function StraightPassReport() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
 
 

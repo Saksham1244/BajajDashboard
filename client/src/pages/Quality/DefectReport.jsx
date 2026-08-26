@@ -1,98 +1,153 @@
-import ReportLayout from '../../components/ReportLayout'
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-import { Download } from 'lucide-react'
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
+import React, { useState } from 'react';
+import StandardFilterBar from '../../components/StandardFilterBar';
+import DataTable from '../../components/DataTable';
+import StatCard from '../../components/StatCard';
+import { exportToXLSX } from '../../utils/exportExcel';
+import { ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { AlertTriangle } from 'lucide-react';
 
-
-const PIE_COLORS = ['#1A3D63', '#4A7FA7', '#B3CFE5', '#FA5D29']
+const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
 export default function DefectReport() {
-  const [data, setData] = useState(null)
+  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  
+  const [period, setPeriod] = useState('Shift');
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
+  const [shift, setShift] = useState('All');
+  const [line, setLine] = useState('All');
+  const [station, setStation] = useState('All');
+  const [modelFamily, setModelFamily] = useState('All');
+  const [model, setModel] = useState('All');
+  const [sku, setSku] = useState('All');
 
-  useEffect(() => {
-    fetch('http://localhost:5000/api/quality/defect')
-      .then(res => res.json())
-      .then(d => setData(d))
-  }, [])
+  const kpiData = {
+    totalProduction: 1250,
+    totalDefects: 45,
+    rft: 96.4
+  };
 
-  if (!data) return <div className="p-8 text-center text-brand-secondary">Loading...</div>
+  const defectTrendData = [
+    { date: '2023-01-01', defects: 5 },
+    { date: '2023-01-02', defects: 8 },
+    { date: '2023-01-03', defects: 4 },
+    { date: '2023-01-04', defects: 6 },
+    { date: '2023-01-05', defects: 9 },
+  ];
+
+  const defectDistData = [
+    { name: 'Half Engine', value: 20 },
+    { name: 'Leakage', value: 15 },
+    { name: 'PV', value: 10 },
+  ];
+
+  const defectReasonsData = [
+    { name: 'Torque Failure', value: 15 },
+    { name: 'Missing Part', value: 12 },
+    { name: 'Scratch', value: 8 },
+    { name: 'Wrong Orientation', value: 10 },
+  ];
+
+  const tableData = [
+    { engineNo: 'ENG001', defect: 'Torque Failure', station: 'ST-01', operator: 'John Doe', time: '10:00 AM' },
+    { engineNo: 'ENG002', defect: 'Missing Part', station: 'ST-02', operator: 'Jane Smith', time: '10:15 AM' },
+    { engineNo: 'ENG003', defect: 'Scratch', station: 'ST-03', operator: 'Mike Johnson', time: '10:30 AM' },
+    { engineNo: 'ENG004', defect: 'Wrong Orientation', station: 'ST-01', operator: 'John Doe', time: '10:45 AM' },
+    { engineNo: 'ENG005', defect: 'Torque Failure', station: 'ST-02', operator: 'Jane Smith', time: '11:00 AM' },
+  ];
+
+  const columns = [
+    { header: 'Engine No', accessorKey: 'engineNo' },
+    { header: 'Defect', accessorKey: 'defect' },
+    { header: 'Station', accessorKey: 'station' },
+    { header: 'Operator', accessorKey: 'operator' },
+    { header: 'Time', accessorKey: 'time' },
+  ];
+
+  const exportToExcel = () => {
+    exportToXLSX('DefectReport.xlsx', [
+      { name: 'KPI', rows: [['Metric', 'Value'], ['Total Production', kpiData.totalProduction], ['Total Defects', kpiData.totalDefects], ['RFT %', kpiData.rft]] },
+      { name: 'Defect Trend', rows: [['Date', 'Defects'], ...defectTrendData.map(d => [d.date, d.defects])] },
+      { name: 'Defect Distribution', rows: [['Category', 'Count'], ...defectDistData.map(d => [d.name, d.value])] },
+      { name: 'Defect Details', rows: [['Engine No', 'Defect', 'Station', 'Operator', 'Time'], ...tableData.map(d => [d.engineNo, d.defect, d.station, d.operator, d.time])] },
+    ]);
+  };
+
+  const filters = [
+    { type: 'period', value: period, onChange: setPeriod },
+    { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate },
+    { type: 'dropdown', label: 'Shift', options: ['All','Shift 1','Shift 2','Shift 3'], value: shift, onChange: setShift },
+    { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine },
+    { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02','ST-03'], value: station, onChange: setStation },
+    { type: 'dropdown', label: 'Model Family', options: ['All','Pulsar','Dominar','Avenger'], value: modelFamily, onChange: setModelFamily },
+    { type: 'dropdown', label: 'Model', options: ['All','Pulsar 150','Pulsar 220','Dominar 400'], value: model, onChange: setModel },
+    { type: 'dropdown', label: 'SKU', options: ['All','UG5','UG6','STD'], value: sku, onChange: setSku },
+  ];
 
   return (
-    <ReportLayout title="Defect Report" moduleType="quality">
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-        {/* Defect Distribution Pie Chart */}
-        <motion.div className="card flex flex-col items-center justify-center p-6" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
-          <h2 className="text-lg font-semibold text-brand-dark mb-4 text-center">Defect Distribution Pie Chart</h2>
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={data.distribution} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {data.distribution.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+    <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
+      <StandardFilterBar
+        title="Defect Report"
+        icon={AlertTriangle}
+        onExcelClick={exportToExcel}
+        filters={filters}
+      />
+      <div className="flex-1 flex flex-col gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard title="Total Production" value={kpiData.totalProduction} />
+          <StatCard title="Total Defects" value={kpiData.totalDefects} />
+          <StatCard title="RFT %" value={`${kpiData.rft}%`} />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="card p-4">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Defect Trend</h3>
+            <div className="h-[240px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={defectTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="defects" stroke={COLORS[0]} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </motion.div>
-
-        {/* Top Defect Reasons Pie Chart */}
-        <motion.div className="card flex flex-col items-center justify-center p-6" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
-          <h2 className="text-lg font-semibold text-brand-dark mb-4 text-center">Top Defect Reasons Pie Chart</h2>
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={data.reasons} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {data.reasons.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="card p-4">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Defect Distribution</h3>
+            <div className="h-[240px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={defectDistData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label>
+                    {defectDistData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </motion.div>
+          <div className="card p-4 md:col-span-2">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Top Defect Reasons</h3>
+            <div className="h-[240px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={defectReasonsData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label>
+                    {defectReasonsData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+        <div className="card p-4">
+          <h3 className="text-sm font-bold text-brand-dark mb-3">Defect Details</h3>
+          <DataTable columns={columns} data={tableData} />
+        </div>
       </div>
-
-      {/* Defected Engine Table */}
-      <motion.div className="card overflow-hidden" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-lg font-semibold text-brand-dark">Defected Engine Details Table</h2>
-          <button className="flex items-center gap-2 text-brand-accent text-sm font-medium hover:underline">
-            <span>Download</span> <Download className="w-4 h-4" />
-          </button>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-brand-bg text-brand-primary font-medium text-sm border-b border-slate-200">
-                <th className="py-3 px-4">Engine UID</th>
-                <th className="py-3 px-4">Defect Reason</th>
-                <th className="py-3 px-4">Category</th>
-                <th className="py-3 px-4">Station</th>
-                <th className="py-3 px-4">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.table.map((row) => (
-                <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors text-sm text-slate-600">
-                  <td className="py-3 px-4 font-medium text-brand-primary">{row.engine}</td>
-                  <td className="py-3 px-4 text-brand-danger font-medium">{row.defect}</td>
-                  <td className="py-3 px-4">{row.category}</td>
-                  <td className="py-3 px-4">{row.station}</td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${row.status === 'Fixed' ? 'bg-brand-success/10 text-brand-success' : 'bg-brand-secondary/20 text-brand-primary'}`}>
-                      {row.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
-    </ReportLayout>
-  )
+    </div>
+  );
 }
-
-

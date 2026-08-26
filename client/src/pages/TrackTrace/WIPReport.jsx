@@ -1,91 +1,95 @@
-import ReportLayout from '../../components/ReportLayout'
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-import { Download, Package } from 'lucide-react'
+import React, { useState } from 'react';
+import { Layers } from 'lucide-react';
+import StandardFilterBar from '../../components/StandardFilterBar';
+import DataTable from '../../components/DataTable';
+import StatCard from '../../components/StatCard';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { exportToXLSX } from '../../utils/exportExcel';
 
 export default function WIPReport() {
-  const [data, setData] = useState(null)
+  const [line, setLine] = useState('All');
+  const [wipStatus, setWipStatus] = useState('All');
 
-  useEffect(() => {
-    fetch('http://localhost:5000/api/trace/wip')
-      .then(res => res.json())
-      .then(d => setData(d))
-  }, [])
+  const COLORS = ['#0369a1', '#f97316', '#f43f5e', '#8b5cf6'];
+
+  const wipDistData = [
+    { name: 'In-Process', value: 45 },
+    { name: 'Rework', value: 12 },
+    { name: 'Blocked', value: 5 },
+    { name: 'Idle', value: 8 },
+  ];
+
+  const mockData = [
+    { id: 1, engineNo: 'ENG-101', model: 'Pulsar 150', sku: 'UG5', station: 'ST-04', status: 'In-Process', entryTime: '10:00', duration: 1.5, operator: 'OP-01' },
+    { id: 2, engineNo: 'ENG-102', model: 'Dominar 400', sku: 'STD', station: 'ST-02', status: 'Idle', entryTime: '09:30', duration: 2.0, operator: 'OP-02' },
+    { id: 3, engineNo: 'ENG-103', model: 'Avenger 220', sku: 'STD', station: 'ST-07', status: 'Rework', entryTime: '10:15', duration: 1.25, operator: 'OP-03' },
+    { id: 4, engineNo: 'ENG-104', model: 'Pulsar 220', sku: 'UG6', station: 'ST-01', status: 'Blocked', entryTime: '11:00', duration: 0.5, operator: 'OP-04' },
+    { id: 5, engineNo: 'ENG-105', model: 'Pulsar 150', sku: 'UG5', station: 'ST-03', status: 'In-Process', entryTime: '11:15', duration: 0.25, operator: 'OP-05' },
+  ];
+
+  const columns = [
+    { header: 'Engine No', accessor: 'engineNo' },
+    { header: 'Model', accessor: 'model' },
+    { header: 'SKU', accessor: 'sku' },
+    { header: 'Current Station', accessor: 'station' },
+    { header: 'WIP Status', accessor: 'status' },
+    { header: 'Entry Time', accessor: 'entryTime' },
+    { header: 'Duration (hrs)', accessor: 'duration' },
+    { header: 'Operator', accessor: 'operator' },
+  ];
+
+  const exportToExcel = () => {
+    exportToXLSX('WIPReport.xlsx', [
+      { name: 'WIP Summary', rows: [['Status', 'Count'], ['In-Process', 45], ['Rework', 12], ['Blocked', 5], ['Idle', 8], ['Total', 70]] },
+      { name: 'Engine Details', rows: [['Engine No', 'Model', 'SKU', 'Current Station', 'WIP Status', 'Entry Time', 'Duration (hrs)', 'Operator'], ...mockData.map(r => [r.engineNo, r.model, r.sku, r.station, r.status, r.entryTime, r.duration, r.operator])] }
+    ]);
+  };
 
   return (
-    <ReportLayout title="WIP Report" moduleType="trace">
-
-      {/* WIP Filters */}
-      <div className="card p-4 flex gap-4 items-center shadow-[0_2px_10px_0_rgba(10,25,49,0.02)] mb-3">
-        <select className="px-3 py-2 bg-brand-primary text-white rounded-md border-none text-sm font-medium outline-none cursor-pointer hover:opacity-90">
-          <option>Line</option>
-          <option>Line A</option>
-          <option>Line B</option>
-        </select>
-        <select className="px-3 py-2 bg-brand-primary text-white rounded-md border-none text-sm font-medium outline-none cursor-pointer hover:opacity-90">
-          <option>Wip Status</option>
-          <option>In Progress</option>
-          <option>Waiting</option>
-        </select>
-      </div>
-      
-      {/* KPI Card */}
-      <motion.div className="card bg-brand-accent/5 border-none flex items-center gap-3 mb-3" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-        <div className="w-16 h-16 rounded-full bg-brand-accent/20 flex items-center justify-center text-brand-accent">
-          <Package className="w-8 h-8" />
-        </div>
-        <div>
-          <h2 className="text-sm font-semibold text-brand-dark mb-1">Engine Quantity in WIP</h2>
-          <div className="text-4xl font-bold text-brand-primary">
-            {data ? data.totalWip : '...'}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Table */}
-      <motion.div className="card overflow-hidden" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-lg font-semibold text-brand-dark">Engine details table</h2>
-          <button className="flex items-center gap-2 text-brand-accent text-sm font-medium hover:underline">
-            <span>Download</span> <Download className="w-4 h-4" />
-          </button>
+    <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
+      <StandardFilterBar
+        title="WIP Report"
+        icon={Layers}
+        onExcelClick={exportToExcel}
+        filters={[
+          { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2', 'Sub-Assy'], value: line, onChange: setLine },
+          { type: 'dropdown', label: 'WIP Status', options: ['All', 'In-Process', 'Rework', 'Blocked', 'Idle'], value: wipStatus, onChange: setWipStatus }
+        ]}
+      />
+      <div className="flex-1 flex flex-col gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <StatCard title="Total WIP" value="70" trend="up" color="blue" />
+          <StatCard title="In-Process" value="45" trend="neutral" color="green" />
+          <StatCard title="Rework" value="12" trend="down" color="orange" />
+          <StatCard title="Blocked" value="5" trend="up" color="red" />
+          <StatCard title="Idle" value="8" trend="down" color="purple" />
         </div>
         
-        {data ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-brand-bg text-brand-primary font-medium text-sm border-b border-slate-200">
-                  <th className="py-3 px-4">Engine UID</th>
-                  <th className="py-3 px-4">Line</th>
-                  <th className="py-3 px-4">Station</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.details.map((row) => (
-                  <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors text-sm text-slate-600">
-                    <td className="py-3 px-4 font-medium text-brand-primary">{row.engine}</td>
-                    <td className="py-3 px-4">{row.line}</td>
-                    <td className="py-3 px-4">{row.station}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${row.status === 'In Progress' ? 'bg-brand-accent/10 text-brand-accent' : 'bg-brand-secondary/20 text-brand-primary'}`}>
-                        {row.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">{row.time}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="card p-4 col-span-1">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">WIP Status Distribution</h3>
+            <div className="h-[240px]">
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={wipDistData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                    {wipDistData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        ) : (
-          <div className="py-8 text-center text-brand-secondary">Loading WIP data...</div>
-        )}
-      </motion.div>
-    </ReportLayout>
-  )
+          <div className="card p-4 col-span-2 flex flex-col">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">WIP Engine Details</h3>
+            <div className="flex-1">
+              <DataTable columns={columns} data={mockData} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
-
-

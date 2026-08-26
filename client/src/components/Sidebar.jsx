@@ -258,18 +258,16 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden ml-9 mt-1 space-y-1"
                   >
-                    {item.subItems.map(sub => (
-                      <NavLink
-                        key={sub.path}
-                        to={sub.path}
-                        className={({ isActive }) => `
-                          block px-3 py-2.5 rounded-lg text-sm transition-all duration-200
-                          ${isActive ? 'bg-brand-accent text-white font-medium shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}
-                        `}
-                      >
-                        {sub.name}
-                      </NavLink>
-                    ))}
+                      {item.subItems.map(sub => (
+                        <NavLink key={sub.path} to={sub.path} end
+                          className={({ isActive }) => `
+                            block px-3 py-2 text-sm transition-all duration-200 border-l-2
+                            ${isActive ? 'border-brand-accent text-white font-medium bg-slate-800/30' : 'border-transparent text-slate-400 hover:text-white hover:border-slate-600 hover:bg-slate-800/10'}
+                          `}
+                        >
+                          {sub.name}
+                        </NavLink>
+                      ))}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -309,3 +307,5 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     </motion.aside>
   )
 }
+
+

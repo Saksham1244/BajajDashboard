@@ -38,15 +38,15 @@ export default function Layout() {
   }, [])
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-brand-primary">
+    <div className="flex h-screen print:h-auto bg-slate-50 overflow-hidden print:overflow-visible font-sans text-brand-primary">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col relative z-0 overflow-hidden bg-slate-50">
+      <div className="flex-1 flex flex-col relative z-0 overflow-hidden print:overflow-visible bg-slate-50">
         <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         
-        <main ref={mainRef} className="flex-1 overflow-y-auto p-2 md:p-3 relative no-scrollbar">
+        <main ref={mainRef} className="flex-1 overflow-y-auto print:overflow-visible p-2 md:p-3 relative no-scrollbar">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -59,3 +59,4 @@ export default function Layout() {
     </div>
   )
 }
+

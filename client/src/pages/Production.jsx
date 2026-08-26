@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts';
-import { LayoutDashboard } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { LayoutDashboard , Download , FileSpreadsheet } from 'lucide-react';
 
 const FilterSection = ({ title, options, active, onChange, isDropdown = false, isDate = false }) => (
   <div className="flex flex-col gap-1 flex-1 min-w-[120px]">
@@ -67,7 +68,7 @@ const KPICard = ({ title, trend, current, lastMonth }) => {
 };
 
 export default function Production() {
-  const [activeDate, setActiveDate] = useState('2026-08-25');
+  const [activeDate, setActiveDate] = useState(new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]);
   const [activeYear, setActiveYear] = useState('2026');
   const [activeMonth, setActiveMonth] = useState('Aug');
   const [activeShift, setActiveShift] = useState('All');
@@ -96,6 +97,54 @@ export default function Production() {
     { name: 'Avenger 220', plan: 150, actual: 152, wip: 10, rollover: 0 },
   ];
 
+  const exportToExcel = () => {
+    const wb = XLSX.utils.book_new();
+
+    // 1. KPI Summary
+    const kpiData = [
+      ['Metric', 'Current', 'Last Month', 'Trend (%)'],
+      ['Total Production', 58089, 51680, '+12.4%'],
+      ['Production Shortfall', 842, 879, '-4.2%'],
+      ['Current WIP', 142, 139, '+1.8%'],
+      ['Rollover Quantity', 85, 100, '-15.3%']
+    ];
+    const wsKpi = XLSX.utils.aoa_to_sheet(kpiData);
+    XLSX.utils.book_append_sheet(wb, wsKpi, "KPI Summary");
+
+    // 2. Hourly Plan vs Actual
+    const hourlySheetData = [['Time', 'Plan', 'Actual', 'Variance']];
+    hourlyData.forEach(row => {
+      hourlySheetData.push([row.time, row.plan, row.actual, row.actual - row.plan]);
+    });
+    const wsHourly = XLSX.utils.aoa_to_sheet(hourlySheetData);
+    XLSX.utils.book_append_sheet(wb, wsHourly, "Hourly Plan vs Actual");
+
+    // 3. Shortfall Pareto
+    const paretoSheetData = [['Reason', 'Loss Count', 'Cumulative %']];
+    paretoData.forEach(row => {
+      paretoSheetData.push([row.reason, row.count, row.cumPercent + '%']);
+    });
+    const wsPareto = XLSX.utils.aoa_to_sheet(paretoSheetData);
+    XLSX.utils.book_append_sheet(wb, wsPareto, "Loss Analysis");
+
+    // 4. SKU Wise Status
+    const skuSheetData = [['SKU Name', 'Plan Qty', 'Actual Qty', 'Variance', 'WIP Status', 'Rollover Plan']];
+    let totalPlan = 0, totalActual = 0, totalWip = 0, totalRollover = 0;
+    skuData.forEach(row => {
+      totalPlan += row.plan;
+      totalActual += row.actual;
+      totalWip += row.wip;
+      totalRollover += row.rollover;
+      skuSheetData.push([row.name, row.plan, row.actual, row.actual - row.plan, row.wip, row.rollover]);
+    });
+    skuSheetData.push(['TOTAL', totalPlan, totalActual, totalActual - totalPlan, totalWip, totalRollover]);
+    const wsSku = XLSX.utils.aoa_to_sheet(skuSheetData);
+    XLSX.utils.book_append_sheet(wb, wsSku, "SKU Production Status");
+
+    // Save File
+    XLSX.writeFile(wb, "Production_Report.xlsx");
+  };
+
   // Pareto Chart Data (Production Shortfall Reasons)
   const paretoData = [
     { reason: 'Material Short', count: 28, cumPercent: 42 },
@@ -109,7 +158,7 @@ export default function Production() {
         <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col h-full gap-3">
       
       {/* Top Horizontal Filter Bar */}
-      <div className="w-full bg-white border border-slate-200 rounded-lg shadow-sm p-3 sticky top-0 z-10 flex flex-wrap items-center gap-4">
+      <div className="print:hidden w-full bg-white border border-slate-200 rounded-lg shadow-sm p-3 sticky top-0 z-10 flex flex-wrap items-center gap-4">
         
         {/* Title Section */}
         <div className="flex items-center gap-2 pr-4 border-r border-slate-200">
@@ -127,11 +176,21 @@ export default function Production() {
           <FilterSection title="Shift" options={['All', 'Shift 1', 'Shift 2', 'Shift 3']} active={activeShift} onChange={setActiveShift} isDropdown={true} />
           <FilterSection title="Line" options={['All', 'Line 1', 'Line 2', 'Sub-Assy']} active={activeLine} onChange={setActiveLine} isDropdown={true} />
           <FilterSection title="Model Family" options={['All', 'Pulsar', 'Dominar', 'Avenger']} active={'All'} onChange={()=>{}} isDropdown={true} />
+                    <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+            <button onClick={exportToExcel} className="flex items-center justify-center gap-2 bg-green-700 text-white px-4 py-2 rounded shadow hover:bg-green-800 transition-colors h-[38px]">
+              <FileSpreadsheet className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Excel</span>
+            </button>
+            <button onClick={() => window.print()} className="flex items-center justify-center gap-2 bg-[#0369a1] text-white px-4 py-2 rounded shadow hover:bg-[#02517d] transition-colors h-[38px] self-end flex-shrink-0">
+            <Download className="w-4 h-4" />
+            <span className="text-xs font-bold uppercase tracking-wider">PDF</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col gap-3"><div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div className="flex-1 flex flex-col gap-3"><div className="grid grid-cols-1 md:grid-cols-4 print:grid-cols-4 gap-3">
           <KPICard 
             title="Total Production" 
             trend={12.4} 
@@ -159,7 +218,7 @@ export default function Production() {
         </div>
 
         {/* Middle Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 min-h-[250px]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 print:grid-cols-1 gap-3 min-h-[250px]">
           
           {/* Hourly Plan vs Actual */}
           <div className="card flex flex-col p-3">
@@ -201,9 +260,9 @@ export default function Production() {
         </div>
 
         {/* Bottom Table: SKU Wise Data */}
-        <div className="card overflow-hidden">
+        <div className="card print:overflow-visible">
           <h3 className="text-sm font-bold text-brand-dark mb-3 p-3 pb-0">Model & SKU Wise Production Status</h3>
-          <div className="overflow-x-auto p-3 pt-0">
+          <div className="overflow-x-auto print:overflow-visible p-3 pt-0">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-y border-slate-200 text-[11px] text-slate-500 uppercase tracking-wider">
@@ -238,13 +297,13 @@ export default function Production() {
                   )
                 })}
                 {/* Total Row */}
-                <tr className="bg-slate-50 text-sm font-black border-t-2 border-slate-200">
-                  <td className="py-3 px-3 text-brand-dark uppercase tracking-wider text-xs">Total</td>
-                  <td className="py-3 px-3 text-right text-slate-700">800</td>
-                  <td className="py-3 px-3 text-right text-[#0369a1]">767</td>
-                  <td className="py-3 px-3 text-right text-rose-600">-33</td>
-                  <td className="py-3 px-3 text-right text-amber-700">77</td>
-                  <td className="py-3 px-3 text-right text-rose-700">35</td>
+                <tr className="bg-slate-100 text-sm border-t-2 border-slate-300">
+                  <td className="py-3 px-3 text-brand-dark uppercase tracking-wider text-xs font-black">TOTAL</td>
+                  <td className="py-3 px-3 text-right text-slate-800 font-bold">800</td>
+                  <td className="py-3 px-3 text-right text-[#0369a1] font-bold">767</td>
+                  <td className="py-3 px-3 text-right text-rose-600 font-bold">-33</td>
+                  <td className="py-3 px-3 text-right text-amber-700 font-bold">77</td>
+                  <td className="py-3 px-3 text-right text-rose-700 font-bold">35</td>
                 </tr>
               </tbody>
             </table>
@@ -255,5 +314,17 @@ export default function Production() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 

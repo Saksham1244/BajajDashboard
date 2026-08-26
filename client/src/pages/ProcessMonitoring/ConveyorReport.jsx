@@ -1,96 +1,132 @@
-import ReportLayout from '../../components/ReportLayout'
-import { useEffect, useState } from 'react'
-
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-import { motion } from 'framer-motion'
-import { Download } from 'lucide-react'
-
-const PIE_COLORS = ['#1A3D63', '#4A7FA7', '#B3CFE5', '#FA5D29']
+import React, { useState } from 'react';
+import { Workflow } from 'lucide-react';
+import StandardFilterBar from '../../components/StandardFilterBar';
+import DataTable from '../../components/DataTable';
+import StatCard from '../../components/StatCard';
+import { exportToXLSX } from '../../utils/exportExcel';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 export default function ConveyorReport() {
-  const [data, setData] = useState(null)
+  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  
+  const [period, setPeriod] = useState('Shift');
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
+  const [shift, setShift] = useState('All');
+  const [line, setLine] = useState('All');
+  const [station, setStation] = useState('All');
+  const [modelFamily, setModelFamily] = useState('All');
+  const [model, setModel] = useState('All');
+  const [sku, setSku] = useState('All');
 
-  useEffect(() => {
-    fetch('http://localhost:5000/api/process/conveyor')
-      .then(res => res.json())
-      .then(d => setData(d))
-  }, [])
+  const filters = [
+    { type: 'period', value: period, onChange: setPeriod },
+    { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate },
+    { type: 'dropdown', label: 'Shift', options: ['All', 'Shift 1', 'Shift 2', 'Shift 3'], value: shift, onChange: setShift },
+    { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2'], value: line, onChange: setLine },
+    { type: 'dropdown', label: 'Station', options: ['All', 'ST-01', 'ST-02'], value: station, onChange: setStation },
+    { type: 'dropdown', label: 'Model Family', options: ['All', 'Pulsar', 'Dominar'], value: modelFamily, onChange: setModelFamily },
+    { type: 'dropdown', label: 'Model', options: ['All', 'Pulsar 150', 'Dominar 400'], value: model, onChange: setModel },
+    { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'STD'], value: sku, onChange: setSku },
+  ];
 
-  if (!data) return <div className="p-8 text-center text-brand-secondary">Loading...</div>
+  const affectedStationsData = [
+    { station: 'ST-05', downtime: 45 },
+    { station: 'ST-12', downtime: 30 },
+    { station: 'ST-08', downtime: 25 },
+    { station: 'ST-01', downtime: 20 },
+    { station: 'ST-15', downtime: 15 },
+  ];
+
+  const affectedReasonsData = [
+    { reason: 'Part Shortage', count: 12 },
+    { reason: 'Quality Issue', count: 8 },
+    { reason: 'Machine Breakdown', count: 6 },
+    { reason: 'Operator Unavailable', count: 4 },
+    { reason: 'Material Jam', count: 3 },
+  ];
+
+  const tableData = [
+    { station: 'ST-05', plannedSpeed: 10, actualSpeed: 8, deviation: 20, stoppageCount: 3, totalStoppageTime: 45, status: 'Active' },
+    { station: 'ST-12', plannedSpeed: 10, actualSpeed: 9, deviation: 10, stoppageCount: 2, totalStoppageTime: 30, status: 'Active' },
+    { station: 'ST-08', plannedSpeed: 10, actualSpeed: 7, deviation: 30, stoppageCount: 5, totalStoppageTime: 25, status: 'Resolved' },
+    { station: 'ST-01', plannedSpeed: 10, actualSpeed: 9.5, deviation: 5, stoppageCount: 1, totalStoppageTime: 20, status: 'Active' },
+    { station: 'ST-15', plannedSpeed: 10, actualSpeed: 8.5, deviation: 15, stoppageCount: 2, totalStoppageTime: 15, status: 'Resolved' },
+  ];
+
+  const tableColumns = [
+    { header: 'Station', accessor: 'station' },
+    { header: 'Planned Speed (m/min)', accessor: 'plannedSpeed' },
+    { header: 'Actual Speed (m/min)', accessor: 'actualSpeed' },
+    { header: 'Deviation %', accessor: 'deviation' },
+    { header: 'Stoppage Count', accessor: 'stoppageCount' },
+    { header: 'Total Stoppage Time (mins)', accessor: 'totalStoppageTime' },
+    { header: 'Status', accessor: 'status' },
+  ];
+
+  const exportToExcel = () => {
+    exportToXLSX('ConveyorReport.xlsx', [
+      { name: 'KPI Summary', rows: [['Avg Speed', 'Max Deviation', 'Total Stoppages', 'Efficiency'], [8.4, 30, 13, 85]] },
+      { name: 'Affected Stations', rows: [['Station', 'Downtime'], ...affectedStationsData.map(d => [d.station, d.downtime])] },
+      { name: 'Conveyor Performance', rows: [['Station', 'Planned Speed', 'Actual Speed', 'Deviation %', 'Stoppage Count', 'Stoppage Time', 'Status'], ...tableData.map(d => [d.station, d.plannedSpeed, d.actualSpeed, d.deviation, d.stoppageCount, d.totalStoppageTime, d.status])] }
+    ]);
+  };
 
   return (
-    <ReportLayout title="Conveyor Report" moduleType="process">
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+    <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
+      <StandardFilterBar
+        title="Conveyor Report"
+        icon={Workflow}
+        onExcelClick={exportToExcel}
+        filters={filters}
+      />
+      <div className="flex-1 flex flex-col gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard title="Avg Speed (m/min)" value="8.4" />
+          <StatCard title="Max Speed Deviation" value="30%" color="text-red-500" />
+          <StatCard title="Total Stoppages" value="13" />
+          <StatCard title="Conveyor Efficiency %" value="85%" color="text-green-600" />
+        </div>
         
-        {/* Stations Pie Chart */}
-        <motion.div className="card flex flex-col items-center justify-center p-6" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
-          <h2 className="text-lg font-semibold text-brand-dark mb-4 text-center">Top 5 Conveyor Speed Affected Stations Pie Chart</h2>
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={data.topStations} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {data.topStations.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="card p-4">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Top 5 Conveyor Speed Affected Stations</h3>
+            <div className="h-[240px]">
+              <ResponsiveContainer>
+                <BarChart data={affectedStationsData} layout="vertical" margin={{ top: 5, right: 20, bottom: 5, left: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="station" type="category" />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="downtime" name="Downtime (mins)" fill="#f97316" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </motion.div>
+          
+          <div className="card p-4">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Top 5 Speed Affected Reasons</h3>
+            <div className="h-[240px]">
+              <ResponsiveContainer>
+                <BarChart data={affectedReasonsData} layout="vertical" margin={{ top: 5, right: 20, bottom: 5, left: 40 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="reason" type="category" width={100} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="count" name="Stoppage Count" fill="#0369a1" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
 
-        {/* Reasons Pie Chart */}
-        <motion.div className="card flex flex-col items-center justify-center p-6" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
-          <h2 className="text-lg font-semibold text-brand-dark mb-4 text-center">Top 5 Conveyor Speed Affected Reasons Pie Chart</h2>
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={data.topReasons} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {data.topReasons.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
+        <div className="card p-4 flex-1 flex flex-col">
+          <h3 className="text-sm font-bold text-brand-dark mb-3">Conveyor Performance Details</h3>
+          <DataTable columns={tableColumns} data={tableData} />
+        </div>
       </div>
-
-      {/* Conveyor Table */}
-      <motion.div className="card overflow-hidden" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-lg font-semibold text-brand-dark">Conveyor Performance table</h2>
-          <button className="flex items-center gap-2 text-brand-accent text-sm font-medium hover:underline">
-            <span>Download</span> <Download className="w-4 h-4" />
-          </button>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-brand-bg text-brand-primary font-medium text-sm border-b border-slate-200">
-                <th className="py-3 px-4">Line</th>
-                <th className="py-3 px-4">Station</th>
-                <th className="py-3 px-4">Reason</th>
-                <th className="py-3 px-4">Duration</th>
-                <th className="py-3 px-4">Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.performanceTable.map((row) => (
-                <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors text-sm text-slate-600">
-                  <td className="py-3 px-4 font-medium text-brand-primary">{row.line}</td>
-                  <td className="py-3 px-4">{row.station}</td>
-                  <td className="py-3 px-4 text-brand-danger">{row.reason}</td>
-                  <td className="py-3 px-4 font-medium">{row.duration}</td>
-                  <td className="py-3 px-4">{row.time}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
-
-    </ReportLayout>
-  )
+    </div>
+  );
 }
-
-

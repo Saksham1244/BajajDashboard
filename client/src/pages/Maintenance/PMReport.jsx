@@ -1,0 +1,82 @@
+import React, { useState } from 'react';
+import { ClipboardList } from 'lucide-react';
+import StandardFilterBar from '../../components/StandardFilterBar';
+import DataTable from '../../components/DataTable';
+import StatCard from '../../components/StatCard';
+import { exportToXLSX } from '../../utils/exportExcel';
+
+export default function PMReport() {
+  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  
+  const [line, setLine] = useState('All');
+  const [machine, setMachine] = useState('All');
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
+
+  const tableData = [
+    { machine: 'M-01', type: 'Monthly', scheduled: '2023-10-01', completed: '2023-10-01', status: 'Completed', delay: 0 },
+    { machine: 'M-02', type: 'Weekly', scheduled: '2023-10-15', completed: '2023-10-17', status: 'Completed', delay: 2 },
+    { machine: 'M-03', type: 'Quarterly', scheduled: '2023-10-20', completed: '-', status: 'Pending', delay: 0 },
+    { machine: 'M-04', type: 'Monthly', scheduled: '2023-10-10', completed: '-', status: 'Overdue', delay: 10 },
+    { machine: 'M-05', type: 'Weekly', scheduled: '2023-10-18', completed: '2023-10-18', status: 'Completed', delay: 0 },
+  ];
+
+  const columns = [
+    { header: 'Machine', accessorKey: 'machine' },
+    { header: 'PM Type', accessorKey: 'type' },
+    { header: 'Scheduled Date', accessorKey: 'scheduled' },
+    { header: 'Completed Date', accessorKey: 'completed' },
+    { 
+      header: 'Status', 
+      accessorKey: 'status',
+      cell: ({ row }) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-semibold 
+          ${row.original.status === 'Completed' ? 'bg-green-100 text-green-700' : 
+            row.original.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 
+            'bg-red-100 text-red-700'}`}>
+          {row.original.status}
+        </span>
+      )
+    },
+    { header: 'Delay (days)', accessorKey: 'delay' },
+  ];
+
+  const exportToExcel = () => {
+    exportToXLSX('PMReport.xlsx', [
+      { name: 'KPI', rows: [
+        ['Metric', 'Value'],
+        ['Total PM Orders', 50],
+        ['Completed', 35],
+        ['Pending', 10],
+        ['Overdue', 5],
+      ]},
+      { name: 'PM Details', rows: [['Machine', 'PM Type', 'Scheduled', 'Completed', 'Status', 'Delay (days)'], ...tableData.map(d => [d.machine, d.type, d.scheduled, d.completed, d.status, d.delay])] }
+    ]);
+  };
+
+  return (
+    <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
+      <StandardFilterBar
+        title="PM Report"
+        icon={ClipboardList}
+        onExcelClick={exportToExcel}
+        filters={[
+          { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate },
+          { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2'], value: line, onChange: setLine },
+          { type: 'dropdown', label: 'Machine', options: ['All','M-01','M-02'], value: machine, onChange: setMachine },
+        ]} 
+      />
+      
+      <div className="flex-1 flex flex-col gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard title="Total PM Orders" value="50" />
+          <StatCard title="Completed" value="35" />
+          <StatCard title="Pending" value="10" />
+          <StatCard title="Overdue" value="5" />
+        </div>
+
+        <DataTable columns={columns} data={tableData} />
+      </div>
+    </div>
+  );
+}

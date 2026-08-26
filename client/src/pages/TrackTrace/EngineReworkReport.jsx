@@ -1,102 +1,67 @@
-import ReportLayout from '../../components/ReportLayout'
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-import { Download, Search, AlertTriangle, Hammer, CheckCircle, Clock } from 'lucide-react'
-
-const KPICard = ({ title, value, icon: Icon, bgClass }) => (
-  <div className={`kpi-block ${bgClass}`}>
-    <div className="flex justify-between items-center w-full mb-1">
-      <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">{title}</span>
-      <Icon className="w-4 h-4 text-white/80" />
-    </div>
-    <div className="flex items-end justify-between w-full mt-1">
-      <span className="text-3xl font-black text-white leading-none">{value}</span>
-    </div>
-  </div>
-);
+import React, { useState } from 'react';
+import { Cpu } from 'lucide-react';
+import StandardFilterBar from '../../components/StandardFilterBar';
+import DataTable from '../../components/DataTable';
+import StatCard from '../../components/StatCard';
+import { exportToXLSX } from '../../utils/exportExcel';
 
 export default function EngineReworkReport() {
-  const [data, setData] = useState(null)
-  const [engineUid, setEngineUid] = useState('')
+  const [searchUID, setSearchUID] = useState('');
 
-  useEffect(() => {
-    fetch('http://localhost:5000/api/trace/engine-rework')
-      .then(res => res.json())
-      .then(d => setData(d))
-  }, [])
+  const mockReworkData = [
+    { id: 1, engineNo: 'ENG-3001', model: 'Pulsar 150', station: 'ST-04', reason: 'Torque Fail', detectedTime: '2026-08-26 10:00', reworkStart: '10:15', reworkEnd: '10:30', status: 'Completed', operator: 'OP-RW1' },
+    { id: 2, engineNo: 'ENG-3001', model: 'Pulsar 150', station: 'ST-11', reason: 'Scratch', detectedTime: '2026-08-26 11:30', reworkStart: '11:45', reworkEnd: '12:05', status: 'Completed', operator: 'OP-RW2' },
+  ];
+
+  const columns = [
+    { header: 'Engine No', accessor: 'engineNo' },
+    { header: 'Model', accessor: 'model' },
+    { header: 'Defect Station', accessor: 'station' },
+    { header: 'Defect Reason', accessor: 'reason' },
+    { header: 'Detected Date & Time', accessor: 'detectedTime' },
+    { header: 'Rework Start', accessor: 'reworkStart' },
+    { header: 'Rework End', accessor: 'reworkEnd' },
+    { header: 'Rework Status', accessor: 'status' },
+    { header: 'Rework Operator', accessor: 'operator' },
+  ];
+
+  const exportToExcel = () => {
+    exportToXLSX('EngineReworkReport.xlsx', [
+      { name: 'Engine Summary', rows: [['Engine UID', 'Total Defects', 'Rework Count', 'Final Status', 'Total Rework Time'], [searchUID, 2, 2, 'OK', '35m']] },
+      { name: 'Rework Details', rows: [['Engine No', 'Model', 'Station', 'Reason', 'Detected Time', 'Start Time', 'End Time', 'Status', 'Operator'], ...mockReworkData.map(r => [r.engineNo, r.model, r.station, r.reason, r.detectedTime, r.reworkStart, r.reworkEnd, r.status, r.operator])] }
+    ]);
+  };
 
   return (
-    <ReportLayout title="Engine Wise Rework Summary" moduleType="trace">
-
-      {/* Engine UID Filter */}
-      <div className="card p-2 px-3 flex gap-4 items-center shadow-sm mb-2">
-        <div className="flex items-center gap-2">
-          <label className="text-[11px] font-bold uppercase tracking-wider text-white bg-brand-primary px-2.5 py-1.5 rounded-l-md -mr-2 z-10">
-            Engine UID
-          </label>
-          <div className="flex items-center gap-2 px-2 py-1 bg-brand-bg rounded-r-md border border-slate-200 text-xs focus-within:border-brand-accent transition-colors flex-1 w-64">
-            <input 
-              type="text" 
-              placeholder="Search UID..."
-              value={engineUid}
-              onChange={(e) => setEngineUid(e.target.value)}
-              className="bg-transparent text-brand-primary outline-none w-full"
-            />
-            <Search className="w-3 h-3 text-brand-primary/50" />
-          </div>
-        </div>
-      </div>
-      
-      {/* KPI Cards */}
-      {data && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2">
-          <KPICard title="Total Defects" value={data.kpis.totalDefects} icon={AlertTriangle} bgClass="kpi-block-blue-3" />
-          <KPICard title="Rework Count" value={data.kpis.reworkCount} icon={Hammer} bgClass="kpi-block-blue-2" />
-          <KPICard title="Final Status" value={data.kpis.finalStatus} icon={CheckCircle} bgClass="kpi-block-green" />
-          <KPICard title="Total Rework Time" value={data.kpis.totalReworkTime} icon={Clock} bgClass="kpi-block-blue-1" />
-        </div>
-      )}
-
-      {/* Table */}
-      <motion.div className="card overflow-hidden" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.5 }}>
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-lg font-semibold text-brand-dark">Rework Status table</h2>
-          <button className="flex items-center gap-2 text-brand-accent text-sm font-medium hover:underline">
-            <span>Download</span> <Download className="w-4 h-4" />
-          </button>
-        </div>
-        
-        {data ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-brand-bg text-brand-primary font-medium text-sm border-b border-slate-200">
-                  <th className="py-3 px-4">Defect</th>
-                  <th className="py-3 px-4">Station</th>
-                  <th className="py-3 px-4">Action</th>
-                  <th className="py-3 px-4">Time Spent</th>
-                  <th className="py-3 px-4">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.table.map((row) => (
-                  <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors text-sm text-slate-600">
-                    <td className="py-3 px-4 font-medium text-brand-danger">{row.defect}</td>
-                    <td className="py-3 px-4">{row.station}</td>
-                    <td className="py-3 px-4 text-brand-primary">{row.action}</td>
-                    <td className="py-3 px-4 font-medium">{row.timeSpent}</td>
-                    <td className="py-3 px-4">{row.date}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+    <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
+      <StandardFilterBar
+        title="Engine Wise Rework Summary"
+        icon={Cpu}
+        onExcelClick={exportToExcel}
+        filters={[
+          { type: 'search', label: 'Engine UID', value: searchUID, onChange: setSearchUID, placeholder: 'Enter Engine UID...' }
+        ]}
+      />
+      <div className="flex-1 flex flex-col gap-3">
+        {!searchUID ? (
+          <div className="flex-1 flex items-center justify-center bg-white rounded-lg shadow border border-slate-200">
+            <p className="text-slate-500 font-medium">Enter Engine UID to view rework summary</p>
           </div>
         ) : (
-          <div className="py-8 text-center text-brand-secondary">Loading rework data...</div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <StatCard title="Total Defects" value="2" trend="neutral" color="red" />
+              <StatCard title="Rework Count" value="2" trend="neutral" color="orange" />
+              <StatCard title="Final Status" value="OK" trend="neutral" color="green" />
+              <StatCard title="Total Rework Time" value="35m" trend="neutral" color="blue" />
+            </div>
+            <div className="card p-4 flex-1">
+              <h3 className="text-sm font-bold text-brand-dark mb-3">Rework Details</h3>
+              <DataTable columns={columns} data={mockReworkData} />
+            </div>
+          </>
         )}
-      </motion.div>
-    </ReportLayout>
-  )
+      </div>
+    </div>
+  );
 }
-
-

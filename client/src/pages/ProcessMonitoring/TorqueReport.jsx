@@ -1,90 +1,92 @@
-import ReportLayout from '../../components/ReportLayout'
-import { useEffect, useState } from 'react'
-
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { motion } from 'framer-motion'
-import { Download } from 'lucide-react'
+import React, { useState } from 'react';
+import { Settings2 } from 'lucide-react';
+import StandardFilterBar from '../../components/StandardFilterBar';
+import DataTable from '../../components/DataTable';
+import StatCard from '../../components/StatCard';
+import { exportToXLSX } from '../../utils/exportExcel';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 export default function TorqueReport() {
-  const [data, setData] = useState(null)
+  const [modelFamily, setModelFamily] = useState('All');
+  const [model, setModel] = useState('All');
+  const [sku, setSku] = useState('All');
+  const [device, setDevice] = useState('All');
 
-  useEffect(() => {
-    fetch('http://localhost:5000/api/process/torque')
-      .then(res => res.json())
-      .then(d => setData(d))
-  }, [])
+  const filters = [
+    { type: 'dropdown', label: 'Model Family', options: ['All', 'Pulsar', 'Dominar'], value: modelFamily, onChange: setModelFamily },
+    { type: 'dropdown', label: 'Model', options: ['All', 'Pulsar 150', 'Dominar 400'], value: model, onChange: setModel },
+    { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'STD'], value: sku, onChange: setSku },
+    { type: 'dropdown', label: 'Torque Device', options: ['All', 'TD-01', 'TD-02', 'TD-03'], value: device, onChange: setDevice },
+  ];
 
-  if (!data) return <div className="p-8 text-center text-brand-secondary">Loading...</div>
+  const torqueData = [
+    { engineNo: 'ENG-001', sku: 'UG5', device: 'TD-01', value: 45.2, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2023-10-25 08:30', operator: 'Opr 1' },
+    { engineNo: 'ENG-002', sku: 'UG5', device: 'TD-01', value: 48.1, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2023-10-25 08:45', operator: 'Opr 1' },
+    { engineNo: 'ENG-003', sku: 'STD', device: 'TD-02', value: 51.5, minSpec: 40, maxSpec: 50, result: 'NOK', datetime: '2023-10-25 09:00', operator: 'Opr 2' },
+    { engineNo: 'ENG-004', sku: 'UG5', device: 'TD-01', value: 42.8, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2023-10-25 09:15', operator: 'Opr 1' },
+    { engineNo: 'ENG-005', sku: 'STD', device: 'TD-02', value: 46.0, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2023-10-25 09:30', operator: 'Opr 2' },
+    { engineNo: 'ENG-006', sku: 'UG5', device: 'TD-03', value: 39.5, minSpec: 40, maxSpec: 50, result: 'NOK', datetime: '2023-10-25 09:45', operator: 'Opr 3' },
+  ];
+
+  const tableColumns = [
+    { header: 'Engine No', accessor: 'engineNo' },
+    { header: 'SKU', accessor: 'sku' },
+    { header: 'Torque Device', accessor: 'device' },
+    { header: 'Torque Value (Nm)', accessor: 'value' },
+    { header: 'Min Spec', accessor: 'minSpec' },
+    { header: 'Max Spec', accessor: 'maxSpec' },
+    { header: 'Result', accessor: 'result' },
+    { header: 'Date & Time', accessor: 'datetime' },
+    { header: 'Operator', accessor: 'operator' },
+  ];
+
+  const exportToExcel = () => {
+    exportToXLSX('TorqueReport.xlsx', [
+      { name: 'KPI Summary', rows: [['Total Readings', 'OK Count', 'NOT-OK Count', 'Avg Torque'], [6, 4, 2, 45.5]] },
+      { name: 'Torque Trend', rows: [['Engine No', 'Torque Value'], ...torqueData.map(d => [d.engineNo, d.value])] },
+      { name: 'Torque Details', rows: [['Engine No', 'SKU', 'Device', 'Value', 'Min', 'Max', 'Result', 'Datetime', 'Operator'], ...torqueData.map(d => [d.engineNo, d.sku, d.device, d.value, d.minSpec, d.maxSpec, d.result, d.datetime, d.operator])] }
+    ]);
+  };
 
   return (
-    <ReportLayout title="Torque Report" moduleType="process">
-      
-      <div className="grid grid-cols-1 gap-3">
+    <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
+      <StandardFilterBar
+        title="Torque Report"
+        icon={Settings2}
+        onExcelClick={exportToExcel}
+        filters={filters}
+      />
+      <div className="flex-1 flex flex-col gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard title="Total Readings" value="6" />
+          <StatCard title="OK Count" value="4" color="text-green-600" />
+          <StatCard title="NOT-OK Count" value="2" color="text-red-600" />
+          <StatCard title="Avg Torque (Nm)" value="45.5" />
+        </div>
         
-        {/* Torque Line Chart */}
-        <motion.div className="card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-semibold text-brand-dark">Engine wise torque value line chart</h2>
-          </div>
-          <div className="h-[240px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data.torqueValues} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="engine" axisLine={false} tickLine={false} tick={{fill: '#1A3D63', fontSize: 12}} dy={10} />
-                <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} tick={{fill: '#1A3D63', fontSize: 12}} />
-                <Tooltip cursor={{fill: '#F6FAFD'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 20px rgba(10,25,49,0.08)'}} />
-                <Legend iconType="circle" wrapperStyle={{paddingTop: '20px', fontSize: '12px', color: '#0A1931'}} />
-                <Line type="monotone" dataKey="value" name="Actual Torque (Nm)" stroke="#4A7FA7" strokeWidth={3} dot={{r: 4, strokeWidth: 2}} activeDot={{r: 6}} />
-                <Line type="monotone" dataKey="target" name="Target Torque (Nm)" stroke="#FA5D29" strokeDasharray="5 5" strokeWidth={2} dot={false} />
+        <div className="card p-4">
+          <h3 className="text-sm font-bold text-brand-dark mb-3">Engine-wise Torque Trend</h3>
+          <div className="h-[240px]">
+            <ResponsiveContainer>
+              <LineChart data={torqueData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="engineNo" />
+                <YAxis domain={[35, 55]} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="value" name="Torque Value (Nm)" stroke="#0369a1" activeDot={{ r: 8 }} />
+                <Line type="monotone" dataKey="minSpec" name="Min Spec" stroke="#f43f5e" strokeDasharray="5 5" dot={false} />
+                <Line type="monotone" dataKey="maxSpec" name="Max Spec" stroke="#f43f5e" strokeDasharray="5 5" dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Torque Table */}
-        <motion.div className="card overflow-hidden" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-semibold text-brand-dark">Engine wise torque value table</h2>
-            <button className="flex items-center gap-2 text-brand-accent text-sm font-medium hover:underline">
-              <span>Download</span> <Download className="w-4 h-4" />
-            </button>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-brand-bg text-brand-primary font-medium text-sm border-b border-slate-200">
-                  <th className="py-3 px-4">ID</th>
-                  <th className="py-3 px-4">Engine UID</th>
-                  <th className="py-3 px-4">Torque Device</th>
-                  <th className="py-3 px-4">Torque Value (Nm)</th>
-                  <th className="py-3 px-4">Time</th>
-                  <th className="py-3 px-4">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.torqueTable.map((row) => (
-                  <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors text-sm text-slate-600">
-                    <td className="py-3 px-4">#{row.id}</td>
-                    <td className="py-3 px-4 font-medium text-brand-primary">{row.engine}</td>
-                    <td className="py-3 px-4">{row.device}</td>
-                    <td className="py-3 px-4 font-medium">{row.value}</td>
-                    <td className="py-3 px-4">{row.time}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${row.status === 'Pass' ? 'bg-brand-success/10 text-brand-success' : 'bg-brand-danger/10 text-brand-danger'}`}>
-                        {row.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
-
+        <div className="card p-4 flex-1 flex flex-col">
+          <h3 className="text-sm font-bold text-brand-dark mb-3">Torque Details</h3>
+          <DataTable columns={tableColumns} data={torqueData} />
+        </div>
       </div>
-    </ReportLayout>
-  )
+    </div>
+  );
 }
-
-
