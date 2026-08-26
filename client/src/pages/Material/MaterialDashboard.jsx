@@ -91,12 +91,12 @@ export default function MaterialDashboard() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <StatCard title="Availability %" value="94%" color="bg-blue-100" />
-          <StatCard title="Shortage Count" value="15" color="bg-red-100" />
+          <StatCard title="Availability %" autoScale value="94%" color="bg-blue-100" />
+          <StatCard title="Shortage Count" autoScale value="15" color="bg-red-100" />
           <StatCard title="Line Feed Status" value="OK" color="bg-green-100" />
-          <StatCard title="Request Count" value="42" color="bg-blue-100" />
-          <StatCard title="Pending Requests" value="5" color="bg-orange-100" />
-          <StatCard title="Stock Level" value="12 C / 85 S / 18 E" color="bg-gray-100" />
+          <StatCard title="Request Count" autoScale value="42" color="bg-blue-100" />
+          <StatCard title="Pending Requests" autoScale value="5" color="bg-orange-100" />
+          <StatCard title="Stock Level" autoScale value="12 C / 85 S / 18 E" color="bg-gray-100" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

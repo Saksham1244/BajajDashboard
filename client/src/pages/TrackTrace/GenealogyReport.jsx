@@ -62,9 +62,9 @@ export default function GenealogyReport() {
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <StatCard title="Engine Status" value="OK" trend="neutral" color="green" />
-              <StatCard title="Total Stations Passed" value="4" trend="up" color="blue" />
-              <StatCard title="Total Rework Count" value="1" trend="down" color="red" />
-              <StatCard title="Assembly Duration" value="40m" trend="neutral" color="yellow" />
+              <StatCard title="Total Stations Passed" autoScale value="4" trend="up" color="blue" />
+              <StatCard title="Total Rework Count" autoScale value="1" trend="down" color="red" />
+              <StatCard title="Assembly Duration" autoScale value="40m" trend="neutral" color="yellow" />
             </div>
             <div className="card p-4 flex-1">
               <h3 className="text-sm font-bold text-brand-dark mb-3">Station History</h3>

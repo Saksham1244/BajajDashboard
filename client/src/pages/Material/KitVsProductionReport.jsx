@@ -75,10 +75,10 @@ export default function KitVsProductionReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Kits" value="260" color="bg-blue-100" />
-          <StatCard title="Total Production" value="260" color="bg-green-100" />
-          <StatCard title="Gap Count" value="0" color="bg-orange-100" />
-          <StatCard title="Gap %" value="0%" color="bg-purple-100" />
+          <StatCard title="Total Kits" autoScale value="260" color="bg-blue-100" />
+          <StatCard title="Total Production" autoScale value="260" color="bg-green-100" />
+          <StatCard title="Gap Count" autoScale value="0" color="bg-orange-100" />
+          <StatCard title="Gap %" autoScale value="0%" color="bg-purple-100" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

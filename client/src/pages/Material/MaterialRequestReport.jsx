@@ -75,10 +75,10 @@ export default function MaterialRequestReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Requests" value="40" color="bg-blue-100" />
-          <StatCard title="Fulfilled" value="35" color="bg-green-100" />
-          <StatCard title="Pending" value="5" color="bg-orange-100" />
-          <StatCard title="Avg Fulfillment Time (mins)" value="12" color="bg-purple-100" />
+          <StatCard title="Total Requests" autoScale value="40" color="bg-blue-100" />
+          <StatCard title="Fulfilled" autoScale value="35" color="bg-green-100" />
+          <StatCard title="Pending" autoScale value="5" color="bg-orange-100" />
+          <StatCard title="Avg Fulfillment Time (mins)" autoScale value="12" color="bg-purple-100" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

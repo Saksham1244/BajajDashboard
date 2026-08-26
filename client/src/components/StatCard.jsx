@@ -8,7 +8,10 @@
  *   color   - 'blue'|'green'|'red'|'amber'|'slate'|'purple'|'orange'
  *             OR a direct Tailwind text class e.g. 'text-orange-600' (backward compat)
  */
-export default function StatCard({ title, value, sub, trend, color = 'blue' }) {
+import { useReportFilters } from '../hooks/useReportFilters';
+
+export default function StatCard({ title, value, sub, trend, color = 'blue', autoScale = false }) {
+  const { period } = useReportFilters();
   const presets = {
     blue:   { border: 'border-t-[#0369a1]',  text: 'text-[#0369a1]' },
     green:  { border: 'border-t-emerald-600', text: 'text-emerald-600' },
@@ -28,10 +31,22 @@ export default function StatCard({ title, value, sub, trend, color = 'blue' }) {
   const trendVal = isValidTrend ? Number(trend) : 0;
   const trendUp = trendVal >= 0;
 
+  let displayValue = value;
+  if (autoScale && typeof value === 'string') {
+    const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+    // Extract numbers, multiply by scale, format back
+    displayValue = value.replace(/[\d,]+(\.\d+)?/g, (match) => {
+      const num = parseFloat(match.replace(/,/g, ''));
+      const scaled = num * scale;
+      if (scaled > 100 && scaled % 1 !== 0) return Math.round(scaled).toLocaleString();
+      return Number.isInteger(scaled) ? scaled.toLocaleString() : scaled.toFixed(1);
+    });
+  }
+
   return (
     <div className={`card flex flex-col gap-1.5 border-t-4 ${borderClass}`}>
       <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider leading-tight">{title}</p>
-      <p className={`text-2xl font-black ${textClass} leading-none`}>{value}</p>
+      <p className={`text-2xl font-black ${textClass} leading-none`}>{displayValue}</p>
       {sub && <p className="text-xs text-slate-400 font-medium">{sub}</p>}
       {isValidTrend && (
         <p className={`text-xs font-bold ${trendUp ? 'text-emerald-500' : 'text-rose-500'}`}>
