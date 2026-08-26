@@ -14,11 +14,19 @@ export default function WorkforceDashboard() {
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
 
-  const kpiData = { assigned: 150, present: 142, absent: 8, skillMatch: 95, utilization: 88, idleTime: 12, overtime: 24 };
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const kpiData = { 
+    assigned: Math.max(1, Math.round(150 * scale)), 
+    present: Math.max(1, Math.round(142 * scale)), 
+    absent: Math.max(0, Math.round(8 * scale)), 
+    skillMatch: 95, utilization: 88, 
+    idleTime: Math.max(1, Math.round(12 * scale)), 
+    overtime: Math.max(0, Math.round(24 * scale)) 
+  };
   
   const attendanceData = [
-    { name: 'Present', value: 142 },
-    { name: 'Absent', value: 8 }
+    { name: 'Present', value: kpiData.present },
+    { name: 'Absent', value: kpiData.absent }
   ];
   
   const COLORS = ['#0369a1', '#f43f5e'];
@@ -32,11 +40,11 @@ export default function WorkforceDashboard() {
   ];
 
   const tableData = [
-    { station: 'ST-01', assigned: 30, present: 29, absent: 1, skillMatch: '98%', utilization: '92%', idleTime: 2 },
-    { station: 'ST-02', assigned: 30, present: 28, absent: 2, skillMatch: '94%', utilization: '85%', idleTime: 3 },
-    { station: 'ST-03', assigned: 30, present: 29, absent: 1, skillMatch: '96%', utilization: '88%', idleTime: 2.5 },
-    { station: 'ST-04', assigned: 30, present: 30, absent: 0, skillMatch: '99%', utilization: '95%', idleTime: 1 },
-    { station: 'ST-05', assigned: 30, present: 26, absent: 4, skillMatch: '90%', utilization: '80%', idleTime: 3.5 }
+    { station: 'ST-01', assigned: Math.round(30 * scale) || 1, present: Math.round(29 * scale) || 1, absent: Math.round(1 * scale), skillMatch: '98%', utilization: '92%', idleTime: Math.max(1, Math.round(2 * scale)) },
+    { station: 'ST-02', assigned: Math.round(30 * scale) || 1, present: Math.round(28 * scale) || 1, absent: Math.round(2 * scale), skillMatch: '94%', utilization: '85%', idleTime: Math.max(1, Math.round(3 * scale)) },
+    { station: 'ST-03', assigned: Math.round(30 * scale) || 1, present: Math.round(29 * scale) || 1, absent: Math.round(1 * scale), skillMatch: '96%', utilization: '88%', idleTime: Math.max(1, Math.round(2.5 * scale)) },
+    { station: 'ST-04', assigned: Math.round(30 * scale) || 1, present: Math.round(30 * scale) || 1, absent: 0, skillMatch: '99%', utilization: '95%', idleTime: Math.max(1, Math.round(1 * scale)) },
+    { station: 'ST-05', assigned: Math.round(30 * scale) || 1, present: Math.round(26 * scale) || 1, absent: Math.round(4 * scale), skillMatch: '90%', utilization: '80%', idleTime: Math.max(1, Math.round(3.5 * scale)) }
   ];
 
   const columns = [

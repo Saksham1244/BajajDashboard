@@ -13,7 +13,13 @@ export default function AttendanceReport() {
   
   const [line, setLine] = useState('All');
 
-  const kpiData = { scheduled: 150, present: 142, absent: 8, attendancePct: 94.6 };
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const kpiData = { 
+    scheduled: Math.max(1, Math.round(150 * scale)), 
+    present: Math.max(1, Math.round(142 * scale)), 
+    absent: Math.max(0, Math.round(8 * scale)), 
+    attendancePct: 94.6 
+  };
   
   const trendData = useMemo(() => {
     return generateTimeLabels(period, shift).map(label => ({
