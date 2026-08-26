@@ -96,10 +96,10 @@ export default function ConveyorReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard autoScale title="Avg Speed (m/min)" value={kpi.avgSpeed} />
-          <StatCard autoScale title="Max Speed Deviation" value={kpi.maxDeviation} color="text-red-500" />
-          <StatCard autoScale title="Total Stoppages" value={kpi.totalStoppages} />
-          <StatCard autoScale title="Conveyor Efficiency %" value={kpi.efficiency} color="text-green-600" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Avg Speed (m/min)" value={kpi.avgSpeed} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Max Speed Deviation" value={kpi.maxDeviation} color="text-red-500" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Stoppages" value={kpi.totalStoppages} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Conveyor Efficiency %" value={kpi.efficiency} color="text-green-600" />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

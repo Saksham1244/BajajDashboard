@@ -65,10 +65,10 @@ export default function SkillMatrixReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard autoScale title="Total Operators" value={kpiData.total} />
-          <StatCard autoScale title="Certified %" value={`${kpiData.certifiedPct}%`} />
-          <StatCard autoScale title="Multi-skilled Operators" value={kpiData.multiSkilled} />
-          <StatCard autoScale title="Skill Gaps" value={kpiData.skillGaps} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Operators" value={kpiData.total} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Certified %" value={`${kpiData.certifiedPct}%`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Multi-skilled Operators" value={kpiData.multiSkilled} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Skill Gaps" value={kpiData.skillGaps} />
         </div>
         <div className="card p-4 flex-1">
           <h3 className="text-sm font-bold text-brand-dark mb-3">Operator Skill Details</h3>

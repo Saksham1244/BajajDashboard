@@ -80,10 +80,10 @@ export default function BreakdownReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard autoScale title="Total Breakdowns" value={kpiData.total} />
-          <StatCard autoScale title="Avg Duration" value={kpiData.avg} />
-          <StatCard autoScale title="Max Duration" value={kpiData.max} />
-          <StatCard autoScale title="Total Downtime" value={kpiData.downtime} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Breakdowns" value={kpiData.total} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Avg Duration" value={kpiData.avg} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Max Duration" value={kpiData.max} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Downtime" value={kpiData.downtime} />
         </div>
 
         <DataTable columns={columns} data={tableData} />

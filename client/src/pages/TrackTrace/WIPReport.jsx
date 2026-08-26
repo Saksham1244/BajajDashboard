@@ -84,11 +84,11 @@ export default function WIPReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <StatCard autoScale title="Total WIP" value={dbData?.kpis?.total || kpiValues.total} trend="up" color="blue" />
-          <StatCard autoScale title="In-Process" value={dbData?.kpis?.inProcess || kpiValues.inProcess} trend="neutral" color="green" />
-          <StatCard autoScale title="Rework" value={dbData?.kpis?.rework || kpiValues.rework} trend="down" color="orange" />
-          <StatCard autoScale title="Blocked" value={dbData?.kpis?.blocked || kpiValues.blocked} trend="up" color="red" />
-          <StatCard autoScale title="Idle" value={dbData?.kpis?.idle || kpiValues.idle} trend="down" color="purple" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total WIP" value={dbData?.kpis?.total || kpiValues.total} trend="up" color="blue" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="In-Process" value={dbData?.kpis?.inProcess || kpiValues.inProcess} trend="neutral" color="green" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Rework" value={dbData?.kpis?.rework || kpiValues.rework} trend="down" color="orange" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Blocked" value={dbData?.kpis?.blocked || kpiValues.blocked} trend="up" color="red" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Idle" value={dbData?.kpis?.idle || kpiValues.idle} trend="down" color="purple" />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

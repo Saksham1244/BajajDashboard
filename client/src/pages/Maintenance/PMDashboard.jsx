@@ -83,11 +83,11 @@ export default function PMDashboard() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <StatCard autoScale title="Scheduled PM"  value="100" />
-          <StatCard autoScale title="Completed PM"  value="65" />
-          <StatCard autoScale title="Pending PM"  value="20" />
-          <StatCard autoScale title="Overdue PM"  value="15" />
-          <StatCard autoScale title="Compliance %"  value="85%" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Scheduled PM"  value="100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Completed PM"  value="65" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Pending PM"  value="20" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Overdue PM"  value="15" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Compliance %"  value="85%" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

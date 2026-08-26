@@ -77,10 +77,10 @@ export default function PokaYokeBypassReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard autoScale title="Total Bypasses" value={kpi.totalBypasses} />
-          <StatCard autoScale title="Active Bypasses" value={kpi.activeBypasses} color="text-orange-500" />
-          <StatCard autoScale title="Max Duration" value={kpi.maxDuration} />
-          <StatCard autoScale title="Total Duration" value={kpi.totalDuration} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Bypasses" value={kpi.totalBypasses} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Active Bypasses" value={kpi.activeBypasses} color="text-orange-500" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Max Duration" value={kpi.maxDuration} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Duration" value={kpi.totalDuration} />
         </div>
         
         <div className="card p-4 flex-1 flex flex-col">

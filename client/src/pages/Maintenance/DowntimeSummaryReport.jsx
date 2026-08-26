@@ -68,10 +68,10 @@ export default function DowntimeSummaryReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard autoScale title="Total Downtime"  value="5.75 hrs" />
-          <StatCard autoScale title="Avg Daily Downtime"  value="69 mins" />
-          <StatCard autoScale title="Total Breakdowns"  value="7" />
-          <StatCard autoScale title="Most Affected Machine" value="M-02" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Downtime"  value="5.75 hrs" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Avg Daily Downtime"  value="69 mins" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Breakdowns"  value="7" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Most Affected Machine" value="M-02" />
         </div>
 
         <div className="card p-4">

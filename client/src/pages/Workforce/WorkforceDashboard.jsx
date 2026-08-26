@@ -79,13 +79,13 @@ export default function WorkforceDashboard() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-          <StatCard autoScale title="Total Operators Assigned" value={kpiData.assigned} />
-          <StatCard autoScale title="Present" value={kpiData.present} />
-          <StatCard autoScale title="Absent" value={kpiData.absent} />
-          <StatCard autoScale title="Skill Match %" value={`${kpiData.skillMatch}%`} />
-          <StatCard autoScale title="Operator Utilization %" value={`${kpiData.utilization}%`} />
-          <StatCard autoScale title="Idle Time (hrs)" value={kpiData.idleTime} />
-          <StatCard autoScale title="Overtime Hours" value={kpiData.overtime} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Operators Assigned" value={kpiData.assigned} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Present" value={kpiData.present} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Absent" value={kpiData.absent} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Skill Match %" value={`${kpiData.skillMatch}%`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Operator Utilization %" value={`${kpiData.utilization}%`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Idle Time (hrs)" value={kpiData.idleTime} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Overtime Hours" value={kpiData.overtime} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="card p-4">

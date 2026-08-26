@@ -61,9 +61,9 @@ export default function EngineStockReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <StatCard autoScale title="Total Engine Count"  value="100" color="bg-blue-100" />
-          <StatCard autoScale title="Models Count"  value="3" color="bg-purple-100" />
-          <StatCard autoScale title="Oldest Entry Age"  value="2 Days" color="bg-orange-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Engine Count"  value="100" color="bg-blue-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Models Count"  value="3" color="bg-purple-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Oldest Entry Age"  value="2 Days" color="bg-orange-100" />
         </div>
 
         <div className="card p-4">

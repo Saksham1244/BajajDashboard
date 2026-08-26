@@ -77,10 +77,10 @@ export default function SkillMatrixDashboard() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard autoScale title="Total Operators" value={kpiData.total} />
-          <StatCard autoScale title="Beginner" value={kpiData.beginner} />
-          <StatCard autoScale title="Intermediate" value={kpiData.intermediate} />
-          <StatCard autoScale title="Expert" value={kpiData.expert} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Operators" value={kpiData.total} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Beginner" value={kpiData.beginner} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Intermediate" value={kpiData.intermediate} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Expert" value={kpiData.expert} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="card p-4">

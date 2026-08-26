@@ -104,11 +104,11 @@ export default function PQCAReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <StatCard autoScale title="Total Checkpoints" value={kpiData.totalCheckpoints} />
-          <StatCard autoScale title="OK" value={kpiData.ok} />
-          <StatCard autoScale title="NC" value={kpiData.nc} />
-          <StatCard autoScale title="Single Occurrence NC" value={kpiData.singleNc} />
-          <StatCard autoScale title="Double Occurrence NC" value={kpiData.doubleNc} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Checkpoints" value={kpiData.totalCheckpoints} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="OK" value={kpiData.ok} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="NC" value={kpiData.nc} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Single Occurrence NC" value={kpiData.singleNc} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Double Occurrence NC" value={kpiData.doubleNc} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="card p-4">

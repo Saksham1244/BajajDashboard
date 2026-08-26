@@ -87,12 +87,12 @@ export default function MaintenanceDashboard() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <StatCard autoScale title="Machine Status"  value="45 / 5 / 2 / 8" subtitle="Run/Brk/Mnt/Idle" />
-          <StatCard autoScale title="Total Downtime"  value="450 mins" />
-          <StatCard autoScale title="Breakdown Count"  value="12" />
-          <StatCard autoScale title="Avg MTTR"  value="45 mins" />
-          <StatCard autoScale title="Avg MTBF"  value="146 hrs" />
-          <StatCard autoScale title="Machine Availability"  value="94.5 %" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Machine Status"  value="45 / 5 / 2 / 8" subtitle="Run/Brk/Mnt/Idle" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Downtime"  value="450 mins" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Breakdown Count"  value="12" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Avg MTTR"  value="45 mins" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Avg MTBF"  value="146 hrs" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Machine Availability"  value="94.5 %" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

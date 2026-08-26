@@ -91,12 +91,12 @@ export default function MaterialDashboard() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <StatCard autoScale title="Availability %"  value="94%" color="bg-blue-100" />
-          <StatCard autoScale title="Shortage Count"  value="15" color="bg-red-100" />
-          <StatCard autoScale title="Line Feed Status" value="OK" color="bg-green-100" />
-          <StatCard autoScale title="Request Count"  value="42" color="bg-blue-100" />
-          <StatCard autoScale title="Pending Requests"  value="5" color="bg-orange-100" />
-          <StatCard autoScale title="Stock Level"  value="12 C / 85 S / 18 E" color="bg-gray-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Availability %"  value="94%" color="bg-blue-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Shortage Count"  value="15" color="bg-red-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Line Feed Status" value="OK" color="bg-green-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Request Count"  value="42" color="bg-blue-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Pending Requests"  value="5" color="bg-orange-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Stock Level"  value="12 C / 85 S / 18 E" color="bg-gray-100" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

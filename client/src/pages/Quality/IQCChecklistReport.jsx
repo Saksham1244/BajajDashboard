@@ -74,10 +74,10 @@ export default function IQCChecklistReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard autoScale title="Total Checklists" value={kpiData.totalChecklists} />
-          <StatCard autoScale title="OK Checklists" value={kpiData.okChecklists} />
-          <StatCard autoScale title="NOK Checklists" value={kpiData.nokChecklists} />
-          <StatCard autoScale title="Compliance %" value={`${kpiData.compliance}%`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Checklists" value={kpiData.totalChecklists} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="OK Checklists" value={kpiData.okChecklists} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="NOK Checklists" value={kpiData.nokChecklists} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Compliance %" value={`${kpiData.compliance}%`} />
         </div>
         <div className="card p-4">
           <h3 className="text-sm font-bold text-brand-dark mb-3">Checklist Details</h3>

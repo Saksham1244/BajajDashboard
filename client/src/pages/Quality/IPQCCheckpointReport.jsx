@@ -75,10 +75,10 @@ export default function IPQCCheckpointReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard autoScale title="Total Checkpoints" value={kpiData.totalCheckpoints} />
-          <StatCard autoScale title="Passed" value={kpiData.passed} />
-          <StatCard autoScale title="Failed" value={kpiData.failed} />
-          <StatCard autoScale title="Pass Rate %" value={`${kpiData.passRate}%`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Checkpoints" value={kpiData.totalCheckpoints} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Passed" value={kpiData.passed} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Failed" value={kpiData.failed} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Pass Rate %" value={`${kpiData.passRate}%`} />
         </div>
         <div className="card p-4">
           <h3 className="text-sm font-bold text-brand-dark mb-3">Checkpoint Details</h3>

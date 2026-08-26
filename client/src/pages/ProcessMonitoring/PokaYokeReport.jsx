@@ -90,10 +90,10 @@ export default function PokaYokeReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard autoScale title="Total Checks" value={kpi.totalChecks} />
-          <StatCard autoScale title="OK Count" value={kpi.okCount} color="text-green-600" />
-          <StatCard autoScale title="NOT-OK Count" value={kpi.notOkCount} color="text-red-600" />
-          <StatCard autoScale title="Bypass Count" value={kpi.bypassCount} color="text-orange-600" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Checks" value={kpi.totalChecks} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="OK Count" value={kpi.okCount} color="text-green-600" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="NOT-OK Count" value={kpi.notOkCount} color="text-red-600" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Bypass Count" value={kpi.bypassCount} color="text-orange-600" />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

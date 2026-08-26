@@ -100,10 +100,10 @@ export default function Production() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard autoScale title="Total Production" value={kpis.totalProd.toLocaleString()} trend={12.4} subtitle="vs Last Month 51,680" />
-          <StatCard autoScale title="Production Shortfall" value={kpis.shortfall.toLocaleString()} trend={-4.2} subtitle="vs Last Month 879" />
-          <StatCard autoScale title="Current WIP" value={kpis.wip.toLocaleString()} trend={1.8} subtitle="vs Last Month 139" />
-          <StatCard autoScale title="Rollover Quantity" value={kpis.rollover.toLocaleString()} trend={-15.3} subtitle="vs Last Month 100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Production" value={kpis.totalProd} trend={12.4} subtitle="vs Last Month 51,680" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Production Shortfall" value={kpis.shortfall} trend={-4.2} subtitle="vs Last Month 879" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Current WIP" value={kpis.wip} trend={1.8} subtitle="vs Last Month 139" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Rollover Quantity" value={kpis.rollover} trend={-15.3} subtitle="vs Last Month 100" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

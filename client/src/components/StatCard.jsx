@@ -8,10 +8,7 @@
  *   color   - 'blue'|'green'|'red'|'amber'|'slate'|'purple'|'orange'
  *             OR a direct Tailwind text class e.g. 'text-orange-600' (backward compat)
  */
-import { useReportFilters } from '../hooks/useReportFilters';
-
-export default function StatCard({ title, value, sub, trend, color = 'blue', autoScale = false }) {
-  const { period } = useReportFilters();
+export default function StatCard({ title, value, sub, trend, color = 'blue', autoScale = false, period = 'Month' }) {
   const presets = {
     blue:   { border: 'border-t-[#0369a1]',  text: 'text-[#0369a1]' },
     green:  { border: 'border-t-emerald-600', text: 'text-emerald-600' },
@@ -32,7 +29,9 @@ export default function StatCard({ title, value, sub, trend, color = 'blue', aut
   const trendUp = trendVal >= 0;
 
   let displayValue = value;
-  if (autoScale && typeof value === 'string') {
+  if (typeof value === 'number') {
+    displayValue = value.toLocaleString();
+  } else if (autoScale && typeof value === 'string') {
     const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
     // Extract numbers, multiply by scale, format back
     displayValue = value.replace(/[\d,]+(\.\d+)?/g, (match) => {

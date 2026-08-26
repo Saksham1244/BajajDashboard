@@ -75,10 +75,10 @@ export default function KitInspectionReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard autoScale title="Total Inspected"  value="150" color="bg-blue-100" />
-          <StatCard autoScale title="OK"  value="130" color="bg-green-100" />
-          <StatCard autoScale title="NOK"  value="20" color="bg-red-100" />
-          <StatCard autoScale title="Pass Rate %"  value="86.6%" color="bg-purple-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Inspected"  value="150" color="bg-blue-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="OK"  value="130" color="bg-green-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="NOK"  value="20" color="bg-red-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Pass Rate %"  value="86.6%" color="bg-purple-100" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

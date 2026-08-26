@@ -61,10 +61,10 @@ export default function GenealogyReport() {
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <StatCard autoScale title="Engine Status" value="OK" trend="neutral" color="green" />
-              <StatCard autoScale title="Total Stations Passed"  value="4" trend="up" color="blue" />
-              <StatCard autoScale title="Total Rework Count"  value="1" trend="down" color="red" />
-              <StatCard autoScale title="Assembly Duration"  value="40m" trend="neutral" color="yellow" />
+              <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Engine Status" value="OK" trend="neutral" color="green" />
+              <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Stations Passed"  value="4" trend="up" color="blue" />
+              <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Rework Count"  value="1" trend="down" color="red" />
+              <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Assembly Duration"  value="40m" trend="neutral" color="yellow" />
             </div>
             <div className="card p-4 flex-1">
               <h3 className="text-sm font-bold text-brand-dark mb-3">Station History</h3>

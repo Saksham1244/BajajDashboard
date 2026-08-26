@@ -84,10 +84,10 @@ export default function StockStatusReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard autoScale title="Total Materials" value={dbData?.kpis?.totalMaterials || "115"} color="bg-blue-100" />
-          <StatCard autoScale title="Critical Count" value={dbData?.kpis?.criticalCount || "12"} color="bg-red-100" />
-          <StatCard autoScale title="Safe Count" value={dbData?.kpis?.safeCount || "85"} color="bg-green-100" />
-          <StatCard autoScale title="Excess Count" value={dbData?.kpis?.excessCount || "18"} color="bg-yellow-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Materials" value={dbData?.kpis?.totalMaterials || "115"} color="bg-blue-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Critical Count" value={dbData?.kpis?.criticalCount || "12"} color="bg-red-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Safe Count" value={dbData?.kpis?.safeCount || "85"} color="bg-green-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Excess Count" value={dbData?.kpis?.excessCount || "18"} color="bg-yellow-100" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
