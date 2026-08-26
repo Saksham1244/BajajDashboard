@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Layers } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
@@ -11,6 +11,15 @@ import { generateTimeLabels } from '../../utils/timeDataGenerator';
 export default function WIPReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
   const [wipStatus, setWipStatus] = useState('All');
+
+  const [dbData, setDbData] = useState(null);
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/trace/wip?period=${period}&shift=${shift}&wipStatus=${wipStatus}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, wipStatus]);
 
   const COLORS = ['#0369a1', '#f97316', '#f43f5e', '#8b5cf6'];
 
@@ -43,7 +52,7 @@ export default function WIPReport() {
   const exportToExcel = () => {
     exportToXLSX('WIPReport.xlsx', [
       { name: 'WIP Summary', rows: [['Status', 'Count'], ['In-Process', 45], ['Rework', 12], ['Blocked', 5], ['Idle', 8], ['Total', 70]] },
-      { name: 'Engine Details', rows: [['Engine No', 'Model', 'SKU', 'Current Station', 'WIP Status', 'Entry Time', 'Duration (hrs)', 'Operator'], ...mockData.map(r => [r.engineNo, r.model, r.sku, r.station, r.status, r.entryTime, r.duration, r.operator])] }
+      { name: 'Engine Details', rows: [['Engine No', 'Model', 'SKU', 'Current Station', 'WIP Status', 'Entry Time', 'Duration (hrs)', 'Operator'], ...(dbData?.table || mockData).map(r => [r.engineNo, r.model, r.sku, r.station, r.status, r.entryTime, r.duration, r.operator])] }
     ]);
   };
 
@@ -60,11 +69,11 @@ export default function WIPReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <StatCard title="Total WIP" value="70" trend="up" color="blue" />
-          <StatCard title="In-Process" value="45" trend="neutral" color="green" />
-          <StatCard title="Rework" value="12" trend="down" color="orange" />
-          <StatCard title="Blocked" value="5" trend="up" color="red" />
-          <StatCard title="Idle" value="8" trend="down" color="purple" />
+          <StatCard title="Total WIP" value={dbData?.kpis?.total || "70"} trend="up" color="blue" />
+          <StatCard title="In-Process" value={dbData?.kpis?.inProcess || "45"} trend="neutral" color="green" />
+          <StatCard title="Rework" value={dbData?.kpis?.rework || "12"} trend="down" color="orange" />
+          <StatCard title="Blocked" value={dbData?.kpis?.blocked || "5"} trend="up" color="red" />
+          <StatCard title="Idle" value={dbData?.kpis?.idle || "8"} trend="down" color="purple" />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -73,8 +82,8 @@ export default function WIPReport() {
             <div className="h-[240px]">
               <ResponsiveContainer>
                 <PieChart>
-                  <Pie data={wipDistData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                    {wipDistData.map((entry, index) => (
+                  <Pie data={dbData?.kpis?.distribution || wipDistData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                    {(dbData?.kpis?.distribution || wipDistData).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -87,7 +96,7 @@ export default function WIPReport() {
           <div className="card p-4 col-span-2 flex flex-col">
             <h3 className="text-sm font-bold text-brand-dark mb-3">WIP Engine Details</h3>
             <div className="flex-1">
-              <DataTable columns={columns} data={mockData} />
+              <DataTable columns={columns} data={dbData?.table || mockData} />
             </div>
           </div>
         </div>

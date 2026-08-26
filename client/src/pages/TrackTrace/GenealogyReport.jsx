@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GitBranch } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
@@ -7,6 +7,15 @@ import { exportToXLSX } from '../../utils/exportExcel';
 
 export default function GenealogyReport() {
   const [searchUID, setSearchUID] = useState('ENG-2026-00123');
+
+  const [dbData, setDbData] = useState(null);
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/trace/genealogy?uid=${searchUID}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [searchUID]);
 
   const mockHistoryData = [
     { id: 1, station: 'ST-01', operation: 'Block Assembly', startTime: '10:00:00', endTime: '10:05:00', duration: '5m', operator: 'OP-001', result: 'OK', remarks: '-' },
@@ -30,7 +39,7 @@ export default function GenealogyReport() {
   const exportToExcel = () => {
     exportToXLSX('GenealogyReport.xlsx', [
       { name: 'Engine Summary', rows: [['Engine UID', 'Engine Status', 'Total Stations', 'Total Rework Count', 'Assembly Duration'], [searchUID, 'OK', 4, 1, '40m']] },
-      { name: 'Station History', rows: [['Station', 'Operation', 'Start Time', 'End Time', 'Duration', 'Operator', 'Result', 'Remarks'], ...mockHistoryData.map(r => [r.station, r.operation, r.startTime, r.endTime, r.duration, r.operator, r.result, r.remarks])] }
+      { name: 'Station History', rows: [['Station', 'Operation', 'Start Time', 'End Time', 'Duration', 'Operator', 'Result', 'Remarks'], ...(dbData?.table || mockHistoryData).map(r => [r.station, r.operation, r.startTime, r.endTime, r.duration, r.operator, r.result, r.remarks])] }
     ]);
   };
 
@@ -59,7 +68,7 @@ export default function GenealogyReport() {
             </div>
             <div className="card p-4 flex-1">
               <h3 className="text-sm font-bold text-brand-dark mb-3">Station History</h3>
-              <DataTable columns={columns} data={mockHistoryData} />
+              <DataTable columns={columns} data={dbData?.table || mockHistoryData} />
             </div>
           </>
         )}

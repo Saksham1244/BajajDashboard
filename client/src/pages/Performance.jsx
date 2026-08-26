@@ -38,8 +38,30 @@ const GaugeChart = ({ title, value, color }) => {
 
 export default function Performance() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const [dbData, setDbData] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const stackedData = [
+  React.useEffect(() => {
+    setLoading(true);
+    fetch(`http://localhost:5000/api/dashboard/performance?period=${period}&shift=${shift}`)
+      .then(res => res.json())
+      .then(data => {
+        setDbData(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, [period, shift]);
+
+  const kpis = dbData?.kpis || { oee: 60.15, availability: 70.58, performance: 90.46, ole: 91.85 };
+  
+  const stackedData = dbData?.downtime?.map(d => ({
+    name: d.category,
+    runTime: 3000 - (d.duration * 10),
+    downTime: d.duration * 10
+  })) || [
     { name: 'Kiln Phase', runTime: 3000, downTime: 300 },
     { name: 'Pre Learning', runTime: 3100, downTime: 350 },
     { name: 'Packing', runTime: 3300, downTime: 400 },
@@ -115,12 +137,12 @@ export default function Performance() {
           </div>
         </div>
 
-        <div className="card p-4 py-6">
+        <div className="card p-4 py-6 flex-1">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <GaugeChart title="Product Availability" value={70.58} color="#f97316" />
-            <GaugeChart title="Performance" value={90.46} color="#334155" />
-            <GaugeChart title="Quality" value={91.85} color="#f97316" />
-            <GaugeChart title="Equipment Efficiency" value={60.15} color="#334155" />
+            <GaugeChart title="Product Availability" value={Number(kpis.availability).toFixed(1)} color="#f97316" />
+            <GaugeChart title="Performance" value={Number(kpis.performance).toFixed(1)} color="#334155" />
+            <GaugeChart title="Quality / OLE" value={Number(kpis.ole).toFixed(1)} color="#f97316" />
+            <GaugeChart title="Equipment Efficiency" value={Number(kpis.oee).toFixed(1)} color="#334155" />
           </div>
         </div>
       </div>

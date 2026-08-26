@@ -7,16 +7,24 @@ import { CheckSquare } from 'lucide-react';
 import { useReportFilters } from '../../hooks/useReportFilters';
 
 export default function FQCChecklistReport() {
-  const { getBaseFilters } = useReportFilters();
+  const { period, getBaseFilters } = useReportFilters();
 
-  const kpiData = {
+  const [dbData, setDbData] = React.useState(null);
+  React.useEffect(() => {
+    fetch(`http://localhost:5000/api/quality/checklist?period=${period}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period]);
+
+  const kpiData = dbData?.kpis || {
     totalChecklists: 200,
     okChecklists: 195,
     nokChecklists: 5,
     compliance: 97.5,
   };
 
-  const tableData = [
+  const tableData = dbData?.table || [
     { id: 'FQC-001', name: 'Final Insp A', date: '2023-10-01 10:00', shift: 'Shift 1', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', inspector: 'Tom', total: 30, passed: 30, failed: 0, status: 'OK', remarks: '-' },
     { id: 'FQC-002', name: 'Final Insp B', date: '2023-10-01 12:00', shift: 'Shift 1', line: 'Line 2', model: 'Dominar 400', sku: 'STD', inspector: 'Jerry', total: 35, passed: 34, failed: 1, status: 'NOK', remarks: 'Paint issue' },
     { id: 'FQC-003', name: 'Final Insp C', date: '2023-10-01 15:00', shift: 'Shift 2', line: 'Line 1', model: 'Pulsar 220', sku: 'UG5', inspector: 'Spike', total: 25, passed: 25, failed: 0, status: 'OK', remarks: '-' },

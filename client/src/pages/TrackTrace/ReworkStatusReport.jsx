@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { RotateCcw } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
@@ -11,6 +11,15 @@ import { generateTimeLabels } from '../../utils/timeDataGenerator';
 export default function ReworkStatusReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
   const [status, setStatus] = useState('All');
+
+  const [dbData, setDbData] = useState(null);
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/trace/rework?period=${period}&shift=${shift}&status=${status}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, status]);
 
   const topDefectsData = [
     { name: 'Torque Fail', count: 45 },
@@ -52,8 +61,8 @@ export default function ReworkStatusReport() {
   const exportToExcel = () => {
     exportToXLSX('ReworkStatusReport.xlsx', [
       { name: 'KPI Summary', rows: [['Total Rework', 'Pending', 'In-Progress', 'Completed'], [132, 28, 15, 89]] },
-      { name: 'Top Defects', rows: [['Defect Name', 'Count'], ...topDefectsData.map(r => [r.name, r.count])] },
-      { name: 'Rework Details', rows: [['Engine No', 'Model', 'Station', 'Reason', 'Detected Time', 'Start Time', 'End Time', 'Status', 'Operator', 'Location'], ...mockData.map(r => [r.engineNo, r.model, r.station, r.reason, r.detectedTime, r.reworkStart, r.reworkEnd, r.status, r.operator, r.location])] }
+      { name: 'Top Defects', rows: [['Defect Name', 'Count'], ...(dbData?.chartDefects || topDefectsData).map(r => [r.name, r.count])] },
+      { name: 'Rework Details', rows: [['Engine No', 'Model', 'Station', 'Reason', 'Detected Time', 'Start Time', 'End Time', 'Status', 'Operator', 'Location'], ...(dbData?.table || mockData).map(r => [r.engineNo, r.model, r.station, r.reason, r.detectedTime, r.reworkStart, r.reworkEnd, r.status, r.operator, r.location])] }
     ]);
   };
 
@@ -70,10 +79,10 @@ export default function ReworkStatusReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Rework" value="132" trend="up" color="red" />
-          <StatCard title="Pending" value="28" trend="neutral" color="orange" />
-          <StatCard title="In-Progress" value="15" trend="up" color="blue" />
-          <StatCard title="Completed" value="89" trend="up" color="green" />
+          <StatCard title="Total Rework" value={dbData?.kpis?.total || "132"} trend="up" color="red" />
+          <StatCard title="Pending" value={dbData?.kpis?.pending || "28"} trend="neutral" color="orange" />
+          <StatCard title="In-Progress" value={dbData?.kpis?.inProgress || "15"} trend="up" color="blue" />
+          <StatCard title="Completed" value={dbData?.kpis?.completed || "89"} trend="up" color="green" />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -81,7 +90,7 @@ export default function ReworkStatusReport() {
             <h3 className="text-sm font-bold text-brand-dark mb-3">Top 5 Defects</h3>
             <div className="h-[240px]">
               <ResponsiveContainer>
-                <BarChart data={topDefectsData}>
+                <BarChart data={dbData?.chartDefects || topDefectsData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
@@ -95,7 +104,7 @@ export default function ReworkStatusReport() {
             <h3 className="text-sm font-bold text-brand-dark mb-3">Top 5 Defect Stations</h3>
             <div className="h-[240px]">
               <ResponsiveContainer>
-                <BarChart data={topStationsData}>
+                <BarChart data={dbData?.chartStations || topStationsData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
@@ -109,7 +118,7 @@ export default function ReworkStatusReport() {
 
         <div className="card p-4">
           <h3 className="text-sm font-bold text-brand-dark mb-3">Rework Details</h3>
-          <DataTable columns={columns} data={mockData} />
+          <DataTable columns={columns} data={dbData?.table || mockData} />
         </div>
       </div>
     </div>

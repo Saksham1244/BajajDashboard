@@ -7,16 +7,24 @@ import { ScanLine } from 'lucide-react';
 import { useReportFilters } from '../../hooks/useReportFilters';
 
 export default function FQCCheckpointReport() {
-  const { getBaseFilters } = useReportFilters();
+  const { period, getBaseFilters } = useReportFilters();
+  
+  const [dbData, setDbData] = React.useState(null);
+  React.useEffect(() => {
+    fetch(`http://localhost:5000/api/quality/checklist?period=${period}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period]);
 
-  const kpiData = {
+  const kpiData = dbData?.kpis || {
     totalCheckpoints: 4000,
     passed: 3960,
     failed: 40,
     passRate: 99.0,
   };
 
-  const tableData = [
+  const tableData = dbData?.table || [
     { id: 'FQC-001', cpName: 'Engine Start', date: '2023-10-01 10:15', shift: 'Shift 1', line: 'Line 1', stage: 'Final', model: 'Pulsar 150', sku: 'UG6', inspector: 'Tom', category: 'Functional', stdValue: 'Starts < 2s', actValue: '1.5s', result: 'PASS' },
     { id: 'FQC-002', cpName: 'Paint Finish', date: '2023-10-01 12:20', shift: 'Shift 1', line: 'Line 2', stage: 'Final', model: 'Dominar 400', sku: 'STD', inspector: 'Jerry', category: 'Visual', stdValue: 'No defects', actValue: 'Scratch', result: 'FAIL' },
     { id: 'FQC-003', cpName: 'Horn Sound', date: '2023-10-01 15:30', shift: 'Shift 2', line: 'Line 1', stage: 'Final', model: 'Pulsar 220', sku: 'UG5', inspector: 'Spike', category: 'Functional', stdValue: 'Clear', actValue: 'Clear', result: 'PASS' },

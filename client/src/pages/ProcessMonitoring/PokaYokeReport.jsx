@@ -16,23 +16,51 @@ export default function PokaYokeReport() {
     { type: 'dropdown', label: 'Poka Yoke Device', options: ['All', 'PY-01 Torque', 'PY-02 Vision', 'PY-03 Sensor'], value: device, onChange: setDevice },
   ];
 
+  const [dbData, setDbData] = useState({ hourlyOkNotOk: [], hourlyBypass: [] });
+  const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    setLoading(true);
+    fetch(`http://localhost:5000/api/process/pokayoke?period=${period}&shift=${shift}`)
+      .then(res => res.json())
+      .then(data => {
+        setDbData(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, [period, shift]);
+
   const hourlyData = useMemo(() => {
+    if (dbData.hourlyData?.length) return dbData.hourlyData;
     const labels = generateTimeLabels(period, shift);
     return labels.map(label => ({
       hour: label,
-      ok: Math.floor(Math.random() * 50) + 100,
+      ok: Math.floor(Math.random() * 50) + 100, // Still mock randomized for variation if endpoint doesn't have 16h data
       nok: Math.floor(Math.random() * 5),
       bypass: Math.floor(Math.random() * 3),
     }));
-  }, [period, shift]);
+  }, [period, shift, dbData]);
 
-  const bypassLogData = [
-    { startTime: '09:15', endTime: '09:20', duration: 5, station: 'ST-01', device: 'PY-01 Torque', operator: 'John Doe', reason: 'Sensor malfunction' },
-    { startTime: '11:30', endTime: '11:45', duration: 15, station: 'ST-02', device: 'PY-02 Vision', operator: 'Jane Smith', reason: 'Calibration error' },
-    { startTime: '13:00', endTime: '13:10', duration: 10, station: 'ST-01', device: 'PY-01 Torque', operator: 'Alice Bob', reason: 'Maintenance' },
-    { startTime: '14:20', endTime: '14:25', duration: 5, station: 'ST-02', device: 'PY-02 Vision', operator: 'Charlie Green', reason: 'Software glitch' },
-    { startTime: '15:10', endTime: '15:30', duration: 20, station: 'ST-01', device: 'PY-01 Torque', operator: 'Bob Brown', reason: 'Sensor malfunction' },
-  ];
+  const bypassLogData = useMemo(() => {
+    if (dbData.bypassLogData?.length) return dbData.bypassLogData;
+    return [
+      { startTime: '09:15', endTime: '09:20', duration: 5, station: 'ST-01', device: 'PY-01 Torque', operator: 'John Doe', reason: 'Sensor malfunction' },
+      { startTime: '11:30', endTime: '11:45', duration: 15, station: 'ST-02', device: 'PY-02 Vision', operator: 'Jane Smith', reason: 'Calibration error' },
+      { startTime: '13:00', endTime: '13:10', duration: 10, station: 'ST-01', device: 'PY-01 Torque', operator: 'Alice Bob', reason: 'Maintenance' },
+      { startTime: '14:20', endTime: '14:25', duration: 5, station: 'ST-02', device: 'PY-02 Vision', operator: 'Charlie Green', reason: 'Software glitch' },
+      { startTime: '15:10', endTime: '15:30', duration: 20, station: 'ST-01', device: 'PY-01 Torque', operator: 'Bob Brown', reason: 'Sensor malfunction' },
+    ];
+  }, [dbData]);
+
+  const kpi = dbData.kpi || {
+    totalChecks: 665,
+    okCount: 655,
+    notOkCount: 10,
+    bypassCount: 3
+  };
 
   const tableColumns = [
     { header: 'Start Time', accessor: 'startTime' },
@@ -46,7 +74,7 @@ export default function PokaYokeReport() {
 
   const exportToExcel = () => {
     exportToXLSX('PokaYokeReport.xlsx', [
-      { name: 'KPI Summary', rows: [['Total Checks', 'OK Count', 'NOT-OK Count', 'Bypass Count'], [665, 655, 10, 3]] },
+      { name: 'KPI Summary', rows: [['Total Checks', 'OK Count', 'NOT-OK Count', 'Bypass Count'], [kpi.totalChecks, kpi.okCount, kpi.notOkCount, kpi.bypassCount]] },
       { name: 'Hourly OK_NOK', rows: [['Time', 'OK Count', 'NOT-OK Count', 'Bypass Count'], ...hourlyData.map(d => [d.hour, d.ok, d.nok, d.bypass])] },
       { name: 'Bypass Log', rows: [['Start Time', 'End Time', 'Duration', 'Station', 'Device', 'Operator', 'Reason'], ...bypassLogData.map(d => [d.startTime, d.endTime, d.duration, d.station, d.device, d.operator, d.reason])] }
     ]);
@@ -62,10 +90,10 @@ export default function PokaYokeReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Checks" value="665" />
-          <StatCard title="OK Count" value="655" color="text-green-600" />
-          <StatCard title="NOT-OK Count" value="10" color="text-red-600" />
-          <StatCard title="Bypass Count" value="3" color="text-orange-600" />
+          <StatCard title="Total Checks" value={kpi.totalChecks} />
+          <StatCard title="OK Count" value={kpi.okCount} color="text-green-600" />
+          <StatCard title="NOT-OK Count" value={kpi.notOkCount} color="text-red-600" />
+          <StatCard title="Bypass Count" value={kpi.bypassCount} color="text-orange-600" />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

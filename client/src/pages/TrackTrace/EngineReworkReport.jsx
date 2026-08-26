@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Cpu } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
@@ -7,6 +7,15 @@ import { exportToXLSX } from '../../utils/exportExcel';
 
 export default function EngineReworkReport() {
   const [searchUID, setSearchUID] = useState('');
+
+  const [dbData, setDbData] = useState(null);
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/trace/engine-rework?uid=${searchUID}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [searchUID]);
 
   const mockReworkData = [
     { id: 1, engineNo: 'ENG-3001', model: 'Pulsar 150', station: 'ST-04', reason: 'Torque Fail', detectedTime: '2026-08-26 10:00', reworkStart: '10:15', reworkEnd: '10:30', status: 'Completed', operator: 'OP-RW1' },
@@ -28,7 +37,7 @@ export default function EngineReworkReport() {
   const exportToExcel = () => {
     exportToXLSX('EngineReworkReport.xlsx', [
       { name: 'Engine Summary', rows: [['Engine UID', 'Total Defects', 'Rework Count', 'Final Status', 'Total Rework Time'], [searchUID, 2, 2, 'OK', '35m']] },
-      { name: 'Rework Details', rows: [['Engine No', 'Model', 'Station', 'Reason', 'Detected Time', 'Start Time', 'End Time', 'Status', 'Operator'], ...mockReworkData.map(r => [r.engineNo, r.model, r.station, r.reason, r.detectedTime, r.reworkStart, r.reworkEnd, r.status, r.operator])] }
+      { name: 'Rework Details', rows: [['Engine No', 'Model', 'Station', 'Reason', 'Detected Time', 'Start Time', 'End Time', 'Status', 'Operator'], ...(dbData?.table || mockReworkData).map(r => [r.engineNo, r.model, r.station, r.reason, r.detectedTime, r.reworkStart, r.reworkEnd, r.status, r.operator])] }
     ]);
   };
 
@@ -57,7 +66,7 @@ export default function EngineReworkReport() {
             </div>
             <div className="card p-4 flex-1">
               <h3 className="text-sm font-bold text-brand-dark mb-3">Rework Details</h3>
-              <DataTable columns={columns} data={mockReworkData} />
+              <DataTable columns={columns} data={dbData?.table || mockReworkData} />
             </div>
           </>
         )}

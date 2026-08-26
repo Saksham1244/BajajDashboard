@@ -7,16 +7,24 @@ import { FileCheck2 } from 'lucide-react';
 import { useReportFilters } from '../../hooks/useReportFilters';
 
 export default function IPQCChecklistReport() {
-  const { getBaseFilters } = useReportFilters();
+  const { period, getBaseFilters } = useReportFilters();
+  
+  const [dbData, setDbData] = React.useState(null);
+  React.useEffect(() => {
+    fetch(`http://localhost:5000/api/quality/checklist?period=${period}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period]);
 
-  const kpiData = {
+  const kpiData = dbData?.kpis || {
     totalChecklists: 150,
     okChecklists: 135,
     nokChecklists: 15,
     compliance: 90.0,
   };
 
-  const tableData = [
+  const tableData = dbData?.table || [
     { id: 'IPQC-001', name: 'In-Process Insp 1', date: '2023-10-01 09:00', shift: 'Shift 1', line: 'Line 1', model: 'Pulsar 150', inspector: 'John', total: 10, passed: 10, failed: 0, status: 'OK', remarks: '-' },
     { id: 'IPQC-002', name: 'In-Process Insp 2', date: '2023-10-01 11:00', shift: 'Shift 1', line: 'Line 1', model: 'Pulsar 150', inspector: 'John', total: 10, passed: 9, failed: 1, status: 'NOK', remarks: 'Torque low' },
     { id: 'IPQC-003', name: 'In-Process Insp 3', date: '2023-10-01 13:00', shift: 'Shift 1', line: 'Line 2', model: 'Dominar 400', inspector: 'Jane', total: 12, passed: 12, failed: 0, status: 'OK', remarks: '-' },

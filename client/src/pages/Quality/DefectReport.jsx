@@ -13,13 +13,21 @@ const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#ea
 export default function DefectReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
   
+  const [dbData, setDbData] = useState(null);
+  React.useEffect(() => {
+    fetch(`http://localhost:5000/api/quality/defect?period=${period}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period]);
+
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
   const [modelFamily, setModelFamily] = useState('All');
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
 
-  const kpiData = {
+  const kpiData = dbData?.kpis || {
     totalProduction: 1250,
     totalDefects: 45,
     rft: 96.4
@@ -45,7 +53,7 @@ export default function DefectReport() {
     { name: 'Wrong Orientation', value: 10 },
   ];
 
-  const tableData = [
+  const tableData = dbData?.table || [
     { engineNo: 'ENG001', defect: 'Torque Failure', station: 'ST-01', operator: 'John Doe', time: '10:00 AM' },
     { engineNo: 'ENG002', defect: 'Missing Part', station: 'ST-02', operator: 'Jane Smith', time: '10:15 AM' },
     { engineNo: 'ENG003', defect: 'Scratch', station: 'ST-03', operator: 'Mike Johnson', time: '10:30 AM' },

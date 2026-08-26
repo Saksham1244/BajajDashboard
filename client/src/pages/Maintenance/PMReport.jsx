@@ -12,14 +12,25 @@ export default function PMReport() {
   
   const [line, setLine] = useState('All');
   const [machine, setMachine] = useState('All');
+  const [dbData, setDbData] = useState(null);
 
-  const tableData = [
+  React.useEffect(() => {
+    fetch(`http://localhost:5000/api/maintenance/pm?period=${period}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period]);
+
+  const tableData = dbData?.table || [
     { machine: 'M-01', type: 'Monthly', scheduled: '2023-10-01', completed: '2023-10-01', status: 'Completed', delay: 0 },
     { machine: 'M-02', type: 'Weekly', scheduled: '2023-10-15', completed: '2023-10-17', status: 'Completed', delay: 2 },
     { machine: 'M-03', type: 'Quarterly', scheduled: '2023-10-20', completed: '-', status: 'Pending', delay: 0 },
     { machine: 'M-04', type: 'Monthly', scheduled: '2023-10-10', completed: '-', status: 'Overdue', delay: 10 },
     { machine: 'M-05', type: 'Weekly', scheduled: '2023-10-18', completed: '2023-10-18', status: 'Completed', delay: 0 },
   ];
+
+  const kpiData = dbData?.kpis || { total: '50', completed: '35', pending: '10', overdue: '5' };
+
 
   const columns = [
     { header: 'Machine', accessorKey: 'machine' },
@@ -69,10 +80,10 @@ export default function PMReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total PM Orders" value="50" />
-          <StatCard title="Completed" value="35" />
-          <StatCard title="Pending" value="10" />
-          <StatCard title="Overdue" value="5" />
+          <StatCard title="Total PM Orders" value={kpiData.total} />
+          <StatCard title="Completed" value={kpiData.completed} />
+          <StatCard title="Pending" value={kpiData.pending} />
+          <StatCard title="Overdue" value={kpiData.overdue} />
         </div>
 
         <DataTable columns={columns} data={tableData} />

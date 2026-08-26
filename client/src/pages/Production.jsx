@@ -13,13 +13,45 @@ export default function Production() {
   const [activeLine, setActiveLine] = useState('All');
   const [activeModel, setActiveModel] = useState('All');
 
-  const hourlyData = useMemo(() => {
-    return generateTimeLabels(period, shift).map(time => ({
-      time,
-      plan: Math.floor(Math.random() * 20) + 90,
-      actual: Math.floor(Math.random() * 20) + 85
-    }));
+  const [dbData, setDbData] = useState([]);
+  const [kpis, setKpis] = useState({ totalProd: 58089, shortfall: 842, wip: 142, rollover: 85 });
+  const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    setLoading(true);
+    fetch(`http://localhost:5000/api/dashboard/production?period=${period}&shift=${shift}`)
+      .then(res => res.json())
+      .then(data => {
+        setDbData(data.planVsActual || []);
+        const total = (data.planVsActual || []).reduce((acc, curr) => acc + curr.actual, 0);
+        const planTotal = (data.planVsActual || []).reduce((acc, curr) => acc + curr.plan, 0);
+        setKpis(prev => ({
+          ...prev,
+          totalProd: total,
+          shortfall: planTotal > total ? planTotal - total : 0
+        }));
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
   }, [period, shift]);
+
+  const hourlyData = useMemo(() => {
+    const labels = generateTimeLabels(period, shift);
+    const totalPlan = dbData.reduce((acc, curr) => acc + curr.plan, 0) || 1200;
+    const totalActual = dbData.reduce((acc, curr) => acc + curr.actual, 0) || 1150;
+    
+    const planPerLabel = Math.floor(totalPlan / (labels.length || 1));
+    const actualPerLabel = Math.floor(totalActual / (labels.length || 1));
+
+    return labels.map(time => ({
+      time,
+      plan: planPerLabel,
+      actual: Math.max(0, actualPerLabel + Math.floor(Math.random() * 20 - 10))
+    }));
+  }, [period, shift, dbData]);
 
   const skuData = [
     { name: 'Pulsar 150 UG5', plan: 400, actual: 380, wip: 45, rollover: 20 },
@@ -68,10 +100,10 @@ export default function Production() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Production" value="58,089" trend={12.4} subtitle="vs Last Month 51,680" />
-          <StatCard title="Production Shortfall" value="842" trend={-4.2} subtitle="vs Last Month 879" />
-          <StatCard title="Current WIP" value="142" trend={1.8} subtitle="vs Last Month 139" />
-          <StatCard title="Rollover Quantity" value="85" trend={-15.3} subtitle="vs Last Month 100" />
+          <StatCard title="Total Production" value={kpis.totalProd.toLocaleString()} trend={12.4} subtitle="vs Last Month 51,680" />
+          <StatCard title="Production Shortfall" value={kpis.shortfall.toLocaleString()} trend={-4.2} subtitle="vs Last Month 879" />
+          <StatCard title="Current WIP" value={kpis.wip.toLocaleString()} trend={1.8} subtitle="vs Last Month 139" />
+          <StatCard title="Rollover Quantity" value={kpis.rollover.toLocaleString()} trend={-15.3} subtitle="vs Last Month 100" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -13,14 +13,25 @@ export default function BreakdownReport() {
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
   const [machine, setMachine] = useState('All');
+  const [dbData, setDbData] = useState(null);
 
-  const tableData = [
+  React.useEffect(() => {
+    fetch(`http://localhost:5000/api/maintenance/breakdown?period=${period}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period]);
+
+  const tableData = dbData?.table || [
     { machine: 'M-01', start: '08:00', end: '08:45', duration: 45, reason: 'Jam', tech: 'John D.', status: 'Resolved' },
     { machine: 'M-02', start: '09:15', end: '11:15', duration: 120, reason: 'Motor Failure', tech: 'Sarah K.', status: 'Pending' },
     { machine: 'M-03', start: '10:30', end: '11:00', duration: 30, reason: 'Sensor Error', tech: 'Mike T.', status: 'Resolved' },
     { machine: 'M-01', start: '13:00', end: '13:15', duration: 15, reason: 'Calibration', tech: 'John D.', status: 'Resolved' },
     { machine: 'M-04', start: '14:20', end: '15:20', duration: 60, reason: 'Power Outage', tech: 'Alan B.', status: 'Resolved' },
   ];
+
+  const kpiData = dbData?.kpis || { total: '5', avg: '54 mins', max: '120 mins', downtime: '4.5 hrs' };
+
 
   const columns = [
     { header: 'Machine', accessorKey: 'machine' },
@@ -69,10 +80,10 @@ export default function BreakdownReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Breakdowns" value="5" />
-          <StatCard title="Avg Duration" value="54 mins" />
-          <StatCard title="Max Duration" value="120 mins" />
-          <StatCard title="Total Downtime" value="4.5 hrs" />
+          <StatCard title="Total Breakdowns" value={kpiData.total} />
+          <StatCard title="Avg Duration" value={kpiData.avg} />
+          <StatCard title="Max Duration" value={kpiData.max} />
+          <StatCard title="Total Downtime" value={kpiData.downtime} />
         </div>
 
         <DataTable columns={columns} data={tableData} />

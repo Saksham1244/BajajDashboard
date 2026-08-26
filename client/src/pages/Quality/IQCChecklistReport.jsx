@@ -7,16 +7,24 @@ import { FileCheck } from 'lucide-react';
 import { useReportFilters } from '../../hooks/useReportFilters';
 
 export default function IQCChecklistReport() {
-  const { getBaseFilters } = useReportFilters();
+  const { period, getBaseFilters } = useReportFilters();
+  
+  const [dbData, setDbData] = React.useState(null);
+  React.useEffect(() => {
+    fetch(`http://localhost:5000/api/quality/checklist?period=${period}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period]);
 
-  const kpiData = {
+  const kpiData = dbData?.kpis || {
     totalChecklists: 120,
     okChecklists: 110,
     nokChecklists: 10,
     compliance: 91.6,
   };
 
-  const tableData = [
+  const tableData = dbData?.table || [
     { id: 'CHK-001', name: 'Morning Inspection', date: '2023-10-01 08:00', shift: 'Shift 1', line: 'Line 1', model: 'Pulsar 150', inspector: 'John Doe', total: 20, passed: 20, failed: 0, status: 'OK', remarks: 'All clear' },
     { id: 'CHK-002', name: 'Afternoon Inspection', date: '2023-10-01 14:00', shift: 'Shift 2', line: 'Line 2', model: 'Dominar 400', inspector: 'Jane Smith', total: 20, passed: 18, failed: 2, status: 'NOK', remarks: 'Missing parts' },
     { id: 'CHK-003', name: 'Evening Inspection', date: '2023-10-01 20:00', shift: 'Shift 3', line: 'Sub-Assy', model: 'Avenger', inspector: 'Mike Lee', total: 15, passed: 15, failed: 0, status: 'OK', remarks: '-' },

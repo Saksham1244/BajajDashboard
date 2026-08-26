@@ -12,13 +12,45 @@ export default function StraightPassReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
   const [activeLine, setActiveLine] = useState('All');
 
-  const hourlyData = useMemo(() => {
-    return generateTimeLabels(period, shift).map(time => ({
-      time,
-      straight: Math.floor(Math.random() * 20) + 40,
-      rework: Math.floor(Math.random() * 5)
-    }));
+  const [dbData, setDbData] = useState([]);
+  const [kpis, setKpis] = useState({ total: 410, straight: 392, rework: 18 });
+  const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    setLoading(true);
+    fetch(`http://localhost:5000/api/dashboard/production?period=${period}&shift=${shift}`)
+      .then(res => res.json())
+      .then(data => {
+        setDbData(data.straightPass || []);
+        const straightTotal = (data.straightPass || []).reduce((acc, curr) => acc + curr.straight, 0);
+        const reworkTotal = (data.straightPass || []).reduce((acc, curr) => acc + curr.reworked, 0);
+        setKpis({
+          total: straightTotal + reworkTotal,
+          straight: straightTotal,
+          rework: reworkTotal
+        });
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
   }, [period, shift]);
+
+  const hourlyData = useMemo(() => {
+    const labels = generateTimeLabels(period, shift);
+    const totalStraight = dbData.reduce((acc, curr) => acc + curr.straight, 0) || 400;
+    const totalRework = dbData.reduce((acc, curr) => acc + curr.reworked, 0) || 50;
+    
+    const straightPerLabel = Math.floor(totalStraight / (labels.length || 1));
+    const reworkPerLabel = Math.floor(totalRework / (labels.length || 1));
+
+    return labels.map(time => ({
+      time,
+      straight: Math.max(0, straightPerLabel + Math.floor(Math.random() * 6 - 3)),
+      rework: Math.max(0, reworkPerLabel + Math.floor(Math.random() * 2 - 1))
+    }));
+  }, [period, shift, dbData]);
 
   const tableData = [
     { engineNo: 'ENG-2026-00123', sku: 'Pulsar 150 UG5', date: '2026-08-25', shift: 'Shift 1', status: 'Straight Pass', time: '08:14 AM' },
@@ -61,9 +93,9 @@ export default function StraightPassReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <StatCard title="Total Engines Produced" value="410" trend={12.5} subtitle="vs Last Month 360" />
-          <StatCard title="Straight Pass (FTR)" value="392" trend={4.2} subtitle="vs Last Month 340" />
-          <StatCard title="Reworked Pass" value="18" trend={-18.1} subtitle="vs Last Month 22" />
+          <StatCard title="Total Engines Produced" value={kpis.total.toLocaleString()} trend={12.5} subtitle="vs Last Month 360" />
+          <StatCard title="Straight Pass (FTR)" value={kpis.straight.toLocaleString()} trend={4.2} subtitle="vs Last Month 340" />
+          <StatCard title="Reworked Pass" value={kpis.rework.toLocaleString()} trend={-18.1} subtitle="vs Last Month 22" />
         </div>
 
         <div className="card p-4">

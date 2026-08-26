@@ -7,16 +7,24 @@ import { ScanLine } from 'lucide-react';
 import { useReportFilters } from '../../hooks/useReportFilters';
 
 export default function IPQCCheckpointReport() {
-  const { getBaseFilters } = useReportFilters();
+  const { period, getBaseFilters } = useReportFilters();
+  
+  const [dbData, setDbData] = React.useState(null);
+  React.useEffect(() => {
+    fetch(`http://localhost:5000/api/quality/checklist?period=${period}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period]);
 
-  const kpiData = {
+  const kpiData = dbData?.kpis || {
     totalCheckpoints: 3000,
     passed: 2950,
     failed: 50,
     passRate: 98.3,
   };
 
-  const tableData = [
+  const tableData = dbData?.table || [
     { id: 'IPQC-001', cpName: 'Torque Check 1', date: '2023-10-01 09:05', shift: 'Shift 1', line: 'Line 1', stage: 'Assembly', model: 'Pulsar 150', sku: 'UG6', inspector: 'John', category: 'Measurement', stdValue: '25 Nm', actValue: '25 Nm', result: 'PASS' },
     { id: 'IPQC-002', cpName: 'Torque Check 2', date: '2023-10-01 11:15', shift: 'Shift 1', line: 'Line 1', stage: 'Assembly', model: 'Pulsar 150', sku: 'UG6', inspector: 'John', category: 'Measurement', stdValue: '30 Nm', actValue: '28 Nm', result: 'FAIL' },
     { id: 'IPQC-003', cpName: 'Wire Routing', date: '2023-10-01 13:20', shift: 'Shift 1', line: 'Line 2', stage: 'Assembly', model: 'Dominar 400', sku: 'STD', inspector: 'Jane', category: 'Visual', stdValue: 'Correct', actValue: 'Correct', result: 'PASS' },

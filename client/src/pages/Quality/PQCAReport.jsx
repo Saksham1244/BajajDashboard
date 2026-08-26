@@ -13,11 +13,19 @@ const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#ea
 export default function PQCAReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
   
+  const [dbData, setDbData] = useState(null);
+  React.useEffect(() => {
+    fetch(`http://localhost:5000/api/quality/pqca?period=${period}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period]);
+
   const [line, setLine] = useState('All');
   const [modelFamily, setModelFamily] = useState('All');
   const [model, setModel] = useState('All');
 
-  const kpiData = {
+  const kpiData = dbData?.kpis || {
     totalCheckpoints: 500,
     ok: 480,
     nc: 20,
@@ -43,7 +51,7 @@ export default function PQCAReport() {
     }));
   }, [period, shift]);
 
-  const tableData = [
+  const tableData = dbData?.table || [
     { checkpoint: 'Oil Level', category: 'Visual', status: 'OK', why: '-', action: '-', repeated: 'No', model: 'Pulsar 150' },
     { checkpoint: 'Torque Value', category: 'Measurement', status: 'NC', why: 'Tool issue', action: 'Recalibrated', repeated: 'No', model: 'Dominar 400' },
     { checkpoint: 'Engine Noise', category: 'Functional', status: 'OK', why: '-', action: '-', repeated: 'No', model: 'Pulsar 220' },

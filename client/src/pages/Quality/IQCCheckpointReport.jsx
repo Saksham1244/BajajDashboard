@@ -7,16 +7,24 @@ import { ScanLine } from 'lucide-react';
 import { useReportFilters } from '../../hooks/useReportFilters';
 
 export default function IQCCheckpointReport() {
-  const { getBaseFilters } = useReportFilters();
+  const { period, getBaseFilters } = useReportFilters();
+  
+  const [dbData, setDbData] = React.useState(null);
+  React.useEffect(() => {
+    fetch(`http://localhost:5000/api/quality/checklist?period=${period}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period]);
 
-  const kpiData = {
+  const kpiData = dbData?.kpis || {
     totalCheckpoints: 2500,
     passed: 2450,
     failed: 50,
     passRate: 98.0,
   };
 
-  const tableData = [
+  const tableData = dbData?.table || [
     { id: 'CHK-001', cpName: 'O-ring Inspection', date: '2023-10-01 08:05', shift: 'Shift 1', line: 'Line 1', stage: 'Incoming', model: 'Pulsar 150', sku: 'UG6', inspector: 'John Doe', category: 'Visual', stdValue: 'Present', actValue: 'Present', result: 'PASS' },
     { id: 'CHK-001', cpName: 'Bolt Length', date: '2023-10-01 08:10', shift: 'Shift 1', line: 'Line 1', stage: 'Incoming', model: 'Pulsar 150', sku: 'UG6', inspector: 'John Doe', category: 'Measurement', stdValue: '45mm', actValue: '45.1mm', result: 'PASS' },
     { id: 'CHK-002', cpName: 'Gear Hardness', date: '2023-10-01 14:15', shift: 'Shift 2', line: 'Line 2', stage: 'Incoming', model: 'Dominar 400', sku: 'STD', inspector: 'Jane Smith', category: 'Measurement', stdValue: '60 HRC', actValue: '58 HRC', result: 'FAIL' },

@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { poolPromise, sql } = require('./db');
@@ -91,6 +91,48 @@ app.get('/api/process/pokayoke', (req, res) => {
     ],
     hourlyBypass: [
       { start: '08:15', end: '08:30', duration: 15, hour: '08:00' }
+    ]
+  });
+});
+
+// Maintenance Mock Data
+app.get('/api/maintenance/breakdown', (req, res) => {
+  res.json({
+    kpis: { totalBreakdowns: 15, mtbf: '24.5 hrs', mttr: '1.2 hrs' },
+    table: [
+      { id: 1, machine: 'Conveyor A', issue: 'Belt Slip', duration: '45 mins', date: '2026-08-25' },
+      { id: 2, machine: 'Torque Gun 3', issue: 'Calibration', duration: '15 mins', date: '2026-08-25' }
+    ]
+  });
+});
+
+app.get('/api/maintenance/pm', (req, res) => {
+  res.json({
+    kpis: { completionRate: '94%', pending: 3, delayed: 1 },
+    table: [
+      { id: 1, task: 'Lubrication', machine: 'Press 1', status: 'Completed', date: '2026-08-25' },
+      { id: 2, task: 'Filter Change', machine: 'HVAC', status: 'Pending', date: '2026-08-26' }
+    ]
+  });
+});
+
+// Material Mock Data
+app.get('/api/material/stock', (req, res) => {
+  res.json({
+    kpis: { totalItems: 1420, lowStock: 15, outOfStock: 2 },
+    table: [
+      { id: 1, item: 'M8 Bolt', qty: 500, minStock: 200, status: 'Healthy' },
+      { id: 2, item: 'O-Ring Seal', qty: 45, minStock: 100, status: 'Low Stock' }
+    ]
+  });
+});
+
+app.get('/api/material/kitting', (req, res) => {
+  res.json({
+    kpis: { kitsPrepared: 450, kitsPending: 50, efficiency: '92%' },
+    table: [
+      { id: 1, kitNo: 'KIT-101', model: 'Pulsar 150', status: 'Ready', time: '08:15 AM' },
+      { id: 2, kitNo: 'KIT-102', model: 'Dominar 400', status: 'In Progress', time: '09:00 AM' }
     ]
   });
 });
