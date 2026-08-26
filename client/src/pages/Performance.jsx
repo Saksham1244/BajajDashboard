@@ -95,10 +95,10 @@ export default function Performance() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Product Quantity" autoScale value="10,994" trend={14} subtitle="Target: 9,472" />
-          <StatCard title="Product Rework Qty" autoScale value="58,089" trend={-88} subtitle="vs Last Month 150,626" />
-          <StatCard title="Production Cost" autoScale value="$12 K" trend={-89} subtitle="vs Last Month $33 K" />
-          <StatCard title="Direct Labor Cost" autoScale value="$3 K" trend={-90} subtitle="vs Last Month $7 K" />
+          <StatCard autoScale title="Product Quantity"  value="10,994" trend={14} subtitle="Target: 9,472" />
+          <StatCard autoScale title="Product Rework Qty"  value="58,089" trend={-88} subtitle="vs Last Month 150,626" />
+          <StatCard autoScale title="Production Cost"  value="$12 K" trend={-89} subtitle="vs Last Month $33 K" />
+          <StatCard autoScale title="Direct Labor Cost"  value="$3 K" trend={-90} subtitle="vs Last Month $7 K" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

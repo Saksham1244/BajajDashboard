@@ -85,10 +85,10 @@ export default function MaterialConsumptionReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Materials" autoScale value="150" color="bg-blue-100" />
-          <StatCard title="Avg Variance %" autoScale value="1.2%" color="bg-purple-100" />
-          <StatCard title="Over-consumed" autoScale value="15" color="bg-red-100" />
-          <StatCard title="Under-consumed" autoScale value="8" color="bg-green-100" />
+          <StatCard autoScale title="Total Materials"  value="150" color="bg-blue-100" />
+          <StatCard autoScale title="Avg Variance %"  value="1.2%" color="bg-purple-100" />
+          <StatCard autoScale title="Over-consumed"  value="15" color="bg-red-100" />
+          <StatCard autoScale title="Under-consumed"  value="8" color="bg-green-100" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

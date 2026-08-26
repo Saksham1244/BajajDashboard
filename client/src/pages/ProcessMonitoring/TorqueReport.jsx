@@ -80,10 +80,10 @@ export default function TorqueReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Readings" value={kpi.totalReadings} />
-          <StatCard title="OK Count" value={kpi.okCount} color="text-green-600" />
-          <StatCard title="NOT-OK Count" value={kpi.notOkCount} color="text-red-600" />
-          <StatCard title="Avg Torque (Nm)" value={kpi.avgTorque} />
+          <StatCard autoScale title="Total Readings" value={kpi.totalReadings} />
+          <StatCard autoScale title="OK Count" value={kpi.okCount} color="text-green-600" />
+          <StatCard autoScale title="NOT-OK Count" value={kpi.notOkCount} color="text-red-600" />
+          <StatCard autoScale title="Avg Torque (Nm)" value={kpi.avgTorque} />
         </div>
         
         <div className="card p-4">

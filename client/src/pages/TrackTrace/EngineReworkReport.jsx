@@ -59,10 +59,10 @@ export default function EngineReworkReport() {
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <StatCard title="Total Defects" autoScale value="2" trend="neutral" color="red" />
-              <StatCard title="Rework Count" autoScale value="2" trend="neutral" color="orange" />
-              <StatCard title="Final Status" value="OK" trend="neutral" color="green" />
-              <StatCard title="Total Rework Time" autoScale value="35m" trend="neutral" color="blue" />
+              <StatCard autoScale title="Total Defects"  value="2" trend="neutral" color="red" />
+              <StatCard autoScale title="Rework Count"  value="2" trend="neutral" color="orange" />
+              <StatCard autoScale title="Final Status" value="OK" trend="neutral" color="green" />
+              <StatCard autoScale title="Total Rework Time"  value="35m" trend="neutral" color="blue" />
             </div>
             <div className="card p-4 flex-1">
               <h3 className="text-sm font-bold text-brand-dark mb-3">Rework Details</h3>

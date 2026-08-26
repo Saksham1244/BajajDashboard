@@ -80,10 +80,10 @@ export default function PMReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total PM Orders" value={kpiData.total} />
-          <StatCard title="Completed" value={kpiData.completed} />
-          <StatCard title="Pending" value={kpiData.pending} />
-          <StatCard title="Overdue" value={kpiData.overdue} />
+          <StatCard autoScale title="Total PM Orders" value={kpiData.total} />
+          <StatCard autoScale title="Completed" value={kpiData.completed} />
+          <StatCard autoScale title="Pending" value={kpiData.pending} />
+          <StatCard autoScale title="Overdue" value={kpiData.overdue} />
         </div>
 
         <DataTable columns={columns} data={tableData} />

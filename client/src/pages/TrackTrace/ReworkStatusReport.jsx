@@ -79,10 +79,10 @@ export default function ReworkStatusReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Rework" value={dbData?.kpis?.total || "132"} trend="up" color="red" />
-          <StatCard title="Pending" value={dbData?.kpis?.pending || "28"} trend="neutral" color="orange" />
-          <StatCard title="In-Progress" value={dbData?.kpis?.inProgress || "15"} trend="up" color="blue" />
-          <StatCard title="Completed" value={dbData?.kpis?.completed || "89"} trend="up" color="green" />
+          <StatCard autoScale title="Total Rework" value={dbData?.kpis?.total || "132"} trend="up" color="red" />
+          <StatCard autoScale title="Pending" value={dbData?.kpis?.pending || "28"} trend="neutral" color="orange" />
+          <StatCard autoScale title="In-Progress" value={dbData?.kpis?.inProgress || "15"} trend="up" color="blue" />
+          <StatCard autoScale title="Completed" value={dbData?.kpis?.completed || "89"} trend="up" color="green" />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -101,12 +101,12 @@ export default function KittingDashboard() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <StatCard title="Kits Planned" value={dbData?.kpis?.totalKitsPlanned || "100"} color="bg-blue-100" />
-          <StatCard title="Kits Prepared" value={dbData?.kpis?.kitsPrepared || "85"} color="bg-green-100" />
-          <StatCard title="Kits Pending" value={dbData?.kpis?.kitsPending || "10"} color="bg-orange-100" />
-          <StatCard title="Kit Accuracy %" value={dbData?.kpis?.kitAccuracy || "98%"} color="bg-purple-100" />
-          <StatCard title="Rejected Kits" value={dbData?.kpis?.rejectedKits || "5"} color="bg-red-100" />
-          <StatCard title="Preparation Status" value={dbData?.kpis?.preparationStatus || "On Track"} color="bg-green-100" />
+          <StatCard autoScale title="Kits Planned" value={dbData?.kpis?.totalKitsPlanned || "100"} color="bg-blue-100" />
+          <StatCard autoScale title="Kits Prepared" value={dbData?.kpis?.kitsPrepared || "85"} color="bg-green-100" />
+          <StatCard autoScale title="Kits Pending" value={dbData?.kpis?.kitsPending || "10"} color="bg-orange-100" />
+          <StatCard autoScale title="Kit Accuracy %" value={dbData?.kpis?.kitAccuracy || "98%"} color="bg-purple-100" />
+          <StatCard autoScale title="Rejected Kits" value={dbData?.kpis?.rejectedKits || "5"} color="bg-red-100" />
+          <StatCard autoScale title="Preparation Status" value={dbData?.kpis?.preparationStatus || "On Track"} color="bg-green-100" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

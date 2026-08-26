@@ -65,10 +65,10 @@ export default function WorkforceAllocationReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Stations" value={kpiData.totalStations} />
-          <StatCard title="Fully Staffed" value={kpiData.fullyStaffed} />
-          <StatCard title="Under-staffed" value={kpiData.underStaffed} />
-          <StatCard title="Over-staffed" value={kpiData.overStaffed} />
+          <StatCard autoScale title="Total Stations" value={kpiData.totalStations} />
+          <StatCard autoScale title="Fully Staffed" value={kpiData.fullyStaffed} />
+          <StatCard autoScale title="Under-staffed" value={kpiData.underStaffed} />
+          <StatCard autoScale title="Over-staffed" value={kpiData.overStaffed} />
         </div>
         <div className="card p-4">
           <h3 className="text-sm font-bold text-brand-dark mb-3">Planned vs Actual by Station</h3>

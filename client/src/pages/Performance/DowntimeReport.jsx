@@ -110,10 +110,10 @@ export default function DowntimeReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Overall Downtime (mins)" value={kpiData.totalDowntime} />
-          <StatCard title="No. of Losses" value={kpiData.noOfLosses} />
-          <StatCard title="Most Lost Category" value={kpiData.mostLostCat} />
-          <StatCard title="Avg Loss Duration (mins)" value={kpiData.avgLossDuration} />
+          <StatCard autoScale title="Overall Downtime (mins)" value={kpiData.totalDowntime} />
+          <StatCard autoScale title="No. of Losses" value={kpiData.noOfLosses} />
+          <StatCard autoScale title="Most Lost Category" value={kpiData.mostLostCat} />
+          <StatCard autoScale title="Avg Loss Duration (mins)" value={kpiData.avgLossDuration} />
         </div>
         
         <div className="card p-4">

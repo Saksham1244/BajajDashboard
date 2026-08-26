@@ -68,10 +68,10 @@ export default function AttendanceReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Scheduled" value={kpiData.scheduled} />
-          <StatCard title="Present" value={kpiData.present} />
-          <StatCard title="Absent" value={kpiData.absent} />
-          <StatCard title="Attendance %" value={`${kpiData.attendancePct}%`} />
+          <StatCard autoScale title="Total Scheduled" value={kpiData.scheduled} />
+          <StatCard autoScale title="Present" value={kpiData.present} />
+          <StatCard autoScale title="Absent" value={kpiData.absent} />
+          <StatCard autoScale title="Attendance %" value={`${kpiData.attendancePct}%`} />
         </div>
         <div className="card p-4">
           <h3 className="text-sm font-bold text-brand-dark mb-3">Daily Attendance % Trend</h3>

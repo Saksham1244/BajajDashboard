@@ -98,9 +98,9 @@ export default function DefectReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Production" value={kpiData.totalProduction} />
-          <StatCard title="Total Defects" value={kpiData.totalDefects} />
-          <StatCard title="RFT %" value={`${kpiData.rft}%`} />
+          <StatCard autoScale title="Total Production" value={kpiData.totalProduction} />
+          <StatCard autoScale title="Total Defects" value={kpiData.totalDefects} />
+          <StatCard autoScale title="RFT %" value={`${kpiData.rft}%`} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="card p-4">

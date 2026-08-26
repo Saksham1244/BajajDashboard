@@ -70,10 +70,10 @@ export default function MTTRMTBFReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Avg MTTR" autoScale value="45 mins" />
-          <StatCard title="Avg MTBF" autoScale value="146 hrs" />
-          <StatCard title="Best Machine Availability" value="M-05 (99%)" />
-          <StatCard title="Worst Machine" value="M-02 (85%)" />
+          <StatCard autoScale title="Avg MTTR"  value="45 mins" />
+          <StatCard autoScale title="Avg MTBF"  value="146 hrs" />
+          <StatCard autoScale title="Best Machine Availability" value="M-05 (99%)" />
+          <StatCard autoScale title="Worst Machine" value="M-02 (85%)" />
         </div>
 
         <div className="card p-4">

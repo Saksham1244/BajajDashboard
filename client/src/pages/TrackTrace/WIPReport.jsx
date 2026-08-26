@@ -20,14 +20,21 @@ export default function WIPReport() {
       .then(data => setDbData(data))
       .catch(err => console.error(err));
   }, [period, shift, wipStatus]);
-
   const COLORS = ['#0369a1', '#f97316', '#f43f5e', '#8b5cf6'];
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const kpiValues = {
+    total: Math.round(70 * scale),
+    inProcess: Math.round(45 * scale),
+    rework: Math.round(12 * scale),
+    blocked: Math.round(5 * scale),
+    idle: Math.round(8 * scale)
+  };
 
   const wipDistData = [
-    { name: 'In-Process', value: 45 },
-    { name: 'Rework', value: 12 },
-    { name: 'Blocked', value: 5 },
-    { name: 'Idle', value: 8 },
+    { name: 'In-Process', value: kpiValues.inProcess },
+    { name: 'Rework', value: kpiValues.rework },
+    { name: 'Blocked', value: kpiValues.blocked },
+    { name: 'Idle', value: kpiValues.idle },
   ];
 
   const mockData = [
@@ -77,11 +84,11 @@ export default function WIPReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <StatCard title="Total WIP" value={dbData?.kpis?.total || "70"} trend="up" color="blue" />
-          <StatCard title="In-Process" value={dbData?.kpis?.inProcess || "45"} trend="neutral" color="green" />
-          <StatCard title="Rework" value={dbData?.kpis?.rework || "12"} trend="down" color="orange" />
-          <StatCard title="Blocked" value={dbData?.kpis?.blocked || "5"} trend="up" color="red" />
-          <StatCard title="Idle" value={dbData?.kpis?.idle || "8"} trend="down" color="purple" />
+          <StatCard autoScale title="Total WIP" value={dbData?.kpis?.total || kpiValues.total} trend="up" color="blue" />
+          <StatCard autoScale title="In-Process" value={dbData?.kpis?.inProcess || kpiValues.inProcess} trend="neutral" color="green" />
+          <StatCard autoScale title="Rework" value={dbData?.kpis?.rework || kpiValues.rework} trend="down" color="orange" />
+          <StatCard autoScale title="Blocked" value={dbData?.kpis?.blocked || kpiValues.blocked} trend="up" color="red" />
+          <StatCard autoScale title="Idle" value={dbData?.kpis?.idle || kpiValues.idle} trend="down" color="purple" />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
