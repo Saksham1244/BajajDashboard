@@ -22,25 +22,33 @@ export default function KitVsProductionReport() {
     { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'UG6'], value: sku, onChange: setSku },
   ];
 
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+
   const chartData = [
-    { model: 'Pulsar 150', kits: 120, production: 115 },
-    { model: 'Dominar 400', kits: 60, production: 65 },
-    { model: 'Avenger 220', kits: 80, production: 80 },
-  ];
+    { model: 'Pulsar 150', kits: Math.round(120 * scale), production: Math.round(115 * scale) },
+    { model: 'Dominar 400', kits: Math.round(60 * scale), production: Math.round(65 * scale) },
+    { model: 'Avenger 220', kits: Math.round(80 * scale), production: Math.round(80 * scale) },
+  ].filter(d => model === 'All' || d.model === model);
+
+  const kpi = {
+    kits: chartData.reduce((acc, d) => acc + d.kits, 0),
+    production: chartData.reduce((acc, d) => acc + d.production, 0)
+  };
+  const gap = kpi.kits - kpi.production;
+  const gapPercent = kpi.kits > 0 ? Math.round((gap / kpi.kits) * 100) : 0;
 
   const trendData = useMemo(() => {
     return generateTimeLabels(period, shift).map(time => ({
       time,
-      kits: Math.floor(Math.random() * 20) + 15,
-      production: Math.floor(Math.random() * 20) + 14
+      kits: Math.floor(Math.random() * 20 * scale) + Math.round(15 * scale),
+      production: Math.floor(Math.random() * 20 * scale) + Math.round(14 * scale)
     }));
   }, [period, shift]);
 
-  const tableData = [
-    { model: 'Pulsar 150', kits: 120, production: 115, gap: 5 },
-    { model: 'Dominar 400', kits: 60, production: 65, gap: -5 },
-    { model: 'Avenger 220', kits: 80, production: 80, gap: 0 },
-  ];
+  const tableData = chartData.map(d => ({
+    ...d,
+    gap: d.kits - d.production
+  }));
 
   const columns = [
     { header: 'Model', accessor: 'model' },
@@ -57,10 +65,10 @@ export default function KitVsProductionReport() {
   const exportToExcel = () => {
     exportToXLSX('KitVsProductionReport.xlsx', [
       { name: 'KPI', rows: [
-        ['Total Kits', '260'],
-        ['Total Production', '260'],
-        ['Gap Count', '0'],
-        ['Gap %', '0%']
+        ['Total Kits', kpi.kits],
+        ['Total Production', kpi.production],
+        ['Gap Count', gap],
+        ['Gap %', gapPercent + '%']
       ]},
       { name: 'Kit vs Production', rows: [
         ['Model', 'Kits Prepared', 'Production Done', 'Gap'],
@@ -71,14 +79,14 @@ export default function KitVsProductionReport() {
 
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
-      <StandardFilterBar title="Kit vs Production Report" icon={BarChart3} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
+      <StandardFilterBar title="Kit vs Production Report" icon={BarChart3} period={period} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Kits"  value="260" color="bg-blue-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Production"  value="260" color="bg-green-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Gap Count"  value="0" color="bg-orange-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Gap %"  value="0%" color="bg-purple-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Kits"  value={kpi.kits} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Production"  value={kpi.production} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Gap Count"  value={gap} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Gap %"  value={`${gapPercent}%`} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
