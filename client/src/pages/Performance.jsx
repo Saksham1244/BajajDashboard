@@ -8,7 +8,8 @@ import useReportFilters from '../hooks/useReportFilters';
 import { generateTimeLabels } from '../utils/timeDataGenerator';
 
 const GaugeChart = ({ title, value, color }) => {
-  const data = [{ name: 'Achieved', value }, { name: 'Remaining', value: 100 - value }];
+  const numValue = Number(value) || 0;
+  const data = [{ name: 'Achieved', value: numValue }, { name: 'Remaining', value: Math.max(0, 100 - numValue) }];
   return (
     <div className="flex flex-col items-center">
       <h3 className="text-[13px] font-bold text-brand-dark mb-2">{title}</h3>
@@ -29,7 +30,7 @@ const GaugeChart = ({ title, value, color }) => {
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center">
-          <span className="text-xl font-black" style={{ color }}>{value}%</span>
+          <span className="text-xl font-black" style={{ color }}>{numValue.toFixed(1)}%</span>
         </div>
       </div>
     </div>
