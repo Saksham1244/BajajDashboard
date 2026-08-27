@@ -1,22 +1,4 @@
 const express = require('express');
-});
-
-app.get('/api/process/bypass', (req, res) => {
-  const scale = getScale(req.query.period);
-  res.json({
-    kpis: {
-      totalBypasses: Math.max(1, Math.round(5 * scale)),
-      activeBypasses: Math.max(0, Math.round(1 * scale)),
-      maxDuration: Math.max(15, Math.round(45 * scale)) + ' mins',
-      totalDuration: Math.max(20, Math.round(120 * scale)) + ' mins'
-    },
-    table: [
-      { id: 'BP-001', date: '2023-10-25 08:30', line: 'Line 1', station: 'ST-01', device: 'PY-01 Torque', shift: 'Shift 1', model: 'Pulsar 150', duration: Math.max(5, Math.round(15 * scale)), operator: 'John Doe', reason: 'Sensor Failure', authorizedBy: 'Manager A' },
-      { id: 'BP-002', date: '2023-10-25 10:15', line: 'Line 2', station: 'ST-02', device: 'PY-02 Vision', shift: 'Shift 1', model: 'Dominar 400', duration: Math.max(10, Math.round(30 * scale)), operator: 'Jane Smith', reason: 'Network Issue', authorizedBy: 'Manager B' }
-    ]
-  });
-});
-const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { poolPromise, sql } = require('./db');
