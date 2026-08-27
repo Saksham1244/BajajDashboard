@@ -27,7 +27,7 @@ export default function WorkforceDashboard() {
   const attendanceData = [
     { name: 'Present', value: kpiData.present },
     { name: 'Absent', value: kpiData.absent }
-  ];
+  ].filter(d => d.value > 0);
   
   const COLORS = ['#0369a1', '#f43f5e'];
 
@@ -70,22 +70,24 @@ export default function WorkforceDashboard() {
       <StandardFilterBar
         title="Workforce Dashboard"
         icon={Users}
+        period={period}
         onExcelClick={exportToExcel}
         filters={[
-          ...getBaseFilters(),
+          { type: 'period', value: period },
+          { type: 'daterange' },
           { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine },
           { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02','ST-03','ST-04','ST-05'], value: station, onChange: setStation }
         ]}
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Operators Assigned" value={kpiData.assigned} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Present" value={kpiData.present} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Absent" value={kpiData.absent} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Skill Match %" value={`${kpiData.skillMatch}%`} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Operator Utilization %" value={`${kpiData.utilization}%`} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Idle Time (hrs)" value={kpiData.idleTime} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Overtime Hours" value={kpiData.overtime} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Operators Assigned" value={kpiData.assigned} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Present" value={kpiData.present} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Absent" value={kpiData.absent} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Skill Match %" value={`${kpiData.skillMatch}%`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Operator Utilization %" value={`${kpiData.utilization}%`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Idle Time (hrs)" value={kpiData.idleTime} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Overtime Hours" value={kpiData.overtime} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="card p-4">
@@ -93,8 +95,8 @@ export default function WorkforceDashboard() {
             <div className="h-[240px]">
               <ResponsiveContainer>
                 <PieChart>
-                  <Pie data={attendanceData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                    {attendanceData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                  <Pie data={attendanceData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} dataKey="value">
+                    {attendanceData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.name === 'Present' ? COLORS[0] : COLORS[1]} />)}
                   </Pie>
                   <Tooltip />
                   <Legend />
