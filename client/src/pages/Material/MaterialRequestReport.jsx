@@ -20,17 +20,25 @@ export default function MaterialRequestReport() {
     { type: 'dropdown', label: 'Station', options: ['All', 'ST-01', 'ST-02', 'ST-03'], value: station, onChange: setStation },
   ];
 
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const kpi = {
+    total: Math.round(40 * scale),
+    fulfilled: Math.round(35 * scale),
+    pending: Math.round(5 * scale),
+    avgTime: 12
+  };
+
   const reqData = [
-    { station: 'ST-01', requests: 12 },
-    { station: 'ST-02', requests: 8 },
-    { station: 'ST-03', requests: 15 },
-    { station: 'ST-04', requests: 5 },
+    { station: 'ST-01', requests: Math.round(12 * scale) },
+    { station: 'ST-02', requests: Math.round(8 * scale) },
+    { station: 'ST-03', requests: Math.round(15 * scale) },
+    { station: 'ST-04', requests: Math.round(5 * scale) },
   ];
 
   const trendData = useMemo(() => {
     return generateTimeLabels(period, shift).map(time => ({
       time,
-      requests: Math.floor(Math.random() * 15) + 2
+      requests: Math.floor(Math.random() * 15 * scale) + 2
     }));
   }, [period, shift]);
 
@@ -50,17 +58,17 @@ export default function MaterialRequestReport() {
     { header: 'Fulfilled Time', accessor: 'fullTime' },
     { header: 'Status', accessor: 'status', render: (val) => {
       const color = val === 'Fulfilled' ? 'text-green-600 bg-green-100' : 'text-orange-600 bg-orange-100';
-      return <span className={`px-2 py-1 rounded text-xs font-bold ${color}`}>{val}</span>;
+      return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${color}`}>{val}</span>;
     }}
   ];
 
   const exportToExcel = () => {
     exportToXLSX('MaterialRequestReport.xlsx', [
       { name: 'KPI', rows: [
-        ['Total Requests', '40'],
-        ['Fulfilled', '35'],
-        ['Pending', '5'],
-        ['Avg Fulfillment Time (mins)', '12']
+        ['Total Requests', kpi.total],
+        ['Fulfilled', kpi.fulfilled],
+        ['Pending', kpi.pending],
+        ['Avg Fulfillment Time (mins)', kpi.avgTime]
       ]},
       { name: 'Request Details', rows: [
         ['Req ID', 'Station', 'Material', 'Req Time', 'Fulfilled Time', 'Status'],
@@ -71,14 +79,14 @@ export default function MaterialRequestReport() {
 
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
-      <StandardFilterBar title="Material Request Report" icon={ClipboardList} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
+      <StandardFilterBar title="Material Request Report" icon={ClipboardList} period={period} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Requests"  value="40" color="bg-blue-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Fulfilled"  value="35" color="bg-green-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Pending"  value="5" color="bg-orange-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Avg Fulfillment Time (mins)"  value="12" color="bg-purple-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Requests"  value={kpi.total} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Fulfilled"  value={kpi.fulfilled} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Pending"  value={kpi.pending} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg Fulfillment Time (mins)"  value={kpi.avgTime} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

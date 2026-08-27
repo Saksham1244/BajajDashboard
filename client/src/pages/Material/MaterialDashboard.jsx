@@ -63,16 +63,16 @@ export default function MaterialDashboard() {
   ];
 
   const columns = [
-    { header: 'Material ID / Name', accessorKey: 'material' },
-    { header: 'Available Qty', accessorKey: 'available' },
-    { header: 'Min Stock Level', accessorKey: 'minLevel' },
-    { header: 'Status', accessorKey: 'status', cell: ({row}) => {
+    { header: 'Material ID / Name', accessor: 'material' },
+    { header: 'Available Qty', accessor: 'available' },
+    { header: 'Min Stock Level', accessor: 'minLevel' },
+    { header: 'Status', accessor: 'status', render: (val) => {
       const colors = {
         'Critical': 'bg-red-100 text-red-700',
         'Safe': 'bg-green-100 text-green-700',
         'Excess': 'bg-yellow-100 text-yellow-700'
       };
-      return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colors[row.original.status]}`}>{row.original.status}</span>;
+      return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colors[val]}`}>{val}</span>;
     }}
   ];
 
