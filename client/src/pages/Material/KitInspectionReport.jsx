@@ -20,17 +20,25 @@ export default function KitInspectionReport() {
     { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'UG6'], value: sku, onChange: setSku },
   ];
 
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const kpi = {
+    total: Math.round(150 * scale),
+    ok: Math.round(130 * scale),
+    nok: Math.round(20 * scale),
+    passRate: "86.6%"
+  };
+
   const defectData = [
-    { defect: 'Missing Part', count: 12 },
-    { defect: 'Wrong Part', count: 5 },
-    { defect: 'Damaged Part', count: 3 },
-  ];
+    { defect: 'Missing Part', count: Math.round(12 * scale) },
+    { defect: 'Wrong Part', count: Math.round(5 * scale) },
+    { defect: 'Damaged Part', count: Math.round(3 * scale) },
+  ].filter(d => d.count > 0);
 
   const trendData = useMemo(() => {
     return generateTimeLabels(period, shift).map(time => ({
       time,
-      inspected: Math.floor(Math.random() * 20) + 10,
-      defects: Math.floor(Math.random() * 5)
+      inspected: Math.floor(Math.random() * 20 * scale) + Math.round(10 * scale),
+      defects: Math.floor(Math.random() * 5 * scale)
     }));
   }, [period, shift]);
 
@@ -47,7 +55,7 @@ export default function KitInspectionReport() {
     { header: 'Model', accessor: 'model' },
     { header: 'Status', accessor: 'status', render: (val) => {
       const color = val === 'OK' ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
-      return <span className={`px-2 py-1 rounded text-xs font-bold ${color}`}>{val}</span>;
+      return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${color}`}>{val}</span>;
     }},
     { header: 'Defect', accessor: 'defect' },
     { header: 'Operator', accessor: 'operator' },
@@ -57,10 +65,10 @@ export default function KitInspectionReport() {
   const exportToExcel = () => {
     exportToXLSX('KitInspectionReport.xlsx', [
       { name: 'KPI', rows: [
-        ['Total Inspected', '150'],
-        ['OK', '130'],
-        ['NOK', '20'],
-        ['Pass Rate %', '86.6%']
+        ['Total Inspected', kpi.total],
+        ['OK', kpi.ok],
+        ['NOK', kpi.nok],
+        ['Pass Rate %', kpi.passRate]
       ]},
       { name: 'Inspection Details', rows: [
         ['Kit ID', 'Model', 'Status', 'Defect', 'Operator', 'Time'],
@@ -71,14 +79,14 @@ export default function KitInspectionReport() {
 
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
-      <StandardFilterBar title="Kit Inspection Report" icon={PackageSearch} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
+      <StandardFilterBar title="Kit Inspection Report" icon={PackageSearch} period={period} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Inspected"  value="150" color="bg-blue-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="OK"  value="130" color="bg-green-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="NOK"  value="20" color="bg-red-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Pass Rate %"  value="86.6%" color="bg-purple-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Inspected"  value={kpi.total} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="OK"  value={kpi.ok} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="NOK"  value={kpi.nok} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Pass Rate %"  value={kpi.passRate} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
