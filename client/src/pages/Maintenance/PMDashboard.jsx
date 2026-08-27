@@ -16,10 +16,19 @@ export default function PMDashboard() {
 
   const colors = ['#0369a1','#10b981','#f97316','#f43f5e'];
 
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const kpi = {
+    scheduled: Math.round(100 * scale),
+    completed: Math.round(65 * scale),
+    pending: Math.round(20 * scale),
+    overdue: Math.round(15 * scale),
+    compliance: "85%"
+  };
+
   const pmStatusData = [
-    { name: 'Completed', value: 65 },
-    { name: 'Pending', value: 20 },
-    { name: 'Overdue', value: 15 },
+    { name: 'Completed', value: kpi.completed },
+    { name: 'Pending', value: kpi.pending },
+    { name: 'Overdue', value: kpi.overdue },
   ];
 
   const complianceData = [
@@ -57,14 +66,12 @@ export default function PMDashboard() {
     exportToXLSX('PMDashboard.xlsx', [
       { name: 'KPI', rows: [
         ['Metric', 'Value'],
-        ['Total Scheduled PM', 100],
-        ['Completed PM', 65],
-        ['Pending PM', 20],
-        ['Overdue PM', 15],
-        ['Compliance %', '85%'],
+        ['Total Scheduled PM', kpi.scheduled],
+        ['Completed PM', kpi.completed],
+        ['Pending PM', kpi.pending],
+        ['Overdue PM', kpi.overdue],
       ]},
-      { name: 'PM Status', rows: [['Status', 'Count'], ...pmStatusData.map(d => [d.name, d.value])] },
-      { name: 'Upcoming Schedule', rows: [['Machine', 'Next PM Date', 'PM Type', 'Last PM Date', 'Days Remaining', 'Status'], ...tableData.map(d => [d.machine, d.nextDate, d.type, d.lastDate, d.days, d.status])] }
+      { name: 'PM Schedule', rows: [['Machine', 'Next PM Date', 'PM Type', 'Last PM Date', 'Days Remaining', 'Status'], ...tableData.map(d => [d.machine, d.nextDate, d.type, d.lastDate, d.days, d.status])] }
     ]);
   };
 
@@ -74,20 +81,22 @@ export default function PMDashboard() {
         title="Preventive Maintenance Dashboard"
         icon={CalendarCheck}
         onExcelClick={exportToExcel}
+        period={period}
         filters={[
-          ...getBaseFilters(),
-          { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2'], value: line, onChange: setLine },
-          { type: 'dropdown', label: 'Machine', options: ['All','M-01','M-02'], value: machine, onChange: setMachine },
-        ]} 
+          { type: 'period', value: period },
+          { type: 'daterange' },
+          { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2', 'Sub-Assy'], value: line, onChange: setLine },
+          { type: 'dropdown', label: 'Machine', options: ['All', 'M-01', 'M-02', 'M-03'], value: machine, onChange: setMachine },
+        ]}
       />
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Scheduled PM"  value="100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Completed PM"  value="65" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Pending PM"  value="20" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Overdue PM"  value="15" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Compliance %"  value="85%" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Scheduled PM"  value={kpi.scheduled} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Completed PM"  value={kpi.completed} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Pending PM"  value={kpi.pending} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Overdue PM"  value={kpi.overdue} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Compliance %"  value={kpi.compliance} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
