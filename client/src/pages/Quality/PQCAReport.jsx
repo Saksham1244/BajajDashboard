@@ -33,16 +33,18 @@ export default function PQCAReport() {
     doubleNc: "5"
   };
 
-  const complianceData = [
-    { name: 'OK', value: 480 },
-    { name: 'NC', value: 20 },
+  const ncVal = parseInt(kpiData.nc) || 0;
+  
+  const complianceData = dbData?.compliance || [
+    { name: 'OK', value: parseInt(kpiData.ok) || 0 },
+    { name: 'NC', value: ncVal },
   ];
 
-  const categoryNcData = [
-    { name: 'Visual', value: 10 },
-    { name: 'Functional', value: 5 },
-    { name: 'Measurement', value: 5 },
-  ];
+  const categoryNcData = dbData?.categoryNc || [
+    { name: 'Visual', value: Math.ceil(ncVal * 0.5) },
+    { name: 'Functional', value: Math.floor(ncVal * 0.25) },
+    { name: 'Measurement', value: ncVal - Math.ceil(ncVal * 0.5) - Math.floor(ncVal * 0.25) },
+  ].filter(d => d.value > 0);
 
   const ncTrendData = useMemo(() => {
     return generateTimeLabels(period, shift).map(label => ({

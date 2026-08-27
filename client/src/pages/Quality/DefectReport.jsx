@@ -40,18 +40,21 @@ export default function DefectReport() {
     }));
   }, [period, shift]);
 
-  const defectDistData = [
-    { name: 'Half Engine', value: 20 },
-    { name: 'Leakage', value: 15 },
-    { name: 'PV', value: 10 },
-  ];
+  const defVal = parseInt(kpiData.totalDefects) || 0;
+  
+  const defectDistData = dbData?.distribution || [
+    { name: 'Half Engine', value: Math.ceil(defVal * 0.44) },
+    { name: 'Leakage', value: Math.floor(defVal * 0.33) },
+    { name: 'PV', value: defVal - Math.ceil(defVal * 0.44) - Math.floor(defVal * 0.33) },
+  ].filter(d => d.value > 0);
 
-  const defectReasonsData = [
-    { name: 'Torque Failure', value: 15 },
-    { name: 'Missing Part', value: 12 },
-    { name: 'Scratch', value: 8 },
-    { name: 'Wrong Orientation', value: 10 },
-  ];
+  const defectReasonsData = dbData?.reasons || [
+    { name: 'Torque Failure', value: Math.ceil(defVal * 0.33) },
+    { name: 'Missing Part', value: Math.ceil(defVal * 0.27) },
+    { name: 'Scratch', value: Math.ceil(defVal * 0.18) },
+    { name: 'Alignment', value: Math.ceil(defVal * 0.13) },
+    { name: 'Other', value: defVal - Math.ceil(defVal * 0.33) - Math.ceil(defVal * 0.27) - Math.ceil(defVal * 0.18) - Math.ceil(defVal * 0.13) }
+  ].filter(d => d.value > 0);
 
   const tableData = dbData?.table || [
     { engineNo: 'ENG001', defect: 'Torque Failure', station: 'ST-01', operator: 'John Doe', time: '10:00 AM' },
