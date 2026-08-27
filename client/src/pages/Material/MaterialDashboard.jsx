@@ -22,44 +22,57 @@ export default function MaterialDashboard() {
     { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'UG6'], value: sku, onChange: setSku },
   ];
 
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const kpi = {
+    availability: "94%",
+    shortage: Math.round(15 * scale),
+    lineFeed: "OK",
+    requests: Math.round(45 * scale),
+    pending: Math.round(4 * scale),
+    critical: Math.round(12 * scale),
+    safe: Math.round(85 * scale),
+    excess: Math.round(18 * scale)
+  };
+
   const stockLevelData = [
-    { name: 'Critical', value: 12 },
-    { name: 'Safe', value: 85 },
-    { name: 'Excess', value: 18 }
-  ];
+    { name: 'Critical', value: kpi.critical },
+    { name: 'Safe', value: kpi.safe },
+    { name: 'Excess', value: kpi.excess }
+  ].filter(d => d.value > 0);
 
   const shortageData = [
-    { category: 'Engine Parts', count: 5 },
-    { category: 'Chassis Parts', count: 3 },
-    { category: 'Electrical', count: 8 },
-    { category: 'Fasteners', count: 2 },
+    { category: 'Engine Parts', count: Math.round(5 * scale) },
+    { category: 'Chassis Parts', count: Math.round(3 * scale) },
+    { category: 'Electrical', count: Math.round(8 * scale) },
+    { category: 'Fasteners', count: Math.round(2 * scale) },
   ];
 
   const trendData = useMemo(() => {
     return generateTimeLabels(period, shift).map(time => ({
       time,
-      shortages: Math.floor(Math.random() * 10),
-      requests: Math.floor(Math.random() * 20)
+      shortages: Math.floor(Math.random() * 10 * scale),
+      requests: Math.floor(Math.random() * 20 * scale)
     }));
   }, [period, shift]);
 
   const tableData = [
-    { material: 'MAT-001', available: 10, minLevel: 20, status: 'Critical' },
-    { material: 'MAT-002', available: 50, minLevel: 15, status: 'Safe' },
-    { material: 'MAT-003', available: 120, minLevel: 20, status: 'Excess' },
-    { material: 'MAT-004', available: 5, minLevel: 10, status: 'Critical' },
-    { material: 'MAT-005', available: 30, minLevel: 25, status: 'Safe' },
+    { material: 'MAT-001', available: Math.round(10 * scale), minLevel: Math.round(20 * scale), status: 'Critical' },
+    { material: 'MAT-002', available: Math.round(50 * scale), minLevel: Math.round(15 * scale), status: 'Safe' },
+    { material: 'MAT-003', available: Math.round(120 * scale), minLevel: Math.round(20 * scale), status: 'Excess' },
+    { material: 'MAT-004', available: Math.round(5 * scale), minLevel: Math.round(10 * scale), status: 'Critical' },
   ];
 
   const columns = [
-    { header: 'Material', accessor: 'material' },
-    { header: 'Available Qty', accessor: 'available' },
-    { header: 'Min Level', accessor: 'minLevel' },
-    { header: 'Status', accessor: 'status', render: (val) => {
-      let color = 'text-green-600 bg-green-100';
-      if(val === 'Critical') color = 'text-red-600 bg-red-100';
-      if(val === 'Excess') color = 'text-yellow-600 bg-yellow-100';
-      return <span className={`px-2 py-1 rounded text-xs font-bold ${color}`}>{val}</span>;
+    { header: 'Material ID / Name', accessorKey: 'material' },
+    { header: 'Available Qty', accessorKey: 'available' },
+    { header: 'Min Stock Level', accessorKey: 'minLevel' },
+    { header: 'Status', accessorKey: 'status', cell: ({row}) => {
+      const colors = {
+        'Critical': 'bg-red-100 text-red-700',
+        'Safe': 'bg-green-100 text-green-700',
+        'Excess': 'bg-yellow-100 text-yellow-700'
+      };
+      return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colors[row.original.status]}`}>{row.original.status}</span>;
     }}
   ];
 
@@ -67,21 +80,14 @@ export default function MaterialDashboard() {
     exportToXLSX('MaterialDashboard.xlsx', [
       { name: 'KPI', rows: [
         ['Metric', 'Value'],
-        ['Material Availability %', '94%'],
-        ['Material Shortage Count', '15'],
-        ['Line Feed Status', 'OK'],
-        ['Material Request Count', '42'],
-        ['Pending Requests', '5'],
-        ['Stock Level (C/S/E)', '12/85/18']
+        ['Material Availability %', kpi.availability],
+        ['Material Shortage Count', kpi.shortage],
+        ['Line Feed Status', kpi.lineFeed],
+        ['Material Request Count', kpi.requests],
+        ['Pending Requests', kpi.pending],
+        ['Stock Level', `${kpi.critical} C / ${kpi.safe} S / ${kpi.excess} E`],
       ]},
-      { name: 'Stock Status', rows: [
-        ['Material', 'Available', 'Min Level', 'Status'],
-        ...tableData.map(d => [d.material, d.available, d.minLevel, d.status])
-      ]},
-      { name: 'Shortage Details', rows: [
-        ['Category', 'Count'],
-        ...shortageData.map(d => [d.category, d.count])
-      ]}
+      { name: 'Shortages Details', rows: [['Material', 'Available Qty', 'Min Stock Level', 'Status'], ...tableData.map(d => [d.material, d.available, d.minLevel, d.status])] }
     ]);
   };
 
@@ -91,12 +97,12 @@ export default function MaterialDashboard() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Availability %"  value="94%" color="bg-blue-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Shortage Count"  value="15" color="bg-red-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Line Feed Status" value="OK" color="bg-green-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Request Count"  value="42" color="bg-blue-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Pending Requests"  value="5" color="bg-orange-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Stock Level"  value="12 C / 85 S / 18 E" color="bg-gray-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Availability %" value={kpi.availability} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Shortage Count" value={kpi.shortage} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Line Feed Status" value={kpi.lineFeed} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Request Count" value={kpi.requests} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Pending Requests" value={kpi.pending} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Stock Level" value={`${kpi.critical} C / ${kpi.safe} S / ${kpi.excess} E`} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
