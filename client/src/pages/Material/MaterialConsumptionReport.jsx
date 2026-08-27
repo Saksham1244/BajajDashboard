@@ -22,29 +22,39 @@ export default function MaterialConsumptionReport() {
     { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'UG6'], value: sku, onChange: setSku },
   ];
 
-  const varianceData = [
-    { material: 'Bolt M8', variance: 5.2 },
-    { material: 'Gasket', variance: 3.1 },
-    { material: 'O-Ring', variance: 2.8 },
-    { material: 'Washer', variance: -1.5 },
-    { material: 'Screw', variance: -2.2 },
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+
+  const allTableData = [
+    { material: 'Bolt M8', line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', consumed: Math.round(526 * scale), expected: Math.round(500 * scale), variance: Math.round(26 * scale), variancePct: 5.2 },
+    { material: 'Gasket', line: 'Line 1', model: 'Dominar 400', sku: 'UG6', consumed: Math.round(103 * scale), expected: Math.round(100 * scale), variance: Math.round(3 * scale), variancePct: 3.0 },
+    { material: 'O-Ring', line: 'Line 2', model: 'Pulsar 150', sku: 'UG5', consumed: Math.round(205 * scale), expected: Math.round(200 * scale), variance: Math.round(5 * scale), variancePct: 2.5 },
+    { material: 'Washer', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', consumed: Math.round(98 * scale), expected: Math.round(100 * scale), variance: Math.round(-2 * scale), variancePct: -2.0 },
+    { material: 'Screw', line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', consumed: Math.round(295 * scale), expected: Math.round(300 * scale), variance: Math.round(-5 * scale), variancePct: -1.6 },
   ];
+
+  const tableData = allTableData.filter(d => 
+    (line === 'All' || d.line === line) &&
+    (model === 'All' || d.model === model) &&
+    (sku === 'All' || d.sku === sku)
+  );
+
+  const varianceData = tableData.map(d => ({
+    material: d.material,
+    variance: d.variancePct
+  }));
 
   const trendData = useMemo(() => {
     return generateTimeLabels(period, shift).map(time => ({
       time,
-      expected: Math.floor(Math.random() * 100) + 200,
-      consumed: Math.floor(Math.random() * 100) + 200,
+      expected: Math.floor(Math.random() * 100 * scale) + Math.round(200 * scale),
+      consumed: Math.floor(Math.random() * 100 * scale) + Math.round(200 * scale),
     }));
-  }, [period, shift]);
+  }, [period, shift, scale]);
 
-  const tableData = [
-    { material: 'Bolt M8', consumed: 526, expected: 500, variance: 26, variancePct: 5.2 },
-    { material: 'Gasket', consumed: 103, expected: 100, variance: 3, variancePct: 3.0 },
-    { material: 'O-Ring', consumed: 205, expected: 200, variance: 5, variancePct: 2.5 },
-    { material: 'Washer', consumed: 98, expected: 100, variance: -2, variancePct: -2.0 },
-    { material: 'Screw', consumed: 295, expected: 300, variance: -5, variancePct: -1.6 },
-  ];
+  const totalMaterials = Math.max(1, Math.round(150 * scale));
+  const overConsumed = Math.max(0, Math.round(15 * scale));
+  const underConsumed = Math.max(0, Math.round(8 * scale));
+  const avgVariance = '+1.2%';
 
   const columns = [
     { header: 'Material', accessor: 'material' },
@@ -52,8 +62,8 @@ export default function MaterialConsumptionReport() {
     { header: 'Expected Qty', accessor: 'expected' },
     { header: 'Variance', accessor: 'variance', render: (val) => {
       let color = 'text-gray-600';
-      if(val < 0) color = 'text-green-600 font-bold'; // negative variance = under-consumed = green
-      if(val > 0) color = 'text-red-600 font-bold'; // positive variance = over-consumed = red
+      if(val < 0) color = 'text-green-600 font-bold';
+      if(val > 0) color = 'text-red-600 font-bold';
       return <span className={color}>{val > 0 ? `+${val}` : val}</span>;
     }},
     { header: 'Variance %', accessor: 'variancePct', render: (val) => {
@@ -67,10 +77,11 @@ export default function MaterialConsumptionReport() {
   const exportToExcel = () => {
     exportToXLSX('MaterialConsumptionReport.xlsx', [
       { name: 'KPI', rows: [
-        ['Total Materials', '150'],
-        ['Avg Variance %', '1.2%'],
-        ['Over-consumed Count', '15'],
-        ['Under-consumed Count', '8']
+        ['Metric', 'Value'],
+        ['Total Materials', totalMaterials],
+        ['Avg Variance %', avgVariance],
+        ['Over-consumed Count', overConsumed],
+        ['Under-consumed Count', underConsumed]
       ]},
       { name: 'Consumption Details', rows: [
         ['Material', 'Consumed', 'Expected', 'Variance', 'Variance %'],
@@ -81,19 +92,19 @@ export default function MaterialConsumptionReport() {
 
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
-      <StandardFilterBar title="Material Consumption Report" icon={TrendingDown} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
+      <StandardFilterBar title="Material Consumption Report" icon={TrendingDown} period={period} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Materials"  value="150" color="bg-blue-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Avg Variance %"  value="1.2%" color="bg-purple-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Over-consumed"  value="15" color="bg-red-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Under-consumed"  value="8" color="bg-green-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Materials" value={totalMaterials} color="bg-blue-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg Variance %" value={avgVariance} color="bg-purple-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Over-consumed" value={overConsumed} color="bg-red-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Under-consumed" value={underConsumed} color="bg-green-100" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="card p-4">
-            <h3 className="text-sm font-bold text-brand-dark mb-3">Top 5 Materials by Variance</h3>
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Top Materials by Variance</h3>
             <div className="h-[240px]">
               <ResponsiveContainer>
                 <BarChart data={varianceData}>

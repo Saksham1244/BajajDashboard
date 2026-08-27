@@ -30,7 +30,9 @@ export default function EngineReworkReport() {
     { header: 'Detected Date & Time', accessor: 'detectedTime' },
     { header: 'Rework Start', accessor: 'reworkStart' },
     { header: 'Rework End', accessor: 'reworkEnd' },
-    { header: 'Rework Status', accessor: 'status' },
+    { header: 'Rework Status', accessor: 'status', render: (val) => (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${val === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{val}</span>
+    )},
     { header: 'Rework Operator', accessor: 'operator' },
   ];
 
@@ -59,10 +61,10 @@ export default function EngineReworkReport() {
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Defects"  value="2" trend="neutral" color="red" />
-              <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Rework Count"  value="2" trend="neutral" color="orange" />
-              <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Final Status" value="OK" trend="neutral" color="green" />
-              <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Rework Time"  value="35m" trend="neutral" color="blue" />
+              <StatCard title="Total Defects" value="2" trend="neutral" color="red" />
+              <StatCard title="Rework Count" value="2" trend="neutral" color="orange" />
+              <StatCard title="Final Status" value="OK" trend="neutral" color="green" />
+              <StatCard title="Total Rework Time" value="35m" trend="neutral" color="blue" />
             </div>
             <div className="card p-4 flex-1">
               <h3 className="text-sm font-bold text-brand-dark mb-3">Rework Details</h3>

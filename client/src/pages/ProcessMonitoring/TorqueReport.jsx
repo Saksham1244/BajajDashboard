@@ -10,42 +10,33 @@ import { useReportFilters } from '../../hooks/useReportFilters';
 export default function TorqueReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
   const [device, setDevice] = useState('All');
-  const [dbData, setDbData] = React.useState({});
-  const [loading, setLoading] = React.useState(false);
+  const [sku, setSku] = useState('All');
 
   const customFilters = [
     { type: 'dropdown', label: 'Torque Device', options: ['All', 'TD-01', 'TD-02', 'TD-03'], value: device, onChange: setDevice },
+    { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'STD'], value: sku, onChange: setSku },
   ];
 
-  React.useEffect(() => {
-        fetch(`http://localhost:5000/api/process/torque?period=${period}&shift=${shift}`)
-      .then(res => res.json())
-      .then(data => {
-        setDbData(data);
-              })
-      .catch(err => {
-        console.error(err);
-              });
-  }, [period, shift]);
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
 
-  const torqueData = React.useMemo(() => {
-    if (dbData.torqueData?.length) return dbData.torqueData;
-    return [
-      { engineNo: 'ENG-001', sku: 'UG5', device: 'TD-01', value: 45.2, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2023-10-25 08:30', operator: 'Opr 1' },
-      { engineNo: 'ENG-002', sku: 'UG5', device: 'TD-01', value: 48.1, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2023-10-25 08:45', operator: 'Opr 1' },
-      { engineNo: 'ENG-003', sku: 'STD', device: 'TD-02', value: 51.5, minSpec: 40, maxSpec: 50, result: 'NOK', datetime: '2023-10-25 09:00', operator: 'Opr 2' },
-      { engineNo: 'ENG-004', sku: 'UG5', device: 'TD-01', value: 42.8, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2023-10-25 09:15', operator: 'Opr 1' },
-      { engineNo: 'ENG-005', sku: 'STD', device: 'TD-02', value: 46.0, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2023-10-25 09:30', operator: 'Opr 2' },
-      { engineNo: 'ENG-006', sku: 'UG5', device: 'TD-03', value: 39.5, minSpec: 40, maxSpec: 50, result: 'NOK', datetime: '2023-10-25 09:45', operator: 'Opr 3' },
-    ];
-  }, [dbData]);
+  const allTorqueData = [
+    { engineNo: 'ENG-001', sku: 'UG5', device: 'TD-01', value: 45.2, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2026-08-25 08:30', operator: 'Opr 1' },
+    { engineNo: 'ENG-002', sku: 'UG5', device: 'TD-01', value: 48.1, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2026-08-25 08:45', operator: 'Opr 1' },
+    { engineNo: 'ENG-003', sku: 'STD', device: 'TD-02', value: 51.5, minSpec: 40, maxSpec: 50, result: 'NOK', datetime: '2026-08-25 09:00', operator: 'Opr 2' },
+    { engineNo: 'ENG-004', sku: 'UG5', device: 'TD-01', value: 42.8, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2026-08-25 09:15', operator: 'Opr 1' },
+    { engineNo: 'ENG-005', sku: 'STD', device: 'TD-02', value: 46.0, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2026-08-25 09:30', operator: 'Opr 2' },
+    { engineNo: 'ENG-006', sku: 'UG5', device: 'TD-03', value: 39.5, minSpec: 40, maxSpec: 50, result: 'NOK', datetime: '2026-08-25 09:45', operator: 'Opr 3' },
+  ];
 
-  const kpi = dbData.kpi || {
-    totalReadings: "6",
-    okCount: "4",
-    notOkCount: "2",
-    avgTorque: 45.5
-  };
+  const torqueData = allTorqueData.filter(d => 
+    (device === 'All' || d.device === device) &&
+    (sku === 'All' || d.sku === sku)
+  );
+
+  const totalReadings = Math.max(1, Math.round(torqueData.length * (period === 'Month' ? 20 : period === 'Week' ? 5 : 1)));
+  const okCount = Math.round(totalReadings * 0.8);
+  const notOkCount = totalReadings - okCount;
+  const avgTorque = (torqueData.reduce((acc, d) => acc + d.value, 0) / (torqueData.length || 1)).toFixed(1);
 
   const tableColumns = [
     { header: 'Engine No', accessor: 'engineNo' },
@@ -54,14 +45,16 @@ export default function TorqueReport() {
     { header: 'Torque Value (Nm)', accessor: 'value' },
     { header: 'Min Spec', accessor: 'minSpec' },
     { header: 'Max Spec', accessor: 'maxSpec' },
-    { header: 'Result', accessor: 'result' },
+    { header: 'Result', accessor: 'result', render: (val) => (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${val === 'OK' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{val}</span>
+    )},
     { header: 'Date & Time', accessor: 'datetime' },
     { header: 'Operator', accessor: 'operator' },
   ];
 
   const exportToExcel = () => {
     exportToXLSX('TorqueReport.xlsx', [
-      { name: 'KPI Summary', rows: [['Total Readings', 'OK Count', 'NOT-OK Count', 'Avg Torque'], [kpi.totalReadings, kpi.okCount, kpi.notOkCount, kpi.avgTorque]] },
+      { name: 'KPI Summary', rows: [['Metric', 'Value'], ['Total Readings', totalReadings], ['OK Count', okCount], ['NOT-OK Count', notOkCount], ['Avg Torque', `${avgTorque} Nm`]] },
       { name: 'Torque Trend', rows: [['Engine No', 'Torque Value'], ...torqueData.map(d => [d.engineNo, d.value])] },
       { name: 'Torque Details', rows: [['Engine No', 'SKU', 'Device', 'Value', 'Min', 'Max', 'Result', 'Datetime', 'Operator'], ...torqueData.map(d => [d.engineNo, d.sku, d.device, d.value, d.minSpec, d.maxSpec, d.result, d.datetime, d.operator])] }
     ]);
@@ -72,15 +65,16 @@ export default function TorqueReport() {
       <StandardFilterBar
         title="Torque Report"
         icon={Settings2}
+        period={period}
         onExcelClick={exportToExcel}
         filters={[...getBaseFilters(), ...customFilters]}
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Readings" value={kpi.totalReadings} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="OK Count" value={kpi.okCount} color="text-green-600" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="NOT-OK Count" value={kpi.notOkCount} color="text-red-600" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Avg Torque (Nm)" value={kpi.avgTorque} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Readings" value={totalReadings} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="OK Count" value={okCount} color="text-green-600" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="NOT-OK Count" value={notOkCount} color="text-red-600" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg Torque (Nm)" value={`${avgTorque} Nm`} />
         </div>
         
         <div className="card p-4">

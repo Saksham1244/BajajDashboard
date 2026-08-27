@@ -12,17 +12,26 @@ export default function SkillMatrixReport() {
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
 
-  const kpiData = { total: 150, certifiedPct: 85, multiSkilled: 42, skillGaps: 12 };
-  
-  const tableData = [
-    { operator: 'John Doe', station: 'ST-01', skillLevel: 'Expert', certified: 'Yes' },
-    { operator: 'Jane Smith', station: 'ST-02', skillLevel: 'Intermediate', certified: 'Yes' },
-    { operator: 'Mike Johnson', station: 'ST-03', skillLevel: 'Beginner', certified: 'No' },
-    { operator: 'Sarah Williams', station: 'ST-04', skillLevel: 'Expert', certified: 'Yes' },
-    { operator: 'David Brown', station: 'ST-05', skillLevel: 'Intermediate', certified: 'Yes' },
-    { operator: 'Emily Davis', station: 'ST-01', skillLevel: 'Beginner', certified: 'No' },
-    { operator: 'Tom Wilson', station: 'ST-02', skillLevel: 'Expert', certified: 'Yes' }
+  const allOperators = [
+    { operator: 'John Doe', line: 'Line 1', station: 'ST-01', skillLevel: 'Expert', certified: 'Yes' },
+    { operator: 'Jane Smith', line: 'Line 1', station: 'ST-02', skillLevel: 'Intermediate', certified: 'Yes' },
+    { operator: 'Mike Johnson', line: 'Line 2', station: 'ST-03', skillLevel: 'Beginner', certified: 'No' },
+    { operator: 'Sarah Williams', line: 'Line 2', station: 'ST-04', skillLevel: 'Expert', certified: 'Yes' },
+    { operator: 'David Brown', line: 'Line 1', station: 'ST-05', skillLevel: 'Intermediate', certified: 'Yes' },
+    { operator: 'Emily Davis', line: 'Line 1', station: 'ST-01', skillLevel: 'Beginner', certified: 'No' },
+    { operator: 'Tom Wilson', line: 'Line 2', station: 'ST-02', skillLevel: 'Expert', certified: 'Yes' }
   ];
+
+  const tableData = allOperators.filter(d => 
+    (line === 'All' || d.line === line) &&
+    (station === 'All' || d.station === station)
+  );
+
+  const totalOps = tableData.length;
+  const certifiedCount = tableData.filter(d => d.certified === 'Yes').length;
+  const certifiedPct = totalOps > 0 ? Math.round((certifiedCount / totalOps) * 100) : 100;
+  const multiSkilled = tableData.filter(d => d.skillLevel === 'Expert' || d.skillLevel === 'Intermediate').length;
+  const skillGaps = tableData.filter(d => d.skillLevel === 'Beginner').length;
 
   const getBadgeColor = (level) => {
     switch (level) {
@@ -40,13 +49,17 @@ export default function SkillMatrixReport() {
   const columns = [
     { header: 'Operator', accessor: 'operator' },
     { header: 'Station', accessor: 'station' },
-    { header: 'Skill Level', accessor: (row) => <span className={`px-2 py-1 rounded-full text-xs font-medium ${getBadgeColor(row.skillLevel)}`}>{row.skillLevel}</span> },
-    { header: 'Certified', accessor: (row) => <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCertifiedBadge(row.certified)}`}>{row.certified}</span> }
+    { header: 'Skill Level', accessor: 'skillLevel', render: (val) => (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getBadgeColor(val)}`}>{val}</span>
+    )},
+    { header: 'Certified', accessor: 'certified', render: (val) => (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getCertifiedBadge(val)}`}>{val}</span>
+    )}
   ];
 
   const exportToExcel = () => {
     exportToXLSX('SkillMatrixReport.xlsx', [
-      { name: 'KPI', rows: [['Metric', 'Value'], ['Total Operators', kpiData.total], ['Certified %', kpiData.certifiedPct], ['Multi-skilled Operators', kpiData.multiSkilled], ['Skill Gaps', kpiData.skillGaps]] },
+      { name: 'KPI', rows: [['Metric', 'Value'], ['Total Operators', totalOps], ['Certified %', `${certifiedPct}%`], ['Multi-skilled Operators', multiSkilled], ['Skill Gaps', skillGaps]] },
       { name: 'Skill Details', rows: [['Operator', 'Station', 'Skill Level', 'Certified'], ...tableData.map(d => [d.operator, d.station, d.skillLevel, d.certified])] }
     ]);
   };
@@ -56,6 +69,7 @@ export default function SkillMatrixReport() {
       <StandardFilterBar
         title="Skill Matrix Report"
         icon={GraduationCap}
+        period={period}
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
@@ -65,10 +79,10 @@ export default function SkillMatrixReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Operators" value={kpiData.total} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Certified %" value={`${kpiData.certifiedPct}%`} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Multi-skilled Operators" value={kpiData.multiSkilled} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Skill Gaps" value={kpiData.skillGaps} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Operators" value={totalOps} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Certified %" value={`${certifiedPct}%`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Multi-skilled Operators" value={multiSkilled} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Skill Gaps" value={skillGaps} />
         </div>
         <div className="card p-4 flex-1">
           <h3 className="text-sm font-bold text-brand-dark mb-3">Operator Skill Details</h3>

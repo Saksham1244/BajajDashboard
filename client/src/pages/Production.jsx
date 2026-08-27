@@ -38,35 +38,44 @@ export default function Production() {
       });
   }, [period, shift]);
 
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+
+  const totalProd = Math.max(1, Math.round(58089 * scale));
+  const shortfall = Math.max(0, Math.round(842 * scale));
+  const wip = Math.max(0, Math.round(142 * scale));
+  const rollover = Math.max(0, Math.round(85 * scale));
+
   const hourlyData = useMemo(() => {
     const labels = generateTimeLabels(period, shift);
-    const totalPlan = dbData.reduce((acc, curr) => acc + curr.plan, 0) || 1200;
-    const totalActual = dbData.reduce((acc, curr) => acc + curr.actual, 0) || 1150;
-    
-    const planPerLabel = Math.floor(totalPlan / (labels.length || 1));
-    const actualPerLabel = Math.floor(totalActual / (labels.length || 1));
+    const planPerLabel = Math.floor((totalProd + shortfall) / (labels.length || 1));
+    const actualPerLabel = Math.floor(totalProd / (labels.length || 1));
 
     return labels.map(time => ({
       time,
       plan: planPerLabel,
-      actual: Math.max(0, actualPerLabel + Math.floor(Math.random() * 20 - 10))
+      actual: Math.max(0, actualPerLabel + Math.floor(Math.random() * 20 * scale - 10 * scale))
     }));
-  }, [period, shift, dbData]);
+  }, [period, shift, totalProd, shortfall, scale]);
 
-  const skuData = [
-    { name: 'Pulsar 150 UG5', plan: 400, actual: 380, wip: 45, rollover: 20 },
-    { name: 'Dominar 400', plan: 250, actual: 235, wip: 22, rollover: 15 },
-    { name: 'Avenger 220', plan: 150, actual: 152, wip: 10, rollover: 0 },
-    { name: 'Pulsar 220', plan: 200, actual: 190, wip: 15, rollover: 5 },
-    { name: 'CT 100', plan: 300, actual: 310, wip: 20, rollover: 0 },
+  const allSkuData = [
+    { line: 'Line 1', modelFamily: 'Pulsar', name: 'Pulsar 150 UG5', plan: Math.round(400 * scale), actual: Math.round(380 * scale), wip: Math.round(45 * scale), rollover: Math.round(20 * scale) },
+    { line: 'Line 2', modelFamily: 'Dominar', name: 'Dominar 400', plan: Math.round(250 * scale), actual: Math.round(235 * scale), wip: Math.round(22 * scale), rollover: Math.round(15 * scale) },
+    { line: 'Line 1', modelFamily: 'Avenger', name: 'Avenger 220', plan: Math.round(150 * scale), actual: Math.round(152 * scale), wip: Math.round(10 * scale), rollover: 0 },
+    { line: 'Line 2', modelFamily: 'Pulsar', name: 'Pulsar 220', plan: Math.round(200 * scale), actual: Math.round(190 * scale), wip: Math.round(15 * scale), rollover: Math.round(5 * scale) },
+    { line: 'Line 1', modelFamily: 'Pulsar', name: 'CT 100', plan: Math.round(300 * scale), actual: Math.round(310 * scale), wip: Math.round(20 * scale), rollover: 0 },
   ];
 
+  const skuData = allSkuData.filter(d => 
+    (activeLine === 'All' || d.line === activeLine) &&
+    (activeModel === 'All' || d.modelFamily === activeModel)
+  );
+
   const paretoData = [
-    { reason: 'Material Short', count: 28, cumPercent: 42 },
-    { reason: 'Machine BD', count: 18, cumPercent: 69 },
-    { reason: 'Quality Hold', count: 12, cumPercent: 87 },
-    { reason: 'Setup Delay', count: 5, cumPercent: 95 },
-    { reason: 'Other', count: 3, cumPercent: 100 },
+    { reason: 'Material Short', count: Math.max(1, Math.round(28 * scale)), cumPercent: 42 },
+    { reason: 'Machine BD', count: Math.max(1, Math.round(18 * scale)), cumPercent: 69 },
+    { reason: 'Quality Hold', count: Math.max(1, Math.round(12 * scale)), cumPercent: 87 },
+    { reason: 'Setup Delay', count: Math.max(1, Math.round(5 * scale)), cumPercent: 95 },
+    { reason: 'Other', count: Math.max(1, Math.round(3 * scale)), cumPercent: 100 },
   ];
 
   const columns = [
@@ -79,7 +88,7 @@ export default function Production() {
 
   const exportToExcel = () => {
     exportToXLSX('Production_Report.xlsx', [
-      { name: 'KPI Summary', rows: [['Metric', 'Value'], ['Total Production', 58089], ['Production Shortfall', 842], ['Current WIP', 142], ['Rollover Quantity', 85]] },
+      { name: 'KPI Summary', rows: [['Metric', 'Value'], ['Total Production', totalProd], ['Production Shortfall', shortfall], ['Current WIP', wip], ['Rollover Quantity', rollover]] },
       { name: 'Hourly Plan vs Actual', rows: [['Time', 'Plan', 'Actual', 'Variance'], ...hourlyData.map(r => [r.time, r.plan, r.actual, r.actual - r.plan])] },
       { name: 'Loss Analysis', rows: [['Reason', 'Loss Count', 'Cumulative %'], ...paretoData.map(r => [r.reason, r.count, r.cumPercent + '%'])] },
       { name: 'SKU Production Status', rows: [['SKU Name', 'Plan Qty', 'Actual Qty', 'WIP Status', 'Rollover Plan'], ...skuData.map(r => [r.name, r.plan, r.actual, r.wip, r.rollover])] }
@@ -91,6 +100,7 @@ export default function Production() {
       <StandardFilterBar
         title="Production Report"
         icon={LayoutDashboard}
+        period={period}
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
@@ -100,15 +110,15 @@ export default function Production() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Production" value={kpis.totalProd} trend={12.4} subtitle="vs Last Month 51,680" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Production Shortfall" value={kpis.shortfall} trend={-4.2} subtitle="vs Last Month 879" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Current WIP" value={kpis.wip} trend={1.8} subtitle="vs Last Month 139" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Rollover Quantity" value={kpis.rollover} trend={-15.3} subtitle="vs Last Month 100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Production" value={totalProd} trend={12.4} subtitle="vs Last Period" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Production Shortfall" value={shortfall} trend={-4.2} subtitle="vs Last Period" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Current WIP" value={wip} trend={1.8} subtitle="vs Last Period" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Rollover Quantity" value={rollover} trend={-15.3} subtitle="vs Last Period" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="card p-4">
-            <h3 className="text-sm font-bold text-brand-dark mb-3">Hourly Plan vs Actual</h3>
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Plan vs Actual by Period</h3>
             <div className="h-[240px]">
               <ResponsiveContainer>
                 <ComposedChart data={hourlyData}>
@@ -118,7 +128,7 @@ export default function Production() {
                   <Tooltip />
                   <Legend />
                   <Bar dataKey="actual" name="Actual Prod." fill="#0ea5e9" />
-                  <Line type="stepAfter" dataKey="plan" name="Hourly Target" stroke="#ef4444" strokeWidth={2} dot={false} />
+                  <Line type="stepAfter" dataKey="plan" name="Target" stroke="#ef4444" strokeWidth={2} dot={false} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>

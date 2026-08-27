@@ -17,37 +17,50 @@ export default function DowntimeSummaryReport() {
 
   const colors = ['#0369a1','#f97316'];
 
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+
   const chartData = useMemo(() => {
     return generateTimeLabels(period, shift).map(label => ({
       time: label,
-      downtime: Math.floor(Math.random() * 100) + 10
+      downtime: Math.floor(Math.random() * 80 * scale) + Math.round(15 * scale)
     }));
-  }, [period, shift]);
+  }, [period, shift, scale]);
 
-  const tableData = [
-    { date: '2023-10-01', shift: 'Shift 1', machine: 'M-01', downtime: 45, count: 1 },
-    { date: '2023-10-02', shift: 'Shift 2', machine: 'M-02', downtime: 120, count: 2 },
-    { date: '2023-10-03', shift: 'Shift 1', machine: 'M-03', downtime: 30, count: 1 },
-    { date: '2023-10-04', shift: 'Shift 3', machine: 'M-01', downtime: 90, count: 2 },
-    { date: '2023-10-05', shift: 'Shift 1', machine: 'M-04', downtime: 60, count: 1 },
+  const allTableData = [
+    { date: '2026-08-25', line: 'Line 1', station: 'ST-01', shift: 'Shift 1', machine: 'M-01', downtime: Math.round(45 * scale) || 10, count: 1 },
+    { date: '2026-08-25', line: 'Line 1', station: 'ST-02', shift: 'Shift 2', machine: 'M-02', downtime: Math.round(120 * scale) || 25, count: 2 },
+    { date: '2026-08-26', line: 'Line 2', station: 'ST-01', shift: 'Shift 1', machine: 'M-03', downtime: Math.round(30 * scale) || 15, count: 1 },
+    { date: '2026-08-26', line: 'Line 2', station: 'ST-02', shift: 'Shift 2', machine: 'M-01', downtime: Math.round(90 * scale) || 20, count: 2 },
+    { date: '2026-08-27', line: 'Line 1', station: 'ST-01', shift: 'Shift 1', machine: 'M-04', downtime: Math.round(60 * scale) || 10, count: 1 },
   ];
 
+  const tableData = allTableData.filter(d => 
+    (line === 'All' || d.line === line) &&
+    (station === 'All' || d.station === station)
+  );
+
+  const totalDowntimeMins = tableData.reduce((acc, d) => acc + d.downtime, 0);
+  const totalDowntimeHrs = (totalDowntimeMins / 60).toFixed(1);
+  const avgDowntimeMins = Math.round(totalDowntimeMins / (tableData.length || 1));
+  const totalBreakdowns = tableData.reduce((acc, d) => acc + d.count, 0);
+  const mostAffected = tableData.length > 0 ? tableData[0].machine : 'M-01';
+
   const columns = [
-    { header: 'Date', accessorKey: 'date' },
-    { header: 'Shift', accessorKey: 'shift' },
-    { header: 'Machine', accessorKey: 'machine' },
-    { header: 'Total Downtime (mins)', accessorKey: 'downtime' },
-    { header: 'No. of Breakdowns', accessorKey: 'count' },
+    { header: 'Date', accessor: 'date' },
+    { header: 'Shift', accessor: 'shift' },
+    { header: 'Machine', accessor: 'machine' },
+    { header: 'Total Downtime (mins)', accessor: 'downtime' },
+    { header: 'No. of Breakdowns', accessor: 'count' },
   ];
 
   const exportToExcel = () => {
     exportToXLSX('DowntimeSummaryReport.xlsx', [
       { name: 'KPI', rows: [
         ['Metric', 'Value'],
-        ['Total Downtime (hrs)', 5.75],
-        ['Avg Daily Downtime', '69 mins'],
-        ['Total Breakdowns', 7],
-        ['Most Affected Machine', 'M-02'],
+        ['Total Downtime (hrs)', totalDowntimeHrs],
+        ['Avg Daily Downtime (mins)', avgDowntimeMins],
+        ['Total Breakdowns', totalBreakdowns],
+        ['Most Affected Machine', mostAffected],
       ]},
       { name: 'Downtime Summary', rows: [['Date', 'Shift', 'Machine', 'Total Downtime (mins)', 'No. of Breakdowns'], ...tableData.map(d => [d.date, d.shift, d.machine, d.downtime, d.count])] }
     ]);
@@ -58,6 +71,7 @@ export default function DowntimeSummaryReport() {
       <StandardFilterBar
         title="Downtime Summary Report"
         icon={Timer}
+        period={period}
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
@@ -68,10 +82,10 @@ export default function DowntimeSummaryReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Downtime"  value="5.75 hrs" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Avg Daily Downtime"  value="69 mins" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Breakdowns"  value="7" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Most Affected Machine" value="M-02" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Downtime" value={`${totalDowntimeHrs} hrs`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg Daily Downtime" value={`${avgDowntimeMins} mins`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Breakdowns" value={totalBreakdowns} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Most Affected Machine" value={mostAffected} />
         </div>
 
         <div className="card p-4">

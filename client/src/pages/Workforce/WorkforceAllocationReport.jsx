@@ -13,23 +13,28 @@ export default function WorkforceAllocationReport() {
   
   const [line, setLine] = useState('All');
 
-  const kpiData = { totalStations: 25, fullyStaffed: 20, underStaffed: 4, overStaffed: 1 };
-  
-  const allocationData = [
-    { station: 'ST-01', planned: 5, actual: 5 },
-    { station: 'ST-02', planned: 4, actual: 3 },
-    { station: 'ST-03', planned: 6, actual: 6 },
-    { station: 'ST-04', planned: 3, actual: 4 },
-    { station: 'ST-05', planned: 5, actual: 3 }
+  const allAllocations = [
+    { line: 'Line 1', station: 'ST-01', assignedOperator: 'John Doe, Jane Smith', plannedCount: 5, actualCount: 5, gap: 0 },
+    { line: 'Line 1', station: 'ST-02', assignedOperator: 'Mike Johnson', plannedCount: 4, actualCount: 3, gap: -1 },
+    { line: 'Line 2', station: 'ST-03', assignedOperator: 'Sarah Williams', plannedCount: 6, actualCount: 6, gap: 0 },
+    { line: 'Line 2', station: 'ST-04', assignedOperator: 'David Brown, Tom Wilson', plannedCount: 3, actualCount: 4, gap: 1 },
+    { line: 'Line 1', station: 'ST-05', assignedOperator: 'Emily Davis', plannedCount: 5, actualCount: 3, gap: -2 }
   ];
 
-  const tableData = [
-    { station: 'ST-01', assignedOperator: 'John Doe, Jane Smith...', plannedCount: 5, actualCount: 5, gap: 0 },
-    { station: 'ST-02', assignedOperator: 'Mike Johnson...', plannedCount: 4, actualCount: 3, gap: -1 },
-    { station: 'ST-03', assignedOperator: 'Sarah Williams...', plannedCount: 6, actualCount: 6, gap: 0 },
-    { station: 'ST-04', assignedOperator: 'David Brown, Tom Wilson...', plannedCount: 3, actualCount: 4, gap: 1 },
-    { station: 'ST-05', assignedOperator: 'Emily Davis...', plannedCount: 5, actualCount: 3, gap: -2 }
-  ];
+  const tableData = allAllocations.filter(d =>
+    line === 'All' || d.line === line
+  );
+
+  const allocationData = tableData.map(d => ({
+    station: d.station,
+    planned: d.plannedCount,
+    actual: d.actualCount
+  }));
+
+  const totalStations = tableData.length;
+  const fullyStaffed = tableData.filter(d => d.gap === 0).length;
+  const underStaffed = tableData.filter(d => d.gap < 0).length;
+  const overStaffed = tableData.filter(d => d.gap > 0).length;
 
   const getGapBadge = (gap) => {
     if (gap === 0) return <span className="text-green-600 font-bold">0</span>;
@@ -42,12 +47,12 @@ export default function WorkforceAllocationReport() {
     { header: 'Assigned Operator(s)', accessor: 'assignedOperator' },
     { header: 'Planned Count', accessor: 'plannedCount' },
     { header: 'Actual Count', accessor: 'actualCount' },
-    { header: 'Gap', accessor: (row) => getGapBadge(row.gap) }
+    { header: 'Gap', accessor: 'gap', render: (val) => getGapBadge(val) }
   ];
 
   const exportToExcel = () => {
     exportToXLSX('WorkforceAllocationReport.xlsx', [
-      { name: 'KPI', rows: [['Metric', 'Value'], ['Total Stations', kpiData.totalStations], ['Fully Staffed', kpiData.fullyStaffed], ['Under-staffed', kpiData.underStaffed], ['Over-staffed', kpiData.overStaffed]] },
+      { name: 'KPI', rows: [['Metric', 'Value'], ['Total Stations', totalStations], ['Fully Staffed', fullyStaffed], ['Under-staffed', underStaffed], ['Over-staffed', overStaffed]] },
       { name: 'Allocation Details', rows: [['Station', 'Assigned Operator', 'Planned Count', 'Actual Count', 'Gap'], ...tableData.map(d => [d.station, d.assignedOperator, d.plannedCount, d.actualCount, d.gap])] }
     ]);
   };
@@ -57,6 +62,7 @@ export default function WorkforceAllocationReport() {
       <StandardFilterBar
         title="Workforce Allocation Report"
         icon={UserCheck}
+        period={period}
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
@@ -65,10 +71,10 @@ export default function WorkforceAllocationReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Stations" value={kpiData.totalStations} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Fully Staffed" value={kpiData.fullyStaffed} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Under-staffed" value={kpiData.underStaffed} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Over-staffed" value={kpiData.overStaffed} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Stations" value={totalStations} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Fully Staffed" value={fullyStaffed} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Under-staffed" value={underStaffed} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Over-staffed" value={overStaffed} />
         </div>
         <div className="card p-4">
           <h3 className="text-sm font-bold text-brand-dark mb-3">Planned vs Actual by Station</h3>

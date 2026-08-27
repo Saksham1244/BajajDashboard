@@ -30,14 +30,12 @@ export default function DowntimeReport() {
               });
   }, [period, shift]);
 
-  const totalDowntime = dbData.reduce((acc, curr) => acc + curr.duration, 0) || 420;
-  const noOfLosses = dbData.reduce((acc, curr) => acc + curr.occurrences, 0) || 35;
-  const avgLossDuration = noOfLosses > 0 ? Math.round(totalDowntime / noOfLosses) : 0;
-  let mostLostCat = 'None';
-  if (dbData.length > 0) {
-    const sorted = [...dbData].sort((a, b) => b.duration - a.duration);
-    mostLostCat = sorted[0].category;
-  }
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+
+  const totalDowntime = Math.round(420 * scale);
+  const noOfLosses = Math.max(1, Math.round(35 * scale));
+  const avgLossDuration = Math.round(totalDowntime / noOfLosses);
+  const mostLostCat = 'Equipment Failure';
 
   const kpiData = { totalDowntime, noOfLosses, mostLostCat, avgLossDuration };
   
@@ -46,28 +44,32 @@ export default function DowntimeReport() {
     const downtimePerLabel = Math.floor(totalDowntime / (labels.length || 1));
     return labels.map(time => ({
       time,
-      duration: Math.max(0, downtimePerLabel + Math.floor(Math.random() * 10 - 5))
+      duration: Math.max(0, downtimePerLabel + Math.floor(Math.random() * 6 * scale))
     }));
-  }, [period, shift, dbData]);
+  }, [period, shift, totalDowntime, scale]);
 
-  const categoryData = dbData.length > 0 ? dbData.map(d => ({
-    category: d.category,
-    duration: d.duration,
-    occurrence: d.occurrences
-  })) : [
-    { category: 'Equipment Failure', duration: 180, occurrence: 5 },
-    { category: 'Material Shortage', duration: 120, occurrence: 15 },
-    { category: 'Setup/Adjustments', duration: 90, occurrence: 8 },
-    { category: 'Quality Issues', duration: 30, occurrence: 7 }
+  const categoryData = [
+    { category: 'Equipment Failure', duration: Math.round(180 * scale), occurrence: Math.max(1, Math.round(5 * scale)) },
+    { category: 'Material Shortage', duration: Math.round(120 * scale), occurrence: Math.max(1, Math.round(15 * scale)) },
+    { category: 'Setup/Adjustments', duration: Math.round(90 * scale), occurrence: Math.max(1, Math.round(8 * scale)) },
+    { category: 'Quality Issues', duration: Math.round(30 * scale), occurrence: Math.max(1, Math.round(7 * scale)) }
+  ].filter(d => d.duration > 0 || d.occurrence > 0);
+
+  const allTableData = [
+    { line: 'Line 1', station: 'ST-01', modelFamily: 'Pulsar', model: 'Pulsar 150', sku: 'UG5', category: 'Equipment Failure', subCategory: 'Motor Breakdown', startTime: '08:15', endTime: '09:00', duration: 45, occurrence: 1, machine: 'M-101', reason: 'Overheating' },
+    { line: 'Line 1', station: 'ST-02', modelFamily: 'Dominar', model: 'Dominar 400', sku: 'STD', category: 'Material Shortage', subCategory: 'Part XYZ Missing', startTime: '11:00', endTime: '12:00', duration: 60, occurrence: 1, machine: 'M-102', reason: 'Supply Delay' },
+    { line: 'Line 2', station: 'ST-01', modelFamily: 'Pulsar', model: 'Pulsar 220', sku: 'UG6', category: 'Setup/Adjustments', subCategory: 'Tool Change', startTime: '06:30', endTime: '06:45', duration: 15, occurrence: 1, machine: 'M-103', reason: 'Wear and Tear' },
+    { line: 'Line 2', station: 'ST-03', modelFamily: 'Pulsar', model: 'Pulsar 150', sku: 'UG5', category: 'Quality Issues', subCategory: 'Defective Batch', startTime: '10:00', endTime: '10:10', duration: 10, occurrence: 1, machine: 'M-101', reason: 'Calibration Error' },
+    { line: 'Line 1', station: 'ST-01', modelFamily: 'Avenger', model: 'Avenger 220', sku: 'STD', category: 'Equipment Failure', subCategory: 'Sensor Fault', startTime: '09:10', endTime: '09:30', duration: 20, occurrence: 1, machine: 'M-104', reason: 'Damaged wire' }
   ];
 
-  const tableData = [
-    { category: 'Equipment Failure', subCategory: 'Motor Breakdown', startTime: '08:15', endTime: '09:00', duration: 45, occurrence: 1, machine: 'M-101', reason: 'Overheating' },
-    { category: 'Material Shortage', subCategory: 'Part XYZ Missing', startTime: '11:00', endTime: '12:00', duration: 60, occurrence: 1, machine: 'M-102', reason: 'Supply Delay' },
-    { category: 'Setup/Adjustments', subCategory: 'Tool Change', startTime: '06:30', endTime: '06:45', duration: 15, occurrence: 1, machine: 'M-103', reason: 'Wear and Tear' },
-    { category: 'Quality Issues', subCategory: 'Defective Batch', startTime: '10:00', endTime: '10:10', duration: 10, occurrence: 1, machine: 'M-101', reason: 'Calibration Error' },
-    { category: 'Equipment Failure', subCategory: 'Sensor Fault', startTime: '09:10', endTime: '09:30', duration: 20, occurrence: 1, machine: 'M-104', reason: 'Damaged wire' }
-  ];
+  const tableData = allTableData.filter(d => 
+    (line === 'All' || d.line === line) &&
+    (station === 'All' || d.station === station) &&
+    (modelFamily === 'All' || d.modelFamily === modelFamily) &&
+    (model === 'All' || d.model === model) &&
+    (sku === 'All' || d.sku === sku)
+  );
 
   const columns = [
     { header: 'Category', accessor: 'category' },
@@ -82,7 +84,7 @@ export default function DowntimeReport() {
 
   const exportToExcel = () => {
     exportToXLSX('DowntimeReport.xlsx', [
-      { name: 'KPI', rows: [['Metric', 'Value'], ['Overall Downtime (mins)', kpiData.totalDowntime], ['No. of Losses', kpiData.noOfLosses], ['Most Lost Category', kpiData.mostLostCat], ['Avg Loss Duration', kpiData.avgLossDuration]] },
+      { name: 'KPI', rows: [['Metric', 'Value'], ['Overall Downtime (mins)', kpiData.totalDowntime], ['No. of Losses', kpiData.noOfLosses], ['Most Lost Category', kpiData.mostLostCat], ['Avg Loss Duration (mins)', kpiData.avgLossDuration]] },
       { name: 'Hourly Downtime', rows: [['Time', 'Duration (mins)'], ...hourlyData.map(d => [d.time, d.duration])] },
       { name: 'Category Downtime', rows: [['Category', 'Duration (mins)', 'Occurrence'], ...categoryData.map(d => [d.category, d.duration, d.occurrence])] },
       { name: 'Downtime Details', rows: [['Category', 'Sub-Category', 'Start Time', 'End Time', 'Duration (mins)', 'Occurrence', 'Machine', 'Reason'], ...tableData.map(d => [d.category, d.subCategory, d.startTime, d.endTime, d.duration, d.occurrence, d.machine, d.reason])] }
@@ -94,6 +96,7 @@ export default function DowntimeReport() {
       <StandardFilterBar
         title="Downtime (Loss) Report"
         icon={Timer}
+        period={period}
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
@@ -106,10 +109,10 @@ export default function DowntimeReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Overall Downtime (mins)" value={kpiData.totalDowntime} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="No. of Losses" value={kpiData.noOfLosses} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Most Lost Category" value={kpiData.mostLostCat} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Avg Loss Duration (mins)" value={kpiData.avgLossDuration} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Overall Downtime (mins)" value={kpiData.totalDowntime} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="No. of Losses" value={kpiData.noOfLosses} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Most Lost Category" value={kpiData.mostLostCat} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg Loss Duration (mins)" value={kpiData.avgLossDuration} />
         </div>
         
         <div className="card p-4">

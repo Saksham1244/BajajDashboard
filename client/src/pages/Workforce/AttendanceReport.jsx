@@ -14,6 +14,19 @@ export default function AttendanceReport() {
   const [line, setLine] = useState('All');
 
   const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+
+  const allTableData = [
+    { operator: 'John Doe', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
+    { operator: 'Jane Smith', line: 'Line 1', shift: 'Shift 1', inTime: '06:15', outTime: '14:00', status: 'Late', hoursWorked: 7.75 },
+    { operator: 'Mike Johnson', line: 'Line 2', shift: 'Shift 1', inTime: '-', outTime: '-', status: 'Absent', hoursWorked: 0 },
+    { operator: 'Sarah Williams', line: 'Line 2', shift: 'Shift 2', inTime: '14:00', outTime: '22:00', status: 'Present', hoursWorked: 8 },
+    { operator: 'David Brown', line: 'Line 1', shift: 'Shift 2', inTime: '14:00', outTime: '22:30', status: 'Present', hoursWorked: 8.5 }
+  ];
+
+  const tableData = allTableData.filter(d => 
+    line === 'All' || d.line === line
+  );
+
   const kpiData = { 
     scheduled: Math.max(1, Math.round(150 * scale)), 
     present: Math.max(1, Math.round(142 * scale)), 
@@ -27,14 +40,6 @@ export default function AttendanceReport() {
       pct: Math.floor(Math.random() * (100 - 85 + 1)) + 85
     }));
   }, [period, shift]);
-
-  const tableData = [
-    { operator: 'John Doe', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
-    { operator: 'Jane Smith', shift: 'Shift 1', inTime: '06:15', outTime: '14:00', status: 'Late', hoursWorked: 7.75 },
-    { operator: 'Mike Johnson', shift: 'Shift 1', inTime: '-', outTime: '-', status: 'Absent', hoursWorked: 0 },
-    { operator: 'Sarah Williams', shift: 'Shift 2', inTime: '14:00', outTime: '22:00', status: 'Present', hoursWorked: 8 },
-    { operator: 'David Brown', shift: 'Shift 2', inTime: '14:00', outTime: '22:30', status: 'Present', hoursWorked: 8.5 }
-  ];
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -50,13 +55,15 @@ export default function AttendanceReport() {
     { header: 'Shift', accessor: 'shift' },
     { header: 'In Time', accessor: 'inTime' },
     { header: 'Out Time', accessor: 'outTime' },
-    { header: 'Status', accessor: (row) => <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(row.status)}`}>{row.status}</span> },
+    { header: 'Status', accessor: 'status', render: (val) => (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusBadge(val)}`}>{val}</span>
+    )},
     { header: 'Hours Worked', accessor: 'hoursWorked' }
   ];
 
   const exportToExcel = () => {
     exportToXLSX('AttendanceReport.xlsx', [
-      { name: 'KPI', rows: [['Metric', 'Value'], ['Total Scheduled', kpiData.scheduled], ['Present', kpiData.present], ['Absent', kpiData.absent], ['Attendance %', kpiData.attendancePct]] },
+      { name: 'KPI', rows: [['Metric', 'Value'], ['Total Scheduled', kpiData.scheduled], ['Present', kpiData.present], ['Absent', kpiData.absent], ['Attendance %', `${kpiData.attendancePct}%`]] },
       { name: 'Attendance Details', rows: [['Operator', 'Shift', 'In Time', 'Out Time', 'Status', 'Hours Worked'], ...tableData.map(d => [d.operator, d.shift, d.inTime, d.outTime, d.status, d.hoursWorked])] }
     ]);
   };
@@ -66,6 +73,7 @@ export default function AttendanceReport() {
       <StandardFilterBar
         title="Attendance Report"
         icon={CalendarCheck2}
+        period={period}
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
@@ -74,10 +82,10 @@ export default function AttendanceReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Scheduled" value={kpiData.scheduled} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Present" value={kpiData.present} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Absent" value={kpiData.absent} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Attendance %" value={`${kpiData.attendancePct}%`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Scheduled" value={kpiData.scheduled} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Present" value={kpiData.present} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Absent" value={kpiData.absent} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Attendance %" value={`${kpiData.attendancePct}%`} />
         </div>
         <div className="card p-4">
           <h3 className="text-sm font-bold text-brand-dark mb-3">Daily Attendance % Trend</h3>

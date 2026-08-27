@@ -57,16 +57,16 @@ export default function WIPReport() {
 
   const exportToExcel = () => {
     exportToXLSX('WIPReport.xlsx', [
-      { name: 'WIP Summary', rows: [['Status', 'Count'], ['In-Process', 45], ['Rework', 12], ['Blocked', 5], ['Idle', 8], ['Total', 70]] },
-      { name: 'Engine Details', rows: [['Engine No', 'Model', 'SKU', 'Current Station', 'WIP Status', 'Entry Time', 'Duration (hrs)', 'Operator'], ...(dbData?.table || mockData).map(r => [r.engineNo, r.model, r.sku, r.station, r.status, r.entryTime, r.duration, r.operator])] }
+      { name: 'WIP Summary', rows: [['Status', 'Count'], ['In-Process', kpiValues.inProcess], ['Rework', kpiValues.rework], ['Blocked', kpiValues.blocked], ['Idle', kpiValues.idle], ['Total', kpiValues.total]] },
+      { name: 'Engine Details', rows: [['Engine No', 'Model', 'SKU', 'Current Station', 'WIP Status', 'Entry Time', 'Duration (hrs)', 'Operator'], ...filteredTableData.map(r => [r.engineNo, r.model, r.sku, r.station, r.status, r.entryTime, r.duration, r.operator])] }
     ]);
   };
 
-  const filteredDistData = (dbData?.kpis?.distribution || wipDistData).filter(
+  const filteredDistData = wipDistData.filter(
     item => wipStatus === 'All' || item.name === wipStatus
-  );
+  ).filter(d => d.value > 0);
 
-  const filteredTableData = (dbData?.table || mockData).filter(
+  const filteredTableData = mockData.filter(
     row => wipStatus === 'All' || row.status === wipStatus
   );
 
@@ -75,6 +75,7 @@ export default function WIPReport() {
       <StandardFilterBar
         title="WIP Report"
         icon={Layers}
+        period={period}
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
@@ -83,11 +84,11 @@ export default function WIPReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total WIP" value={dbData?.kpis?.total || kpiValues.total} trend="up" color="blue" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="In-Process" value={dbData?.kpis?.inProcess || kpiValues.inProcess} trend="neutral" color="green" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Rework" value={dbData?.kpis?.rework || kpiValues.rework} trend="down" color="orange" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Blocked" value={dbData?.kpis?.blocked || kpiValues.blocked} trend="up" color="red" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Idle" value={dbData?.kpis?.idle || kpiValues.idle} trend="down" color="purple" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total WIP" value={kpiValues.total} trend="up" color="blue" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="In-Process" value={kpiValues.inProcess} trend="neutral" color="green" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Rework" value={kpiValues.rework} trend="down" color="orange" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Blocked" value={kpiValues.blocked} trend="up" color="red" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Idle" value={kpiValues.idle} trend="down" color="purple" />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -96,7 +97,7 @@ export default function WIPReport() {
             <div className="h-[240px]">
               <ResponsiveContainer>
                 <PieChart>
-                  <Pie data={filteredDistData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                  <Pie data={filteredDistData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
                     {filteredDistData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[wipDistData.findIndex(d => d.name === entry.name) % COLORS.length]} />
                     ))}

@@ -21,45 +21,56 @@ export default function PMReport() {
       .catch(err => console.error(err));
   }, [period]);
 
-  const tableData = dbData?.table || [
-    { machine: 'M-01', type: 'Monthly', scheduled: '2023-10-01', completed: '2023-10-01', status: 'Completed', delay: 0 },
-    { machine: 'M-02', type: 'Weekly', scheduled: '2023-10-15', completed: '2023-10-17', status: 'Completed', delay: 2 },
-    { machine: 'M-03', type: 'Quarterly', scheduled: '2023-10-20', completed: '-', status: 'Pending', delay: 0 },
-    { machine: 'M-04', type: 'Monthly', scheduled: '2023-10-10', completed: '-', status: 'Overdue', delay: 10 },
-    { machine: 'M-05', type: 'Weekly', scheduled: '2023-10-18', completed: '2023-10-18', status: 'Completed', delay: 0 },
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+
+  const allTableData = [
+    { machine: 'M-01', line: 'Line 1', type: 'Monthly', scheduled: '2026-08-01', completed: '2026-08-01', status: 'Completed', delay: 0 },
+    { machine: 'M-02', line: 'Line 1', type: 'Weekly', scheduled: '2026-08-15', completed: '2026-08-17', status: 'Completed', delay: 2 },
+    { machine: 'M-03', line: 'Line 2', type: 'Quarterly', scheduled: '2026-08-20', completed: '-', status: 'Pending', delay: 0 },
+    { machine: 'M-04', line: 'Line 2', type: 'Monthly', scheduled: '2026-08-10', completed: '-', status: 'Overdue', delay: 10 },
+    { machine: 'M-05', line: 'Line 1', type: 'Weekly', scheduled: '2026-08-18', completed: '2026-08-18', status: 'Completed', delay: 0 },
   ];
 
-  const kpiData = dbData?.kpis || { total: '50', completed: '35', pending: '10', overdue: '5' };
+  const tableData = allTableData.filter(d => 
+    (line === 'All' || d.line === line) &&
+    (machine === 'All' || d.machine === machine)
+  );
 
+  const completedCount = Math.max(0, Math.round(35 * scale));
+  const pendingCount = Math.max(0, Math.round(10 * scale));
+  const overdueCount = Math.max(0, Math.round(5 * scale));
+  const totalCount = completedCount + pendingCount + overdueCount || 1;
 
   const columns = [
-    { header: 'Machine', accessorKey: 'machine' },
-    { header: 'PM Type', accessorKey: 'type' },
-    { header: 'Scheduled Date', accessorKey: 'scheduled' },
-    { header: 'Completed Date', accessorKey: 'completed' },
+    { header: 'Machine', accessor: 'machine' },
+    { header: 'PM Type', accessor: 'type' },
+    { header: 'Scheduled Date', accessor: 'scheduled' },
+    { header: 'Completed Date', accessor: 'completed' },
     { 
       header: 'Status', 
-      accessorKey: 'status',
-      cell: ({ row }) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-semibold 
-          ${row.original.status === 'Completed' ? 'bg-green-100 text-green-700' : 
-            row.original.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 
-            'bg-red-100 text-red-700'}`}>
-          {row.original.status}
-        </span>
-      )
+      accessor: 'status',
+      render: (val) => {
+        let color = 'bg-green-100 text-green-700';
+        if (val === 'Pending') color = 'bg-yellow-100 text-yellow-700';
+        if (val === 'Overdue') color = 'bg-red-100 text-red-700';
+        return (
+          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${color}`}>
+            {val}
+          </span>
+        );
+      }
     },
-    { header: 'Delay (days)', accessorKey: 'delay' },
+    { header: 'Delay (days)', accessor: 'delay' },
   ];
 
   const exportToExcel = () => {
     exportToXLSX('PMReport.xlsx', [
       { name: 'KPI', rows: [
         ['Metric', 'Value'],
-        ['Total PM Orders', 50],
-        ['Completed', 35],
-        ['Pending', 10],
-        ['Overdue', 5],
+        ['Total PM Orders', totalCount],
+        ['Completed', completedCount],
+        ['Pending', pendingCount],
+        ['Overdue', overdueCount],
       ]},
       { name: 'PM Details', rows: [['Machine', 'PM Type', 'Scheduled', 'Completed', 'Status', 'Delay (days)'], ...tableData.map(d => [d.machine, d.type, d.scheduled, d.completed, d.status, d.delay])] }
     ]);
@@ -70,20 +81,21 @@ export default function PMReport() {
       <StandardFilterBar
         title="PM Report"
         icon={ClipboardList}
+        period={period}
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
           { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2'], value: line, onChange: setLine },
-          { type: 'dropdown', label: 'Machine', options: ['All','M-01','M-02'], value: machine, onChange: setMachine },
+          { type: 'dropdown', label: 'Machine', options: ['All','M-01','M-02','M-03','M-04','M-05'], value: machine, onChange: setMachine },
         ]} 
       />
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total PM Orders" value={kpiData.total} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Completed" value={kpiData.completed} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Pending" value={kpiData.pending} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Overdue" value={kpiData.overdue} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total PM Orders" value={totalCount} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Completed" value={completedCount} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Pending" value={pendingCount} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Overdue" value={overdueCount} />
         </div>
 
         <DataTable columns={columns} data={tableData} />

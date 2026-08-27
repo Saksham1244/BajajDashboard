@@ -11,41 +11,43 @@ export default function PokaYokeBypassReport() {
   const [dbData, setDbData] = React.useState({});
   const [loading, setLoading] = React.useState(false);
 
-  const customFilters = [];
+  const [line, setLine] = React.useState('All');
+  const [station, setStation] = React.useState('All');
+  const [device, setDevice] = React.useState('All');
+  const [model, setModel] = React.useState('All');
 
-  React.useEffect(() => {
-        // You can share the pokayoke endpoint or use a specific bypass one if it exists.
-    fetch(`http://localhost:5000/api/process/bypass?period=${period}&shift=${shift}`)
-      .then(res => res.json())
-      .then(data => {
-        setDbData(data);
-              })
-      .catch(err => {
-        console.error(err);
-              });
-  }, [period, shift]);
+  const customFilters = [
+    { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2'], value: line, onChange: setLine },
+    { type: 'dropdown', label: 'Station', options: ['All', 'ST-01', 'ST-02', 'ST-03'], value: station, onChange: setStation },
+    { type: 'dropdown', label: 'Device', options: ['All', 'PY-01 Torque', 'PY-02 Vision', 'PY-03 Sensor'], value: device, onChange: setDevice },
+    { type: 'dropdown', label: 'Model', options: ['All', 'Pulsar 150', 'Dominar 400'], value: model, onChange: setModel },
+  ];
 
-  const tableData = React.useMemo(() => {
-    if (dbData.table?.length) return dbData.table;
-    return [
-      { bypassId: 'BP-001', datetime: '2023-10-25 08:30', line: 'Line 1', station: 'ST-01', device: 'PY-01 Torque', shift: 'Shift 1', model: 'Pulsar 150', duration: 15, operator: 'John Doe', reason: 'Sensor Failure', authorizedBy: 'Manager A' },
-      { bypassId: 'BP-002', datetime: '2023-10-25 10:15', line: 'Line 2', station: 'ST-02', device: 'PY-02 Vision', shift: 'Shift 1', model: 'Dominar 400', duration: 30, operator: 'Jane Smith', reason: 'Network Issue', authorizedBy: 'Manager B' },
-      { bypassId: 'BP-003', datetime: '2023-10-25 12:00', line: 'Line 1', station: 'ST-01', device: 'PY-01 Torque', shift: 'Shift 2', model: 'Pulsar 150', duration: 10, operator: 'Bob Brown', reason: 'Calibration', authorizedBy: 'Manager A' },
-      { bypassId: 'BP-004', datetime: '2023-10-25 14:45', line: 'Line 2', station: 'ST-03', device: 'PY-03 Sensor', shift: 'Shift 2', model: 'Dominar 400', duration: 45, operator: 'Alice Green', reason: 'Device Replacement', authorizedBy: 'Manager C' },
-      { bypassId: 'BP-005', datetime: '2023-10-25 16:30', line: 'Line 1', station: 'ST-02', device: 'PY-02 Vision', shift: 'Shift 3', model: 'Pulsar 150', duration: 20, operator: 'Charlie Black', reason: 'Maintenance', authorizedBy: 'Manager B' },
-    ];
-  }, [dbData]);
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
 
-  const kpi = dbData.kpis || {
-    totalBypasses: "5",
-    activeBypasses: "1",
-    maxDuration: '45 mins',
-    totalDuration: '120 mins'
-  };
+  const allTableData = [
+    { bypassId: 'BP-001', datetime: '2026-08-25 08:30', line: 'Line 1', station: 'ST-01', device: 'PY-01 Torque', shift: 'Shift 1', model: 'Pulsar 150', duration: 15, operator: 'John Doe', reason: 'Sensor Failure', authorizedBy: 'Manager A', status: 'Active' },
+    { bypassId: 'BP-002', datetime: '2026-08-25 10:15', line: 'Line 2', station: 'ST-02', device: 'PY-02 Vision', shift: 'Shift 1', model: 'Dominar 400', duration: 30, operator: 'Jane Smith', reason: 'Network Issue', authorizedBy: 'Manager B', status: 'Resolved' },
+    { bypassId: 'BP-003', datetime: '2026-08-26 12:00', line: 'Line 1', station: 'ST-01', device: 'PY-01 Torque', shift: 'Shift 2', model: 'Pulsar 150', duration: 10, operator: 'Bob Brown', reason: 'Calibration', authorizedBy: 'Manager A', status: 'Resolved' },
+    { bypassId: 'BP-004', datetime: '2026-08-26 14:45', line: 'Line 2', station: 'ST-03', device: 'PY-03 Sensor', shift: 'Shift 2', model: 'Dominar 400', duration: 45, operator: 'Alice Green', reason: 'Device Replacement', authorizedBy: 'Manager C', status: 'Active' },
+    { bypassId: 'BP-005', datetime: '2026-08-27 16:30', line: 'Line 1', station: 'ST-02', device: 'PY-02 Vision', shift: 'Shift 3', model: 'Pulsar 150', duration: 20, operator: 'Charlie Black', reason: 'Maintenance', authorizedBy: 'Manager B', status: 'Resolved' },
+  ];
+
+  const tableData = allTableData.filter(d => 
+    (line === 'All' || d.line === line) &&
+    (station === 'All' || d.station === station) &&
+    (device === 'All' || d.device === device) &&
+    (model === 'All' || d.model === model)
+  );
+
+  const totalBypasses = Math.max(1, Math.round(tableData.length * (period === 'Month' ? 5 : period === 'Week' ? 2 : 1)));
+  const activeBypasses = tableData.filter(d => d.status === 'Active').length;
+  const maxDuration = Math.max(...tableData.map(d => d.duration), 15);
+  const totalDuration = tableData.reduce((acc, d) => acc + d.duration, 0);
 
   const tableColumns = [
-    { header: 'Bypass ID', accessor: 'id' },
-    { header: 'Date & Time', accessor: 'date' },
+    { header: 'Bypass ID', accessor: 'bypassId' },
+    { header: 'Date & Time', accessor: 'datetime' },
     { header: 'Line', accessor: 'line' },
     { header: 'Station', accessor: 'station' },
     { header: 'Device', accessor: 'device' },
@@ -59,8 +61,8 @@ export default function PokaYokeBypassReport() {
 
   const exportToExcel = () => {
     exportToXLSX('PokaYokeBypassReport.xlsx', [
-      { name: 'KPI Summary', rows: [['Total Bypasses', 'Active Bypasses', 'Max Duration', 'Total Duration'], [kpi.totalBypasses, kpi.activeBypasses, kpi.maxDuration, kpi.totalDuration]] },
-      { name: 'Bypass Details', rows: [['Bypass ID', 'Date & Time', 'Line', 'Station', 'Device', 'Shift', 'Model', 'Duration', 'Operator', 'Reason', 'Authorized By'], ...tableData.map(d => [d.id || d.bypassId, d.date || d.datetime, d.line, d.station, d.device, d.shift, d.model, d.duration, d.operator, d.reason, d.authorizedBy])] }
+      { name: 'KPI Summary', rows: [['Metric', 'Value'], ['Total Bypasses', totalBypasses], ['Active Bypasses', activeBypasses], ['Max Duration', `${maxDuration} mins`], ['Total Duration', `${totalDuration} mins`]] },
+      { name: 'Bypass Details', rows: [['Bypass ID', 'Date & Time', 'Line', 'Station', 'Device', 'Shift', 'Model', 'Duration', 'Operator', 'Reason', 'Authorized By'], ...tableData.map(d => [d.bypassId, d.datetime, d.line, d.station, d.device, d.shift, d.model, d.duration, d.operator, d.reason, d.authorizedBy])] }
     ]);
   };
 
@@ -69,15 +71,16 @@ export default function PokaYokeBypassReport() {
       <StandardFilterBar
         title="Poka Yoke Bypass Report"
         icon={ShieldAlert}
+        period={period}
         onExcelClick={exportToExcel}
         filters={[...getBaseFilters(), ...customFilters]}
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Bypasses" value={kpi.totalBypasses} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Active Bypasses" value={kpi.activeBypasses} color="text-orange-500" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Max Duration" value={kpi.maxDuration} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Duration" value={kpi.totalDuration} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Bypasses" value={totalBypasses} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Active Bypasses" value={activeBypasses} color="text-orange-500" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Max Duration" value={`${maxDuration} mins`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Duration" value={`${totalDuration} mins`} />
         </div>
         
         <div className="card p-4 flex-1 flex flex-col">

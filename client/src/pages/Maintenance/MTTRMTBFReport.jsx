@@ -18,42 +18,52 @@ export default function MTTRMTBFReport() {
   const colors = ['#0369a1','#f97316'];
 
   const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
-  const v = (base) => Math.max(1, Math.round(base * (1 + scale * 0.1))); // Add slight variance so graphs wiggle
+  const v = (base) => Math.max(1, Math.round(base * (1 + scale * 0.1)));
 
-  const chartData = [
-    { machine: 'M-01', mttr: v(45), mtbf: v(120) },
-    { machine: 'M-02', mttr: v(60), mtbf: v(80) },
-    { machine: 'M-03', mttr: v(30), mtbf: v(200) },
-    { machine: 'M-04', mttr: v(50), mtbf: v(150) },
+  const allData = [
+    { machine: 'M-01', line: 'Line 1', station: 'ST-01', mttr: v(45), mtbf: v(120), availability: 98, count: Math.round(20 * scale), totalTime: Math.round(900 * scale) },
+    { machine: 'M-02', line: 'Line 1', station: 'ST-02', mttr: v(60), mtbf: v(80), availability: 85, count: Math.round(50 * scale), totalTime: Math.round(3000 * scale) },
+    { machine: 'M-03', line: 'Line 2', station: 'ST-01', mttr: v(30), mtbf: v(200), availability: 95, count: Math.round(10 * scale), totalTime: Math.round(300 * scale) },
+    { machine: 'M-04', line: 'Line 2', station: 'ST-02', mttr: v(50), mtbf: v(150), availability: 92, count: Math.round(30 * scale), totalTime: Math.round(1500 * scale) },
+    { machine: 'M-05', line: 'Line 1', station: 'ST-01', mttr: v(40), mtbf: v(180), availability: 99, count: 0, totalTime: 0 },
   ];
 
-  const tableData = [
-    { machine: 'M-01', mttr: v(45), mtbf: v(120), availability: 98, count: Math.round(20 * scale), totalTime: Math.round(900 * scale) },
-    { machine: 'M-02', mttr: v(60), mtbf: v(80), availability: 85, count: Math.round(50 * scale), totalTime: Math.round(3000 * scale) },
-    { machine: 'M-03', mttr: v(30), mtbf: v(200), availability: 95, count: Math.round(10 * scale), totalTime: Math.round(300 * scale) },
-    { machine: 'M-04', mttr: v(50), mtbf: v(150), availability: 92, count: Math.round(30 * scale), totalTime: Math.round(1500 * scale) },
-    { machine: 'M-05', mttr: v(40), mtbf: v(180), availability: 99, count: 0, totalTime: 0 },
-  ];
+  const tableData = allData.filter(d => 
+    (line === 'All' || d.line === line) &&
+    (station === 'All' || d.station === station) &&
+    (machine === 'All' || d.machine === machine)
+  );
+
+  const chartData = tableData.map(d => ({
+    machine: d.machine,
+    mttr: d.mttr,
+    mtbf: d.mtbf
+  }));
+
+  const avgMTTR = Math.round(tableData.reduce((sum, d) => sum + d.mttr, 0) / (tableData.length || 1));
+  const avgMTBF = Math.round(tableData.reduce((sum, d) => sum + d.mtbf, 0) / (tableData.length || 1));
+  const bestMachine = tableData.length > 0 ? tableData.reduce((prev, curr) => prev.availability > curr.availability ? prev : curr).machine : 'M-05';
+  const worstMachine = tableData.length > 0 ? tableData.reduce((prev, curr) => prev.availability < curr.availability ? prev : curr).machine : 'M-02';
 
   const columns = [
-    { header: 'Machine', accessorKey: 'machine' },
-    { header: 'MTTR (mins)', accessorKey: 'mttr' },
-    { header: 'MTBF (hrs)', accessorKey: 'mtbf' },
-    { header: 'Availability %', accessorKey: 'availability' },
-    { header: 'Breakdown Count', accessorKey: 'count' },
-    { header: 'Total Repair Time', accessorKey: 'totalTime' },
+    { header: 'Machine', accessor: 'machine' },
+    { header: 'MTTR (mins)', accessor: 'mttr' },
+    { header: 'MTBF (hrs)', accessor: 'mtbf' },
+    { header: 'Availability %', accessor: 'availability', render: (val) => `${val}%` },
+    { header: 'Breakdown Count', accessor: 'count' },
+    { header: 'Total Repair Time', accessor: 'totalTime' },
   ];
 
   const exportToExcel = () => {
     exportToXLSX('MTTRMTBFReport.xlsx', [
       { name: 'KPI', rows: [
         ['Metric', 'Value'],
-        ['Avg MTTR', '45 mins'],
-        ['Avg MTBF', '146 hrs'],
-        ['Best Machine Availability', 'M-05 (99%)'],
-        ['Worst Machine', 'M-02 (85%)'],
+        ['Avg MTTR', `${avgMTTR} mins`],
+        ['Avg MTBF', `${avgMTBF} hrs`],
+        ['Best Machine Availability', bestMachine],
+        ['Worst Machine', worstMachine],
       ]},
-      { name: 'MTTR MTBF Details', rows: [['Machine', 'MTTR (mins)', 'MTBF (hrs)', 'Availability %', 'Breakdown Count', 'Total Repair Time'], ...tableData.map(d => [d.machine, d.mttr, d.mtbf, d.availability, d.count, d.totalTime])] }
+      { name: 'MTTR MTBF Details', rows: [['Machine', 'MTTR (mins)', 'MTBF (hrs)', 'Availability %', 'Breakdown Count', 'Total Repair Time'], ...tableData.map(d => [d.machine, d.mttr, d.mtbf, `${d.availability}%`, d.count, d.totalTime])] }
     ]);
   };
 
@@ -62,21 +72,22 @@ export default function MTTRMTBFReport() {
       <StandardFilterBar
         title="MTTR & MTBF Report"
         icon={Activity}
+        period={period}
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
           { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2'], value: line, onChange: setLine },
           { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02'], value: station, onChange: setStation },
-          { type: 'dropdown', label: 'Machine', options: ['All','M-01','M-02'], value: machine, onChange: setMachine },
+          { type: 'dropdown', label: 'Machine', options: ['All','M-01','M-02','M-03','M-04','M-05'], value: machine, onChange: setMachine },
         ]} 
       />
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg MTTR" value={Math.round((chartData.reduce((sum, d) => sum + d.mttr, 0)) / chartData.length) + " mins"} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg MTBF" value={Math.round((chartData.reduce((sum, d) => sum + d.mtbf, 0)) / chartData.length) + " hrs"} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Best Machine Availability" value="M-05 (99%)" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Worst Machine" value="M-02 (85%)" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg MTTR" value={`${avgMTTR} mins`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg MTBF" value={`${avgMTBF} hrs`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Best Machine" value={bestMachine} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Worst Machine" value={worstMachine} />
         </div>
 
         <div className="card p-4">

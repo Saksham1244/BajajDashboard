@@ -28,27 +28,38 @@ export default function StockStatusReport() {
     { type: 'dropdown', label: 'Store Location', options: ['All', 'Main', 'Line-1', 'Line-2'], value: location, onChange: setLocation },
   ];
 
-  const chartData = [
-    { material: 'M-01', available: 50, minLevel: 20 },
-    { material: 'M-02', available: 10, minLevel: 15 },
-    { material: 'M-03', available: 120, minLevel: 100 },
-    { material: 'M-04', available: 8, minLevel: 10 },
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+
+  const allTableData = [
+    { material: 'M-01', matType: 'Raw', location: 'Main', available: Math.round(50 * scale) || 5, minLevel: 20, maxLevel: 100, status: 'Safe' },
+    { material: 'M-02', matType: 'WIP', location: 'Line-1', available: Math.round(10 * scale) || 1, minLevel: 15, maxLevel: 50, status: 'Critical' },
+    { material: 'M-03', matType: 'Finished', location: 'Main', available: Math.round(120 * scale) || 10, minLevel: 100, maxLevel: 110, status: 'Excess' },
+    { material: 'M-04', matType: 'Raw', location: 'Line-2', available: Math.round(8 * scale) || 1, minLevel: 10, maxLevel: 40, status: 'Critical' },
+    { material: 'M-05', matType: 'Finished', location: 'Line-1', available: Math.round(30 * scale) || 3, minLevel: 15, maxLevel: 60, status: 'Safe' },
   ];
+
+  const tableData = allTableData.filter(d =>
+    (matType === 'All' || d.matType === matType) &&
+    (location === 'All' || d.location === location)
+  );
+
+  const chartData = tableData.map(d => ({
+    material: d.material,
+    available: d.available,
+    minLevel: Math.round(d.minLevel * scale) || 2
+  }));
 
   const trendData = useMemo(() => {
     return generateTimeLabels(period, shift).map(time => ({
       time,
-      stockValue: Math.floor(Math.random() * 5000) + 10000
+      stockValue: Math.floor(Math.random() * 5000 * scale) + Math.round(10000 * scale)
     }));
-  }, [period, shift]);
+  }, [period, shift, scale]);
 
-  const tableData = dbData?.table || [
-    { material: 'M-01', available: 50, minLevel: 20, maxLevel: 100, status: 'Safe' },
-    { material: 'M-02', available: 10, minLevel: 15, maxLevel: 50, status: 'Critical' },
-    { material: 'M-03', available: 120, minLevel: 100, maxLevel: 110, status: 'Excess' },
-    { material: 'M-04', available: 8, minLevel: 10, maxLevel: 40, status: 'Critical' },
-    { material: 'M-05', available: 30, minLevel: 15, maxLevel: 60, status: 'Safe' },
-  ];
+  const totalMaterials = Math.max(1, Math.round(115 * scale));
+  const criticalCount = tableData.filter(d => d.status === 'Critical').length;
+  const safeCount = tableData.filter(d => d.status === 'Safe').length;
+  const excessCount = tableData.filter(d => d.status === 'Excess').length;
 
   const columns = [
     { header: 'Material', accessor: 'material' },
@@ -59,17 +70,18 @@ export default function StockStatusReport() {
       let color = 'text-green-600 bg-green-100';
       if(val === 'Critical') color = 'text-red-600 bg-red-100';
       if(val === 'Excess') color = 'text-yellow-600 bg-yellow-100';
-      return <span className={`px-2 py-1 rounded text-xs font-bold ${color}`}>{val}</span>;
+      return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${color}`}>{val}</span>;
     }}
   ];
 
   const exportToExcel = () => {
     exportToXLSX('StockStatusReport.xlsx', [
       { name: 'KPI', rows: [
-        ['Total Materials', dbData?.kpis?.totalMaterials || '115'],
-        ['Critical Count', dbData?.kpis?.criticalCount || '12'],
-        ['Safe Count', dbData?.kpis?.safeCount || '85'],
-        ['Excess Count', dbData?.kpis?.excessCount || '18']
+        ['Metric', 'Value'],
+        ['Total Materials', totalMaterials],
+        ['Critical Count', criticalCount],
+        ['Safe Count', safeCount],
+        ['Excess Count', excessCount]
       ]},
       { name: 'Stock Details', rows: [
         ['Material', 'Available Qty', 'Min Level', 'Max Level', 'Status'],
@@ -80,14 +92,14 @@ export default function StockStatusReport() {
 
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
-      <StandardFilterBar title="Stock Status Report" icon={Boxes} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
+      <StandardFilterBar title="Stock Status Report" icon={Boxes} period={period} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Materials" value={dbData?.kpis?.totalMaterials || "115"} color="bg-blue-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Critical Count" value={dbData?.kpis?.criticalCount || "12"} color="bg-red-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Safe Count" value={dbData?.kpis?.safeCount || "85"} color="bg-green-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Excess Count" value={dbData?.kpis?.excessCount || "18"} color="bg-yellow-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Materials" value={totalMaterials} color="bg-blue-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Critical Count" value={criticalCount} color="bg-red-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Safe Count" value={safeCount} color="bg-green-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Excess Count" value={excessCount} color="bg-yellow-100" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
