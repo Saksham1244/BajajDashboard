@@ -18,9 +18,9 @@ export default function IPQCChecklistReport() {
   }, [period]);
 
   const kpiData = dbData?.kpis || {
-    totalChecklists: 150,
-    okChecklists: 135,
-    nokChecklists: 15,
+    totalChecklists: "150",
+    okChecklists: "135",
+    nokChecklists: "15",
     compliance: 90.0,
   };
 

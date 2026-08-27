@@ -41,9 +41,9 @@ export default function TorqueReport() {
   }, [dbData]);
 
   const kpi = dbData.kpi || {
-    totalReadings: 6,
-    okCount: 4,
-    notOkCount: 2,
+    totalReadings: "6",
+    okCount: "4",
+    notOkCount: "2",
     avgTorque: 45.5
   };
 

@@ -18,9 +18,9 @@ export default function FQCCheckpointReport() {
   }, [period]);
 
   const kpiData = dbData?.kpis || {
-    totalCheckpoints: 4000,
-    passed: 3960,
-    failed: 40,
+    totalCheckpoints: "4000",
+    passed: "3960",
+    failed: "40",
     passRate: 99.0,
   };
 

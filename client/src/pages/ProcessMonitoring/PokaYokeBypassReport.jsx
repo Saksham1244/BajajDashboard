@@ -37,8 +37,8 @@ export default function PokaYokeBypassReport() {
   }, [dbData]);
 
   const kpi = dbData.kpis || {
-    totalBypasses: 5,
-    activeBypasses: 1,
+    totalBypasses: "5",
+    activeBypasses: "1",
     maxDuration: '45 mins',
     totalDuration: '120 mins'
   };

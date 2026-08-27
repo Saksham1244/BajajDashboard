@@ -28,8 +28,8 @@ export default function DefectReport() {
   const [sku, setSku] = useState('All');
 
   const kpiData = dbData?.kpis || {
-    totalProduction: 1250,
-    totalDefects: 45,
+    totalProduction: "1250",
+    totalDefects: "45",
     rft: 96.4
   };
 

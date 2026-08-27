@@ -18,9 +18,9 @@ export default function FQCChecklistReport() {
   }, [period]);
 
   const kpiData = dbData?.kpis || {
-    totalChecklists: 200,
-    okChecklists: 195,
-    nokChecklists: 5,
+    totalChecklists: "200",
+    okChecklists: "195",
+    nokChecklists: "5",
     compliance: 97.5,
   };
 

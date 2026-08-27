@@ -18,9 +18,9 @@ export default function IPQCCheckpointReport() {
   }, [period]);
 
   const kpiData = dbData?.kpis || {
-    totalCheckpoints: 3000,
-    passed: 2950,
-    failed: 50,
+    totalCheckpoints: "3000",
+    passed: "2950",
+    failed: "50",
     passRate: 98.3,
   };
 

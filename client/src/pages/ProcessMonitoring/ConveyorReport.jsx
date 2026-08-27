@@ -61,7 +61,7 @@ export default function ConveyorReport() {
   const kpi = dbData.kpi || {
     avgSpeed: 8.4,
     maxDeviation: '30%',
-    totalStoppages: 13,
+    totalStoppages: "13",
     efficiency: '85%'
   };
 

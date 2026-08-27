@@ -52,10 +52,10 @@ export default function PokaYokeReport() {
   }, [dbData]);
 
   const kpi = dbData.kpi || {
-    totalChecks: 665,
-    okCount: 655,
-    notOkCount: 10,
-    bypassCount: 3
+    totalChecks: "665",
+    okCount: "655",
+    notOkCount: "10",
+    bypassCount: "3"
   };
 
   const tableColumns = [

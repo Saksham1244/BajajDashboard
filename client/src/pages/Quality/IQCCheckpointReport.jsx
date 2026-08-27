@@ -18,9 +18,9 @@ export default function IQCCheckpointReport() {
   }, [period]);
 
   const kpiData = dbData?.kpis || {
-    totalCheckpoints: 2500,
-    passed: 2450,
-    failed: 50,
+    totalCheckpoints: "2500",
+    passed: "2450",
+    failed: "50",
     passRate: 98.0,
   };
 

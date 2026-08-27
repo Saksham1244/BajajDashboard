@@ -26,11 +26,11 @@ export default function PQCAReport() {
   const [model, setModel] = useState('All');
 
   const kpiData = dbData?.kpis || {
-    totalCheckpoints: 500,
-    ok: 480,
-    nc: 20,
-    singleNc: 15,
-    doubleNc: 5,
+    totalCheckpoints: "500",
+    ok: "480",
+    nc: "20",
+    singleNc: "15",
+    doubleNc: "5"
   };
 
   const complianceData = [
