@@ -13,11 +13,11 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="h-14 w-48 flex justify-end overflow-hidden">
+        <div className="h-16 w-56 flex justify-end">
           <img 
             src="/bajaj-logo.png" 
             alt="Bajaj Logo" 
-            className="w-full h-full object-contain scale-[1.7] origin-right"
+            className="w-full h-full object-contain"
           />
         </div>
       </div>
