@@ -30,26 +30,36 @@ export default function KittingDashboard() {
     { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'UG6'], value: sku, onChange: setSku },
   ];
 
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const kpi = {
+    planned: Math.round(100 * scale),
+    prepared: Math.round(85 * scale),
+    pending: Math.round(10 * scale),
+    accuracy: "98%",
+    rejected: Math.round(5 * scale),
+    status: "On Track"
+  };
+
   const pieData = [
-    { name: 'Prepared', value: 85 },
-    { name: 'Pending', value: 10 },
-    { name: 'Rejected', value: 5 },
-  ];
+    { name: 'Prepared', value: kpi.prepared },
+    { name: 'Pending', value: kpi.pending },
+    { name: 'Rejected', value: kpi.rejected },
+  ].filter(d => d.value > 0);
 
   const barData = [
-    { model: 'Pulsar 150', prepared: 40 },
-    { model: 'Dominar 400', prepared: 25 },
-    { model: 'Avenger 220', prepared: 20 },
+    { model: 'Pulsar 150', prepared: Math.round(40 * scale) },
+    { model: 'Dominar 400', prepared: Math.round(25 * scale) },
+    { model: 'Avenger 220', prepared: Math.round(20 * scale) },
   ];
 
   const trendData = useMemo(() => {
     return generateTimeLabels(period, shift).map(time => ({
       time,
-      kitsPrepared: Math.floor(Math.random() * 30) + 10
+      kitsPrepared: Math.floor(Math.random() * 30 * scale) + Math.round(10 * scale)
     }));
   }, [period, shift]);
 
-  const tableData = dbData?.table || [
+  const tableData = [
     { kitId: 'KIT-101', model: 'Pulsar 150', sku: 'UG5', status: 'Prepared', preparedAt: '10:00', accuracy: '100%', defect: '-' },
     { kitId: 'KIT-102', model: 'Dominar 400', sku: 'UG6', status: 'Pending', preparedAt: '-', accuracy: '-', defect: '-' },
     { kitId: 'KIT-103', model: 'Pulsar 150', sku: 'UG5', status: 'Rejected', preparedAt: '11:15', accuracy: '95%', defect: 'Missing Bolt' },
@@ -66,7 +76,7 @@ export default function KittingDashboard() {
       if(val === 'Prepared') color = 'text-green-600 bg-green-100';
       if(val === 'Pending') color = 'text-orange-600 bg-orange-100';
       if(val === 'Rejected') color = 'text-red-600 bg-red-100';
-      return <span className={`px-2 py-1 rounded text-xs font-bold ${color}`}>{val}</span>;
+      return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${color}`}>{val}</span>;
     }},
     { header: 'Prepared At', accessor: 'preparedAt' },
     { header: 'Accuracy %', accessor: 'accuracy' },
@@ -77,12 +87,12 @@ export default function KittingDashboard() {
     exportToXLSX('KittingDashboard.xlsx', [
       { name: 'KPI', rows: [
         ['Metric', 'Value'],
-        ['Total Kits Planned', dbData?.kpis?.totalKitsPlanned || '100'],
-        ['Kits Prepared', dbData?.kpis?.kitsPrepared || '85'],
-        ['Kits Pending', dbData?.kpis?.kitsPending || '10'],
-        ['Kit Accuracy %', dbData?.kpis?.kitAccuracy || '98%'],
-        ['Rejected Kits', dbData?.kpis?.rejectedKits || '5'],
-        ['Preparation Status', dbData?.kpis?.preparationStatus || 'On Track']
+        ['Total Kits Planned', kpi.planned],
+        ['Kits Prepared', kpi.prepared],
+        ['Kits Pending', kpi.pending],
+        ['Kit Accuracy %', kpi.accuracy],
+        ['Rejected Kits', kpi.rejected],
+        ['Preparation Status', kpi.status]
       ]},
       { name: 'Kit Status', rows: [
         ['Status', 'Count'],
@@ -97,16 +107,16 @@ export default function KittingDashboard() {
 
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
-      <StandardFilterBar title="Kitting Dashboard" icon={PackagePlus} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
+      <StandardFilterBar title="Kitting Dashboard" icon={PackagePlus} period={period} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Kits Planned" value={dbData?.kpis?.totalKitsPlanned || "100"} color="bg-blue-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Kits Prepared" value={dbData?.kpis?.kitsPrepared || "85"} color="bg-green-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Kits Pending" value={dbData?.kpis?.kitsPending || "10"} color="bg-orange-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Kit Accuracy %" value={dbData?.kpis?.kitAccuracy || "98%"} color="bg-purple-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Rejected Kits" value={dbData?.kpis?.rejectedKits || "5"} color="bg-red-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Preparation Status" value={dbData?.kpis?.preparationStatus || "On Track"} color="bg-green-100" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Kits Planned" value={kpi.planned} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Kits Prepared" value={kpi.prepared} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Kits Pending" value={kpi.pending} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Kit Accuracy %" value={kpi.accuracy} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Rejected Kits" value={kpi.rejected} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Preparation Status" value={kpi.status} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
