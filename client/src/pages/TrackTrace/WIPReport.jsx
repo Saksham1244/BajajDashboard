@@ -38,11 +38,10 @@ export default function WIPReport() {
   ];
 
   const mockData = [
-    { id: 1, engineNo: 'ENG-101', model: 'Pulsar 150', sku: 'UG5', station: 'ST-04', status: 'In-Process', entryTime: '10:00', duration: 1.5, operator: 'OP-01' },
-    { id: 2, engineNo: 'ENG-102', model: 'Dominar 400', sku: 'STD', station: 'ST-02', status: 'Idle', entryTime: '09:30', duration: 2.0, operator: 'OP-02' },
-    { id: 3, engineNo: 'ENG-103', model: 'Avenger 220', sku: 'STD', station: 'ST-07', status: 'Rework', entryTime: '10:15', duration: 1.25, operator: 'OP-03' },
-    { id: 4, engineNo: 'ENG-104', model: 'Pulsar 220', sku: 'UG6', station: 'ST-01', status: 'Blocked', entryTime: '11:00', duration: 0.5, operator: 'OP-04' },
-    { id: 5, engineNo: 'ENG-105', model: 'Pulsar 150', sku: 'UG5', station: 'ST-03', status: 'In-Process', entryTime: '11:15', duration: 0.25, operator: 'OP-05' },
+    ...Array(kpiValues.inProcess).fill().map((_, i) => ({ id: `IP-${i}`, engineNo: `ENG-IP${i}`, model: 'Pulsar 150', sku: 'UG5', station: 'ST-04', status: 'In-Process', entryTime: '10:00', duration: 1.5, operator: 'OP-01' })),
+    ...Array(kpiValues.rework).fill().map((_, i) => ({ id: `RW-${i}`, engineNo: `ENG-RW${i}`, model: 'Avenger 220', sku: 'STD', station: 'ST-07', status: 'Rework', entryTime: '10:15', duration: 1.25, operator: 'OP-03' })),
+    ...Array(kpiValues.blocked).fill().map((_, i) => ({ id: `BL-${i}`, engineNo: `ENG-BL${i}`, model: 'Pulsar 220', sku: 'UG6', station: 'ST-01', status: 'Blocked', entryTime: '11:00', duration: 0.5, operator: 'OP-04' })),
+    ...Array(kpiValues.idle).fill().map((_, i) => ({ id: `ID-${i}`, engineNo: `ENG-ID${i}`, model: 'Dominar 400', sku: 'STD', station: 'ST-02', status: 'Idle', entryTime: '09:30', duration: 2.0, operator: 'OP-02' })),
   ];
 
   const columns = [
