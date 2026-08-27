@@ -17,19 +17,22 @@ export default function MTTRMTBFReport() {
 
   const colors = ['#0369a1','#f97316'];
 
+  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const v = (base) => Math.max(1, Math.round(base * (1 + scale * 0.1))); // Add slight variance so graphs wiggle
+
   const chartData = [
-    { machine: 'M-01', mttr: 45, mtbf: 120 },
-    { machine: 'M-02', mttr: 60, mtbf: 80 },
-    { machine: 'M-03', mttr: 30, mtbf: 200 },
-    { machine: 'M-04', mttr: 50, mtbf: 150 },
+    { machine: 'M-01', mttr: v(45), mtbf: v(120) },
+    { machine: 'M-02', mttr: v(60), mtbf: v(80) },
+    { machine: 'M-03', mttr: v(30), mtbf: v(200) },
+    { machine: 'M-04', mttr: v(50), mtbf: v(150) },
   ];
 
   const tableData = [
-    { machine: 'M-01', mttr: 45, mtbf: 120, availability: 98, count: 2, totalTime: 90 },
-    { machine: 'M-02', mttr: 60, mtbf: 80, availability: 85, count: 5, totalTime: 300 },
-    { machine: 'M-03', mttr: 30, mtbf: 200, availability: 95, count: 1, totalTime: 30 },
-    { machine: 'M-04', mttr: 50, mtbf: 150, availability: 92, count: 3, totalTime: 150 },
-    { machine: 'M-05', mttr: 40, mtbf: 180, availability: 99, count: 0, totalTime: 0 },
+    { machine: 'M-01', mttr: v(45), mtbf: v(120), availability: 98, count: Math.round(20 * scale), totalTime: Math.round(900 * scale) },
+    { machine: 'M-02', mttr: v(60), mtbf: v(80), availability: 85, count: Math.round(50 * scale), totalTime: Math.round(3000 * scale) },
+    { machine: 'M-03', mttr: v(30), mtbf: v(200), availability: 95, count: Math.round(10 * scale), totalTime: Math.round(300 * scale) },
+    { machine: 'M-04', mttr: v(50), mtbf: v(150), availability: 92, count: Math.round(30 * scale), totalTime: Math.round(1500 * scale) },
+    { machine: 'M-05', mttr: v(40), mtbf: v(180), availability: 99, count: 0, totalTime: 0 },
   ];
 
   const columns = [
@@ -70,10 +73,10 @@ export default function MTTRMTBFReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Avg MTTR"  value="45 mins" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Avg MTBF"  value="146 hrs" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Best Machine Availability" value="M-05 (99%)" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Worst Machine" value="M-02 (85%)" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg MTTR" value={Math.round((chartData.reduce((sum, d) => sum + d.mttr, 0)) / chartData.length) + " mins"} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg MTBF" value={Math.round((chartData.reduce((sum, d) => sum + d.mtbf, 0)) / chartData.length) + " hrs"} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Best Machine Availability" value="M-05 (99%)" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Worst Machine" value="M-02 (85%)" />
         </div>
 
         <div className="card p-4">
