@@ -17,7 +17,7 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
           <img 
             src="/bajaj-logo.png" 
             alt="Bajaj Logo" 
-            className="w-full h-full object-contain"
+            className="w-full h-full object-contain object-right"
           />
         </div>
       </div>
