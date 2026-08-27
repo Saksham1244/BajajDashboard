@@ -83,8 +83,7 @@ export default function PMDashboard() {
         onExcelClick={exportToExcel}
         period={period}
         filters={[
-          { type: 'period', value: period },
-          { type: 'daterange' },
+          ...getBaseFilters(),
           { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2', 'Sub-Assy'], value: line, onChange: setLine },
           { type: 'dropdown', label: 'Machine', options: ['All', 'M-01', 'M-02', 'M-03'], value: machine, onChange: setMachine },
         ]}

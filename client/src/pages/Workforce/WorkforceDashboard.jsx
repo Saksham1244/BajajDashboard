@@ -73,8 +73,7 @@ export default function WorkforceDashboard() {
         period={period}
         onExcelClick={exportToExcel}
         filters={[
-          { type: 'period', value: period },
-          { type: 'daterange' },
+          ...getBaseFilters(),
           { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine },
           { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02','ST-03','ST-04','ST-05'], value: station, onChange: setStation }
         ]}
