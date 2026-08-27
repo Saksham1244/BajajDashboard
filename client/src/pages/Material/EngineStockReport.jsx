@@ -20,10 +20,16 @@ export default function EngineStockReport() {
   ];
 
   const pieData = [
-    { name: 'Pulsar 150', value: 45 },
-    { name: 'Dominar 400', value: 20 },
-    { name: 'Avenger 220', value: 35 },
-  ];
+    { family: 'Pulsar', name: 'Pulsar 150', value: 45 },
+    { family: 'Dominar', name: 'Dominar 400', value: 20 },
+    { family: 'Avenger', name: 'Avenger 220', value: 35 },
+  ].filter(d => 
+    (modelFamily === 'All' || d.family === modelFamily) &&
+    (model === 'All' || d.name === model)
+  );
+
+  const totalEngines = pieData.reduce((sum, d) => sum + d.value, 0);
+  const modelsCount = pieData.length;
 
   const tableData = [
     { modelFamily: 'Pulsar', model: 'Pulsar 150', sku: 'UG5', engineNo: 'ENG-1001', dateTime: '2023-10-01 08:30' },
@@ -31,7 +37,11 @@ export default function EngineStockReport() {
     { modelFamily: 'Avenger', model: 'Avenger 220', sku: 'STD', engineNo: 'ENG-3001', dateTime: '2023-10-01 10:00' },
     { modelFamily: 'Pulsar', model: 'Pulsar 150', sku: 'UG5', engineNo: 'ENG-1002', dateTime: '2023-10-01 10:30' },
     { modelFamily: 'Dominar', model: 'Dominar 400', sku: 'UG6', engineNo: 'ENG-2002', dateTime: '2023-10-01 11:00' },
-  ];
+  ].filter(d => 
+    (modelFamily === 'All' || d.modelFamily === modelFamily) &&
+    (model === 'All' || d.model === model) &&
+    (sku === 'All' || d.sku === sku)
+  );
 
   const columns = [
     { header: 'Model Family', accessor: 'modelFamily' },
@@ -44,8 +54,8 @@ export default function EngineStockReport() {
   const exportToExcel = () => {
     exportToXLSX('EngineStockReport.xlsx', [
       { name: 'Summary', rows: [
-        ['Total Engine Count', '100'],
-        ['Models Count', '3'],
+        ['Total Engine Count', totalEngines],
+        ['Models Count', modelsCount],
         ['Oldest Entry Age', '2 Days']
       ]},
       { name: 'Engine Details', rows: [
@@ -61,9 +71,9 @@ export default function EngineStockReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Engine Count"  value="100" color="bg-blue-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Models Count"  value="3" color="bg-purple-100" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Oldest Entry Age"  value="2 Days" color="bg-orange-100" />
+          <StatCard title="Total Engine Count"  value={totalEngines} />
+          <StatCard title="Models Count"  value={modelsCount} />
+          <StatCard title="Oldest Entry Age"  value="2 Days" />
         </div>
 
         <div className="card p-4">
