@@ -12,18 +12,20 @@ export default function PokaYokeReport() {
   const { period, shift, startDate, endDate, getBaseFilters } = useReportFilters();
   const [device, setDevice] = useState('All');
   const [bypassLogs, setBypassLogs] = useState([]);
+  const [kpiData, setKpiData] = useState({ totalChecks: 1578, okCount: 1570, notOkCount: 8, bypassCount: 3 });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/process/bypass?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.bypassLogs) {
-          setBypassLogs(data.bypassLogs);
-        }
+    Promise.all([
+      fetch(`/api/process/bypass?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}`).then(r => r.json()),
+      fetch(`/api/process/pokayoke?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}`).then(r => r.json())
+    ])
+      .then(([bypassRes, pokaRes]) => {
+        if (bypassRes.bypassLogs) setBypassLogs(bypassRes.bypassLogs);
+        if (pokaRes.kpis) setKpiData(pokaRes.kpis);
       })
-      .catch(err => console.error('Bypass fetch error:', err))
+      .catch(err => console.error('PokaYoke fetch error:', err))
       .finally(() => setLoading(false));
   }, [period, shift, startDate, endDate]);
 
@@ -31,24 +33,28 @@ export default function PokaYokeReport() {
     { type: 'dropdown', label: 'Poka Yoke Device', options: ['All', 'PY-01 Torque', 'PY-02 Vision', 'PY-03 Sensor'], value: device, onChange: setDevice },
   ];
 
+  const totalChecks = Number(kpiData.totalChecks) || 1578;
+  const okSum = Number(kpiData.okCount) || 1570;
+  const nokSum = Number(kpiData.notOkCount) || 8;
+  const bypassSum = Number(kpiData.bypassCount) || 3;
+
   const hourlyData = useMemo(() => {
     const labels = generateTimeLabels(period, shift);
+    const n = Math.max(1, labels.length);
+    const baseOkPerSlot = Math.floor(okSum / n);
+    const remainder = okSum % n;
+
     return labels.map((label, idx) => ({
       hour: label,
-      ok: 120 + ((idx * 7) % 25),
-      nok: idx % 5 === 0 ? 1 : 0,
-      bypass: idx % 7 === 0 ? 1 : 0,
+      ok: baseOkPerSlot + (idx < remainder ? 1 : 0),
+      nok: idx < nokSum ? Math.ceil(nokSum / Math.min(n, 4)) : 0,
+      bypass: idx < bypassSum ? 1 : 0,
     }));
-  }, [period, shift]);
+  }, [period, shift, okSum, nokSum, bypassSum]);
 
   const bypassLogData = (bypassLogs.length > 0 ? bypassLogs : [
-    { id: 1, startTime: '09:15', endTime: '09:20', duration: 5, station: 'ST-01', device: 'PY-01 Torque Bypass', operator: 'Rahul Sharma', reason: 'Sensor calibration', authorizedBy: 'Supervisor Amit', status: 'Resolved' }
+    { id: 1, bypassId: 'BP-001', startTime: '08:30', endTime: '08:45', duration: 15, station: 'ST-01', device: 'PY-01 Torque Bypass', operator: 'Rahul Sharma', reason: 'Sensor calibration', authorizedBy: 'Supervisor Amit', status: 'Resolved' }
   ]).filter(d => device === 'All' || d.device === device || device.includes(d.device));
-
-  const okSum = hourlyData.reduce((acc, d) => acc + d.ok, 0);
-  const nokSum = hourlyData.reduce((acc, d) => acc + d.nok, 0);
-  const bypassSum = hourlyData.reduce((acc, d) => acc + d.bypass, 0);
-  const totalChecks = okSum + nokSum;
 
   const tableColumns = [
     { header: 'Start Time', accessor: 'startTime' },
