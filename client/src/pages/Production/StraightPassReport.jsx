@@ -91,9 +91,9 @@ export default function StraightPassReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Engines Produced" value={kpis.total} trend={12.5} subtitle="vs Last Month 360" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Straight Pass (FTR)" value={kpis.straight} trend={4.2} subtitle="vs Last Month 340" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Reworked Pass" value={kpis.rework} trend={-18.1} subtitle="vs Last Month 22" />
+          <StatCard title="Total Engines Produced" value={kpis.total} sub="Completed Production" color="blue" />
+          <StatCard title="Straight Pass (FTR)" value={kpis.straight} trend={`${kpis.total > 0 ? ((kpis.straight / kpis.total) * 100).toFixed(1) : 100}%`} trendLabel="FTR Rate" sub="First Time Right" color="green" />
+          <StatCard title="Reworked Pass" value={kpis.rework} trend={kpis.rework > 0 ? `${kpis.total > 0 ? ((kpis.rework / kpis.total) * 100).toFixed(1) : 0}%` : '0%'} trendLabel="Rework Rate" sub="Fixed & Passed" color="amber" />
         </div>
 
         <div className="card p-4">

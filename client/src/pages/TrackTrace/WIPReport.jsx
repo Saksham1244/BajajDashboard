@@ -84,11 +84,11 @@ export default function WIPReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total WIP" value={kpiValues.total} trend="up" color="blue" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="In-Process" value={kpiValues.inProcess} trend="neutral" color="green" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Rework" value={kpiValues.rework} trend="down" color="orange" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Blocked" value={kpiValues.blocked} trend="up" color="red" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Idle" value={kpiValues.idle} trend="down" color="purple" />
+          <StatCard title="Total WIP" value={kpiValues.total} sub="Active Line Units" color="blue" />
+          <StatCard title="In-Process" value={kpiValues.inProcess} sub={`${kpiValues.total > 0 ? ((kpiValues.inProcess / kpiValues.total) * 100).toFixed(1) : 0}% of WIP`} color="green" />
+          <StatCard title="Rework" value={kpiValues.rework} sub={`${kpiValues.total > 0 ? ((kpiValues.rework / kpiValues.total) * 100).toFixed(1) : 0}% of WIP`} color="amber" />
+          <StatCard title="Blocked" value={kpiValues.blocked} sub={`${kpiValues.total > 0 ? ((kpiValues.blocked / kpiValues.total) * 100).toFixed(1) : 0}% of WIP`} color="red" />
+          <StatCard title="Idle" value={kpiValues.idle} sub={`${kpiValues.total > 0 ? ((kpiValues.idle / kpiValues.total) * 100).toFixed(1) : 0}% of WIP`} color="purple" />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

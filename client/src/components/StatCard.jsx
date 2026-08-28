@@ -8,7 +8,7 @@
  *   color   - 'blue'|'green'|'red'|'amber'|'slate'|'purple'|'orange'
  *             OR a direct Tailwind text class e.g. 'text-orange-600' (backward compat)
  */
-export default function StatCard({ title, value, sub, trend, color = 'blue', autoScale = false, period = 'Month', sparkline = [40, 65, 55, 80, 95, 85, 90, 100] }) {
+export default function StatCard({ title, value, sub, trend, trendLabel, color = 'blue', autoScale = false, period = 'Month', sparkline = [40, 65, 55, 80, 95, 85, 90, 100] }) {
   const presets = {
     blue:   { border: 'border-t-[#0369a1]',  text: 'text-[#0369a1]', spark: 'bg-[#0369a1]' },
     green:  { border: 'border-t-emerald-600', text: 'text-emerald-600', spark: 'bg-emerald-600' },
@@ -25,9 +25,21 @@ export default function StatCard({ title, value, sub, trend, color = 'blue', aut
   const textClass   = isRaw ? color                : (presets[color]?.text   ?? presets.blue.text)
   const sparkColor  = isRaw ? 'bg-slate-400'       : (presets[color]?.spark  ?? presets.blue.spark)
 
-  const isValidTrend = trend !== undefined && trend !== null && !isNaN(Number(trend));
-  const trendVal = isValidTrend ? Number(trend) : 0;
-  const trendUp = trendVal >= 0;
+  const isValidTrend = trend !== undefined && trend !== null && trend !== '';
+  let trendVal = 0;
+  let trendText = '';
+  let trendUp = true;
+
+  if (isValidTrend) {
+    if (typeof trend === 'number') {
+      trendVal = trend;
+      trendUp = trendVal >= 0;
+      trendText = `${trendUp ? '▲' : '▼'} ${Math.abs(trendVal)}%`;
+    } else if (typeof trend === 'string') {
+      trendText = trend;
+      trendUp = !trend.includes('-') && !trend.includes('▼');
+    }
+  }
 
   let displayValue = value;
   if (typeof value === 'number') {
@@ -57,7 +69,7 @@ export default function StatCard({ title, value, sub, trend, color = 'blue', aut
           {sub && <p className="text-xs text-slate-400 font-medium">{sub}</p>}
           {isValidTrend && (
             <p className={`text-[11px] font-bold ${trendUp ? 'text-emerald-500' : 'text-rose-500'}`}>
-              {trendUp ? '▲' : '▼'} {Math.abs(trendVal)}% vs last
+              {trendText} {trendLabel ? trendLabel : ''}
             </p>
           )}
         </div>

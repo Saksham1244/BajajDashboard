@@ -47,6 +47,7 @@ export default function Production() {
       });
   }, [period, shift, activeLine, activeModel]);
 
+  const totalPlan = dbData.kpis?.totalPlan ?? (totalProd + shortfall);
   const totalProd = dbData.kpis?.totalProd ?? 265;
   const shortfall = dbData.kpis?.shortfall ?? 1035;
   const wip = dbData.kpis?.wip ?? 10;
@@ -179,37 +180,33 @@ export default function Production() {
             period={typeof period !== "undefined" ? period : "Month"}
             title="Total Production"
             value={totalProd}
-            trend={12.4}
-            sub="vs Last Period"
+            trend={`${totalPlan > 0 ? ((totalProd / totalPlan) * 100).toFixed(1) : 100}%`}
+            trendLabel="Target Reached"
+            sub={`Planned: ${totalPlan.toLocaleString()} units`}
             color="blue"
-            sparkline={[45, 60, 75, 80, 92, 88, 95, 100]}
           />
           <StatCard
             period={typeof period !== "undefined" ? period : "Month"}
             title="Production Shortfall"
             value={shortfall}
-            trend={-4.2}
-            sub="vs Shift Plan"
+            trend={shortfall > 0 ? `-${totalPlan > 0 ? ((shortfall / totalPlan) * 100).toFixed(1) : 0}%` : '0%'}
+            trendLabel="of Plan"
+            sub="Variance from Target"
             color="red"
-            sparkline={[80, 70, 50, 40, 60, 30, 20, 15]}
           />
           <StatCard
             period={typeof period !== "undefined" ? period : "Month"}
             title="Current WIP Buffer"
             value={wip}
-            trend={1.8}
-            sub="Across 6 Stations"
+            sub="Mainline Assembly Buffer"
             color="amber"
-            sparkline={[30, 45, 55, 60, 58, 62, 50, 48]}
           />
           <StatCard
             period={typeof period !== "undefined" ? period : "Month"}
             title="Rollover Quantity"
             value={rollover}
-            trend={-15.3}
-            sub="To Next Shift"
+            sub="QC & Material Holds"
             color="purple"
-            sparkline={[50, 40, 35, 30, 25, 20, 15, 10]}
           />
         </div>
 

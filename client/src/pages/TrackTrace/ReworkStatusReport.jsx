@@ -98,10 +98,10 @@ export default function ReworkStatusReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Rework" value={totalRework} trend="up" color="red" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Pending" value={pendingCount} trend="neutral" color="orange" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="In-Progress" value={inProgressCount} trend="up" color="blue" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Completed" value={completedCount} trend="up" color="green" />
+          <StatCard title="Total Rework" value={totalRework} sub="Rework Logged" color="red" />
+          <StatCard title="Pending" value={pendingCount} sub={`${totalRework > 0 ? ((pendingCount / totalRework) * 100).toFixed(1) : 0}% of Total`} color="amber" />
+          <StatCard title="In-Progress" value={inProgressCount} sub={`${totalRework > 0 ? ((inProgressCount / totalRework) * 100).toFixed(1) : 0}% of Total`} color="blue" />
+          <StatCard title="Completed" value={completedCount} sub={`${totalRework > 0 ? ((completedCount / totalRework) * 100).toFixed(1) : 0}% of Total`} color="green" />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
