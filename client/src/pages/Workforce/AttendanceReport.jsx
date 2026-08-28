@@ -14,25 +14,32 @@ export default function AttendanceReport() {
   const filterOptions = useFilterOptions();
   
   const [line, setLine] = useState('All');
+  const [dbData, setDbData] = useState(null);
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  React.useEffect(() => {
+    fetch(`/api/workforce/attendance?period=${period}&shift=${shift}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift]);
 
-  const allTableData = [
-    { operator: 'John Doe', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
-    { operator: 'Jane Smith', line: 'Line 1', shift: 'Shift 1', inTime: '06:15', outTime: '14:00', status: 'Late', hoursWorked: 7.75 },
-    { operator: 'Mike Johnson', line: 'Line 2', shift: 'Shift 1', inTime: '-', outTime: '-', status: 'Absent', hoursWorked: 0 },
-    { operator: 'Sarah Williams', line: 'Line 2', shift: 'Shift 2', inTime: '14:00', outTime: '22:00', status: 'Present', hoursWorked: 8 },
-    { operator: 'David Brown', line: 'Line 1', shift: 'Shift 2', inTime: '14:00', outTime: '22:30', status: 'Present', hoursWorked: 8.5 }
+  const allTableData = dbData?.table || [
+    { id: '3', operator: 'Rahul Sharma', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
+    { id: '4', operator: 'Priya Singh', line: 'Line 2', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
+    { id: '5', operator: 'Amit Kumar', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
+    { id: '6', operator: 'Neha Verma', line: 'Line 2', shift: 'Shift 1', inTime: '06:15', outTime: '14:00', status: 'Late', hoursWorked: 7.75 },
+    { id: '7', operator: 'Vikram Patel', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
+    { id: '8', operator: 'Sneha Gupta', line: 'Line 2', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 }
   ];
 
   const tableData = allTableData.filter(d => 
     line === 'All' || d.line === line
   );
 
-  const kpiData = { 
-    scheduled: Math.max(1, Math.round(150 * scale)), 
-    present: Math.max(1, Math.round(142 * scale)), 
-    absent: Math.max(0, Math.round(8 * scale)), 
+  const kpiData = dbData?.kpiData || { 
+    scheduled: 8, 
+    present: 7, 
+    absent: 1, 
     attendancePct: 94.6 
   };
   

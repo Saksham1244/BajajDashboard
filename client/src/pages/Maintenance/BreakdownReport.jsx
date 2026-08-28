@@ -24,14 +24,10 @@ export default function BreakdownReport() {
       .catch(err => console.error(err));
   }, [period]);
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
-
-  const allBreakdowns = [
-    { machine: 'M-01', line: 'Line 1', station: 'ST-01', start: '08:00', end: '08:45', duration: 45, reason: 'Jam', tech: 'John D.', status: 'Resolved' },
-    { machine: 'M-02', line: 'Line 1', station: 'ST-02', start: '09:15', end: '11:15', duration: 120, reason: 'Motor Failure', tech: 'Sarah K.', status: 'Pending' },
-    { machine: 'M-03', line: 'Line 2', station: 'ST-01', start: '10:30', end: '11:00', duration: 30, reason: 'Sensor Error', tech: 'Mike T.', status: 'Resolved' },
-    { machine: 'M-01', line: 'Line 1', station: 'ST-01', start: '13:00', end: '13:15', duration: 15, reason: 'Calibration', tech: 'John D.', status: 'Resolved' },
-    { machine: 'M-04', line: 'Line 2', station: 'ST-02', start: '14:20', end: '15:20', duration: 60, reason: 'Power Outage', tech: 'Alan B.', status: 'Resolved' },
+  const allBreakdowns = dbData?.table || [
+    { machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', start: '08:15', end: '08:33', duration: 18, reason: 'Nutrunner Spindle #2 Stall', tech: 'Amit Kumar', status: 'Resolved' },
+    { machine: 'Line2 Pallet Indexer', line: 'Line 2', station: 'Line2 (Head Tightening)', start: '09:10', end: '09:35', duration: 25, reason: 'Conveyor Pallet Stop Cylinder Jam', tech: 'Rahul Sharma', status: 'Resolved' },
+    { machine: 'Station2 Cold Test Bench', line: 'Line 1', station: 'Station2 (Cold Inspection)', start: '10:40', end: '10:52', duration: 12, reason: 'Vision Camera Communication Timeout', tech: 'Priya Singh', status: 'Resolved' }
   ];
 
   const tableData = allBreakdowns.filter(d => 
@@ -40,11 +36,10 @@ export default function BreakdownReport() {
     (machine === 'All' || d.machine === machine)
   );
 
-  const totalBreakdowns = Math.max(1, Math.round(tableData.length * (period === 'Month' ? 6 : period === 'Week' ? 2 : 1)));
-  const totalMins = tableData.reduce((acc, d) => acc + d.duration, 0) || 120;
-  const avgMins = Math.round(totalMins / (tableData.length || 1));
-  const maxMins = Math.max(...tableData.map(d => d.duration), 60);
-  const totalDowntimeHours = (totalMins / 60).toFixed(1);
+  const totalBreakdowns = dbData?.kpis?.totalBreakdowns || tableData.length;
+  const avgMins = dbData?.kpis?.avgMins || 22;
+  const maxMins = dbData?.kpis?.maxMins || 45;
+  const totalDowntimeHours = dbData?.kpis?.totalDowntimeHours || '2.5';
 
   const columns = [
     { header: 'Machine', accessor: 'machine' },

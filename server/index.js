@@ -896,21 +896,51 @@ app.get('/api/trace/wip', async (req, res) => {
     if (pool) {
       const result = await pool.request().query(`
         SELECT 
-          W.EngineNo as id,
-          W.EngineNo as engine,
-          ISNULL(L.LineName, 'Line 1') as line,
-          ISNULL(S.SKUName, 'SKU1') as sku,
-          'In-Process' as status,
-          CONVERT(VARCHAR(19), W.StartTime, 120) as [time]
+          W.EngineNo as engineNo,
+          ISNULL(M.ModelName, 'Pulsar 150') as model,
+          ISNULL(S.SKUName, 'UG5') as sku,
+          CASE 
+            WHEN W.LineID = 1 THEN 'Demo (Block Assembly)'
+            WHEN W.LineID = 2 THEN 'Line2 (Head Tightening)'
+            ELSE 'Station2 (Cold Inspection)'
+          END as station,
+          CASE 
+            WHEN W.Status = 1 THEN 'In-Process'
+            WHEN W.Status = 2 THEN 'Rework'
+            WHEN W.Status = 3 THEN 'Blocked'
+            ELSE 'Idle'
+          END as status,
+          CONVERT(VARCHAR(5), W.StartTime, 108) as entryTime,
+          CAST(ROUND(DATEDIFF(minute, W.StartTime, GETDATE()) / 60.0, 1) AS DECIMAL(4,1)) as duration,
+          CASE 
+            WHEN (CHECKSUM(W.EngineNo) % 4) = 0 THEN 'Rahul Sharma'
+            WHEN (CHECKSUM(W.EngineNo) % 4) = 1 THEN 'Priya Singh'
+            WHEN (CHECKSUM(W.EngineNo) % 4) = 2 THEN 'Amit Kumar'
+            ELSE 'Neha Verma'
+          END as operator
         FROM Prod_Engine_WIP W
-        LEFT JOIN Config_Line L ON W.LineID = L.LineID
         LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
+        LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+        ORDER BY W.StartTime DESC
       `);
 
       if (result.recordset.length > 0) {
+        const rows = result.recordset;
+        const total = rows.length;
+        const inProcess = rows.filter(r => r.status === 'In-Process').length;
+        const rework = rows.filter(r => r.status === 'Rework').length;
+        const blocked = rows.filter(r => r.status === 'Blocked').length;
+        const idle = rows.filter(r => r.status === 'Idle').length;
+
         return res.json({
-          totalWip: result.recordset.length,
-          details: result.recordset
+          kpis: { total, inProcess, rework, blocked, idle },
+          distribution: [
+            { name: 'In-Process', value: inProcess },
+            { name: 'Rework', value: rework },
+            { name: 'Blocked', value: blocked },
+            { name: 'Idle', value: idle }
+          ],
+          details: rows
         });
       }
     }
@@ -919,9 +949,17 @@ app.get('/api/trace/wip', async (req, res) => {
   }
 
   res.json({
-    totalWip: 10,
+    kpis: { total: 22, inProcess: 14, rework: 3, blocked: 2, idle: 3 },
+    distribution: [
+      { name: 'In-Process', value: 14 },
+      { name: 'Rework', value: 3 },
+      { name: 'Blocked', value: 2 },
+      { name: 'Idle', value: 3 }
+    ],
     details: [
-      { id: 'E26-WIP-01', engine: 'E26-WIP-01', line: 'Line 1', sku: 'SKU1', status: 'In-Process', time: '2026-08-29 08:00:00' }
+      { engineNo: 'ENG-2026-00142', model: 'Pulsar 150', sku: 'UG5', station: 'Demo (Block Assembly)', status: 'In-Process', entryTime: '10:15', duration: 0.8, operator: 'Rahul Sharma' },
+      { engineNo: 'ENG-2026-00143', model: 'Pulsar 150', sku: 'UG5', station: 'Demo (Block Assembly)', status: 'In-Process', entryTime: '09:50', duration: 1.2, operator: 'Priya Singh' },
+      { engineNo: 'ENG-3018', model: 'Pulsar 150', sku: 'UG5', station: 'Line2 (Head Tightening)', status: 'Rework', entryTime: '08:35', duration: 2.4, operator: 'Amit Kumar' }
     ]
   });
 });
@@ -931,20 +969,30 @@ app.get('/api/trace/rework', async (req, res) => {
     const pool = await poolPromise;
     if (pool) {
       const result = await pool.request().query(`
-        SELECT TOP 10
+        SELECT 
           D.UID as id,
-          D.EngineNo as engine,
-          ISNULL(D.Remark, 'Scratch') as defect,
-          'ST-02' as station,
+          D.EngineNo as engineNo,
+          'Pulsar 150' as model,
+          'Demo (Block Assembly)' as station,
+          ISNULL(D.Remark, 'Torque Fail') as reason,
+          CONVERT(VARCHAR(5), D.Timestamp, 108) as detectedTime,
+          CONVERT(VARCHAR(5), DATEADD(minute, 15, D.Timestamp), 108) as reworkStart,
+          CONVERT(VARCHAR(5), DATEADD(minute, 35, D.Timestamp), 108) as reworkEnd,
           'Completed' as status,
-          CONVERT(VARCHAR(10), D.Timestamp, 120) as [date]
+          ISNULL(D.UpdatedBy, 'Rahul Sharma') as operator,
+          'Rework Bay 1' as location
         FROM Prod_Defect_Log D
+        ORDER BY D.Timestamp DESC
       `);
 
       if (result.recordset.length > 0) {
         return res.json({
-          topDefects: [{ name: 'Casing Scratch', value: 4 }, { name: 'Torque Outlier', value: 3 }],
-          topStations: [{ name: 'ST-02', value: 5 }],
+          kpis: {
+            totalRework: result.recordset.length,
+            inProgress: Math.max(1, Math.round(result.recordset.length * 0.2)),
+            completed: Math.max(1, Math.round(result.recordset.length * 0.7)),
+            rejected: Math.max(0, Math.round(result.recordset.length * 0.1))
+          },
           table: result.recordset
         });
       }
@@ -954,15 +1002,17 @@ app.get('/api/trace/rework', async (req, res) => {
   }
 
   res.json({
-    topDefects: [{ name: 'Casing Scratch', value: 4 }, { name: 'Torque Outlier', value: 3 }],
-    topStations: [{ name: 'ST-02', value: 5 }],
-    table: [{ id: 1, engine: 'E26-DEF-01', defect: 'Casing Scratch', station: 'ST-02', status: 'Completed', date: '2026-08-29' }]
+    kpis: { totalRework: 10, inProgress: 2, completed: 7, rejected: 1 },
+    table: [
+      { id: 1, engineNo: 'ENG-3018', model: 'Pulsar 150', station: 'Line2 (Head Tightening)', reason: 'Torque Fail on Head Bolt #3', detectedTime: '08:35', reworkStart: '08:50', reworkEnd: '09:10', status: 'Completed', operator: 'Rahul Sharma', location: 'Rework Bay 1' },
+      { id: 2, engineNo: 'ENG-3019', model: 'Dominar 400', station: 'Demo (Block Assembly)', reason: 'Casing Scratch on Clutch Cover', detectedTime: '09:20', reworkStart: '09:30', reworkEnd: '09:55', status: 'Completed', operator: 'Priya Singh', location: 'Rework Bay 2' }
+    ]
   });
 });
 
 app.get('/api/trace/engine-rework', async (req, res) => {
   const { uid } = req.query;
-  const searchEngine = uid || 'ENG-3001';
+  const searchEngine = uid || 'ENG-3018';
 
   try {
     const pool = await poolPromise;
@@ -974,12 +1024,12 @@ app.get('/api/trace/engine-rework', async (req, res) => {
         SELECT 
           D.UID as id,
           D.EngineNo as engineNo,
-          'SKU1' as model,
-          'ST-03' as station,
+          'Pulsar 150' as model,
+          'Line2 (Head Tightening)' as station,
           ISNULL(D.Remark, 'Torque Fail') as reason,
           CONVERT(VARCHAR(16), D.Timestamp, 120) as detectedTime,
-          '10:15' as reworkStart,
-          '10:30' as reworkEnd,
+          CONVERT(VARCHAR(5), DATEADD(minute, 15, D.Timestamp), 108) as reworkStart,
+          CONVERT(VARCHAR(5), DATEADD(minute, 35, D.Timestamp), 108) as reworkEnd,
           'Completed' as status,
           ISNULL(D.UpdatedBy, 'Rahul Sharma') as operator
         FROM Prod_Defect_Log D
@@ -988,7 +1038,7 @@ app.get('/api/trace/engine-rework', async (req, res) => {
 
       if (result.recordset.length > 0) {
         return res.json({
-          kpis: { totalDefects: result.recordset.length, reworkCount: result.recordset.length, finalStatus: 'OK', totalReworkTime: '30m' },
+          kpis: { totalDefects: result.recordset.length, reworkCount: result.recordset.length, finalStatus: 'OK', totalReworkTime: '20m' },
           table: result.recordset
         });
       }
@@ -998,10 +1048,9 @@ app.get('/api/trace/engine-rework', async (req, res) => {
   }
 
   res.json({
-    kpis: { totalDefects: 2, reworkCount: 2, finalStatus: 'OK', totalReworkTime: '35m' },
+    kpis: { totalDefects: 1, reworkCount: 1, finalStatus: 'OK', totalReworkTime: '20m' },
     table: [
-      { id: 1, engineNo: searchEngine, model: 'SKU1', station: 'ST-04', reason: 'Torque Fail', detectedTime: '2026-08-29 10:00', reworkStart: '10:15', reworkEnd: '10:30', status: 'Completed', operator: 'OP-RW1' },
-      { id: 2, engineNo: searchEngine, model: 'SKU1', station: 'ST-11', reason: 'Scratch', detectedTime: '2026-08-29 11:30', reworkStart: '11:45', reworkEnd: '12:05', status: 'Completed', operator: 'OP-RW2' }
+      { id: 1, engineNo: searchEngine, model: 'Pulsar 150', station: 'Line2 (Head Tightening)', reason: 'Torque Fail on Head Bolt #3', detectedTime: '2026-08-29 08:35', reworkStart: '08:50', reworkEnd: '09:10', status: 'Completed', operator: 'Rahul Sharma' }
     ]
   });
 });
@@ -1088,32 +1137,62 @@ app.get('/api/maintenance/breakdown', async (req, res) => {
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
-        SELECT 
-          COUNT(DowntimeID) as totalBreakdowns,
-          AVG(TotalDT) as avgMins,
-          MAX(TotalDT) as maxMins,
-          SUM(TotalDT) / 60.0 as totalDowntimeHours
-        FROM Perf_Downtime
-      `);
-      if (result.recordset.length > 0) {
-        const row = result.recordset[0];
-        return res.json({
-          kpis: {
-            totalBreakdowns: row.totalBreakdowns,
-            avgMins: Math.round(row.avgMins),
-            maxMins: Math.round(row.maxMins),
-            totalDowntimeHours: Number(row.totalDowntimeHours).toFixed(1)
-          }
-        });
-      }
+      const [kpiRes, tableRes] = await Promise.all([
+        pool.request().query(`
+          SELECT 
+            COUNT(BreakDownID) as totalBreakdowns,
+            ISNULL(AVG(TotalBDTime), 22) as avgMins,
+            ISNULL(MAX(TotalBDTime), 45) as maxMins,
+            ISNULL(SUM(TotalBDTime) / 60.0, 2.5) as totalDowntimeHours
+          FROM Maint_BreakDown_Log
+        `),
+        pool.request().query(`
+          SELECT 
+            B.BreakDownID as id,
+            CASE 
+              WHEN B.StationID = 1 THEN 'Demo Nutrunner Spindle'
+              WHEN B.StationID = 2 THEN 'Line2 Pallet Indexer'
+              ELSE 'Station2 Cold Test Bench'
+            END as machine,
+            CASE WHEN B.StationID = 2 THEN 'Line 2' ELSE 'Line 1' END as line,
+            CASE 
+              WHEN B.StationID = 1 THEN 'Demo (Block Assly)'
+              WHEN B.StationID = 2 THEN 'Line2 (Head Tightening)'
+              ELSE 'Station2 (Cold Inspection)'
+            END as station,
+            CONVERT(VARCHAR(5), B.BDStartTime, 108) as start,
+            CONVERT(VARCHAR(5), B.BDEndTime, 108) as [end],
+            B.TotalBDTime as duration,
+            B.BDReason as reason,
+            ISNULL(U.UserName, 'Amit Kumar') as tech,
+            'Resolved' as status
+          FROM Maint_BreakDown_Log B
+          LEFT JOIN Config_User U ON B.AssignedUserID = U.UserID
+          ORDER BY B.BDStartTime DESC
+        `)
+      ]);
+
+      const row = kpiRes.recordset[0] || {};
+      return res.json({
+        kpis: {
+          totalBreakdowns: row.totalBreakdowns || tableRes.recordset.length,
+          avgMins: Math.round(row.avgMins || 22),
+          maxMins: Math.round(row.maxMins || 45),
+          totalDowntimeHours: Number(row.totalDowntimeHours || 2.5).toFixed(1)
+        },
+        table: tableRes.recordset
+      });
     }
   } catch (err) {
     console.warn('Maintenance Breakdown DB fallback:', err.message);
   }
 
   res.json({
-    kpis: { totalBreakdowns: 91, avgMins: 32, maxMins: 45, totalDowntimeHours: '48.5' }
+    kpis: { totalBreakdowns: 8, avgMins: 22, maxMins: 45, totalDowntimeHours: '2.9' },
+    table: [
+      { id: 1, machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', start: '08:15', end: '08:33', duration: 18, reason: 'Nutrunner Spindle #2 Stall', tech: 'Amit Kumar', status: 'Resolved' },
+      { id: 2, machine: 'Line2 Pallet Indexer', line: 'Line 2', station: 'Line2 (Head Tightening)', start: '09:10', end: '09:35', duration: 25, reason: 'Conveyor Pallet Stop Cylinder Jam', tech: 'Rahul Sharma', status: 'Resolved' }
+    ]
   });
 });
 
@@ -1166,16 +1245,35 @@ app.get('/api/material/stock', async (req, res) => {
       const result = await pool.request().query(`
         SELECT 
           PartID as id,
-          PartName as item,
-          PartDesc as [desc],
-          500 as qty,
-          100 as minStock,
-          'Healthy' as status
+          PartName as material,
+          CASE 
+            WHEN PartID IN ('BAJ-ENG-101', 'BAJ-ENG-102', 'BAJ-ENG-108') THEN 'Raw'
+            WHEN PartID IN ('BAJ-ENG-103', 'BAJ-ENG-104', 'BAJ-ENG-105') THEN 'WIP'
+            ELSE 'Finished'
+          END as matType,
+          CASE 
+            WHEN PartID LIKE '%101' OR PartID LIKE '%104' THEN 'Main Store'
+            WHEN PartID LIKE '%102' OR PartID LIKE '%105' THEN 'Line 1'
+            ELSE 'Line 2'
+          END as location,
+          CASE 
+            WHEN PartID = 'BAJ-ENG-102' THEN 18
+            WHEN PartID = 'BAJ-ENG-105' THEN 12
+            WHEN PartID = 'BAJ-ENG-108' THEN 450
+            ELSE 120
+          END as available,
+          CASE WHEN PartID = 'BAJ-ENG-108' THEN 100 ELSE 25 END as minLevel,
+          CASE WHEN PartID = 'BAJ-ENG-108' THEN 300 ELSE 150 END as maxLevel,
+          CASE 
+            WHEN PartID IN ('BAJ-ENG-102', 'BAJ-ENG-105') THEN 'Critical'
+            WHEN PartID = 'BAJ-ENG-108' THEN 'Excess'
+            ELSE 'Safe'
+          END as status
         FROM SAP_PartMaster
       `);
+
       if (result.recordset.length > 0) {
         return res.json({
-          kpis: { totalItems: result.recordset.length * 100, lowStock: 2, outOfStock: 0 },
           table: result.recordset
         });
       }
@@ -1185,9 +1283,13 @@ app.get('/api/material/stock', async (req, res) => {
   }
 
   res.json({
-    kpis: { totalItems: 500, lowStock: 2, outOfStock: 0 },
     table: [
-      { id: 'PART-ENG-01', item: 'Cylinder Block 150cc', desc: 'Aluminum Die-Cast Block', qty: 500, minStock: 100, status: 'Healthy' }
+      { id: 'BAJ-ENG-101', material: 'Cylinder Block 150cc', matType: 'Raw', location: 'Main Store', available: 120, minLevel: 25, maxLevel: 150, status: 'Safe' },
+      { id: 'BAJ-ENG-102', material: 'Piston Assembly 57mm', matType: 'Raw', location: 'Line 1', available: 18, minLevel: 25, maxLevel: 150, status: 'Critical' },
+      { id: 'BAJ-ENG-103', material: 'Cylinder Head DOHC', matType: 'WIP', location: 'Line 2', available: 85, minLevel: 25, maxLevel: 150, status: 'Safe' },
+      { id: 'BAJ-ENG-104', material: 'Crankshaft & Connecting Rod', matType: 'WIP', location: 'Main Store', available: 64, minLevel: 25, maxLevel: 150, status: 'Safe' },
+      { id: 'BAJ-ENG-105', material: 'Camshaft Timing Gear Set', matType: 'WIP', location: 'Line 1', available: 12, minLevel: 25, maxLevel: 150, status: 'Critical' },
+      { id: 'BAJ-ENG-108', material: 'Spark Plug Twin-Spark', matType: 'Finished', location: 'Main Store', available: 450, minLevel: 100, maxLevel: 300, status: 'Excess' }
     ]
   });
 });
@@ -1242,19 +1344,23 @@ app.get('/api/workforce/attendance', async (req, res) => {
     if (pool) {
       const result = await pool.request().query(`
         SELECT 
-          M.UserID as id,
-          ISNULL(U.UserName, 'Operator ' + CAST(M.UserID AS VARCHAR)) as name,
-          ISNULL(S.StationName, 'ST-0' + CAST(M.StationID AS VARCHAR)) as station,
-          ISNULL(M.UserSkillTotal, 4) as skillLevel,
-          'Present' as status
-        FROM Prod_OperatorStationMapping M
-        LEFT JOIN Config_User U ON M.UserID = U.UserID
-        LEFT JOIN Config_Station S ON M.StationID = S.StationID
+          U.UserID as id,
+          U.UserName as operator,
+          CASE WHEN CAST(U.UserID AS INT) % 2 = 0 THEN 'Line 2' ELSE 'Line 1' END as line,
+          'Shift 1' as shift,
+          '06:00' as inTime,
+          '14:00' as outTime,
+          'Present' as status,
+          8.0 as hoursWorked
+        FROM Config_User U
+        WHERE U.UserName NOT IN ('admin', 'coolsuper')
+        ORDER BY U.UserID ASC
       `);
       if (result.recordset.length > 0) {
+        const rows = result.recordset;
         return res.json({
-          kpiData: { scheduled: result.recordset.length + 1, present: result.recordset.length, absent: 1, attendancePct: 92.5 },
-          table: result.recordset
+          kpiData: { scheduled: rows.length + 1, present: rows.length, absent: 1, attendancePct: 94.6 },
+          table: rows
         });
       }
     }
@@ -1263,9 +1369,14 @@ app.get('/api/workforce/attendance', async (req, res) => {
   }
 
   res.json({
-    kpiData: { scheduled: 8, present: 7, absent: 1, attendancePct: 92.5 },
+    kpiData: { scheduled: 8, present: 7, absent: 1, attendancePct: 94.6 },
     table: [
-      { id: '3', name: 'Rahul Sharma', station: 'ST-01', skillLevel: 4, status: 'Present' }
+      { id: '3', operator: 'Rahul Sharma', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
+      { id: '4', operator: 'Priya Singh', line: 'Line 2', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
+      { id: '5', operator: 'Amit Kumar', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
+      { id: '6', operator: 'Neha Verma', line: 'Line 2', shift: 'Shift 1', inTime: '06:15', outTime: '14:00', status: 'Late', hoursWorked: 7.75 },
+      { id: '7', operator: 'Vikram Patel', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
+      { id: '8', operator: 'Sneha Gupta', line: 'Line 2', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 }
     ]
   });
 });

@@ -6,20 +6,21 @@ import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 
 export default function EngineReworkReport() {
-  const [searchUID, setSearchUID] = useState('');
+  const [searchUID, setSearchUID] = useState('ENG-3018');
 
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
-    fetch(`/api/trace/engine-rework?uid=${searchUID}`)
-      .then(res => res.json())
-      .then(data => setDbData(data))
-      .catch(err => console.error(err));
+    if (searchUID) {
+      fetch(`/api/trace/engine-rework?uid=${searchUID}`)
+        .then(res => res.json())
+        .then(data => setDbData(data))
+        .catch(err => console.error(err));
+    }
   }, [searchUID]);
 
-  const mockReworkData = [
-    { id: 1, engineNo: 'ENG-3001', model: 'Pulsar 150', station: 'ST-04', reason: 'Torque Fail', detectedTime: '2026-08-26 10:00', reworkStart: '10:15', reworkEnd: '10:30', status: 'Completed', operator: 'OP-RW1' },
-    { id: 2, engineNo: 'ENG-3001', model: 'Pulsar 150', station: 'ST-11', reason: 'Scratch', detectedTime: '2026-08-26 11:30', reworkStart: '11:45', reworkEnd: '12:05', status: 'Completed', operator: 'OP-RW2' },
+  const tableData = dbData?.table || [
+    { id: 1, engineNo: 'ENG-3018', model: 'Pulsar 150', station: 'Line2 (Head Tightening)', reason: 'Torque Fail on Head Bolt #3', detectedTime: '2026-08-29 08:35', reworkStart: '08:50', reworkEnd: '09:10', status: 'Completed', operator: 'Rahul Sharma' }
   ];
 
   const columns = [
@@ -38,8 +39,8 @@ export default function EngineReworkReport() {
 
   const exportToExcel = () => {
     exportToXLSX('EngineReworkReport.xlsx', [
-      { name: 'Engine Summary', rows: [['Engine UID', 'Total Defects', 'Rework Count', 'Final Status', 'Total Rework Time'], [searchUID, 2, 2, 'OK', '35m']] },
-      { name: 'Rework Details', rows: [['Engine No', 'Model', 'Station', 'Reason', 'Detected Time', 'Start Time', 'End Time', 'Status', 'Operator'], ...(dbData?.table || mockReworkData).map(r => [r.engineNo, r.model, r.station, r.reason, r.detectedTime, r.reworkStart, r.reworkEnd, r.status, r.operator])] }
+      { name: 'Engine Summary', rows: [['Engine UID', 'Total Defects', 'Rework Count', 'Final Status', 'Total Rework Time'], [searchUID, tableData.length, tableData.length, 'OK', '20m']] },
+      { name: 'Rework Details', rows: [['Engine No', 'Model', 'Station', 'Reason', 'Detected Time', 'Start Time', 'End Time', 'Status', 'Operator'], ...tableData.map(r => [r.engineNo, r.model, r.station, r.reason, r.detectedTime, r.reworkStart, r.reworkEnd, r.status, r.operator])] }
     ]);
   };
 
@@ -61,14 +62,14 @@ export default function EngineReworkReport() {
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <StatCard title="Total Defects" value={dbData?.table?.length || 2} sub="Logged Inspection Issues" color="red" />
-              <StatCard title="Rework Count" value={dbData?.table?.length || 2} sub="Repair Cycles Completed" color="orange" />
+              <StatCard title="Total Defects" value={tableData.length} sub="Logged Inspection Issues" color="red" />
+              <StatCard title="Rework Count" value={tableData.length} sub="Repair Cycles Completed" color="orange" />
               <StatCard title="Final Status" value="OK" sub="Passed Quality Gate" color="green" />
-              <StatCard title="Total Rework Time" value="35m" sub="Cumulative Duration" color="blue" />
+              <StatCard title="Total Rework Time" value="20m" sub="Cumulative Duration" color="blue" />
             </div>
             <div className="card p-4 flex-1">
               <h3 className="text-sm font-bold text-brand-dark mb-3">Rework Details</h3>
-              <DataTable columns={columns} data={dbData?.table || mockReworkData} />
+              <DataTable columns={columns} data={tableData} />
             </div>
           </>
         )}

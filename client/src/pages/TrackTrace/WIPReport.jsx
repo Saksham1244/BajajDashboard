@@ -21,27 +21,26 @@ export default function WIPReport() {
       .catch(err => console.error(err));
   }, [period, shift, wipStatus]);
   const COLORS = ['#0369a1', '#f97316', '#f43f5e', '#8b5cf6'];
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
-  const kpiValues = {
-    total: Math.round(70 * scale),
-    inProcess: Math.round(45 * scale),
-    rework: Math.round(12 * scale),
-    blocked: Math.round(5 * scale),
-    idle: Math.round(8 * scale)
+  
+  const kpiValues = dbData?.kpis || {
+    total: 22,
+    inProcess: 14,
+    rework: 3,
+    blocked: 2,
+    idle: 3
   };
 
-  const wipDistData = [
+  const wipDistData = dbData?.distribution || [
     { name: 'In-Process', value: kpiValues.inProcess },
     { name: 'Rework', value: kpiValues.rework },
     { name: 'Blocked', value: kpiValues.blocked },
     { name: 'Idle', value: kpiValues.idle },
   ];
 
-  const mockData = [
-    ...Array(kpiValues.inProcess).fill().map((_, i) => ({ id: `IP-${i}`, engineNo: `ENG-IP${i}`, model: 'Pulsar 150', sku: 'UG5', station: 'ST-04', status: 'In-Process', entryTime: '10:00', duration: 1.5, operator: 'OP-01' })),
-    ...Array(kpiValues.rework).fill().map((_, i) => ({ id: `RW-${i}`, engineNo: `ENG-RW${i}`, model: 'Avenger 220', sku: 'STD', station: 'ST-07', status: 'Rework', entryTime: '10:15', duration: 1.25, operator: 'OP-03' })),
-    ...Array(kpiValues.blocked).fill().map((_, i) => ({ id: `BL-${i}`, engineNo: `ENG-BL${i}`, model: 'Pulsar 220', sku: 'UG6', station: 'ST-01', status: 'Blocked', entryTime: '11:00', duration: 0.5, operator: 'OP-04' })),
-    ...Array(kpiValues.idle).fill().map((_, i) => ({ id: `ID-${i}`, engineNo: `ENG-ID${i}`, model: 'Dominar 400', sku: 'STD', station: 'ST-02', status: 'Idle', entryTime: '09:30', duration: 2.0, operator: 'OP-02' })),
+  const tableData = dbData?.details || [
+    { engineNo: 'ENG-2026-00142', model: 'Pulsar 150', sku: 'UG5', station: 'Demo (Block Assembly)', status: 'In-Process', entryTime: '10:15', duration: 0.8, operator: 'Rahul Sharma' },
+    { engineNo: 'ENG-2026-00143', model: 'Pulsar 150', sku: 'UG5', station: 'Demo (Block Assembly)', status: 'In-Process', entryTime: '09:50', duration: 1.2, operator: 'Priya Singh' },
+    { engineNo: 'ENG-3018', model: 'Pulsar 150', sku: 'UG5', station: 'Line2 (Head Tightening)', status: 'Rework', entryTime: '08:35', duration: 2.4, operator: 'Amit Kumar' }
   ];
 
   const columns = [
@@ -66,7 +65,7 @@ export default function WIPReport() {
     item => wipStatus === 'All' || item.name === wipStatus
   ).filter(d => d.value > 0);
 
-  const filteredTableData = mockData.filter(
+  const filteredTableData = tableData.filter(
     row => wipStatus === 'All' || row.status === wipStatus
   );
 

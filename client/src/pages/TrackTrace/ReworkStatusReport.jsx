@@ -21,40 +21,34 @@ export default function ReworkStatusReport() {
       .catch(err => console.error(err));
   }, [period, shift, status]);
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
-
-  const topDefectsData = [
-    { name: 'Torque Fail', count: Math.max(1, Math.round(45 * scale)) },
-    { name: 'Leakage', count: Math.max(1, Math.round(32 * scale)) },
-    { name: 'Missing Part', count: Math.max(1, Math.round(28 * scale)) },
-    { name: 'Scratch', count: Math.max(1, Math.round(15 * scale)) },
-    { name: 'Misalignment', count: Math.max(1, Math.round(12 * scale)) },
+  const tableData = dbData?.table || [
+    { id: 1, engineNo: 'ENG-3018', model: 'Pulsar 150', station: 'Line2 (Head Tightening)', reason: 'Torque Fail on Head Bolt #3', detectedTime: '08:35', reworkStart: '08:50', reworkEnd: '09:10', status: 'Completed', operator: 'Rahul Sharma', location: 'Rework Bay 1' },
+    { id: 2, engineNo: 'ENG-3019', model: 'Dominar 400', station: 'Demo (Block Assembly)', reason: 'Casing Scratch on Clutch Cover', detectedTime: '09:20', reworkStart: '09:30', reworkEnd: '09:55', status: 'Completed', operator: 'Priya Singh', location: 'Rework Bay 2' },
+    { id: 3, engineNo: 'ENG-3020', model: 'Avenger 220', station: 'Station2 (Cold Inspection)', reason: 'Leakage on Water Pump Seal', detectedTime: '10:05', reworkStart: '10:15', reworkEnd: '-', status: 'In-Progress', operator: 'Amit Kumar', location: 'Rework Bay 1' }
   ];
 
-  const topStationsData = [
-    { name: 'ST-04', count: Math.max(1, Math.round(38 * scale)) },
-    { name: 'ST-09', count: Math.max(1, Math.round(30 * scale)) },
-    { name: 'ST-02', count: Math.max(1, Math.round(25 * scale)) },
-    { name: 'ST-11', count: Math.max(1, Math.round(22 * scale)) },
-    { name: 'ST-15', count: Math.max(1, Math.round(17 * scale)) },
-  ];
-
-  const allMockData = [
-    { id: 1, engineNo: 'ENG-201', model: 'Pulsar 150', station: 'ST-04', reason: 'Torque Fail', detectedTime: '09:00', reworkStart: '09:15', reworkEnd: '09:30', status: 'Completed', operator: 'OP-RW1', location: 'RW-Area' },
-    { id: 2, engineNo: 'ENG-202', model: 'Dominar 400', station: 'ST-09', reason: 'Leakage', detectedTime: '10:00', reworkStart: '10:10', reworkEnd: '-', status: 'In-Progress', operator: 'OP-RW2', location: 'RW-Area' },
-    { id: 3, engineNo: 'ENG-203', model: 'Avenger 220', station: 'ST-02', reason: 'Missing Part', detectedTime: '10:30', reworkStart: '-', reworkEnd: '-', status: 'Pending', operator: '-', location: 'Buffer' },
-    { id: 4, engineNo: 'ENG-204', model: 'Pulsar 220', station: 'ST-04', reason: 'Torque Fail', detectedTime: '11:00', reworkStart: '11:20', reworkEnd: '11:45', status: 'Completed', operator: 'OP-RW1', location: 'Line' },
-    { id: 5, engineNo: 'ENG-205', model: 'Pulsar 150', station: 'ST-11', reason: 'Scratch', detectedTime: '11:30', reworkStart: '11:35', reworkEnd: '11:50', status: 'Rejected', operator: 'OP-RW3', location: 'Scrap' },
-  ];
-
-  const mockData = allMockData.filter(d => 
+  const filteredData = tableData.filter(d => 
     status === 'All' || d.status === status
   );
 
-  const totalRework = Math.max(1, Math.round(132 * scale));
-  const pendingCount = Math.max(0, Math.round(28 * scale));
-  const inProgressCount = Math.max(0, Math.round(15 * scale));
-  const completedCount = Math.max(0, Math.round(89 * scale));
+  const topDefectsData = [
+    { name: 'Torque Fail', count: tableData.filter(t => t.reason?.includes('Torque')).length || 4 },
+    { name: 'Casing Scratch', count: tableData.filter(t => t.reason?.includes('Scratch')).length || 3 },
+    { name: 'Leakage', count: tableData.filter(t => t.reason?.includes('Leakage')).length || 2 },
+    { name: 'Thread Mismatch', count: tableData.filter(t => t.reason?.includes('Thread')).length || 1 }
+  ];
+
+  const topStationsData = [
+    { name: 'Demo (Block Assembly)', count: tableData.filter(t => t.station?.includes('Demo')).length || 4 },
+    { name: 'Line2 (Head Tightening)', count: tableData.filter(t => t.station?.includes('Line2')).length || 3 },
+    { name: 'Station2 (Cold Inspection)', count: tableData.filter(t => t.station?.includes('Station2')).length || 2 }
+  ];
+
+  const totalRework = dbData?.kpis?.totalRework || tableData.length;
+  const inProgressCount = dbData?.kpis?.inProgress || tableData.filter(t => t.status === 'In-Progress').length;
+  const completedCount = dbData?.kpis?.completed || tableData.filter(t => t.status === 'Completed').length;
+  const rejectedCount = dbData?.kpis?.rejected || tableData.filter(t => t.status === 'Rejected').length;
+  const pendingCount = Math.max(0, totalRework - inProgressCount - completedCount - rejectedCount);
 
   const columns = [
     { header: 'Engine No (EIN)', accessor: 'engineNo' },
@@ -80,7 +74,7 @@ export default function ReworkStatusReport() {
     exportToXLSX('ReworkStatusReport.xlsx', [
       { name: 'KPI Summary', rows: [['Metric', 'Value'], ['Total Rework', totalRework], ['Pending', pendingCount], ['In-Progress', inProgressCount], ['Completed', completedCount]] },
       { name: 'Top Defects', rows: [['Defect Name', 'Count'], ...topDefectsData.map(r => [r.name, r.count])] },
-      { name: 'Rework Details', rows: [['Engine No', 'Model', 'Station', 'Reason', 'Detected Time', 'Start Time', 'End Time', 'Status', 'Operator', 'Location'], ...mockData.map(r => [r.engineNo, r.model, r.station, r.reason, r.detectedTime, r.reworkStart, r.reworkEnd, r.status, r.operator, r.location])] }
+      { name: 'Rework Details', rows: [['Engine No', 'Model', 'Station', 'Reason', 'Detected Time', 'Start Time', 'End Time', 'Status', 'Operator', 'Location'], ...filteredData.map(r => [r.engineNo, r.model, r.station, r.reason, r.detectedTime, r.reworkStart, r.reworkEnd, r.status, r.operator, r.location])] }
     ]);
   };
 
@@ -137,7 +131,7 @@ export default function ReworkStatusReport() {
 
         <div className="card p-4">
           <h3 className="text-sm font-bold text-brand-dark mb-3">Rework Details</h3>
-          <DataTable columns={columns} data={mockData} />
+          <DataTable columns={columns} data={filteredData} />
         </div>
       </div>
     </div>

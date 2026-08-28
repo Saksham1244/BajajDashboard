@@ -30,14 +30,13 @@ export default function StockStatusReport() {
     { type: 'dropdown', label: 'Store Location', options: ['All', 'Main Store', ...filterOptions.lines.filter(l => l !== 'All')], value: location, onChange: setLocation },
   ];
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
-
-  const allTableData = [
-    { material: 'M-01', matType: 'Raw', location: 'Main', available: Math.round(50 * scale) || 5, minLevel: 20, maxLevel: 100, status: 'Safe' },
-    { material: 'M-02', matType: 'WIP', location: 'Line-1', available: Math.round(10 * scale) || 1, minLevel: 15, maxLevel: 50, status: 'Critical' },
-    { material: 'M-03', matType: 'Finished', location: 'Main', available: Math.round(120 * scale) || 10, minLevel: 100, maxLevel: 110, status: 'Excess' },
-    { material: 'M-04', matType: 'Raw', location: 'Line-2', available: Math.round(8 * scale) || 1, minLevel: 10, maxLevel: 40, status: 'Critical' },
-    { material: 'M-05', matType: 'Finished', location: 'Line-1', available: Math.round(30 * scale) || 3, minLevel: 15, maxLevel: 60, status: 'Safe' },
+  const allTableData = dbData?.table || [
+    { material: 'Cylinder Block 150cc', matType: 'Raw', location: 'Main Store', available: 120, minLevel: 25, maxLevel: 150, status: 'Safe' },
+    { material: 'Piston Assembly 57mm', matType: 'Raw', location: 'Line 1', available: 18, minLevel: 25, maxLevel: 150, status: 'Critical' },
+    { material: 'Cylinder Head DOHC', matType: 'WIP', location: 'Line 2', available: 85, minLevel: 25, maxLevel: 150, status: 'Safe' },
+    { material: 'Crankshaft & Connecting Rod', matType: 'WIP', location: 'Main Store', available: 64, minLevel: 25, maxLevel: 150, status: 'Safe' },
+    { material: 'Camshaft Timing Gear Set', matType: 'WIP', location: 'Line 1', available: 12, minLevel: 25, maxLevel: 150, status: 'Critical' },
+    { material: 'Spark Plug Twin-Spark', matType: 'Finished', location: 'Main Store', available: 450, minLevel: 100, maxLevel: 300, status: 'Excess' }
   ];
 
   const tableData = allTableData.filter(d =>
