@@ -6,16 +6,18 @@ import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { ClipboardCheck } from 'lucide-react';
 import { useReportFilters } from '../../hooks/useReportFilters';
+import { useFilterOptions } from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
 export default function PQCAReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   
   const [dbData, setDbData] = useState(null);
   React.useEffect(() => {
-    fetch(`http://localhost:5000/api/quality/pqca?period=${period}`)
+    fetch(`/api/quality/pqca?period=${period}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
@@ -47,9 +49,9 @@ export default function PQCAReport() {
   ].filter(d => d.value > 0);
 
   const ncTrendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map(label => ({
+    return generateTimeLabels(period, shift).map((label, idx) => ({
       date: label,
-      nc: Math.floor(Math.random() * 8)
+      nc: idx % 4 === 0 ? 1 : 0
     }));
   }, [period, shift]);
 
@@ -89,9 +91,9 @@ export default function PQCAReport() {
   };
 
   const customFilters = [
-    { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine },
-    { type: 'dropdown', label: 'Model Family', options: ['All','Pulsar','Dominar','Avenger'], value: modelFamily, onChange: setModelFamily },
-    { type: 'dropdown', label: 'Model', options: ['All','Pulsar 150','Pulsar 220','Dominar 400'], value: model, onChange: setModel },
+    { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
+    { type: 'dropdown', label: 'Model Family', options: filterOptions.modelFamilies, value: modelFamily, onChange: setModelFamily },
+    { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
   ];
 
   const filters = [...getBaseFilters(), ...customFilters];

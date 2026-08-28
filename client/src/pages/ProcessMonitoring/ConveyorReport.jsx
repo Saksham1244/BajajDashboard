@@ -6,9 +6,11 @@ import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { useReportFilters } from '../../hooks/useReportFilters';
+import { useFilterOptions } from '../../hooks/useFilterOptions';
 
 export default function ConveyorReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   const [dbData, setDbData] = React.useState({});
   const [loading, setLoading] = React.useState(false);
 
@@ -16,8 +18,8 @@ export default function ConveyorReport() {
   const [station, setStation] = React.useState('All');
 
   const customFilters = [
-    { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2'], value: line, onChange: setLine },
-    { type: 'dropdown', label: 'Station', options: ['All', 'ST-01', 'ST-05', 'ST-08', 'ST-12', 'ST-15'], value: station, onChange: setStation },
+    { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
+    { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
   ];
 
   const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;

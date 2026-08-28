@@ -6,18 +6,20 @@ import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { PackageSearch } from 'lucide-react';
 import { useReportFilters } from '../../hooks/useReportFilters';
+import { useFilterOptions } from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
 export default function KitInspectionReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
 
   const customFilters = [
-    { type: 'dropdown', label: 'Model', options: ['All', 'Pulsar 150', 'Dominar 400'], value: model, onChange: setModel },
-    { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'UG6'], value: sku, onChange: setSku },
+    { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
+    { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
   const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
@@ -35,10 +37,10 @@ export default function KitInspectionReport() {
   ].filter(d => d.count > 0);
 
   const trendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map(time => ({
+    return generateTimeLabels(period, shift).map((time, idx) => ({
       time,
-      inspected: Math.floor(Math.random() * 20 * scale) + Math.round(10 * scale),
-      defects: Math.floor(Math.random() * 5 * scale)
+      inspected: 25 + ((idx * 2) % 10),
+      defects: idx % 5 === 0 ? 1 : 0
     }));
   }, [period, shift]);
 

@@ -5,10 +5,12 @@ import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import useReportFilters from '../../hooks/useReportFilters';
+import useFilterOptions from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function BreakdownReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
@@ -16,7 +18,7 @@ export default function BreakdownReport() {
   const [dbData, setDbData] = useState(null);
 
   React.useEffect(() => {
-    fetch(`http://localhost:5000/api/maintenance/breakdown?period=${period}`)
+    fetch(`/api/maintenance/breakdown?period=${period}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
@@ -84,9 +86,9 @@ export default function BreakdownReport() {
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
-          { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2'], value: line, onChange: setLine },
-          { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02'], value: station, onChange: setStation },
-          { type: 'dropdown', label: 'Machine', options: ['All','M-01','M-02','M-03','M-04'], value: machine, onChange: setMachine },
+          { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
+          { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
+          { type: 'dropdown', label: 'Machine', options: filterOptions.stations, value: machine, onChange: setMachine },
         ]} 
       />
       

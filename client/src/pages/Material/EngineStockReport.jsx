@@ -6,17 +6,20 @@ import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Cpu } from 'lucide-react';
 
+import useFilterOptions from '../../hooks/useFilterOptions';
+
 const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
 export default function EngineStockReport() {
+  const filterOptions = useFilterOptions();
   const [modelFamily, setModelFamily] = useState('All');
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
 
   const filters = [
-    { type: 'dropdown', label: 'Model Family', options: ['All', 'Pulsar', 'Dominar', 'Avenger'], value: modelFamily, onChange: setModelFamily },
-    { type: 'dropdown', label: 'Model', options: ['All', 'Pulsar 150', 'Dominar 400'], value: model, onChange: setModel },
-    { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'UG6'], value: sku, onChange: setSku },
+    { type: 'dropdown', label: 'Model Family', options: filterOptions.modelFamilies, value: modelFamily, onChange: setModelFamily },
+    { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
+    { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
   const pieData = [

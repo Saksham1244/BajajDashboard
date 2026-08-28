@@ -8,7 +8,7 @@ export default function GenericChecklistReport({ title, typeStr }) {
   const [data, setData] = useState(null)
   
   useEffect(() => {
-    fetch(`http://localhost:5000/api/quality/checklist?type=${typeStr}`)
+    fetch(`/api/quality/checklist?type=${typeStr}`)
       .then(res => res.json())
       .then(d => setData(d))
   }, [typeStr])

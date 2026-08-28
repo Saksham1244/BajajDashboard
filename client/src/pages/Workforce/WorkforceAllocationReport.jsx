@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { UserCheck } from 'lucide-react';
 import useReportFilters from '../../hooks/useReportFilters';
+import useFilterOptions from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
@@ -10,6 +11,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 
 export default function WorkforceAllocationReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   
   const [line, setLine] = useState('All');
 
@@ -66,7 +68,7 @@ export default function WorkforceAllocationReport() {
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
-          { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine }
+          { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine }
         ]}
       />
       <div className="flex-1 flex flex-col gap-3">

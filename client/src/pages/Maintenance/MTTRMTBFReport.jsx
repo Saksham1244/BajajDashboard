@@ -6,10 +6,12 @@ import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import useReportFilters from '../../hooks/useReportFilters';
+import useFilterOptions from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function MTTRMTBFReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
@@ -76,9 +78,9 @@ export default function MTTRMTBFReport() {
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
-          { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2'], value: line, onChange: setLine },
-          { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02'], value: station, onChange: setStation },
-          { type: 'dropdown', label: 'Machine', options: ['All','M-01','M-02','M-03','M-04','M-05'], value: machine, onChange: setMachine },
+          { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
+          { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
+          { type: 'dropdown', label: 'Machine', options: filterOptions.stations, value: machine, onChange: setMachine },
         ]} 
       />
       

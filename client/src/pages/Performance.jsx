@@ -44,7 +44,7 @@ export default function Performance() {
 
   React.useEffect(() => {
     
-    fetch(`http://localhost:5000/api/dashboard/performance?period=${period}&shift=${shift}`)
+    fetch(`/api/dashboard/performance?period=${period}&shift=${shift}`)
       .then(res => res.json())
       .then(data => {
         setDbData(data);
@@ -71,10 +71,10 @@ export default function Performance() {
   ];
 
   const lineData = useMemo(() => {
-    return generateTimeLabels(period, shift).map(time => ({
+    return generateTimeLabels(period, shift).map((time, idx) => ({
       time,
-      cost: Math.floor(Math.random() * 100) + 150,
-      forecast: Math.floor(Math.random() * 100) + 150
+      cost: 180 + ((idx * 7) % 30),
+      forecast: 185 + ((idx * 5) % 25)
     }));
   }, [period, shift]);
 

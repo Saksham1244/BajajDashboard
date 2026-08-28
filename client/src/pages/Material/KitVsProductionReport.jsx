@@ -6,20 +6,22 @@ import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { BarChart3 } from 'lucide-react';
 import { useReportFilters } from '../../hooks/useReportFilters';
+import { useFilterOptions } from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
 export default function KitVsProductionReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   const [line, setLine] = useState('All');
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
 
   const customFilters = [
-    { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2'], value: line, onChange: setLine },
-    { type: 'dropdown', label: 'Model', options: ['All', 'Pulsar 150', 'Dominar 400'], value: model, onChange: setModel },
-    { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'UG6'], value: sku, onChange: setSku },
+    { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
+    { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
+    { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
   const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
@@ -38,10 +40,10 @@ export default function KitVsProductionReport() {
   const gapPercent = kpi.kits > 0 ? Math.round((gap / kpi.kits) * 100) : 0;
 
   const trendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map(time => ({
+    return generateTimeLabels(period, shift).map((time, idx) => ({
       time,
-      kits: Math.floor(Math.random() * 20 * scale) + Math.round(15 * scale),
-      production: Math.floor(Math.random() * 20 * scale) + Math.round(14 * scale)
+      kits: 30 + ((idx * 3) % 10),
+      production: 28 + ((idx * 3) % 10)
     }));
   }, [period, shift]);
 

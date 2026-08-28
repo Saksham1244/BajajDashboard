@@ -4,7 +4,7 @@ import { configureStore, createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 export const fetchProductionData = createAsyncThunk(
   'dashboard/fetchProduction',
   async () => {
-    const response = await fetch('http://localhost:5000/api/dashboard/production');
+    const response = await fetch('/api/dashboard/production');
     return response.json();
   }
 );
@@ -12,7 +12,7 @@ export const fetchProductionData = createAsyncThunk(
 export const fetchPerformanceData = createAsyncThunk(
   'dashboard/fetchPerformance',
   async () => {
-    const response = await fetch('http://localhost:5000/api/dashboard/performance');
+    const response = await fetch('/api/dashboard/performance');
     return response.json();
   }
 );

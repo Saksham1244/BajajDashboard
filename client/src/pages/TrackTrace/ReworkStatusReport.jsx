@@ -15,7 +15,7 @@ export default function ReworkStatusReport() {
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/trace/rework?period=${period}&shift=${shift}&status=${status}`)
+    fetch(`/api/trace/rework?period=${period}&shift=${shift}&status=${status}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));

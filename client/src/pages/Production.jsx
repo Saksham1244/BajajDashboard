@@ -7,43 +7,59 @@ import StatCard from '../components/StatCard';
 import DataTable from '../components/DataTable';
 import { exportToXLSX } from '../utils/exportExcel';
 import useReportFilters from '../hooks/useReportFilters';
+import useFilterOptions from '../hooks/useFilterOptions';
 import { generateTimeLabels } from '../utils/timeDataGenerator';
 
 export default function Production() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   const [activeLine, setActiveLine] = useState('All');
   const [activeModel, setActiveModel] = useState('All');
   const [selectedLoss, setSelectedLoss] = useState(null);
 
-  const [dbData, setDbData] = useState([]);
-  const [kpis, setKpis] = useState({ totalProd: 58089, shortfall: 842, wip: 142, rollover: 85 });
+  const [dbData, setDbData] = useState({
+    kpis: { totalPlan: 1300, totalProd: 265, shortfall: 1035, wip: 10, rollover: 8 },
+    planVsActual: [{ name: 'Shift A', plan: 1300, actual: 265 }],
+    straightPass: [{ name: 'Line 1', straight: 252, reworked: 13 }],
+    skuData: [
+      { line: 'Line 1', name: 'SKU-1', modelFamily: 'Family-1', plan: 500, actual: 85, wip: 5, rollover: 3 },
+      { line: 'Line 1', name: 'SKU-2', modelFamily: 'Family-2', plan: 800, actual: 180, wip: 5, rollover: 5 }
+    ],
+    pareto: [
+      { reason: 'Preventive maintenance', count: 1, duration: 237, cumPercent: 23 },
+      { reason: 'Line changeover', count: 1, duration: 219, cumPercent: 44 },
+      { reason: 'Power', count: 1, duration: 204, cumPercent: 64 },
+      { reason: 'Failure', count: 1, duration: 192, cumPercent: 83 },
+      { reason: 'Conveyor jam', count: 1, duration: 180, cumPercent: 100 }
+    ]
+  });
 
   React.useEffect(() => {
-    fetch(`http://localhost:5000/api/dashboard/production?period=${period}&shift=${shift}`)
+    fetch(`/api/dashboard/production?period=${period}&shift=${shift}&line=${activeLine}&model=${activeModel}`)
       .then(res => res.json())
       .then(data => {
-        setDbData(data.planVsActual || []);
-        const total = (data.planVsActual || []).reduce((acc, curr) => acc + curr.actual, 0);
-        const planTotal = (data.planVsActual || []).reduce((acc, curr) => acc + curr.plan, 0);
-        setKpis(prev => ({
-          ...prev,
-          totalProd: total,
-          shortfall: planTotal > total ? planTotal - total : 0
-        }));
+        if (data && data.kpis) {
+          setDbData(data);
+        }
       })
       .catch(err => {
-        console.error(err);
+        console.error('Error loading live production metrics:', err);
       });
-  }, [period, shift]);
+  }, [period, shift, activeLine, activeModel]);
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
-
-  const totalProd = Math.max(1, Math.round(58089 * scale));
-  const shortfall = Math.max(0, Math.round(842 * scale));
-  const wip = Math.max(0, Math.round(142 * scale));
-  const rollover = Math.max(0, Math.round(85 * scale));
+  const totalProd = dbData.kpis?.totalProd ?? 265;
+  const shortfall = dbData.kpis?.shortfall ?? 1035;
+  const wip = dbData.kpis?.wip ?? 10;
+  const rollover = dbData.kpis?.rollover ?? 8;
 
   const hourlyData = useMemo(() => {
+    if (dbData.planVsActual && dbData.planVsActual.length > 0) {
+      return dbData.planVsActual.map(r => ({
+        time: r.time || r.name,
+        plan: r.plan,
+        actual: r.actual
+      }));
+    }
     const labels = generateTimeLabels(period, shift);
     const planPerLabel = Math.floor((totalProd + shortfall) / (labels.length || 1));
     const actualPerLabel = Math.floor(totalProd / (labels.length || 1));
@@ -51,19 +67,11 @@ export default function Production() {
     return labels.map(time => ({
       time,
       plan: planPerLabel,
-      actual: Math.max(0, actualPerLabel + Math.floor(Math.random() * 20 * scale - 10 * scale))
+      actual: actualPerLabel
     }));
-  }, [period, shift, totalProd, shortfall, scale]);
+  }, [period, shift, totalProd, shortfall, dbData.planVsActual]);
 
-  const allSkuData = [
-    { line: 'Line 1', modelFamily: 'Pulsar', name: 'Pulsar 150 UG5', plan: Math.round(400 * scale), actual: Math.round(380 * scale), wip: Math.round(45 * scale), rollover: Math.round(20 * scale) },
-    { line: 'Line 2', modelFamily: 'Dominar', name: 'Dominar 400', plan: Math.round(250 * scale), actual: Math.round(235 * scale), wip: Math.round(22 * scale), rollover: Math.round(15 * scale) },
-    { line: 'Line 1', modelFamily: 'Avenger', name: 'Avenger 220', plan: Math.round(150 * scale), actual: Math.round(152 * scale), wip: Math.round(10 * scale), rollover: 0 },
-    { line: 'Line 2', modelFamily: 'Pulsar', name: 'Pulsar 220', plan: Math.round(200 * scale), actual: Math.round(190 * scale), wip: Math.round(15 * scale), rollover: Math.round(5 * scale) },
-    { line: 'Line 1', modelFamily: 'Pulsar', name: 'CT 100', plan: Math.round(300 * scale), actual: Math.round(310 * scale), wip: Math.round(20 * scale), rollover: 0 },
-  ];
-
-  const skuData = allSkuData.filter(d => 
+  const skuData = (dbData.skuData || []).filter(d => 
     (activeLine === 'All' || d.line === activeLine) &&
     (activeModel === 'All' || d.modelFamily === activeModel)
   );
@@ -126,12 +134,12 @@ export default function Production() {
     }
   };
 
-  const paretoData = [
-    { reason: 'Material Short', count: Math.max(1, Math.round(28 * scale)), cumPercent: 42 },
-    { reason: 'Machine BD', count: Math.max(1, Math.round(18 * scale)), cumPercent: 69 },
-    { reason: 'Quality Hold', count: Math.max(1, Math.round(12 * scale)), cumPercent: 87 },
-    { reason: 'Setup Delay', count: Math.max(1, Math.round(5 * scale)), cumPercent: 95 },
-    { reason: 'Other', count: Math.max(1, Math.round(3 * scale)), cumPercent: 100 },
+  const paretoData = dbData.pareto && dbData.pareto.length > 0 ? dbData.pareto : [
+    { reason: 'Preventive maintenance', count: 1, duration: 237, cumPercent: 23 },
+    { reason: 'Line changeover', count: 1, duration: 219, cumPercent: 44 },
+    { reason: 'Power', count: 1, duration: 204, cumPercent: 64 },
+    { reason: 'Failure', count: 1, duration: 192, cumPercent: 83 },
+    { reason: 'Conveyor jam', count: 1, duration: 180, cumPercent: 100 },
   ];
 
   const columns = [
@@ -160,8 +168,8 @@ export default function Production() {
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
-          { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2', 'Sub-Assy'], value: activeLine, onChange: setActiveLine },
-          { type: 'dropdown', label: 'Model Family', options: ['All', 'Pulsar', 'Dominar', 'Avenger'], value: activeModel, onChange: setActiveModel }
+          { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: activeLine, onChange: setActiveLine },
+          { type: 'dropdown', label: 'Model Family', options: filterOptions.modelFamilies, value: activeModel, onChange: setActiveModel }
         ]}
       />
 

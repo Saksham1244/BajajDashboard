@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { CalendarCheck2 } from 'lucide-react';
 import useReportFilters from '../../hooks/useReportFilters';
+import useFilterOptions from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
@@ -10,6 +11,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 
 export default function AttendanceReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   
   const [line, setLine] = useState('All');
 
@@ -35,9 +37,9 @@ export default function AttendanceReport() {
   };
   
   const trendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map(label => ({
+    return generateTimeLabels(period, shift).map((label, idx) => ({
       date: label,
-      pct: Math.floor(Math.random() * (100 - 85 + 1)) + 85
+      pct: 94 + (idx % 3)
     }));
   }, [period, shift]);
 
@@ -77,7 +79,7 @@ export default function AttendanceReport() {
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
-          { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine }
+          { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine }
         ]}
       />
       <div className="flex-1 flex flex-col gap-3">

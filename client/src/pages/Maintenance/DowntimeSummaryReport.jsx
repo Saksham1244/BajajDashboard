@@ -6,11 +6,13 @@ import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import useReportFilters from '../../hooks/useReportFilters';
+import useFilterOptions from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 import { useMemo } from 'react';
 
 export default function DowntimeSummaryReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
@@ -20,11 +22,11 @@ export default function DowntimeSummaryReport() {
   const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
 
   const chartData = useMemo(() => {
-    return generateTimeLabels(period, shift).map(label => ({
+    return generateTimeLabels(period, shift).map((label, idx) => ({
       time: label,
-      downtime: Math.floor(Math.random() * 80 * scale) + Math.round(15 * scale)
+      downtime: 20 + ((idx * 8) % 40)
     }));
-  }, [period, shift, scale]);
+  }, [period, shift]);
 
   const allTableData = [
     { date: '2026-08-25', line: 'Line 1', station: 'ST-01', shift: 'Shift 1', machine: 'M-01', downtime: Math.round(45 * scale) || 10, count: 1 },
@@ -75,8 +77,8 @@ export default function DowntimeSummaryReport() {
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
-          { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2'], value: line, onChange: setLine },
-          { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02'], value: station, onChange: setStation },
+          { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
+          { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
         ]} 
       />
       

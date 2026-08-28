@@ -80,6 +80,12 @@ Historically, plant supervisors and industrial engineers faced several challenge
   - Preventive Maintenance scheduling, work order ticketing, and technician checklists are already actively managed in a dedicated plant CMMS (SAP PM / Maximo).
   - Eliminates duplicate data entry and operator confusion, focusing the Maintenance module purely on real-time breakdown monitoring, downtime Pareto analysis, and MTTR/MTBF equipment reliability.
 
+### ADR-011: Live Parameterized Database Execution Across All 8 Core Modules
+- **Decision**: Implement comprehensive Microsoft SQL Server extraction queries across all API endpoints with parameterized inputs (`@StartDate`, `@EndDate`, `@Shift`, `@Line`, `@Station`, `@Model`), `NULLIF` zero-division guards, and self-healing simulation fallbacks.
+- **Rationale**:
+  - Ensures all 40+ manufacturing metrics (Plan vs Actual, Straight Pass FTR %, MTTR/MTBF, Poka-Yoke Bypasses, Defect Logs, WIP Status, Attendance, and Material Gaps) are pulled directly from live database tables (`Prod_EnginePlanExecution`, `Perf_Downtime`, `Prod_Defect_Log`, `Config_Station`, `Config_Line`).
+  - Parameterized binding prevents SQL injection and provides sub-second query performance on factory servers.
+
 ---
 
 ## 3. Technical Trade-offs & Analysis

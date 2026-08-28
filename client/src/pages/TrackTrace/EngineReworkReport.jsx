@@ -11,7 +11,7 @@ export default function EngineReworkReport() {
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/trace/engine-rework?uid=${searchUID}`)
+    fetch(`/api/trace/engine-rework?uid=${searchUID}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));

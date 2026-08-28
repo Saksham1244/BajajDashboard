@@ -6,10 +6,12 @@ import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ComposedChart } from 'recharts';
 import useReportFilters from '../../hooks/useReportFilters';
+import useFilterOptions from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function DowntimeReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
@@ -20,7 +22,7 @@ export default function DowntimeReport() {
   const [dbData, setDbData] = useState([]);
   
   React.useEffect(() => {
-        fetch(`http://localhost:5000/api/dashboard/performance?period=${period}&shift=${shift}`)
+        fetch(`/api/dashboard/performance?period=${period}&shift=${shift}`)
       .then(res => res.json())
       .then(data => {
         setDbData(data.downtime || []);
@@ -42,11 +44,11 @@ export default function DowntimeReport() {
   const hourlyData = useMemo(() => {
     const labels = generateTimeLabels(period, shift);
     const downtimePerLabel = Math.floor(totalDowntime / (labels.length || 1));
-    return labels.map(time => ({
+    return labels.map((time, idx) => ({
       time,
-      duration: Math.max(0, downtimePerLabel + Math.floor(Math.random() * 6 * scale))
+      duration: Math.max(0, downtimePerLabel + ((idx % 3) - 1))
     }));
-  }, [period, shift, totalDowntime, scale]);
+  }, [period, shift, totalDowntime]);
 
   const categoryData = [
     { category: 'Equipment Failure', duration: Math.round(180 * scale), occurrence: Math.max(1, Math.round(5 * scale)) },
@@ -100,11 +102,11 @@ export default function DowntimeReport() {
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
-          { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine },
-          { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02','ST-03'], value: station, onChange: setStation },
-          { type: 'dropdown', label: 'Model Family', options: ['All','Pulsar','Dominar','Avenger'], value: modelFamily, onChange: setModelFamily },
-          { type: 'dropdown', label: 'Model', options: ['All','Pulsar 150','Pulsar 220','Dominar 400'], value: model, onChange: setModel },
-          { type: 'dropdown', label: 'SKU', options: ['All','UG5','UG6','STD'], value: sku, onChange: setSku }
+          { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
+          { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
+          { type: 'dropdown', label: 'Model Family', options: filterOptions.modelFamilies, value: modelFamily, onChange: setModelFamily },
+          { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
+          { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku }
         ]}
       />
       <div className="flex-1 flex flex-col gap-3">

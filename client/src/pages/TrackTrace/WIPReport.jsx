@@ -15,7 +15,7 @@ export default function WIPReport() {
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/trace/wip?period=${period}&shift=${shift}&wipStatus=${wipStatus}`)
+    fetch(`/api/trace/wip?period=${period}&shift=${shift}&wipStatus=${wipStatus}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));

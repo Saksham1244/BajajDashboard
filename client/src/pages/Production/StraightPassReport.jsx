@@ -6,17 +6,19 @@ import StatCard from '../../components/StatCard';
 import DataTable from '../../components/DataTable';
 import { exportToXLSX } from '../../utils/exportExcel';
 import useReportFilters from '../../hooks/useReportFilters';
+import useFilterOptions from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function StraightPassReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   const [activeLine, setActiveLine] = useState('All');
 
   const [dbData, setDbData] = useState([]);
   const [kpis, setKpis] = useState({ total: 410, straight: 392, rework: 18 });
   
   React.useEffect(() => {
-        fetch(`http://localhost:5000/api/dashboard/production?period=${period}&shift=${shift}`)
+        fetch(`/api/dashboard/production?period=${period}&shift=${shift}`)
       .then(res => res.json())
       .then(data => {
         setDbData(data.straightPass || []);
@@ -41,10 +43,10 @@ export default function StraightPassReport() {
     const straightPerLabel = Math.floor(totalStraight / (labels.length || 1));
     const reworkPerLabel = Math.floor(totalRework / (labels.length || 1));
 
-    return labels.map(time => ({
+    return labels.map((time, idx) => ({
       time,
-      straight: Math.max(0, straightPerLabel + Math.floor(Math.random() * 6 - 3)),
-      rework: Math.max(0, reworkPerLabel + Math.floor(Math.random() * 2 - 1))
+      straight: Math.max(0, straightPerLabel + ((idx % 3) - 1)),
+      rework: Math.max(0, reworkPerLabel)
     }));
   }, [period, shift, dbData]);
 
@@ -84,7 +86,7 @@ export default function StraightPassReport() {
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
-          { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2', 'Sub-Assy'], value: activeLine, onChange: setActiveLine }
+          { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: activeLine, onChange: setActiveLine }
         ]}
       />
       <div className="flex-1 flex flex-col gap-3">

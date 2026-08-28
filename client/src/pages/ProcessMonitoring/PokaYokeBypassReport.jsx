@@ -5,9 +5,11 @@ import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import { useReportFilters } from '../../hooks/useReportFilters';
+import { useFilterOptions } from '../../hooks/useFilterOptions';
 
 export default function PokaYokeBypassReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   const [dbData, setDbData] = React.useState({});
   const [loading, setLoading] = React.useState(false);
 
@@ -17,10 +19,10 @@ export default function PokaYokeBypassReport() {
   const [model, setModel] = React.useState('All');
 
   const customFilters = [
-    { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2'], value: line, onChange: setLine },
-    { type: 'dropdown', label: 'Station', options: ['All', 'ST-01', 'ST-02', 'ST-03'], value: station, onChange: setStation },
+    { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
+    { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
     { type: 'dropdown', label: 'Device', options: ['All', 'PY-01 Torque', 'PY-02 Vision', 'PY-03 Sensor'], value: device, onChange: setDevice },
-    { type: 'dropdown', label: 'Model', options: ['All', 'Pulsar 150', 'Dominar 400'], value: model, onChange: setModel },
+    { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
   ];
 
   const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;

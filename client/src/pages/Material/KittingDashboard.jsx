@@ -6,28 +6,30 @@ import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { PackagePlus } from 'lucide-react';
 import { useReportFilters } from '../../hooks/useReportFilters';
+import { useFilterOptions } from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
 export default function KittingDashboard() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   const [line, setLine] = useState('All');
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/material/kitting?period=${period}`)
+    fetch(`/api/material/kitting?period=${period}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
   }, [period]);
 
   const customFilters = [
-    { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2'], value: line, onChange: setLine },
-    { type: 'dropdown', label: 'Model', options: ['All', 'Pulsar 150', 'Dominar 400'], value: model, onChange: setModel },
-    { type: 'dropdown', label: 'SKU', options: ['All', 'UG5', 'UG6'], value: sku, onChange: setSku },
+    { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
+    { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
+    { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
   const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
@@ -53,9 +55,9 @@ export default function KittingDashboard() {
   ];
 
   const trendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map(time => ({
+    return generateTimeLabels(period, shift).map((time, idx) => ({
       time,
-      kitsPrepared: Math.floor(Math.random() * 30 * scale) + Math.round(10 * scale)
+      kitsPrepared: 25 + ((idx * 4) % 15)
     }));
   }, [period, shift]);
 

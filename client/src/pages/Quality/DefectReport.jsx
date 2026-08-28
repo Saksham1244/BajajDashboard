@@ -4,18 +4,19 @@ import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { AlertTriangle } from 'lucide-react';
 import { useReportFilters } from '../../hooks/useReportFilters';
+import { useFilterOptions } from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
 export default function DefectReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   
   const [dbData, setDbData] = useState(null);
   React.useEffect(() => {
-    fetch(`http://localhost:5000/api/quality/defect?period=${period}`)
+    fetch(`/api/quality/defect?period=${period}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
@@ -34,9 +35,9 @@ export default function DefectReport() {
   };
 
   const defectTrendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map(label => ({
+    return generateTimeLabels(period, shift).map((label, idx) => ({
       date: label,
-      defects: Math.floor(Math.random() * 15)
+      defects: idx % 3 === 0 ? 2 : 1
     }));
   }, [period, shift]);
 
@@ -82,11 +83,11 @@ export default function DefectReport() {
   };
 
   const customFilters = [
-    { type: 'dropdown', label: 'Line', options: ['All','Line 1','Line 2','Sub-Assy'], value: line, onChange: setLine },
-    { type: 'dropdown', label: 'Station', options: ['All','ST-01','ST-02','ST-03'], value: station, onChange: setStation },
-    { type: 'dropdown', label: 'Model Family', options: ['All','Pulsar','Dominar','Avenger'], value: modelFamily, onChange: setModelFamily },
-    { type: 'dropdown', label: 'Model', options: ['All','Pulsar 150','Pulsar 220','Dominar 400'], value: model, onChange: setModel },
-    { type: 'dropdown', label: 'SKU', options: ['All','UG5','UG6','STD'], value: sku, onChange: setSku },
+    { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
+    { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
+    { type: 'dropdown', label: 'Model Family', options: filterOptions.modelFamilies, value: modelFamily, onChange: setModelFamily },
+    { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
+    { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
   const filters = [...getBaseFilters(), ...customFilters];

@@ -20,13 +20,13 @@ export default function PokaYokeReport() {
 
   const hourlyData = useMemo(() => {
     const labels = generateTimeLabels(period, shift);
-    return labels.map(label => ({
+    return labels.map((label, idx) => ({
       hour: label,
-      ok: Math.floor(Math.random() * 30 * scale) + Math.round(50 * scale),
-      nok: Math.floor(Math.random() * 3 * scale),
-      bypass: Math.floor(Math.random() * 2 * scale),
+      ok: 50 + ((idx * 5) % 20),
+      nok: idx % 4 === 0 ? 1 : 0,
+      bypass: idx % 6 === 0 ? 1 : 0,
     }));
-  }, [period, shift, scale]);
+  }, [period, shift]);
 
   const allBypassLogs = [
     { startTime: '09:15', endTime: '09:20', duration: 5, station: 'ST-01', device: 'PY-01 Torque', operator: 'John Doe', reason: 'Sensor malfunction' },

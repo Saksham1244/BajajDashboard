@@ -6,18 +6,20 @@ import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Boxes } from 'lucide-react';
 import { useReportFilters } from '../../hooks/useReportFilters';
+import { useFilterOptions } from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
 export default function StockStatusReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
   const [matType, setMatType] = useState('All');
   const [location, setLocation] = useState('All');
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/material/stock?period=${period}`)
+    fetch(`/api/material/stock?period=${period}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
@@ -25,7 +27,7 @@ export default function StockStatusReport() {
 
   const customFilters = [
     { type: 'dropdown', label: 'Material Type', options: ['All', 'Raw', 'WIP', 'Finished'], value: matType, onChange: setMatType },
-    { type: 'dropdown', label: 'Store Location', options: ['All', 'Main', 'Line-1', 'Line-2'], value: location, onChange: setLocation },
+    { type: 'dropdown', label: 'Store Location', options: ['All', 'Main Store', ...filterOptions.lines.filter(l => l !== 'All')], value: location, onChange: setLocation },
   ];
 
   const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
@@ -50,11 +52,11 @@ export default function StockStatusReport() {
   }));
 
   const trendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map(time => ({
+    return generateTimeLabels(period, shift).map((time, idx) => ({
       time,
-      stockValue: Math.floor(Math.random() * 5000 * scale) + Math.round(10000 * scale)
+      stockValue: 12000 + ((idx * 350) % 3000)
     }));
-  }, [period, shift, scale]);
+  }, [period, shift]);
 
   const totalMaterials = Math.max(1, Math.round(115 * scale));
   const criticalCount = tableData.filter(d => d.status === 'Critical').length;

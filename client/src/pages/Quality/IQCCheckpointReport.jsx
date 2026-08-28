@@ -11,7 +11,7 @@ export default function IQCCheckpointReport() {
   
   const [dbData, setDbData] = React.useState(null);
   React.useEffect(() => {
-    fetch(`http://localhost:5000/api/quality/checklist?period=${period}`)
+    fetch(`/api/quality/checklist?period=${period}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
