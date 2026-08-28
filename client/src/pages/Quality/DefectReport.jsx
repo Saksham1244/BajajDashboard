@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
@@ -58,19 +59,19 @@ export default function DefectReport() {
   ].filter(d => d.value > 0);
 
   const tableData = dbData?.table || [
-    { engineNo: 'ENG001', defect: 'Torque Failure', station: 'ST-01', operator: 'John Doe', time: '10:00 AM' },
-    { engineNo: 'ENG002', defect: 'Missing Part', station: 'ST-02', operator: 'Jane Smith', time: '10:15 AM' },
-    { engineNo: 'ENG003', defect: 'Scratch', station: 'ST-03', operator: 'Mike Johnson', time: '10:30 AM' },
-    { engineNo: 'ENG004', defect: 'Wrong Orientation', station: 'ST-01', operator: 'John Doe', time: '10:45 AM' },
-    { engineNo: 'ENG005', defect: 'Torque Failure', station: 'ST-02', operator: 'Jane Smith', time: '11:00 AM' },
+    { engineNo: 'ENG-3018', defect: 'Torque Fail on Head Bolt #3', station: 'Line2 (Head Tightening)', operator: 'Rahul Sharma', time: '08:35' },
+    { engineNo: 'ENG-3019', defect: 'Casing Scratch on Clutch Cover', station: 'Demo (Block Assembly)', operator: 'Priya Singh', time: '09:20' },
+    { engineNo: 'ENG-3020', defect: 'Leakage on Water Pump Seal', station: 'Station2 (Cold Inspection)', operator: 'Amit Kumar', time: '10:05' },
+    { engineNo: 'ENG-2026-00120', defect: 'Thread Mismatch on Crankcase', station: 'Demo (Block Assembly)', operator: 'Neha Verma', time: '11:15' },
+    { engineNo: 'ENG-2026-00125', defect: 'Valve Clearance Out of Spec', station: 'Line2 (Head Tightening)', operator: 'Vikram Patel', time: '12:30' }
   ];
 
   const columns = [
-    { header: 'Engine No', accessorKey: 'engineNo' },
-    { header: 'Defect', accessorKey: 'defect' },
-    { header: 'Station', accessorKey: 'station' },
-    { header: 'Operator', accessorKey: 'operator' },
-    { header: 'Time', accessorKey: 'time' },
+    { header: 'Engine No', accessor: 'engineNo' },
+    { header: 'Defect', accessor: 'defect' },
+    { header: 'Station', accessor: 'station' },
+    { header: 'Operator', accessor: 'operator' },
+    { header: 'Time', accessor: 'time' },
   ];
 
   const exportToExcel = () => {
