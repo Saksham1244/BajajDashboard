@@ -11,16 +11,16 @@ import { generateTimeLabels } from '../../utils/timeDataGenerator';
 const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
 export default function DefectReport() {
-  const { period, shift, getBaseFilters } = useReportFilters();
+  const { period, shift, startDate, endDate, getBaseFilters } = useReportFilters();
   const filterOptions = useFilterOptions();
   
   const [dbData, setDbData] = useState(null);
   React.useEffect(() => {
-    fetch(`/api/quality/defect?period=${period}`)
+    fetch(`/api/quality/defect?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
-  }, [period]);
+  }, [period, shift, startDate, endDate]);
 
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');

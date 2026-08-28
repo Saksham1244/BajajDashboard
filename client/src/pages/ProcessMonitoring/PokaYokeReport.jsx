@@ -9,36 +9,41 @@ import { useReportFilters } from '../../hooks/useReportFilters';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function PokaYokeReport() {
-  const { period, shift, getBaseFilters } = useReportFilters();
+  const { period, shift, startDate, endDate, getBaseFilters } = useReportFilters();
   const [device, setDevice] = useState('All');
+  const [bypassLogs, setBypassLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/process/bypass?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.bypassLogs) {
+          setBypassLogs(data.bypassLogs);
+        }
+      })
+      .catch(err => console.error('Bypass fetch error:', err))
+      .finally(() => setLoading(false));
+  }, [period, shift, startDate, endDate]);
 
   const customFilters = [
     { type: 'dropdown', label: 'Poka Yoke Device', options: ['All', 'PY-01 Torque', 'PY-02 Vision', 'PY-03 Sensor'], value: device, onChange: setDevice },
   ];
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
-
   const hourlyData = useMemo(() => {
     const labels = generateTimeLabels(period, shift);
     return labels.map((label, idx) => ({
       hour: label,
-      ok: 50 + ((idx * 5) % 20),
-      nok: idx % 4 === 0 ? 1 : 0,
-      bypass: idx % 6 === 0 ? 1 : 0,
+      ok: 120 + ((idx * 7) % 25),
+      nok: idx % 5 === 0 ? 1 : 0,
+      bypass: idx % 7 === 0 ? 1 : 0,
     }));
   }, [period, shift]);
 
-  const allBypassLogs = [
-    { startTime: '09:15', endTime: '09:20', duration: 5, station: 'ST-01', device: 'PY-01 Torque', operator: 'John Doe', reason: 'Sensor malfunction' },
-    { startTime: '11:30', endTime: '11:45', duration: 15, station: 'ST-02', device: 'PY-02 Vision', operator: 'Jane Smith', reason: 'Calibration error' },
-    { startTime: '13:00', endTime: '13:10', duration: 10, station: 'ST-01', device: 'PY-01 Torque', operator: 'Alice Bob', reason: 'Maintenance' },
-    { startTime: '14:20', endTime: '14:25', duration: 5, station: 'ST-02', device: 'PY-02 Vision', operator: 'Charlie Green', reason: 'Software glitch' },
-    { startTime: '15:10', endTime: '15:30', duration: 20, station: 'ST-01', device: 'PY-01 Torque', operator: 'Bob Brown', reason: 'Sensor malfunction' },
-  ];
-
-  const bypassLogData = allBypassLogs.filter(d => 
-    device === 'All' || d.device === device
-  );
+  const bypassLogData = (bypassLogs.length > 0 ? bypassLogs : [
+    { id: 1, startTime: '09:15', endTime: '09:20', duration: 5, station: 'ST-01', device: 'PY-01 Torque Bypass', operator: 'Rahul Sharma', reason: 'Sensor calibration', authorizedBy: 'Supervisor Amit', status: 'Resolved' }
+  ]).filter(d => device === 'All' || d.device === device || device.includes(d.device));
 
   const okSum = hourlyData.reduce((acc, d) => acc + d.ok, 0);
   const nokSum = hourlyData.reduce((acc, d) => acc + d.nok, 0);

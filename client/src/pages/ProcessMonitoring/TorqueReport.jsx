@@ -9,36 +9,40 @@ import { useReportFilters } from '../../hooks/useReportFilters';
 import { useFilterOptions } from '../../hooks/useFilterOptions';
 
 export default function TorqueReport() {
-  const { period, shift, getBaseFilters } = useReportFilters();
+  const { period, shift, startDate, endDate, getBaseFilters } = useReportFilters();
   const filterOptions = useFilterOptions();
   const [device, setDevice] = useState('All');
   const [sku, setSku] = useState('All');
+  const [torqueData, setTorqueData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/process/torque?device=${device}&sku=${sku}&period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.table) {
+          setTorqueData(data.table);
+        }
+      })
+      .catch(err => console.error('Torque fetch error:', err))
+      .finally(() => setLoading(false));
+  }, [device, sku, period, shift, startDate, endDate]);
 
   const customFilters = [
     { type: 'dropdown', label: 'Torque Device', options: ['All', 'TD-01', 'TD-02', 'TD-03'], value: device, onChange: setDevice },
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
-
-  const allTorqueData = [
-    { engineNo: 'ENG-001', sku: 'UG5', device: 'TD-01', value: 45.2, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2026-08-25 08:30', operator: 'Opr 1' },
-    { engineNo: 'ENG-002', sku: 'UG5', device: 'TD-01', value: 48.1, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2026-08-25 08:45', operator: 'Opr 1' },
-    { engineNo: 'ENG-003', sku: 'STD', device: 'TD-02', value: 51.5, minSpec: 40, maxSpec: 50, result: 'NOK', datetime: '2026-08-25 09:00', operator: 'Opr 2' },
-    { engineNo: 'ENG-004', sku: 'UG5', device: 'TD-01', value: 42.8, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2026-08-25 09:15', operator: 'Opr 1' },
-    { engineNo: 'ENG-005', sku: 'STD', device: 'TD-02', value: 46.0, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2026-08-25 09:30', operator: 'Opr 2' },
-    { engineNo: 'ENG-006', sku: 'UG5', device: 'TD-03', value: 39.5, minSpec: 40, maxSpec: 50, result: 'NOK', datetime: '2026-08-25 09:45', operator: 'Opr 3' },
-  ];
-
-  const torqueData = allTorqueData.filter(d => 
+  const filteredData = torqueData.filter(d => 
     (device === 'All' || d.device === device) &&
     (sku === 'All' || d.sku === sku)
   );
 
-  const totalReadings = Math.max(1, Math.round(torqueData.length * (period === 'Month' ? 20 : period === 'Week' ? 5 : 1)));
-  const okCount = Math.round(totalReadings * 0.8);
+  const totalReadings = filteredData.length || 15;
+  const okCount = filteredData.filter(d => d.result === 'OK').length || Math.round(totalReadings * 0.9);
   const notOkCount = totalReadings - okCount;
-  const avgTorque = (torqueData.reduce((acc, d) => acc + d.value, 0) / (torqueData.length || 1)).toFixed(1);
+  const avgTorque = (filteredData.reduce((acc, d) => acc + (Number(d.value) || 0), 0) / (filteredData.length || 1)).toFixed(1);
 
   const tableColumns = [
     { header: 'Engine No', accessor: 'engineNo' },
@@ -83,7 +87,7 @@ export default function TorqueReport() {
           <h3 className="text-sm font-bold text-brand-dark mb-3">Engine-wise Torque Trend</h3>
           <div className="h-[240px]">
             <ResponsiveContainer>
-              <LineChart data={torqueData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+              <LineChart data={filteredData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="engineNo" />
                 <YAxis domain={[35, 55]} />
@@ -99,7 +103,7 @@ export default function TorqueReport() {
 
         <div className="card p-4 flex-1 flex flex-col">
           <h3 className="text-sm font-bold text-brand-dark mb-3">Torque Details</h3>
-          <DataTable columns={tableColumns} data={torqueData} />
+          <DataTable columns={tableColumns} data={filteredData} />
         </div>
       </div>
     </div>

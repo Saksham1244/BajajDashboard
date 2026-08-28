@@ -211,8 +211,8 @@ async function seedDatabase() {
       await runQuery(`
         IF NOT EXISTS (SELECT 1 FROM Prod_TorqueData_Log WHERE Timestamp >= '2026-08-20' AND RowID = ${t})
         BEGIN
-          INSERT INTO Prod_TorqueData_Log (SKUID, ActivityID, ActivityValue, Angle, Rundown, CycleTime, Count, UpperLimit, LowerLimit)
-          VALUES (1, 1, ${torque}, 90, 42.0, 12, '1', 50.0, 40.0);
+          INSERT INTO Prod_TorqueData_Log (Timestamp, SKUID, ActivityID, ActivityValue, Angle, Rundown, CycleTime, Count, UpperLimit, LowerLimit)
+          VALUES (GETDATE(), 1, 1, ${torque}, 90, 42.0, 12, '1', 50.0, 40.0);
         END
       `);
     }
@@ -243,22 +243,78 @@ async function seedDatabase() {
       `);
     }
 
-    // Seed Track & Trace Engine Genealogy
-    const stages = [1, 2, 3];
-    for (let g = 1; g <= 5; g++) {
-      const engNo = `E26-TRC-${String(g).padStart(2, '0')}`;
-      for (const st of stages) {
+    // Seed Track & Trace Engine Genealogy (including ENG-2026-00123)
+    const demoEngines = ['ENG-2026-00123', 'ENG-2026-00124', 'ENG-3001', 'E26-TRC-01', 'E26-TRC-02'];
+    const stationOps = [
+      { id: 1, name: 'ST-01', val: 'OK', user: '3' },
+      { id: 2, name: 'ST-02', val: 'OK', user: '4' },
+      { id: 3, name: 'ST-03', val: 'NOK', user: '5' },
+      { id: 4, name: 'Line2', val: 'OK', user: '6' },
+      { id: 5, name: 'Station2', val: 'OK', user: '7' }
+    ];
+
+    for (const engNo of demoEngines) {
+      for (const [idx, st] of stationOps.entries()) {
+        const stationId = (idx % 3) + 1;
         await runQuery(`
-          IF NOT EXISTS (SELECT 1 FROM Prod_Engine_Geneology WHERE EngineNo = '${engNo}' AND StationID = ${st})
+          IF NOT EXISTS (SELECT 1 FROM Prod_Engine_Geneology WHERE EngineNo = '${engNo}' AND ActivityID = ${idx + 1})
           BEGIN
             INSERT INTO Prod_Engine_Geneology (Timestamp, EngineNo, StationID, ActivityID, ActivityValue, Count, Status, UsersID)
-            VALUES (GETDATE(), '${engNo}', ${st}, 1, 'OK', 1, 1, '1');
+            VALUES (DATEADD(minute, ${idx * 6}, DATEADD(hour, -2, GETDATE())), '${engNo}', ${stationId}, ${idx + 1}, '${st.val}', 1, 1, '${st.user}');
           END
         `);
       }
     }
 
-    console.log('\n[5/5] Database Seeding Completed Successfully! 🚀\n');
+    // Seed SAP Part Master for Materials & Kitting
+    const sapParts = [
+      { id: 'PART-ENG-01', name: 'Cylinder Block 150cc', desc: 'Aluminum Die-Cast Block' },
+      { id: 'PART-ENG-02', name: 'Piston Assembly 57mm', desc: 'Forged Piston with Rings' },
+      { id: 'PART-ENG-03', name: 'Cylinder Head DOHC', desc: 'Precision Machined Head' },
+      { id: 'PART-ENG-04', name: 'Crankshaft Assembly', desc: 'Heat-Treated Steel Crankshaft' },
+      { id: 'PART-ENG-05', name: 'Camshaft Timing Gear', desc: 'Sprocket & Timing Drive' }
+    ];
+    for (const p of sapParts) {
+      await runQuery(`
+        IF NOT EXISTS (SELECT 1 FROM SAP_PartMaster WHERE PartID = '${p.id}')
+        BEGIN
+          INSERT INTO SAP_PartMaster (PartID, PartName, PartDesc)
+          VALUES ('${p.id}', '${p.name}', '${p.desc}');
+        END
+      `);
+    }
+
+    // Seed QA Audit Monitoring for Quality Checklists
+    const validAuditIds = [13, 15, 16];
+    for (let a = 0; a < validAuditIds.length; a++) {
+      const auditId = validAuditIds[a];
+      await runQuery(`
+        IF NOT EXISTS (SELECT 1 FROM QA_AuditMonitoring WHERE UID = ${a + 1})
+        BEGIN
+          INSERT INTO QA_AuditMonitoring (LineID, AuditListID, AuditInstanceID, StartDateTime, EndDateTime, ActualStartDateTime, ActualEndDateTime, Notification, Status)
+          VALUES (1, ${auditId}, 100 + ${a + 1}, DATEADD(hour, -${(a + 1) * 2}, GETDATE()), DATEADD(hour, -${(a + 1) * 2 - 1}, GETDATE()), DATEADD(hour, -${(a + 1) * 2}, GETDATE()), DATEADD(hour, -${(a + 1) * 2 - 1}, GETDATE()), 0, 1);
+        END
+      `);
+    }
+
+    // Seed Operator Station Mapping & Skills
+    const operators = [
+      { id: '3', station: 1, skill: 4 },
+      { id: '4', station: 2, skill: 3 },
+      { id: '5', station: 3, skill: 4 },
+      { id: '6', station: 1, skill: 4 }
+    ];
+    for (const op of operators) {
+      await runQuery(`
+        IF NOT EXISTS (SELECT 1 FROM Prod_OperatorStationMapping WHERE UserID = '${op.id}')
+        BEGIN
+          INSERT INTO Prod_OperatorStationMapping (UserID, StationID, UserSkillTotal, PreferredStation)
+          VALUES ('${op.id}', ${op.station}, ${op.skill}, ${op.station});
+        END
+      `);
+    }
+
+    console.log('\n[5/5] All Database Tables Populated Successfully! 🚀\n');
     console.log('========================================================================');
     console.log('✅ PAST 30 DAYS (1 MONTH) DATA POPULATED IN SQL SERVER');
     console.log('✅ PAST 7 DAYS (1 WEEK) DATA POPULATED IN SQL SERVER');
