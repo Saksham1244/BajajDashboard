@@ -142,6 +142,7 @@ function App() {
           <Route path="skill-matrix-dashboard" element={<Suspense fallback={<Loading />}><SkillMatrixDashboard /></Suspense>} />
           <Route path="attendance" element={<Suspense fallback={<Loading />}><AttendanceReport /></Suspense>} />
           <Route path="skill-matrix" element={<Suspense fallback={<Loading />}><SkillMatrixReport /></Suspense>} />
+          <Route path="skill-matrix-report" element={<Suspense fallback={<Loading />}><SkillMatrixReport /></Suspense>} />
           <Route path="allocation" element={<Suspense fallback={<Loading />}><WorkforceAllocationReport /></Suspense>} />
         </Route>
 

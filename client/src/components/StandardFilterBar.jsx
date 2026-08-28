@@ -63,11 +63,18 @@ export default function StandardFilterBar({ title, icon: Icon, onExcelClick, fil
             </div>
           )
           if (f.type === 'dropdown') return (
-            <div key={i} className="flex flex-col gap-1 min-w-[110px]">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{f.label}</span>
+            <div key={i} className="flex flex-col gap-1 min-w-[115px]">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                <span>{f.label}</span>
+                {f.activeShift && <span className="text-[9px] text-emerald-600 font-bold lowercase">live: {f.activeShift}</span>}
+              </span>
               <select value={f.value} onChange={e => f.onChange(e.target.value)}
                 className="text-xs font-bold text-brand-dark bg-slate-50 border border-slate-200 rounded p-1.5 focus:outline-none focus:ring-1 focus:ring-[#0369a1]">
-                {f.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                {f.options.map(opt => (
+                  <option key={opt} value={opt}>
+                    {opt} {f.activeShift === opt ? '🟢 (Active)' : ''}
+                  </option>
+                ))}
               </select>
             </div>
           )

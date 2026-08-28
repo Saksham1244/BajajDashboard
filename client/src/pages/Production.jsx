@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, AlertTriangle, X, Wrench, ShieldAlert, Package, Clock, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import StandardFilterBar from '../components/StandardFilterBar';
 import StatCard from '../components/StatCard';
 import DataTable from '../components/DataTable';
@@ -12,13 +13,12 @@ export default function Production() {
   const { period, shift, getBaseFilters } = useReportFilters();
   const [activeLine, setActiveLine] = useState('All');
   const [activeModel, setActiveModel] = useState('All');
+  const [selectedLoss, setSelectedLoss] = useState(null);
 
   const [dbData, setDbData] = useState([]);
   const [kpis, setKpis] = useState({ totalProd: 58089, shortfall: 842, wip: 142, rollover: 85 });
-  
 
   React.useEffect(() => {
-    
     fetch(`http://localhost:5000/api/dashboard/production?period=${period}&shift=${shift}`)
       .then(res => res.json())
       .then(data => {
@@ -30,11 +30,9 @@ export default function Production() {
           totalProd: total,
           shortfall: planTotal > total ? planTotal - total : 0
         }));
-        
       })
       .catch(err => {
         console.error(err);
-        
       });
   }, [period, shift]);
 
@@ -69,6 +67,64 @@ export default function Production() {
     (activeLine === 'All' || d.line === activeLine) &&
     (activeModel === 'All' || d.modelFamily === activeModel)
   );
+
+  const lossDetailsMap = {
+    'Material Short': {
+      dept: 'Stores & Material Kitting',
+      route: '/material',
+      icon: Package,
+      badge: 'bg-amber-100 text-amber-800 border-amber-300',
+      rootCause: 'M8 Flange Bolt batch stockout at Kitting Station 3',
+      impactMinutes: 24,
+      engineer: 'Vikas Sharma (Stores Lead)',
+      action: 'Expedited buffer pull from Main Storage Rack B-12',
+      engines: ['ENG-2026-00412', 'ENG-2026-00415']
+    },
+    'Machine BD': {
+      dept: 'Plant Maintenance',
+      route: '/maintenance',
+      icon: Wrench,
+      badge: 'bg-rose-100 text-rose-800 border-rose-300',
+      rootCause: 'ST-02 Conveyor motor overload trip & gearbox bearing overheat',
+      impactMinutes: 35,
+      engineer: 'Rajesh Nair (Sr. Maintenance Tech)',
+      action: 'Replaced thermal relay and lubricated drive chain assembly',
+      engines: ['ENG-2026-00389', 'ENG-2026-00392', 'ENG-2026-00398']
+    },
+    'Quality Hold': {
+      dept: 'Quality Assurance & Inspection',
+      route: '/quality',
+      icon: ShieldAlert,
+      badge: 'bg-purple-100 text-purple-800 border-purple-300',
+      rootCause: 'Cylinder head torque outlier (>52.4 Nm vs spec 45-50 Nm)',
+      impactMinutes: 18,
+      engineer: 'Anil Kulkarni (Quality Inspector)',
+      action: 'Re-calibrated Atlas Copco torque spindle and flagged lot for leak test',
+      engines: ['ENG-2026-00440', 'ENG-2026-00441']
+    },
+    'Setup Delay': {
+      dept: 'Process & Tooling Engineering',
+      route: '/process',
+      icon: Clock,
+      badge: 'bg-blue-100 text-blue-800 border-blue-300',
+      rootCause: 'Piston sub-assembly JIG-04 fixture changeover alignment delay',
+      impactMinutes: 12,
+      engineer: 'Suresh Patil (Process Tooling)',
+      action: 'Pneumatic clamp realigned and verified with dial gauge',
+      engines: ['N/A (Station Idle)']
+    },
+    'Other': {
+      dept: 'Workforce & Administration',
+      route: '/workforce',
+      icon: AlertTriangle,
+      badge: 'bg-slate-100 text-slate-800 border-slate-300',
+      rootCause: 'Operator rotation and station skill matrix reassignment',
+      impactMinutes: 8,
+      engineer: 'M. Verma (Shift Incharge)',
+      action: 'Shift handover briefing completed',
+      engines: ['N/A']
+    }
+  };
 
   const paretoData = [
     { reason: 'Material Short', count: Math.max(1, Math.round(28 * scale)), cumPercent: 42 },
@@ -108,12 +164,45 @@ export default function Production() {
           { type: 'dropdown', label: 'Model Family', options: ['All', 'Pulsar', 'Dominar', 'Avenger'], value: activeModel, onChange: setActiveModel }
         ]}
       />
+
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Production" value={totalProd} trend={12.4} subtitle="vs Last Period" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Production Shortfall" value={shortfall} trend={-4.2} subtitle="vs Last Period" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Current WIP" value={wip} trend={1.8} subtitle="vs Last Period" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Rollover Quantity" value={rollover} trend={-15.3} subtitle="vs Last Period" />
+          <StatCard
+            period={typeof period !== "undefined" ? period : "Month"}
+            title="Total Production"
+            value={totalProd}
+            trend={12.4}
+            sub="vs Last Period"
+            color="blue"
+            sparkline={[45, 60, 75, 80, 92, 88, 95, 100]}
+          />
+          <StatCard
+            period={typeof period !== "undefined" ? period : "Month"}
+            title="Production Shortfall"
+            value={shortfall}
+            trend={-4.2}
+            sub="vs Shift Plan"
+            color="red"
+            sparkline={[80, 70, 50, 40, 60, 30, 20, 15]}
+          />
+          <StatCard
+            period={typeof period !== "undefined" ? period : "Month"}
+            title="Current WIP Buffer"
+            value={wip}
+            trend={1.8}
+            sub="Across 6 Stations"
+            color="amber"
+            sparkline={[30, 45, 55, 60, 58, 62, 50, 48]}
+          />
+          <StatCard
+            period={typeof period !== "undefined" ? period : "Month"}
+            title="Rollover Quantity"
+            value={rollover}
+            trend={-15.3}
+            sub="To Next Shift"
+            color="purple"
+            sparkline={[50, 40, 35, 30, 25, 20, 15, 10]}
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -134,24 +223,112 @@ export default function Production() {
             </div>
           </div>
 
-          <div className="card p-4">
-            <h3 className="text-sm font-bold text-brand-dark mb-3">Shortfall Pareto (Loss Analysis)</h3>
+          <div className="card p-4 relative">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-brand-dark">Shortfall Pareto (Loss Analysis)</h3>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
+                Click bar for root cause
+              </span>
+            </div>
             <div className="h-[240px]">
               <ResponsiveContainer>
-                <ComposedChart data={paretoData}>
+                <ComposedChart
+                  data={paretoData}
+                  onClick={(e) => {
+                    if (e && e.activePayload && e.activePayload[0]) {
+                      setSelectedLoss(e.activePayload[0].payload.reason);
+                    }
+                  }}
+                  className="cursor-pointer"
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="reason" />
                   <YAxis yAxisId="left" />
                   <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
                   <Tooltip />
                   <Legend />
-                  <Bar yAxisId="left" dataKey="count" name="Loss Count" fill="#f59e0b" />
+                  <Bar yAxisId="left" dataKey="count" name="Loss Count" fill="#f59e0b">
+                    {paretoData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={selectedLoss === entry.reason ? '#0284c7' : '#f59e0b'}
+                        className="hover:opacity-80 transition-opacity"
+                      />
+                    ))}
+                  </Bar>
                   <Line yAxisId="right" type="monotone" dataKey="cumPercent" name="Cumulative %" stroke="#ef4444" strokeWidth={2} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
           </div>
         </div>
+
+        {/* Shortfall Root Cause Drilldown Drawer / Card */}
+        {selectedLoss && lossDetailsMap[selectedLoss] && (
+          <div className="bg-slate-900 text-white rounded-lg p-4 border border-slate-700 shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="flex items-start justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white flex items-center gap-2">
+                    Root Cause Incident: {selectedLoss}
+                    <span className={`text-[10px] px-2 py-0.5 rounded border font-bold ${lossDetailsMap[selectedLoss].badge}`}>
+                      {lossDetailsMap[selectedLoss].dept}
+                    </span>
+                  </h4>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Impact: <span className="text-amber-400 font-bold">{lossDetailsMap[selectedLoss].impactMinutes} mins line downtime</span> • Assigned to: {lossDetailsMap[selectedLoss].engineer}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedLoss(null)}
+                className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 text-xs">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Diagnosed Root Cause</span>
+                <p className="text-slate-200 font-medium leading-relaxed bg-slate-800/60 p-2 rounded border border-slate-700/50">
+                  {lossDetailsMap[selectedLoss].rootCause}
+                </p>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Corrective Action Taken</span>
+                <p className="text-slate-200 font-medium leading-relaxed bg-slate-800/60 p-2 rounded border border-slate-700/50">
+                  {lossDetailsMap[selectedLoss].action}
+                </p>
+              </div>
+
+              <div className="flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Affected Engine Barcodes</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {lossDetailsMap[selectedLoss].engines.map((eng, i) => (
+                      <span key={i} className="font-mono text-[11px] bg-slate-800 text-sky-400 px-2 py-0.5 rounded border border-slate-700">
+                        {eng}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <Link
+                  to={lossDetailsMap[selectedLoss].route}
+                  className="inline-flex items-center justify-center gap-1.5 mt-2 bg-sky-600 hover:bg-sky-500 text-white font-bold py-1.5 px-3 rounded transition-colors text-[11px]"
+                >
+                  Inspect in {lossDetailsMap[selectedLoss].dept.split(' ')[0]} Module
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="card p-4 flex-1">
           <h3 className="text-sm font-bold text-brand-dark mb-3">Model & SKU Wise Production Status</h3>
