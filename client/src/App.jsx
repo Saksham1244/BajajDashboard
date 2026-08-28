@@ -1,5 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
+import ProtectedRoute from './components/ProtectedRoute'
+import { AuthProvider } from './context/AuthContext'
+import LoginPage from './pages/Auth/LoginPage'
 
 // Production Module
 import Production from './pages/Production'
@@ -63,89 +66,102 @@ const Loading = () => (
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Layout />}>
-        <Route index element={<Navigate to="/production/report" replace />} />
+    <AuthProvider>
+      <Routes>
+        {/* Public Login Route */}
+        <Route path="/login" element={<LoginPage />} />
 
-        {/* Production Module */}
-        <Route path="production">
-          <Route index element={<Navigate to="report" replace />} />
-          <Route path="report" element={<Production />} />
-          <Route path="straight-pass" element={<StraightPassReport />} />
+        {/* Protected Dashboard Routes */}
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/production/report" replace />} />
+
+          {/* Production Module */}
+          <Route path="production">
+            <Route index element={<Navigate to="report" replace />} />
+            <Route path="report" element={<Production />} />
+            <Route path="straight-pass" element={<StraightPassReport />} />
+          </Route>
+
+          {/* Performance Module */}
+          <Route path="performance" element={<Performance />} />
+          <Route path="performance/downtime" element={<Suspense fallback={<Loading />}><DowntimeReport /></Suspense>} />
+
+          {/* Process Monitoring Module */}
+          <Route path="process">
+            <Route index element={<Navigate to="pokayoke" replace />} />
+            <Route path="pokayoke" element={<Suspense fallback={<Loading />}><PokaYokeReport /></Suspense>} />
+            <Route path="bypass" element={<Suspense fallback={<Loading />}><PokaYokeBypassReport /></Suspense>} />
+            <Route path="torque" element={<Suspense fallback={<Loading />}><TorqueReport /></Suspense>} />
+            <Route path="conveyor" element={<Suspense fallback={<Loading />}><ConveyorReport /></Suspense>} />
+          </Route>
+
+          {/* Track & Trace Module */}
+          <Route path="trace">
+            <Route index element={<Navigate to="genealogy" replace />} />
+            <Route path="genealogy" element={<Suspense fallback={<Loading />}><GenealogyReport /></Suspense>} />
+            <Route path="wip" element={<Suspense fallback={<Loading />}><WIPReport /></Suspense>} />
+            <Route path="rework" element={<Suspense fallback={<Loading />}><ReworkStatusReport /></Suspense>} />
+            <Route path="engine-rework" element={<Suspense fallback={<Loading />}><EngineReworkReport /></Suspense>} />
+          </Route>
+
+          {/* Quality Module */}
+          <Route path="quality">
+            <Route index element={<Navigate to="defect" replace />} />
+            <Route path="defect" element={<Suspense fallback={<Loading />}><DefectReport /></Suspense>} />
+            <Route path="pqca" element={<Suspense fallback={<Loading />}><PQCAReport /></Suspense>} />
+            <Route path="iqc-checklist" element={<Suspense fallback={<Loading />}><IQCChecklistReport /></Suspense>} />
+            <Route path="ipqc-checklist" element={<Suspense fallback={<Loading />}><IPQCChecklistReport /></Suspense>} />
+            <Route path="fqc-checklist" element={<Suspense fallback={<Loading />}><FQCChecklistReport /></Suspense>} />
+            <Route path="iqc-checkpoint" element={<Suspense fallback={<Loading />}><IQCCheckpointReport /></Suspense>} />
+            <Route path="ipqc-checkpoint" element={<Suspense fallback={<Loading />}><IPQCCheckpointReport /></Suspense>} />
+            <Route path="fqc-checkpoint" element={<Suspense fallback={<Loading />}><FQCCheckpointReport /></Suspense>} />
+          </Route>
+
+          {/* Maintenance Module */}
+          <Route path="maintenance">
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<Suspense fallback={<Loading />}><MaintenanceDashboard /></Suspense>} />
+            <Route path="breakdown" element={<Suspense fallback={<Loading />}><BreakdownReport /></Suspense>} />
+            <Route path="downtime-summary" element={<Suspense fallback={<Loading />}><DowntimeSummaryReport /></Suspense>} />
+            <Route path="mttr-mtbf" element={<Suspense fallback={<Loading />}><MTTRMTBFReport /></Suspense>} />
+          </Route>
+
+          {/* Material & Kitting Module */}
+          <Route path="material">
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<Suspense fallback={<Loading />}><MaterialDashboard /></Suspense>} />
+            <Route path="request" element={<Suspense fallback={<Loading />}><MaterialRequestReport /></Suspense>} />
+            <Route path="stock" element={<Suspense fallback={<Loading />}><StockStatusReport /></Suspense>} />
+            <Route path="engine-stock" element={<Suspense fallback={<Loading />}><EngineStockReport /></Suspense>} />
+            <Route path="kitting-dashboard" element={<Suspense fallback={<Loading />}><KittingDashboard /></Suspense>} />
+            <Route path="kit-inspection" element={<Suspense fallback={<Loading />}><KitInspectionReport /></Suspense>} />
+            <Route path="kit-production" element={<Suspense fallback={<Loading />}><KitVsProductionReport /></Suspense>} />
+            <Route path="consumption" element={<Suspense fallback={<Loading />}><MaterialConsumptionReport /></Suspense>} />
+          </Route>
+
+          {/* Workforce Module */}
+          <Route path="workforce">
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<Suspense fallback={<Loading />}><WorkforceDashboard /></Suspense>} />
+            <Route path="skill-matrix-dashboard" element={<Suspense fallback={<Loading />}><SkillMatrixDashboard /></Suspense>} />
+            <Route path="attendance" element={<Suspense fallback={<Loading />}><AttendanceReport /></Suspense>} />
+            <Route path="skill-matrix" element={<Suspense fallback={<Loading />}><SkillMatrixReport /></Suspense>} />
+            <Route path="skill-matrix-report" element={<Suspense fallback={<Loading />}><SkillMatrixReport /></Suspense>} />
+            <Route path="allocation" element={<Suspense fallback={<Loading />}><WorkforceAllocationReport /></Suspense>} />
+          </Route>
+
+          {/* Catch-all */}
+          <Route path="*" element={<UnderConstruction />} />
         </Route>
-
-        {/* Performance Module */}
-        <Route path="performance" element={<Performance />} />
-        <Route path="performance/downtime" element={<Suspense fallback={<Loading />}><DowntimeReport /></Suspense>} />
-
-        {/* Process Monitoring Module */}
-        <Route path="process">
-          <Route index element={<Navigate to="pokayoke" replace />} />
-          <Route path="pokayoke" element={<Suspense fallback={<Loading />}><PokaYokeReport /></Suspense>} />
-          <Route path="bypass" element={<Suspense fallback={<Loading />}><PokaYokeBypassReport /></Suspense>} />
-          <Route path="torque" element={<Suspense fallback={<Loading />}><TorqueReport /></Suspense>} />
-          <Route path="conveyor" element={<Suspense fallback={<Loading />}><ConveyorReport /></Suspense>} />
-        </Route>
-
-        {/* Track & Trace Module */}
-        <Route path="trace">
-          <Route index element={<Navigate to="genealogy" replace />} />
-          <Route path="genealogy" element={<Suspense fallback={<Loading />}><GenealogyReport /></Suspense>} />
-          <Route path="wip" element={<Suspense fallback={<Loading />}><WIPReport /></Suspense>} />
-          <Route path="rework" element={<Suspense fallback={<Loading />}><ReworkStatusReport /></Suspense>} />
-          <Route path="engine-rework" element={<Suspense fallback={<Loading />}><EngineReworkReport /></Suspense>} />
-        </Route>
-
-        {/* Quality Module */}
-        <Route path="quality">
-          <Route index element={<Navigate to="defect" replace />} />
-          <Route path="defect" element={<Suspense fallback={<Loading />}><DefectReport /></Suspense>} />
-          <Route path="pqca" element={<Suspense fallback={<Loading />}><PQCAReport /></Suspense>} />
-          <Route path="iqc-checklist" element={<Suspense fallback={<Loading />}><IQCChecklistReport /></Suspense>} />
-          <Route path="ipqc-checklist" element={<Suspense fallback={<Loading />}><IPQCChecklistReport /></Suspense>} />
-          <Route path="fqc-checklist" element={<Suspense fallback={<Loading />}><FQCChecklistReport /></Suspense>} />
-          <Route path="iqc-checkpoint" element={<Suspense fallback={<Loading />}><IQCCheckpointReport /></Suspense>} />
-          <Route path="ipqc-checkpoint" element={<Suspense fallback={<Loading />}><IPQCCheckpointReport /></Suspense>} />
-          <Route path="fqc-checkpoint" element={<Suspense fallback={<Loading />}><FQCCheckpointReport /></Suspense>} />
-        </Route>
-
-        {/* Maintenance Module */}
-        <Route path="maintenance">
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<Suspense fallback={<Loading />}><MaintenanceDashboard /></Suspense>} />
-          <Route path="breakdown" element={<Suspense fallback={<Loading />}><BreakdownReport /></Suspense>} />
-          <Route path="downtime" element={<Suspense fallback={<Loading />}><DowntimeSummaryReport /></Suspense>} />
-          <Route path="mttr-mtbf" element={<Suspense fallback={<Loading />}><MTTRMTBFReport /></Suspense>} />
-        </Route>
-
-        {/* Material & Kitting Module */}
-        <Route path="material">
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<Suspense fallback={<Loading />}><MaterialDashboard /></Suspense>} />
-          <Route path="request" element={<Suspense fallback={<Loading />}><MaterialRequestReport /></Suspense>} />
-          <Route path="stock" element={<Suspense fallback={<Loading />}><StockStatusReport /></Suspense>} />
-          <Route path="engine-stock" element={<Suspense fallback={<Loading />}><EngineStockReport /></Suspense>} />
-          <Route path="kitting-dashboard" element={<Suspense fallback={<Loading />}><KittingDashboard /></Suspense>} />
-          <Route path="kit-inspection" element={<Suspense fallback={<Loading />}><KitInspectionReport /></Suspense>} />
-          <Route path="kit-production" element={<Suspense fallback={<Loading />}><KitVsProductionReport /></Suspense>} />
-          <Route path="consumption" element={<Suspense fallback={<Loading />}><MaterialConsumptionReport /></Suspense>} />
-        </Route>
-
-        {/* Workforce Module */}
-        <Route path="workforce">
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<Suspense fallback={<Loading />}><WorkforceDashboard /></Suspense>} />
-          <Route path="skill-matrix-dashboard" element={<Suspense fallback={<Loading />}><SkillMatrixDashboard /></Suspense>} />
-          <Route path="attendance" element={<Suspense fallback={<Loading />}><AttendanceReport /></Suspense>} />
-          <Route path="skill-matrix" element={<Suspense fallback={<Loading />}><SkillMatrixReport /></Suspense>} />
-          <Route path="skill-matrix-report" element={<Suspense fallback={<Loading />}><SkillMatrixReport /></Suspense>} />
-          <Route path="allocation" element={<Suspense fallback={<Loading />}><WorkforceAllocationReport /></Suspense>} />
-        </Route>
-
-        {/* Catch-all */}
-        <Route path="*" element={<UnderConstruction />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </AuthProvider>
   )
 }
 

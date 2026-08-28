@@ -13,6 +13,107 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Bajaj PPMS Command Center API is running with live database connectivity' });
 });
 
+// ==========================================
+// AUTHENTICATION ENDPOINTS (Config_User)
+// ==========================================
+app.post('/api/auth/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ success: false, message: 'Please provide both username/email and password.' });
+  }
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const request = pool.request();
+      request.input('Username', sql.NVarChar(100), username.trim());
+      request.input('Password', sql.NVarChar(100), password.trim());
+
+      const result = await request.query(`
+        SELECT TOP 1
+          UserID,
+          DepartmentID,
+          DepartmentRoleID,
+          UserName,
+          EmailID,
+          MobileNo,
+          [Password],
+          AadharNo,
+          CreatedBy,
+          CreatedDate,
+          ModifiedBy,
+          ModifiedDate
+        FROM Config_User
+        WHERE (
+          LOWER(UserName) = LOWER(@Username) OR 
+          LOWER(EmailID) = LOWER(@Username) OR 
+          CAST(MobileNo AS VARCHAR) = @Username
+        ) AND [Password] = @Password
+      `);
+
+      if (result.recordset && result.recordset.length > 0) {
+        const user = result.recordset[0];
+        const { Password, ...userProfile } = user;
+        return res.json({
+          success: true,
+          message: 'Login successful',
+          user: userProfile
+        });
+      } else {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid username, email, or password.'
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Login DB error:', err);
+    return res.status(500).json({ success: false, message: 'Database authentication error: ' + err.message });
+  }
+
+  if ((username === 'coolsuper' && password === '1234') || (username === 'admin' && password === '12345')) {
+    return res.json({
+      success: true,
+      message: 'Demo login successful',
+      user: { UserID: '1', UserName: username, EmailID: `${username}@bajaj.com`, DepartmentID: 1, DepartmentRoleID: 1 }
+    });
+  }
+
+  res.status(401).json({ success: false, message: 'Invalid credentials' });
+});
+
+app.get('/api/auth/users', async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const result = await pool.request().query(`
+        SELECT 
+          UserID,
+          DepartmentID,
+          DepartmentRoleID,
+          UserName,
+          EmailID,
+          MobileNo,
+          [Password]
+        FROM Config_User
+        ORDER BY UserID ASC
+      `);
+      return res.json({ users: result.recordset });
+    }
+  } catch (err) {
+    console.warn('Auth users fallback:', err.message);
+  }
+
+  res.json({
+    users: [
+      { UserID: '1', UserName: 'coolsuper', EmailID: 'super@ullu.com', Password: '1234' },
+      { UserID: '2', UserName: 'admin', EmailID: 'ullu@gmail.com', Password: '12345' },
+      { UserID: '3', UserName: 'Rahul Sharma', EmailID: 'rahul.sharma@example.com', Password: 'Pass@123' }
+    ]
+  });
+});
+
 // Helper function for period scaling fallback
 const getScale = (period) => {
   if (period === 'Week') return 0.25;
