@@ -120,14 +120,76 @@ app.get(['/api/dashboard/production', '/api/production/report'], async (req, res
     const pool = await poolPromise;
     if (pool) {
       const request = pool.request();
-      if (startDate) request.input('StartDate', sql.Date, startDate);
-      if (endDate) request.input('EndDate', sql.Date, endDate);
-      if (dbShift) request.input('Shift', sql.VarChar(20), dbShift);
-      if (line && line !== 'All') request.input('Line', sql.VarChar(50), line);
-      if (model && model !== 'All') request.input('Model', sql.VarChar(50), model);
+
+      // Compute effective date range based on period
+      let effectiveStartDate = startDate;
+      let effectiveEndDate = endDate;
+      if (!effectiveStartDate) {
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, '0');
+        const d = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${y}-${m}-${d}`;
+
+        if (period === 'Day' || period === 'Shift') {
+          effectiveStartDate = todayStr;
+          effectiveEndDate = todayStr;
+        } else if (period === 'Week') {
+          const past7 = new Date(today);
+          past7.setDate(today.getDate() - 7);
+          const py = past7.getFullYear();
+          const pm = String(past7.getMonth() + 1).padStart(2, '0');
+          const pd = String(past7.getDate()).padStart(2, '0');
+          effectiveStartDate = `${py}-${pm}-${pd}`;
+        } else if (period === 'Month') {
+          const past30 = new Date(today);
+          past30.setDate(today.getDate() - 30);
+          const py = past30.getFullYear();
+          const pm = String(past30.getMonth() + 1).padStart(2, '0');
+          const pd = String(past30.getDate()).padStart(2, '0');
+          effectiveStartDate = `${py}-${pm}-${pd}`;
+        }
+      }
+
+      const makeRequest = () => {
+        const req = pool.request();
+        req.input('StartDate', sql.Date, effectiveStartDate || null);
+        req.input('EndDate', sql.Date, effectiveEndDate || null);
+        req.input('Shift', sql.VarChar(20), dbShift || null);
+        req.input('Line', sql.VarChar(50), (line && line !== 'All') ? line : null);
+        req.input('Model', sql.VarChar(50), (model && model !== 'All') ? model : null);
+        return req;
+      };
+
+      let planVsActualQuery = `
+        SELECT 
+          'Shift ' + ProdShift as name,
+          ISNULL(SUM(PlanQty), 0) as [plan],
+          ISNULL(SUM(ENGCompleted_Qty), 0) as actual
+        FROM Prod_EnginePlanExecution
+        WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR ProdShift = @Shift)
+        GROUP BY ProdShift
+      `;
+
+      if (period === 'Month' || period === 'Week') {
+        planVsActualQuery = `
+          SELECT 
+            CONVERT(VARCHAR(10), ProdDate, 120) as name,
+            ISNULL(SUM(PlanQty), 0) as [plan],
+            ISNULL(SUM(ENGCompleted_Qty), 0) as actual
+          FROM Prod_EnginePlanExecution
+          WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR ProdShift = @Shift)
+          GROUP BY ProdDate
+          ORDER BY ProdDate ASC
+        `;
+      }
 
       const [kpiRes, planRes, straightRes, skuRes, paretoRes] = await Promise.allSettled([
-        request.query(`
+        makeRequest().query(`
           SELECT 
             ISNULL(SUM(PlanQty), 0) as totalPlan,
             ISNULL(SUM(ENGCompleted_Qty), 0) as totalProd,
@@ -139,18 +201,8 @@ app.get(['/api/dashboard/production', '/api/production/report'], async (req, res
             AND (@EndDate IS NULL OR ProdDate <= @EndDate)
             AND (@Shift IS NULL OR ProdShift = @Shift)
         `),
-        request.query(`
-          SELECT 
-            ProdShift as name,
-            ISNULL(SUM(PlanQty), 0) as [plan],
-            ISNULL(SUM(ENGCompleted_Qty), 0) as actual
-          FROM Prod_EnginePlanExecution
-          WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
-            AND (@EndDate IS NULL OR ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR ProdShift = @Shift)
-          GROUP BY ProdShift
-        `),
-        request.query(`
+        makeRequest().query(planVsActualQuery),
+        makeRequest().query(`
           SELECT 
             ISNULL(L.LineName, 'Line ' + CAST(E.LineID AS VARCHAR)) as name,
             ISNULL(SUM(E.ENGCompleted_Qty) - SUM(E.ENGReworkOK_Qty), 0) as straight,
@@ -162,7 +214,7 @@ app.get(['/api/dashboard/production', '/api/production/report'], async (req, res
             AND (@Shift IS NULL OR E.ProdShift = @Shift)
           GROUP BY L.LineName, E.LineID
         `),
-        request.query(`
+        makeRequest().query(`
           SELECT 
             ISNULL(L.LineName, 'Line 1') as line,
             ISNULL(S.SKUName, 'SKU-' + CAST(E.SKUID AS VARCHAR)) as name,
@@ -181,7 +233,7 @@ app.get(['/api/dashboard/production', '/api/production/report'], async (req, res
             AND (@Shift IS NULL OR E.ProdShift = @Shift)
           GROUP BY L.LineName, S.SKUName, F.ModelFamilyName, E.SKUID
         `),
-        request.query(`
+        makeRequest().query(`
           SELECT TOP 5
             ISNULL(Reason, 'Other') as reason,
             ISNULL(SUM(TotalDT), 0) as duration,
@@ -194,6 +246,12 @@ app.get(['/api/dashboard/production', '/api/production/report'], async (req, res
           ORDER BY duration DESC
         `)
       ]);
+
+      if (kpiRes.status === 'rejected') console.error('kpiRes Rejected:', kpiRes.reason);
+      if (planRes.status === 'rejected') console.error('planRes Rejected:', planRes.reason);
+      if (straightRes.status === 'rejected') console.error('straightRes Rejected:', straightRes.reason);
+      if (skuRes.status === 'rejected') console.error('skuRes Rejected:', skuRes.reason);
+      if (paretoRes.status === 'rejected') console.error('paretoRes Rejected:', paretoRes.reason);
 
       const kpis = kpiRes.status === 'fulfilled' && kpiRes.value?.recordset?.length && kpiRes.value.recordset[0].totalPlan > 0
         ? kpiRes.value.recordset[0]
