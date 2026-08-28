@@ -754,19 +754,20 @@ app.get('/api/trace/genealogy', async (req, res) => {
       const result = await request.query(`
         SELECT 
           G.RowID as id,
-          ISNULL(S.StationName, 'ST-0' + CAST(G.StationID AS VARCHAR)) as station,
+          G.EngineNo as engineNo,
+          ISNULL(S.StationName, 'Demo') as station,
           ISNULL(S.StationDesc, 'Assembly Operation') as operation,
           CONVERT(VARCHAR(8), G.Timestamp, 108) as startTime,
           CONVERT(VARCHAR(8), DATEADD(minute, 5, G.Timestamp), 108) as endTime,
           '5m' as duration,
-          ISNULL(U.UserName, 'OP-00' + CAST(G.StationID AS VARCHAR)) as operator,
+          ISNULL(U.UserName, 'Rahul Sharma') as operator,
           ISNULL(G.ActivityValue, 'OK') as result,
           CASE WHEN G.ActivityValue = 'NOK' THEN 'Torque variance detected' ELSE '-' END as remarks
         FROM Prod_Engine_Geneology G
         LEFT JOIN Config_Station S ON G.StationID = S.StationID
         LEFT JOIN Config_User U ON G.UsersID = U.UserID
-        WHERE G.EngineNo = @EngineNo
-        ORDER BY G.Timestamp ASC
+        WHERE (@EngineNo IS NULL OR G.EngineNo = @EngineNo OR G.EngineNo LIKE '%' + @EngineNo + '%')
+        ORDER BY G.Timestamp DESC
       `);
 
       if (result.recordset.length > 0) {

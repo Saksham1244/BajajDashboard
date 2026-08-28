@@ -26,6 +26,7 @@ export default function GenealogyReport() {
   ];
 
   const columns = [
+    { header: 'Engine No', accessor: 'engineNo' },
     { header: 'Station', accessor: 'station' },
     { header: 'Operation', accessor: 'operation' },
     { header: 'Start Time', accessor: 'startTime' },

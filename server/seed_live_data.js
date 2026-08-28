@@ -243,24 +243,64 @@ async function seedDatabase() {
       `);
     }
 
-    // Seed Track & Trace Engine Genealogy (including ENG-2026-00123)
-    const demoEngines = ['ENG-2026-00123', 'ENG-2026-00124', 'ENG-3001', 'E26-TRC-01', 'E26-TRC-02'];
-    const stationOps = [
-      { id: 1, name: 'ST-01', val: 'OK', user: '3' },
-      { id: 2, name: 'ST-02', val: 'OK', user: '4' },
-      { id: 3, name: 'ST-03', val: 'NOK', user: '5' },
-      { id: 4, name: 'Line2', val: 'OK', user: '6' },
-      { id: 5, name: 'Station2', val: 'OK', user: '7' }
-    ];
+    // Seed Track & Trace Engine Genealogy (76 Distinct Engines)
+    const userIds = ['3', '4', '5', '6', '7'];
+    
+    // 1. ENG-2026-00100 to ENG-2026-00150
+    for (let i = 100; i <= 150; i++) {
+      const engNo = `ENG-2026-${String(i).padStart(5, '0')}`;
+      const hasDefect = (i % 7 === 0);
+      const opCount = hasDefect ? 5 : 3;
 
-    for (const engNo of demoEngines) {
-      for (const [idx, st] of stationOps.entries()) {
-        const stationId = (idx % 3) + 1;
+      for (let step = 1; step <= opCount; step++) {
+        const stationId = (step <= 3) ? step : (step === 4 ? 1 : 3);
+        const activityVal = (hasDefect && step === 3) ? 'NOK' : 'OK';
+        const user = userIds[step % userIds.length];
+        const minutesAgo = (150 - i) * 15 + (opCount - step) * 5;
+
         await runQuery(`
-          IF NOT EXISTS (SELECT 1 FROM Prod_Engine_Geneology WHERE EngineNo = '${engNo}' AND ActivityID = ${idx + 1})
+          IF NOT EXISTS (SELECT 1 FROM Prod_Engine_Geneology WHERE EngineNo = '${engNo}' AND ActivityID = ${step})
           BEGIN
-            INSERT INTO Prod_Engine_Geneology (Timestamp, EngineNo, StationID, ActivityID, ActivityValue, Count, Status, UsersID)
-            VALUES (DATEADD(minute, ${idx * 6}, DATEADD(hour, -2, GETDATE())), '${engNo}', ${stationId}, ${idx + 1}, '${st.val}', 1, 1, '${st.user}');
+            INSERT INTO Prod_Engine_Geneology (
+              Timestamp, EngineNo, StationID, ActivityID, ActivityValue, Count, Status, UsersID
+            ) VALUES (
+              DATEADD(minute, -${minutesAgo}, GETDATE()),
+              '${engNo}',
+              ${stationId},
+              ${step},
+              '${activityVal}',
+              1,
+              1,
+              '${user}'
+            );
+          END
+        `);
+      }
+    }
+
+    // 2. ENG-3001 to ENG-3020
+    for (let j = 3001; j <= 3020; j++) {
+      const engNo = `ENG-${j}`;
+      for (let step = 1; step <= 3; step++) {
+        const stationId = step;
+        const user = userIds[step % userIds.length];
+        const minutesAgo = (3020 - j) * 12 + (3 - step) * 4;
+
+        await runQuery(`
+          IF NOT EXISTS (SELECT 1 FROM Prod_Engine_Geneology WHERE EngineNo = '${engNo}' AND ActivityID = ${step})
+          BEGIN
+            INSERT INTO Prod_Engine_Geneology (
+              Timestamp, EngineNo, StationID, ActivityID, ActivityValue, Count, Status, UsersID
+            ) VALUES (
+              DATEADD(minute, -${minutesAgo}, GETDATE()),
+              '${engNo}',
+              ${stationId},
+              ${step},
+              'OK',
+              1,
+              1,
+              '${user}'
+            );
           END
         `);
       }
