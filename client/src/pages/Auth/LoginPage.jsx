@@ -1,7 +1,7 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Lock, User, Eye, EyeOff, ShieldCheck, AlertCircle, Cpu, Database, CheckCircle2 } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, ShieldCheck, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -24,12 +24,6 @@ export default function LoginPage() {
     if (res.success) {
       navigate(from, { replace: true });
     }
-  };
-
-  const handleQuickFill = (userVal, passVal) => {
-    setUsername(userVal);
-    setPassword(passVal);
-    setError(null);
   };
 
   return (
@@ -80,7 +74,7 @@ export default function LoginPage() {
                     type="text"
                     value={username}
                     onChange={(e) => { setUsername(e.target.value); setError(null); }}
-                    placeholder="e.g. coolsuper, admin, or email"
+                    placeholder="Enter your username or email"
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition"
                     autoFocus
                     required
@@ -100,7 +94,7 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => { setPassword(e.target.value); setError(null); }}
-                    placeholder="Enter password"
+                    placeholder="Enter your password"
                     className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition"
                     required
                   />
@@ -129,69 +123,6 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
-
-            {/* Quick Demo Credentials for Fast Testing */}
-            <div className="mt-6 pt-5 border-t border-slate-200">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
-                  <Database className="w-3.5 h-3.5 text-brand-primary" /> Live Config_User Quick-Fill
-                </span>
-                <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                  MSSQL Connected
-                </span>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('coolsuper', '1234')}
-                  className="p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-brand-primary/5 hover:border-brand-primary text-left transition group"
-                >
-                  <div className="font-bold text-slate-800 group-hover:text-brand-primary flex items-center justify-between">
-                    <span>coolsuper</span>
-                    <span className="text-[10px] font-normal text-slate-400">#1</span>
-                  </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">Role: Supervisor (1234)</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('admin', '12345')}
-                  className="p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-brand-primary/5 hover:border-brand-primary text-left transition group"
-                >
-                  <div className="font-bold text-slate-800 group-hover:text-brand-primary flex items-center justify-between">
-                    <span>admin</span>
-                    <span className="text-[10px] font-normal text-slate-400">#2</span>
-                  </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">Role: Admin (12345)</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('Rahul Sharma', 'Pass@123')}
-                  className="p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-brand-primary/5 hover:border-brand-primary text-left transition group"
-                >
-                  <div className="font-bold text-slate-800 group-hover:text-brand-primary flex items-center justify-between">
-                    <span>Rahul Sharma</span>
-                    <span className="text-[10px] font-normal text-slate-400">#3</span>
-                  </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">Role: Operator (Pass@123)</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('Priya Singh', 'Pass@123')}
-                  className="p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-brand-primary/5 hover:border-brand-primary text-left transition group"
-                >
-                  <div className="font-bold text-slate-800 group-hover:text-brand-primary flex items-center justify-between">
-                    <span>Priya Singh</span>
-                    <span className="text-[10px] font-normal text-slate-400">#4</span>
-                  </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">Role: Quality (Pass@123)</div>
-                </button>
-              </div>
-            </div>
-
           </div>
         </div>
 
@@ -199,9 +130,7 @@ export default function LoginPage() {
         <div className="text-center mt-4 text-[11px] text-slate-400 flex items-center justify-center gap-2">
           <span>Bajaj Auto Pantnagar Plant</span>
           <span>•</span>
-          <span>Database: PPMS_BajajPant</span>
-          <span>•</span>
-          <span>v2.0.0</span>
+          <span>PPMS Enterprise v2.0.0</span>
         </div>
       </div>
     </div>
