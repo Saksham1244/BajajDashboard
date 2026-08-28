@@ -22,8 +22,28 @@ export function useReportFilters() {
 
   const activeShift = getActiveShift();
 
+  const handlePeriodChange = (newPeriod) => {
+    setPeriod(newPeriod);
+    const today = new Date();
+    const todayStr = getToday();
+    if (newPeriod === 'Shift' || newPeriod === 'Day') {
+      setStartDate(todayStr);
+      setEndDate(todayStr);
+    } else if (newPeriod === 'Week') {
+      const past7 = new Date(today);
+      past7.setDate(today.getDate() - 7);
+      setStartDate(new Date(past7.getTime() - past7.getTimezoneOffset() * 60000).toISOString().split('T')[0]);
+      setEndDate(todayStr);
+    } else if (newPeriod === 'Month') {
+      const past30 = new Date(today);
+      past30.setDate(today.getDate() - 30);
+      setStartDate(new Date(past30.getTime() - past30.getTimezoneOffset() * 60000).toISOString().split('T')[0]);
+      setEndDate(todayStr);
+    }
+  };
+
   const getBaseFilters = () => [
-    { type: 'period', value: period, onChange: setPeriod },
+    { type: 'period', value: period, onChange: handlePeriodChange },
     { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate },
     ...(period === 'Shift' ? [{
       type: 'dropdown',

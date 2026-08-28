@@ -124,16 +124,16 @@ app.get(['/api/dashboard/production', '/api/production/report'], async (req, res
       // Compute effective date range based on period
       let effectiveStartDate = startDate;
       let effectiveEndDate = endDate;
-      if (!effectiveStartDate) {
-        const today = new Date();
-        const y = today.getFullYear();
-        const m = String(today.getMonth() + 1).padStart(2, '0');
-        const d = String(today.getDate()).padStart(2, '0');
-        const todayStr = `${y}-${m}-${d}`;
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      const d = String(today.getDate()).padStart(2, '0');
+      const todayStr = `${y}-${m}-${d}`;
 
+      if (!effectiveStartDate || (period === 'Week' && effectiveStartDate === effectiveEndDate) || (period === 'Month' && effectiveStartDate === effectiveEndDate)) {
         if (period === 'Day' || period === 'Shift') {
-          effectiveStartDate = todayStr;
-          effectiveEndDate = todayStr;
+          effectiveStartDate = effectiveStartDate || todayStr;
+          effectiveEndDate = effectiveEndDate || todayStr;
         } else if (period === 'Week') {
           const past7 = new Date(today);
           past7.setDate(today.getDate() - 7);
@@ -141,6 +141,7 @@ app.get(['/api/dashboard/production', '/api/production/report'], async (req, res
           const pm = String(past7.getMonth() + 1).padStart(2, '0');
           const pd = String(past7.getDate()).padStart(2, '0');
           effectiveStartDate = `${py}-${pm}-${pd}`;
+          effectiveEndDate = todayStr;
         } else if (period === 'Month') {
           const past30 = new Date(today);
           past30.setDate(today.getDate() - 30);
@@ -148,6 +149,7 @@ app.get(['/api/dashboard/production', '/api/production/report'], async (req, res
           const pm = String(past30.getMonth() + 1).padStart(2, '0');
           const pd = String(past30.getDate()).padStart(2, '0');
           effectiveStartDate = `${py}-${pm}-${pd}`;
+          effectiveEndDate = todayStr;
         }
       }
 
@@ -374,16 +376,16 @@ app.get(['/api/dashboard/performance', '/api/performance/downtime'], async (req,
       // Compute effective date range based on period
       let effectiveStartDate = startDate;
       let effectiveEndDate = endDate;
-      if (!effectiveStartDate) {
-        const today = new Date();
-        const y = today.getFullYear();
-        const m = String(today.getMonth() + 1).padStart(2, '0');
-        const d = String(today.getDate()).padStart(2, '0');
-        const todayStr = `${y}-${m}-${d}`;
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      const d = String(today.getDate()).padStart(2, '0');
+      const todayStr = `${y}-${m}-${d}`;
 
+      if (!effectiveStartDate || (period === 'Week' && effectiveStartDate === effectiveEndDate) || (period === 'Month' && effectiveStartDate === effectiveEndDate)) {
         if (period === 'Day' || period === 'Shift') {
-          effectiveStartDate = todayStr;
-          effectiveEndDate = todayStr;
+          effectiveStartDate = effectiveStartDate || todayStr;
+          effectiveEndDate = effectiveEndDate || todayStr;
         } else if (period === 'Week') {
           const past7 = new Date(today);
           past7.setDate(today.getDate() - 7);
@@ -391,6 +393,7 @@ app.get(['/api/dashboard/performance', '/api/performance/downtime'], async (req,
           const pm = String(past7.getMonth() + 1).padStart(2, '0');
           const pd = String(past7.getDate()).padStart(2, '0');
           effectiveStartDate = `${py}-${pm}-${pd}`;
+          effectiveEndDate = todayStr;
         } else if (period === 'Month') {
           const past30 = new Date(today);
           past30.setDate(today.getDate() - 30);
@@ -398,6 +401,7 @@ app.get(['/api/dashboard/performance', '/api/performance/downtime'], async (req,
           const pm = String(past30.getMonth() + 1).padStart(2, '0');
           const pd = String(past30.getDate()).padStart(2, '0');
           effectiveStartDate = `${py}-${pm}-${pd}`;
+          effectiveEndDate = todayStr;
         }
       }
 
@@ -441,11 +445,16 @@ app.get(['/api/dashboard/performance', '/api/performance/downtime'], async (req,
       const dtRow = (dtRes.status === 'fulfilled' && dtRes.value?.recordset?.[0]) || { totalDT: 60, mechanicalDT: 20, electricalDT: 10, qualityDT: 10, setupDT: 10, processDT: 10 };
 
       const days = Math.max(1, prodRow.dayCount || 1);
-      const plannedMinutes = days * (dbShift ? 480 : 960);
+      const isSingleDayToday = (days === 1 && (!effectiveStartDate || effectiveStartDate === todayStr));
+      const plannedMinutes = days * (dbShift ? 480 : (isSingleDayToday ? 480 : 960));
+      const activePlan = (isSingleDayToday && !dbShift && prodRow.totalPlan > prodRow.totalProd * 1.5)
+        ? Math.round(prodRow.totalPlan / 2) // Target for active Shift 1
+        : prodRow.totalPlan;
+
       const totalDT = dtRow.totalDT || 0;
 
-      const availability = Math.max(40, Math.min(99.9, Number((((plannedMinutes - totalDT) / plannedMinutes) * 100).toFixed(1))));
-      const performance = prodRow.totalPlan > 0 ? Math.max(40, Math.min(99.9, Number(((prodRow.totalProd / prodRow.totalPlan) * 100).toFixed(1)))) : 90.0;
+      const availability = Math.max(50, Math.min(99.9, Number((((plannedMinutes - totalDT) / plannedMinutes) * 100).toFixed(1))));
+      const performance = activePlan > 0 ? Math.max(50, Math.min(99.9, Number(((prodRow.totalProd / activePlan) * 100).toFixed(1)))) : 90.0;
       const quality = prodRow.totalProd > 0 ? Math.max(70, Math.min(99.9, Number((((prodRow.totalProd - prodRow.totalRework - prodRow.totalNotOk) / prodRow.totalProd) * 100).toFixed(1)))) : 98.0;
       const oee = Number(((availability * performance * quality) / 10000).toFixed(1));
       const ole = Number(Math.min(99.5, oee * 1.05).toFixed(1));

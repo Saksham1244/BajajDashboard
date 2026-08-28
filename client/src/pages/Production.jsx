@@ -11,7 +11,7 @@ import useFilterOptions from '../hooks/useFilterOptions';
 import { generateTimeLabels } from '../utils/timeDataGenerator';
 
 export default function Production() {
-  const { period, shift, getBaseFilters } = useReportFilters();
+  const { period, shift, startDate, endDate, getBaseFilters } = useReportFilters();
   const filterOptions = useFilterOptions();
   const [activeLine, setActiveLine] = useState('All');
   const [activeModel, setActiveModel] = useState('All');
@@ -35,7 +35,7 @@ export default function Production() {
   });
 
   React.useEffect(() => {
-    fetch(`/api/dashboard/production?period=${period}&shift=${shift}&line=${activeLine}&model=${activeModel}`)
+    fetch(`/api/dashboard/production?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}&line=${activeLine}&model=${activeModel}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.kpis) {
@@ -45,7 +45,7 @@ export default function Production() {
       .catch(err => {
         console.error('Error loading live production metrics:', err);
       });
-  }, [period, shift, activeLine, activeModel]);
+  }, [period, shift, startDate, endDate, activeLine, activeModel]);
 
   const totalPlan = dbData.kpis?.totalPlan ?? (totalProd + shortfall);
   const totalProd = dbData.kpis?.totalProd ?? 265;
