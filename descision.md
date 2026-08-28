@@ -74,6 +74,12 @@ Historically, plant supervisors and industrial engineers faced several challenge
 - **Rationale**:
   - Delivers a polished, native application feel on large touch-screen plant displays and executive desktop monitors.
 
+### ADR-010: Deferral of Preventive Maintenance (PM) to External Plant CMMS
+- **Decision**: Remove PM Dashboard and PM Report from the Bajaj PPMS Command Center architecture and navigation.
+- **Rationale**:
+  - Preventive Maintenance scheduling, work order ticketing, and technician checklists are already actively managed in a dedicated plant CMMS (SAP PM / Maximo).
+  - Eliminates duplicate data entry and operator confusion, focusing the Maintenance module purely on real-time breakdown monitoring, downtime Pareto analysis, and MTTR/MTBF equipment reliability.
+
 ---
 
 ## 3. Technical Trade-offs & Analysis

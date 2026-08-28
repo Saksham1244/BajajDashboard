@@ -177,8 +177,9 @@ graph LR
 2. **MTTR & MTBF Reliability**:
    - **MTBF (Mean Time Between Failures)**: $\frac{\text{Operational Uptime}}{\text{Number of Breakdowns}}$
    - **MTTR (Mean Time To Repair)**: $\frac{\text{Total Downtime}}{\text{Number of Breakdowns}}$
-3. **Preventive Maintenance (PM)**:
-   - Tracks schedule compliance, lubrication routines, and calendar-based servicing.
+3. **Breakdown Root-Cause Pareto**:
+   - Ranks top machine failures, failure duration in hours, and station bottlenecks.
+   - *(Note: Preventive Maintenance scheduling is handled in external plant CMMS software).*
 
 ### 4.7 Material Management & Kitting Flow
 1. **Stock Levels & Safety Buffers**:

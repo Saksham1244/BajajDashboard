@@ -113,7 +113,8 @@ graph TD
 - **Key Metrics**: Machine Status (`Running`, `Breakdown`, `Maintenance`, `Idle`), Total Downtime (mins), Breakdown Occurrences, MTBF (hrs), MTTR (mins), Machine Availability %.
 - **Features**:
   - Top 7 Breakdown Pareto Analysis.
-  - Preventive Maintenance (PM) Schedule Compliance & Delay Tracking.
+  - MTTR & MTBF Equipment Reliability Metrics and Downtime Summaries.
+  - *(Note: Preventive Maintenance (PM) is managed in dedicated plant CMMS software).*
 
 ### Module 7: Material & Kitting (`/material`)
 - **Primary Audience**: Stores Incharge, Kitting Leads $\rightarrow$ Supply Chain Head.

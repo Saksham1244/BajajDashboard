@@ -39,8 +39,6 @@ const MaintenanceDashboard   = lazy(() => import('./pages/Maintenance/Maintenanc
 const BreakdownReport        = lazy(() => import('./pages/Maintenance/BreakdownReport'))
 const DowntimeSummaryReport  = lazy(() => import('./pages/Maintenance/DowntimeSummaryReport'))
 const MTTRMTBFReport         = lazy(() => import('./pages/Maintenance/MTTRMTBFReport'))
-const PMDashboard            = lazy(() => import('./pages/Maintenance/PMDashboard'))
-const PMReport               = lazy(() => import('./pages/Maintenance/PMReport'))
 
 const MaterialDashboard      = lazy(() => import('./pages/Material/MaterialDashboard'))
 const MaterialRequestReport  = lazy(() => import('./pages/Material/MaterialRequestReport'))
@@ -118,8 +116,6 @@ function App() {
           <Route path="breakdown" element={<Suspense fallback={<Loading />}><BreakdownReport /></Suspense>} />
           <Route path="downtime" element={<Suspense fallback={<Loading />}><DowntimeSummaryReport /></Suspense>} />
           <Route path="mttr-mtbf" element={<Suspense fallback={<Loading />}><MTTRMTBFReport /></Suspense>} />
-          <Route path="pm-dashboard" element={<Suspense fallback={<Loading />}><PMDashboard /></Suspense>} />
-          <Route path="pm-report" element={<Suspense fallback={<Loading />}><PMReport /></Suspense>} />
         </Route>
 
         {/* Material & Kitting Module */}
