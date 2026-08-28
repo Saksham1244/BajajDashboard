@@ -103,21 +103,29 @@ async function seedDatabase() {
       'Preventive Maintenance'
     ];
 
+    const todayStr = formatLocalDate(today);
+
     for (const dateStr of dates) {
+      const isToday = (dateStr === todayStr);
+
       for (const shift of ['A', 'B']) {
+        const isFutureShiftToday = isToday && shift === 'B';
+
         for (const lineId of [1, 2]) {
           for (const skuId of [1, 2]) {
             // Plan vs actual numbers
             const basePlan = skuId === 1 ? 450 : 380;
             const variance = Math.floor(Math.random() * 30) - 15;
             const planQty = basePlan + variance;
-            const completedQty = planQty - Math.floor(Math.random() * 25 + 10);
-            const reworkQty = Math.floor(Math.random() * 12 + 4);
-            const notOkQty = Math.floor(Math.random() * 4 + 1);
-            const matHold = Math.floor(Math.random() * 3 + 1);
-            const qcHold = Math.floor(Math.random() * 3 + 1);
-            const scrapQty = Math.random() > 0.8 ? 1 : 0;
-            const mainlineQty = completedQty + Math.floor(Math.random() * 10 + 5);
+
+            // If Shift B today (upcoming shift), completed actuals are 0!
+            const completedQty = isFutureShiftToday ? 0 : (planQty - Math.floor(Math.random() * 25 + 10));
+            const reworkQty = isFutureShiftToday ? 0 : Math.floor(Math.random() * 12 + 4);
+            const notOkQty = isFutureShiftToday ? 0 : Math.floor(Math.random() * 4 + 1);
+            const matHold = isFutureShiftToday ? 0 : Math.floor(Math.random() * 3 + 1);
+            const qcHold = isFutureShiftToday ? 0 : Math.floor(Math.random() * 3 + 1);
+            const scrapQty = isFutureShiftToday ? 0 : (Math.random() > 0.8 ? 1 : 0);
+            const mainlineQty = isFutureShiftToday ? 0 : (completedQty + Math.floor(Math.random() * 10 + 5));
 
             await runQuery(`
               DECLARE @CurPlanID INT;
@@ -141,41 +149,54 @@ async function seedDatabase() {
                   ENGMainLine_Qty, ENGNotOK_Qty, ENGNotOKBypass_Qty, ENGTakeOut_Qty, ENGReworkOK_Qty,
                   ENGCompleted_Qty, ENGMaterialHold_Qty, ENGQualityHold_Qty, ENGScrapped_Qty, Status, LineSpeed
                 ) VALUES (
-                  @CurPlanID, ${lineId}, ${skuId}, '${dateStr}', '${shift}', ${planQty}, ${planQty}, ${planQty - 5},
+                  @CurPlanID, ${lineId}, ${skuId}, '${dateStr}', '${shift}', ${planQty}, ${planQty}, ${isFutureShiftToday ? 0 : planQty - 5},
                   ${mainlineQty}, ${notOkQty}, 0, 1, ${reworkQty},
                   ${completedQty}, ${matHold}, ${qcHold}, ${scrapQty}, 1, 5
                 );
+              END
+              ELSE IF '${dateStr}' = '${todayStr}' AND '${shift}' = 'B'
+              BEGIN
+                -- Ensure today's Shift B is updated to 0 completed actuals
+                UPDATE Prod_EnginePlanExecution
+                SET ENGCompleted_Qty = 0, ENGMainLine_Qty = 0, ENGReworkOK_Qty = 0, ENGNotOK_Qty = 0,
+                    ENGMaterialHold_Qty = 0, ENGQualityHold_Qty = 0, ENGScrapped_Qty = 0
+                WHERE ProdDate = '${todayStr}' AND ProdShift = 'B';
               END
             `);
             insertedPlans++;
           }
         }
 
-        // Insert 1-2 realistic downtime events per shift
-        const dtCount = Math.floor(Math.random() * 2) + 1;
-        for (let k = 0; k < dtCount; k++) {
-          const reason = downtimeReasons[Math.floor(Math.random() * downtimeReasons.length)];
-          const subLossId = (k % 3) + 1;
-          const dtMins = Math.floor(Math.random() * 35) + 10;
-          const startHour = shift === 'A' ? (7 + k * 3) : (15 + k * 3);
-          const startStr = `${dateStr} ${String(startHour).padStart(2, '0')}:15:00`;
-          const endStr = `${dateStr} ${String(startHour).padStart(2, '0')}:${15 + (dtMins % 40)}:00`;
-          const stationId = Math.floor(Math.random() * 3) + 1;
+        // Only insert downtime for completed shifts (skip upcoming Shift B today)
+        if (!isFutureShiftToday) {
+          const dtCount = Math.floor(Math.random() * 2) + 1;
+          for (let k = 0; k < dtCount; k++) {
+            const reason = downtimeReasons[Math.floor(Math.random() * downtimeReasons.length)];
+            const subLossId = (k % 3) + 1;
+            const dtMins = Math.floor(Math.random() * 35) + 10;
+            const startHour = shift === 'A' ? (7 + k * 3) : (15 + k * 3);
+            const startStr = `${dateStr} ${String(startHour).padStart(2, '0')}:15:00`;
+            const endStr = `${dateStr} ${String(startHour).padStart(2, '0')}:${15 + (dtMins % 40)}:00`;
+            const stationId = Math.floor(Math.random() * 3) + 1;
 
-          await runQuery(`
-            IF NOT EXISTS (
-              SELECT 1 FROM Perf_Downtime 
-              WHERE ProdDate = '${dateStr}' AND ProdShift = '${shift}' AND StartTime = '${startStr}'
-            )
-            BEGIN
-              INSERT INTO Perf_Downtime (
-                SubAsslyLineID, StationID, ProdDate, ProdShift, StartTime, EndTime, CurrentDT, TotalDT, LossID, SubLossID, [4MLossID], UserID, Reason
-              ) VALUES (
-                1, ${stationId}, '${dateStr}', '${shift}', '${startStr}', '${endStr}', ${dtMins}, ${dtMins}, 1, ${subLossId}, 1, '1', '${reason}'
-              );
-            END
-          `);
-          insertedDowntime++;
+            await runQuery(`
+              IF NOT EXISTS (
+                SELECT 1 FROM Perf_Downtime 
+                WHERE ProdDate = '${dateStr}' AND ProdShift = '${shift}' AND StartTime = '${startStr}'
+              )
+              BEGIN
+                INSERT INTO Perf_Downtime (
+                  SubAsslyLineID, StationID, ProdDate, ProdShift, StartTime, EndTime, CurrentDT, TotalDT, LossID, SubLossID, [4MLossID], UserID, Reason
+                ) VALUES (
+                  1, ${stationId}, '${dateStr}', '${shift}', '${startStr}', '${endStr}', ${dtMins}, ${dtMins}, 1, ${subLossId}, 1, '1', '${reason}'
+                );
+              END
+            `);
+            insertedDowntime++;
+          }
+        } else {
+          // Clean any accidental future downtime for today Shift B
+          await runQuery(`DELETE FROM Perf_Downtime WHERE ProdDate = '${todayStr}' AND ProdShift = 'B'`);
         }
       }
     }
