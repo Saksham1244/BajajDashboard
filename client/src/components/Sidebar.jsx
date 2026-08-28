@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useAuth } from '../context/AuthContext'
 import { 
   LayoutDashboard, 
   Activity, 
@@ -110,6 +111,7 @@ const searchIndex = navItems.flatMap(module =>
 )
 
 export default function Sidebar({ isOpen, setIsOpen }) {
+  const { user, logout } = useAuth()
   const [expandedMenus, setExpandedMenus] = useState({ 'Process Monitoring': true })
   const location = useLocation()
   const navigate = useNavigate()
@@ -278,25 +280,35 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       <div className="flex-shrink-0 border-t border-slate-800 p-4">
         {isOpen ? (
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700 text-slate-300 flex-shrink-0">
-                <User className="w-5 h-5" />
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="w-10 h-10 rounded-full bg-brand-primary/20 flex items-center justify-center border border-brand-primary/30 text-brand-secondary font-bold text-sm flex-shrink-0">
+                {user?.UserName ? user.UserName.charAt(0).toUpperCase() : <User className="w-5 h-5 text-slate-300" />}
               </div>
               <div className="overflow-hidden">
-                <p className="text-sm font-semibold text-white truncate">Logged In User</p>
-                <p className="text-xs text-slate-400 truncate">Admin</p>
+                <p className="text-sm font-semibold text-white truncate">{user?.UserName || 'Logged In User'}</p>
+                <p className="text-xs text-slate-400 truncate">
+                  {user?.DepartmentRoleID === 1 ? 'Administrator' : 'Plant Operator'}
+                </p>
               </div>
             </div>
-            <button className="p-2 rounded-md text-slate-400 hover:text-brand-danger hover:bg-brand-danger/10 transition-colors" title="Log out">
+            <button 
+              onClick={logout}
+              className="p-2 rounded-md text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" 
+              title="Log out"
+            >
               <LogOut className="w-4 h-4" />
             </button>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700 text-slate-300 flex-shrink-0" title="Logged In User">
-              <User className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-full bg-brand-primary/20 flex items-center justify-center border border-brand-primary/30 text-brand-secondary font-bold text-sm flex-shrink-0" title={user?.UserName || 'Logged In User'}>
+              {user?.UserName ? user.UserName.charAt(0).toUpperCase() : <User className="w-5 h-5 text-slate-300" />}
             </div>
-            <button className="p-2 rounded-md text-slate-400 hover:text-brand-danger hover:bg-brand-danger/10 transition-colors" title="Log out">
+            <button 
+              onClick={logout}
+              className="p-2 rounded-md text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" 
+              title="Log out"
+            >
               <LogOut className="w-4 h-4" />
             </button>
           </div>
