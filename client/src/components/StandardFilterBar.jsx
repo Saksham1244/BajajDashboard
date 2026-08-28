@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Download, FileSpreadsheet } from 'lucide-react'
+import { Download, FileSpreadsheet, Search } from 'lucide-react'
 
 const today = () => new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]
 
@@ -79,11 +79,42 @@ export default function StandardFilterBar({ title, icon: Icon, onExcelClick, fil
             </div>
           )
           if (f.type === 'search') return (
-            <div key={i} className="flex flex-col gap-1 flex-1 min-w-[180px]">
+            <div key={i} className="flex flex-col gap-1 flex-1 min-w-[220px]">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{f.label}</span>
-              <input type="text" value={f.value} onChange={e => f.onChange(e.target.value)}
-                placeholder={f.placeholder || 'Search...'}
-                className="text-xs font-bold text-brand-dark bg-slate-50 border border-slate-200 rounded p-1.5 focus:outline-none focus:ring-1 focus:ring-[#0369a1] w-full" />
+              <div className="flex items-center gap-1.5 w-full">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={f.value}
+                    onChange={e => f.onChange(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && f.onSearch) f.onSearch(f.value)
+                    }}
+                    placeholder={f.placeholder || 'Enter UID...'}
+                    className="text-xs font-bold text-brand-dark bg-slate-50 border border-slate-200 rounded p-1.5 focus:outline-none focus:ring-1 focus:ring-[#0369a1] w-full pr-7"
+                  />
+                  {f.value && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        f.onChange('')
+                        if (f.onSearch) f.onSearch('')
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => (f.onSearch ? f.onSearch(f.value) : f.onChange(f.value))}
+                  className="flex items-center gap-1.5 bg-[#0369a1] text-white px-3.5 py-1.5 rounded shadow hover:bg-[#02517d] transition-colors h-[31px] text-xs font-bold uppercase tracking-wider flex-shrink-0"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  Search
+                </button>
+              </div>
             </div>
           )
           return null

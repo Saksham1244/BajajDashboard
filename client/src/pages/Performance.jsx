@@ -38,36 +38,31 @@ const GaugeChart = ({ title, value, color }) => {
 };
 
 export default function Performance() {
-  const { period, shift, getBaseFilters } = useReportFilters();
+  const { period, shift, startDate, endDate, getBaseFilters } = useReportFilters();
   const [dbData, setDbData] = useState(null);
-  
 
   React.useEffect(() => {
-    
-    fetch(`/api/dashboard/performance?period=${period}&shift=${shift}`)
+    fetch(`/api/dashboard/performance?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}`)
       .then(res => res.json())
       .then(data => {
         setDbData(data);
-        
       })
       .catch(err => {
         console.error(err);
-        
       });
-  }, [period, shift]);
+  }, [period, shift, startDate, endDate]);
 
-  const kpis = dbData?.kpis || { oee: 60.15, availability: 70.58, performance: 90.46, ole: 91.85 };
+  const kpis = dbData?.kpis || { oee: 78.2, availability: 92.4, performance: 89.1, ole: 84.5 };
   
   const stackedData = dbData?.downtime?.map(d => ({
-    name: d.category,
-    runTime: 3000 - (d.duration * 10),
-    downTime: d.duration * 10
+    name: d.name || d.category,
+    runTime: d.runTime,
+    downTime: d.downTime
   })) || [
-    { name: 'Kiln Phase', runTime: 3000, downTime: 300 },
-    { name: 'Pre Learning', runTime: 3100, downTime: 350 },
-    { name: 'Packing', runTime: 3300, downTime: 400 },
-    { name: 'Proportioning', runTime: 3500, downTime: 250 },
-    { name: 'Grinding', runTime: 3600, downTime: 300 },
+    { name: 'Mechanical', runTime: 2200, downTime: 120 },
+    { name: 'Electrical', runTime: 2350, downTime: 45 },
+    { name: 'Process', runTime: 2300, downTime: 80 },
+    { name: 'Setup', runTime: 2400, downTime: 30 },
   ];
 
   const lineData = useMemo(() => {
