@@ -277,36 +277,44 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       </nav>
 
       {/* User Footer */}
-      <div className="flex-shrink-0 border-t border-slate-800 p-4">
+      <div className="flex-shrink-0 border-t border-slate-800/80 bg-slate-950/40 p-3.5">
         {isOpen ? (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-10 h-10 rounded-full bg-brand-primary/20 flex items-center justify-center border border-brand-primary/30 text-brand-secondary font-bold text-sm flex-shrink-0">
-                {user?.UserName ? user.UserName.charAt(0).toUpperCase() : <User className="w-5 h-5 text-slate-300" />}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-3 overflow-hidden min-w-0">
+              <div className="relative flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-600 to-blue-500 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-900/30 ring-2 ring-white/10">
+                  {user?.UserName ? user.UserName.charAt(0).toUpperCase() : <User className="w-5 h-5 text-white" />}
+                </div>
+                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
               </div>
-              <div className="overflow-hidden">
-                <p className="text-sm font-semibold text-white truncate">{user?.UserName || 'Logged In User'}</p>
-                <p className="text-xs text-slate-400 truncate">
-                  {user?.DepartmentRoleID === 1 ? 'Administrator' : 'Plant Operator'}
-                </p>
+              <div className="overflow-hidden min-w-0">
+                <p className="text-sm font-semibold text-white truncate tracking-tight">{user?.UserName || 'admin'}</p>
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 truncate">
+                  <span className="font-medium text-slate-300">ID: #{user?.UserID || '2'}</span>
+                  <span>•</span>
+                  <span className="text-sky-400 font-medium">{user?.DepartmentRoleID === 1 ? 'Administrator' : 'Plant Operator'}</span>
+                </div>
               </div>
             </div>
             <button 
               onClick={logout}
-              className="p-2 rounded-md text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" 
+              className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 active:bg-red-500/20 border border-transparent hover:border-red-500/20 transition-all cursor-pointer flex-shrink-0" 
               title="Log out"
             >
               <LogOut className="w-4 h-4" />
             </button>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-brand-primary/20 flex items-center justify-center border border-brand-primary/30 text-brand-secondary font-bold text-sm flex-shrink-0" title={user?.UserName || 'Logged In User'}>
-              {user?.UserName ? user.UserName.charAt(0).toUpperCase() : <User className="w-5 h-5 text-slate-300" />}
+          <div className="flex flex-col items-center gap-3">
+            <div className="relative" title={`${user?.UserName || 'admin'} (ID: #${user?.UserID || '2'} • ${user?.DepartmentRoleID === 1 ? 'Administrator' : 'Plant Operator'})`}>
+              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-600 to-blue-500 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-blue-900/30 ring-2 ring-white/10">
+                {user?.UserName ? user.UserName.charAt(0).toUpperCase() : <User className="w-4 h-4 text-white" />}
+              </div>
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
             </div>
             <button 
               onClick={logout}
-              className="p-2 rounded-md text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" 
+              className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-colors cursor-pointer" 
               title="Log out"
             >
               <LogOut className="w-4 h-4" />
