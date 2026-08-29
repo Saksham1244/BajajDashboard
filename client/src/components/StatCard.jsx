@@ -20,7 +20,7 @@ export default function StatCard({ title, value, sub, trend, trendLabel, color =
   }
 
   // If color is a direct Tailwind class (legacy subagent usage), use it as text
-  const isRaw = color.startsWith('text-') || color.startsWith('#')
+  const isRaw = typeof color === 'string' && (color.startsWith('text-') || color.startsWith('#'))
   const borderClass = isRaw ? 'border-t-slate-400' : (presets[color]?.border ?? presets.blue.border)
   const textClass   = isRaw ? color                : (presets[color]?.text   ?? presets.blue.text)
   const sparkColor  = isRaw ? 'bg-slate-400'       : (presets[color]?.spark  ?? presets.blue.spark)

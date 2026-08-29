@@ -77,17 +77,17 @@ export default function ConveyorReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg Speed (m/min)" value={avgSpeed} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Max Speed Deviation" value={maxDeviation} color="text-red-500" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Stoppages" value={totalStoppages} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Conveyor Efficiency %" value={efficiency} color="text-green-600" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg Speed (m/min)" value={avgSpeed} color="blue" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Max Speed Deviation" value={maxDeviation} color="red" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Stoppages" value={totalStoppages} color="orange" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Conveyor Efficiency %" value={efficiency} color="green" />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="card p-4">
             <h3 className="text-sm font-bold text-brand-dark mb-3">Top Conveyor Speed Affected Stations</h3>
             <div className="h-[240px]">
-              <ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={affectedStationsData} layout="vertical" margin={{ top: 5, right: 20, bottom: 5, left: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" />
@@ -103,7 +103,7 @@ export default function ConveyorReport() {
           <div className="card p-4">
             <h3 className="text-sm font-bold text-brand-dark mb-3">Top Speed Affected Reasons</h3>
             <div className="h-[240px]">
-              <ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={affectedReasonsData} layout="vertical" margin={{ top: 5, right: 20, bottom: 5, left: 40 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" />
