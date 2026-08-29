@@ -63,16 +63,19 @@ export default function MaterialDashboard() {
   }, [period, shift, kpi.shortage, tableData.length]);
 
   const columns = [
-    { header: 'Material ID / Name', accessor: 'material' },
-    { header: 'Available Qty', accessor: 'available' },
+    { header: 'Part ID', accessor: 'id' },
+    { header: 'Material Name', accessor: 'material' },
+    { header: 'Store Location', accessor: 'location' },
+    { header: 'Available Qty', accessor: 'currentStock', render: (val, row) => val || row?.available || 0 },
     { header: 'Min Stock Level', accessor: 'minLevel' },
+    { header: 'Max Stock Level', accessor: 'maxLevel' },
     { header: 'Status', accessor: 'status', render: (val) => {
       const colors = {
         'Critical': 'bg-red-100 text-red-700',
         'Safe': 'bg-green-100 text-green-700',
         'Excess': 'bg-yellow-100 text-yellow-700'
       };
-      return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colors[val]}`}>{val}</span>;
+      return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colors[val] || 'bg-slate-100 text-slate-700'}`}>{val || 'Safe'}</span>;
     }}
   ];
 
@@ -87,7 +90,7 @@ export default function MaterialDashboard() {
         ['Pending Requests', kpi.pending],
         ['Stock Level', `${kpi.critical} C / ${kpi.safe} S / ${kpi.excess} E`],
       ]},
-      { name: 'Shortages Details', rows: [['Material', 'Available Qty', 'Min Stock Level', 'Status'], ...tableData.map(d => [d.material, d.available, d.minLevel, d.status])] }
+      { name: 'Shortages Details', rows: [['Part ID', 'Material', 'Location', 'Available Qty', 'Min Stock Level', 'Status'], ...tableData.map(d => [d.id, d.material, d.location, d.currentStock || d.available, d.minLevel, d.status])] }
     ]);
   };
 
@@ -97,21 +100,21 @@ export default function MaterialDashboard() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Availability %" value={kpi.availability} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Shortage Count" value={kpi.shortage} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Line Feed Status" value={kpi.lineFeed} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Request Count" value={kpi.requests} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Pending Requests" value={kpi.pending} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Stock Level" value={`${kpi.critical} C / ${kpi.safe} S / ${kpi.excess} E`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Availability %" value={kpi.availability} color="green" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Shortage Count" value={kpi.shortage} color="red" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Line Feed Status" value={kpi.lineFeed} color="blue" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Request Count" value={kpi.requests} color="blue" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Pending Requests" value={kpi.pending} color="orange" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Stock Level" value={`${kpi.critical} C / ${kpi.safe} S / ${kpi.excess} E`} color="purple" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="card p-4">
             <h3 className="text-sm font-bold text-brand-dark mb-3">Stock Level Distribution</h3>
             <div className="h-[240px]">
-              <ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={stockLevelData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                  <Pie data={stockLevelData.length > 0 ? stockLevelData : [{ name: 'Safe', value: 1 }]} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
                     {stockLevelData.map((entry, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}
                   </Pie>
                   <Tooltip />
@@ -123,11 +126,11 @@ export default function MaterialDashboard() {
           <div className="card p-4">
             <h3 className="text-sm font-bold text-brand-dark mb-3">Shortage by Category</h3>
             <div className="h-[240px]">
-              <ResponsiveContainer>
-                <BarChart data={shortageData}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={shortageData.length > 0 ? shortageData : [{ category: 'No Shortages', count: 0 }]}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="category" />
-                  <YAxis />
+                  <YAxis allowDecimals={false} />
                   <Tooltip />
                   <Legend />
                   <Bar dataKey="count" fill={COLORS[1]} />
@@ -138,11 +141,11 @@ export default function MaterialDashboard() {
           <div className="card p-4">
             <h3 className="text-sm font-bold text-brand-dark mb-3">Requests & Shortages Trend</h3>
             <div className="h-[240px]">
-              <ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="time" />
-                  <YAxis />
+                  <YAxis allowDecimals={false} />
                   <Tooltip />
                   <Legend />
                   <Line type="monotone" dataKey="requests" stroke={COLORS[0]} name="Requests" />
