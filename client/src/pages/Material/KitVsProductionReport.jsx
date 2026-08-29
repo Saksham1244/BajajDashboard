@@ -18,38 +18,46 @@ export default function KitVsProductionReport() {
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
 
+  const [dbData, setDbData] = useState(null);
+
+  React.useEffect(() => {
+    fetch(`/api/material/kitting?period=${period}&shift=${shift}&line=${line}&model=${model}&sku=${sku}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, line, model, sku]);
+
   const customFilters = [
     { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
     { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
-
-  const chartData = [
-    { model: 'Pulsar 150', kits: Math.round(120 * scale), production: Math.round(115 * scale) },
-    { model: 'Dominar 400', kits: Math.round(60 * scale), production: Math.round(65 * scale) },
-    { model: 'Avenger 220', kits: Math.round(80 * scale), production: Math.round(80 * scale) },
-  ].filter(d => model === 'All' || d.model === model);
+  const chartData = dbData?.chartData || (dbData?.kpis ? [
+    { model: 'Pulsar 150', kits: dbData.kpis.prepared || 0, production: dbData.kpis.planned || 0 }
+  ] : []);
 
   const kpi = {
-    kits: chartData.reduce((acc, d) => acc + d.kits, 0),
-    production: chartData.reduce((acc, d) => acc + d.production, 0)
+    kits: dbData?.kpis?.prepared || chartData.reduce((acc, d) => acc + (d.kits || 0), 0),
+    production: dbData?.kpis?.planned || chartData.reduce((acc, d) => acc + (d.production || 0), 0)
   };
   const gap = kpi.kits - kpi.production;
   const gapPercent = kpi.kits > 0 ? Math.round((gap / kpi.kits) * 100) : 0;
 
   const trendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map((time, idx) => ({
+    return generateTimeLabels(period, shift).map((time) => ({
       time,
-      kits: 30 + ((idx * 3) % 10),
-      production: 28 + ((idx * 3) % 10)
+      kits: kpi.kits,
+      production: kpi.production
     }));
-  }, [period, shift]);
+  }, [period, shift, kpi]);
 
   const tableData = chartData.map(d => ({
-    ...d,
-    gap: d.kits - d.production
+    model: d.model,
+    kits: d.kits,
+    production: d.production,
+    gap: d.kits - d.production,
+    variance: d.kits > 0 ? `${Math.round(((d.kits - d.production) / d.kits) * 100)}%` : '0%'
   }));
 
   const columns = [

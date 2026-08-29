@@ -21,28 +21,24 @@ export default function ReworkStatusReport() {
       .catch(err => console.error(err));
   }, [period, shift, status]);
 
-  const tableData = dbData?.table || [
-    { id: 1, engineNo: 'ENG-3018', model: 'Pulsar 150', station: 'Line2 (Head Tightening)', reason: 'Torque Fail on Head Bolt #3', detectedTime: '08:35', reworkStart: '08:50', reworkEnd: '09:10', status: 'Completed', operator: 'Rahul Sharma', location: 'Rework Bay 1' },
-    { id: 2, engineNo: 'ENG-3019', model: 'Dominar 400', station: 'Demo (Block Assembly)', reason: 'Casing Scratch on Clutch Cover', detectedTime: '09:20', reworkStart: '09:30', reworkEnd: '09:55', status: 'Completed', operator: 'Priya Singh', location: 'Rework Bay 2' },
-    { id: 3, engineNo: 'ENG-3020', model: 'Avenger 220', station: 'Station2 (Cold Inspection)', reason: 'Leakage on Water Pump Seal', detectedTime: '10:05', reworkStart: '10:15', reworkEnd: '-', status: 'In-Progress', operator: 'Amit Kumar', location: 'Rework Bay 1' }
-  ];
+  const tableData = dbData?.table || [];
 
   const filteredData = tableData.filter(d => 
     status === 'All' || d.status === status
   );
 
   const topDefectsData = [
-    { name: 'Torque Fail', count: tableData.filter(t => t.reason?.includes('Torque')).length || 4 },
-    { name: 'Casing Scratch', count: tableData.filter(t => t.reason?.includes('Scratch')).length || 3 },
-    { name: 'Leakage', count: tableData.filter(t => t.reason?.includes('Leakage')).length || 2 },
-    { name: 'Thread Mismatch', count: tableData.filter(t => t.reason?.includes('Thread')).length || 1 }
-  ];
+    { name: 'Torque Fail', count: tableData.filter(t => t.reason?.includes('Torque')).length },
+    { name: 'Casing Scratch', count: tableData.filter(t => t.reason?.includes('Scratch')).length },
+    { name: 'Leakage', count: tableData.filter(t => t.reason?.includes('Leakage')).length },
+    { name: 'Thread Mismatch', count: tableData.filter(t => t.reason?.includes('Thread')).length }
+  ].filter(d => d.count > 0);
 
   const topStationsData = [
-    { name: 'Demo (Block Assembly)', count: tableData.filter(t => t.station?.includes('Demo')).length || 4 },
-    { name: 'Line2 (Head Tightening)', count: tableData.filter(t => t.station?.includes('Line2')).length || 3 },
-    { name: 'Station2 (Cold Inspection)', count: tableData.filter(t => t.station?.includes('Station2')).length || 2 }
-  ];
+    { name: 'Demo (Block Assembly)', count: tableData.filter(t => t.station?.includes('Demo')).length },
+    { name: 'Line2 (Head Tightening)', count: tableData.filter(t => t.station?.includes('Line2')).length },
+    { name: 'Station2 (Cold Inspection)', count: tableData.filter(t => t.station?.includes('Station2')).length }
+  ].filter(d => d.count > 0);
 
   const totalRework = dbData?.kpis?.totalRework || tableData.length;
   const inProgressCount = dbData?.kpis?.inProgress || tableData.filter(t => t.status === 'In-Progress').length;

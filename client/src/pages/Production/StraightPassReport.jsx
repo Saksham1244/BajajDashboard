@@ -50,16 +50,7 @@ export default function StraightPassReport() {
     }));
   }, [period, shift, dbData]);
 
-  const tableData = [
-    { engineNo: 'ENG-2026-00123', sku: 'Pulsar 150 UG5', date: '2026-08-25', shift: 'Shift 1', status: 'Straight Pass', time: '08:14 AM' },
-    { engineNo: 'ENG-2026-00124', sku: 'Pulsar 150 UG5', date: '2026-08-25', shift: 'Shift 1', status: 'Reworked Pass', time: '08:17 AM' },
-    { engineNo: 'ENG-2026-00125', sku: 'Pulsar 150 UG5', date: '2026-08-25', shift: 'Shift 1', status: 'Straight Pass', time: '08:21 AM' },
-    { engineNo: 'ENG-2026-00126', sku: 'Dominar 400', date: '2026-08-25', shift: 'Shift 1', status: 'Straight Pass', time: '08:24 AM' },
-    { engineNo: 'ENG-2026-00127', sku: 'Dominar 400', date: '2026-08-25', shift: 'Shift 1', status: 'Reworked Pass', time: '08:45 AM' },
-    { engineNo: 'ENG-2026-00128', sku: 'Pulsar 150 UG5', date: '2026-08-25', shift: 'Shift 1', status: 'Straight Pass', time: '09:02 AM' },
-    { engineNo: 'ENG-2026-00129', sku: 'Pulsar 150 UG5', date: '2026-08-25', shift: 'Shift 1', status: 'Straight Pass', time: '09:05 AM' },
-    { engineNo: 'ENG-2026-00130', sku: 'Avenger 220', date: '2026-08-25', shift: 'Shift 1', status: 'Straight Pass', time: '09:12 AM' },
-  ];
+  const tableData = dbData?.table || [];
 
   const columns = [
     { header: 'Engine No', accessor: 'engineNo' },

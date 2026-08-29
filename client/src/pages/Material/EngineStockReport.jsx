@@ -16,35 +16,34 @@ export default function EngineStockReport() {
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
 
+  const [dbData, setDbData] = useState(null);
+
+  React.useEffect(() => {
+    fetch('/api/material/engine-stock')
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, []);
+
   const filters = [
     { type: 'dropdown', label: 'Model Family', options: filterOptions.modelFamilies, value: modelFamily, onChange: setModelFamily },
     { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const pieData = [
-    { family: 'Pulsar', name: 'Pulsar 150', value: 45 },
-    { family: 'Dominar', name: 'Dominar 400', value: 20 },
-    { family: 'Avenger', name: 'Avenger 220', value: 35 },
-  ].filter(d => 
-    (modelFamily === 'All' || d.family === modelFamily) &&
-    (model === 'All' || d.name === model)
-  );
-
-  const totalEngines = pieData.reduce((sum, d) => sum + d.value, 0);
-  const modelsCount = pieData.length;
-
-  const tableData = [
-    { modelFamily: 'Pulsar', model: 'Pulsar 150', sku: 'UG5', engineNo: 'ENG-1001', dateTime: '2023-10-01 08:30' },
-    { modelFamily: 'Dominar', model: 'Dominar 400', sku: 'UG6', engineNo: 'ENG-2001', dateTime: '2023-10-01 09:15' },
-    { modelFamily: 'Avenger', model: 'Avenger 220', sku: 'STD', engineNo: 'ENG-3001', dateTime: '2023-10-01 10:00' },
-    { modelFamily: 'Pulsar', model: 'Pulsar 150', sku: 'UG5', engineNo: 'ENG-1002', dateTime: '2023-10-01 10:30' },
-    { modelFamily: 'Dominar', model: 'Dominar 400', sku: 'UG6', engineNo: 'ENG-2002', dateTime: '2023-10-01 11:00' },
-  ].filter(d => 
+  const tableData = (dbData?.table || []).filter(d => 
     (modelFamily === 'All' || d.modelFamily === modelFamily) &&
     (model === 'All' || d.model === model) &&
     (sku === 'All' || d.sku === sku)
   );
+
+  const pieData = (dbData?.pie || []).filter(d => 
+    (modelFamily === 'All' || d.family === modelFamily) &&
+    (model === 'All' || d.name === model)
+  );
+
+  const totalEngines = tableData.length;
+  const modelsCount = pieData.length;
 
   const columns = [
     { header: 'Model Family', accessor: 'modelFamily' },

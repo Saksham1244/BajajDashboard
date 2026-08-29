@@ -17,40 +17,42 @@ export default function MaterialRequestReport() {
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
 
+  const [dbData, setDbData] = useState(null);
+
+  React.useEffect(() => {
+    fetch(`/api/material/request?period=${period}&shift=${shift}&line=${line}&station=${station}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, line, station]);
+
   const customFilters = [
     { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
     { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
   ];
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const tableData = (dbData?.table || []).filter(d => 
+    (line === 'All' || d.line === line) &&
+    (station === 'All' || d.station === station)
+  );
+
   const kpi = {
-    total: Math.round(40 * scale),
-    fulfilled: Math.round(35 * scale),
-    pending: Math.round(5 * scale),
-    avgTime: 12
+    total: dbData?.kpis?.totalRequests || tableData.length,
+    fulfilled: dbData?.kpis?.fulfilled || tableData.filter(d => d.status === 'Approved' || d.status === 'Fulfilled').length,
+    pending: dbData?.kpis?.pending || tableData.filter(d => d.status === 'Pending').length,
+    avgTime: tableData.length > 0 ? 10 : 0
   };
 
-  const reqData = [
-    { station: 'ST-01', requests: Math.round(12 * scale) },
-    { station: 'ST-02', requests: Math.round(8 * scale) },
-    { station: 'ST-03', requests: Math.round(15 * scale) },
-    { station: 'ST-04', requests: Math.round(5 * scale) },
-  ];
+  const reqData = dbData?.reqData || [
+    { station: 'Demo', requests: tableData.length }
+  ].filter(d => d.requests > 0);
 
   const trendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map((time, idx) => ({
+    return generateTimeLabels(period, shift).map((time) => ({
       time,
-      requests: 4 + ((idx * 2) % 6)
+      requests: tableData.length
     }));
-  }, [period, shift]);
-
-  const tableData = [
-    { reqId: 'REQ-001', station: 'ST-01', material: 'Bolt M8', reqTime: '10:00', fullTime: '10:15', status: 'Fulfilled' },
-    { reqId: 'REQ-002', station: 'ST-02', material: 'Engine Block', reqTime: '10:30', fullTime: '-', status: 'Pending' },
-    { reqId: 'REQ-003', station: 'ST-03', material: 'Wire Harness', reqTime: '11:00', fullTime: '11:10', status: 'Fulfilled' },
-    { reqId: 'REQ-004', station: 'ST-01', material: 'Clutch Assy', reqTime: '11:45', fullTime: '12:00', status: 'Fulfilled' },
-    { reqId: 'REQ-005', station: 'ST-04', material: 'Gasket', reqTime: '12:15', fullTime: '-', status: 'Pending' },
-  ];
+  }, [period, shift, tableData.length]);
 
   const columns = [
     { header: 'Request ID', accessor: 'reqId' },

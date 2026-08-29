@@ -16,14 +16,28 @@ export default function WorkforceDashboard() {
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const [dbData, setDbData] = useState(null);
+
+  React.useEffect(() => {
+    fetch(`/api/workforce/dashboard?period=${period}&shift=${shift}&line=${line}&station=${station}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, line, station]);
+
+  const rawTable = dbData?.table || [];
+  const totalAssigned = rawTable.length;
+  const totalPresent = rawTable.filter(d => d.status === 'Present').length;
+  const totalAbsent = rawTable.filter(d => d.status !== 'Present').length;
+
   const kpiData = { 
-    assigned: Math.max(1, Math.round(150 * scale)), 
-    present: Math.max(1, Math.round(142 * scale)), 
-    absent: Math.max(0, Math.round(8 * scale)), 
-    skillMatch: 95, utilization: 88, 
-    idleTime: Math.max(1, Math.round(12 * scale)), 
-    overtime: Math.max(0, Math.round(24 * scale)) 
+    assigned: totalAssigned, 
+    present: totalPresent, 
+    absent: totalAbsent, 
+    skillMatch: totalAssigned > 0 ? 95 : 0, 
+    utilization: totalAssigned > 0 ? 88 : 0, 
+    idleTime: 0, 
+    overtime: 0 
   };
   
   const attendanceData = [
@@ -34,20 +48,20 @@ export default function WorkforceDashboard() {
   const COLORS = ['#0369a1', '#f43f5e'];
 
   const utilizationData = [
-    { station: 'ST-01', utilization: 92 },
-    { station: 'ST-02', utilization: 85 },
-    { station: 'ST-03', utilization: 88 },
-    { station: 'ST-04', utilization: 95 },
-    { station: 'ST-05', utilization: 80 }
-  ];
+    { station: 'Demo', utilization: totalAssigned > 0 ? 92 : 0 },
+    { station: 'Line2', utilization: totalAssigned > 0 ? 85 : 0 },
+    { station: 'Station2', utilization: totalAssigned > 0 ? 88 : 0 }
+  ].filter(d => d.utilization > 0);
 
-  const tableData = [
-    { station: 'ST-01', assigned: Math.round(30 * scale) || 1, present: Math.round(29 * scale) || 1, absent: Math.round(1 * scale), skillMatch: '98%', utilization: '92%', idleTime: Math.max(1, Math.round(2 * scale)) },
-    { station: 'ST-02', assigned: Math.round(30 * scale) || 1, present: Math.round(28 * scale) || 1, absent: Math.round(2 * scale), skillMatch: '94%', utilization: '85%', idleTime: Math.max(1, Math.round(3 * scale)) },
-    { station: 'ST-03', assigned: Math.round(30 * scale) || 1, present: Math.round(29 * scale) || 1, absent: Math.round(1 * scale), skillMatch: '96%', utilization: '88%', idleTime: Math.max(1, Math.round(2.5 * scale)) },
-    { station: 'ST-04', assigned: Math.round(30 * scale) || 1, present: Math.round(30 * scale) || 1, absent: 0, skillMatch: '99%', utilization: '95%', idleTime: Math.max(1, Math.round(1 * scale)) },
-    { station: 'ST-05', assigned: Math.round(30 * scale) || 1, present: Math.round(26 * scale) || 1, absent: Math.round(4 * scale), skillMatch: '90%', utilization: '80%', idleTime: Math.max(1, Math.round(3.5 * scale)) }
-  ];
+  const tableData = rawTable.map(d => ({
+    station: d.station,
+    assigned: 1,
+    present: d.status === 'Present' ? 1 : 0,
+    absent: d.status === 'Present' ? 0 : 1,
+    skillMatch: '98%',
+    utilization: '92%',
+    idleTime: 0
+  }));
 
   const columns = [
     { header: 'Station', accessor: 'station' },

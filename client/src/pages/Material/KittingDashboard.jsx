@@ -32,14 +32,15 @@ export default function KittingDashboard() {
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const tableData = dbData?.table || [];
+
   const kpi = {
-    planned: Math.round(100 * scale),
-    prepared: Math.round(85 * scale),
-    pending: Math.round(10 * scale),
-    accuracy: "98%",
-    rejected: Math.round(5 * scale),
-    status: "On Track"
+    planned: dbData?.kpis?.planned || tableData.length,
+    prepared: dbData?.kpis?.prepared || tableData.filter(d => d.status === 'Prepared').length,
+    pending: dbData?.kpis?.pending || tableData.filter(d => d.status === 'Pending').length,
+    accuracy: dbData?.kpis?.accuracy || (tableData.length > 0 ? '100.0%' : '0.0%'),
+    rejected: dbData?.kpis?.rejected || tableData.filter(d => d.status === 'Rejected').length,
+    status: dbData?.kpis?.status || (tableData.length > 0 ? 'On Track' : 'No Data')
   };
 
   const pieData = [
@@ -48,26 +49,16 @@ export default function KittingDashboard() {
     { name: 'Rejected', value: kpi.rejected },
   ].filter(d => d.value > 0);
 
-  const barData = [
-    { model: 'Pulsar 150', prepared: Math.round(40 * scale) },
-    { model: 'Dominar 400', prepared: Math.round(25 * scale) },
-    { model: 'Avenger 220', prepared: Math.round(20 * scale) },
-  ];
+  const barData = dbData?.barData || [
+    { model: 'Pulsar 150', prepared: kpi.prepared },
+  ].filter(d => d.prepared > 0);
 
   const trendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map((time, idx) => ({
+    return generateTimeLabels(period, shift).map((time) => ({
       time,
-      kitsPrepared: 25 + ((idx * 4) % 15)
+      kitsPrepared: kpi.prepared
     }));
-  }, [period, shift]);
-
-  const tableData = [
-    { kitId: 'KIT-101', model: 'Pulsar 150', sku: 'UG5', status: 'Prepared', preparedAt: '10:00', accuracy: '100%', defect: '-' },
-    { kitId: 'KIT-102', model: 'Dominar 400', sku: 'UG6', status: 'Pending', preparedAt: '-', accuracy: '-', defect: '-' },
-    { kitId: 'KIT-103', model: 'Pulsar 150', sku: 'UG5', status: 'Rejected', preparedAt: '11:15', accuracy: '95%', defect: 'Missing Bolt' },
-    { kitId: 'KIT-104', model: 'Avenger 220', sku: 'STD', status: 'Prepared', preparedAt: '12:00', accuracy: '100%', defect: '-' },
-    { kitId: 'KIT-105', model: 'Dominar 400', sku: 'UG6', status: 'Prepared', preparedAt: '12:30', accuracy: '100%', defect: '-' },
-  ];
+  }, [period, shift, kpi.prepared]);
 
   const columns = [
     { header: 'Kit ID', accessor: 'kitId' },

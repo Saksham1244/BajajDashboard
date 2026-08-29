@@ -18,22 +18,32 @@ export default function MaterialDashboard() {
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
 
+  const [dbData, setDbData] = useState(null);
+
+  React.useEffect(() => {
+    fetch(`/api/material/dashboard?period=${period}&shift=${shift}&line=${line}&model=${model}&sku=${sku}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, line, model, sku]);
+
   const customFilters = [
     { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
     { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const tableData = dbData?.table || [];
+
   const kpi = {
-    availability: "94%",
-    shortage: Math.round(15 * scale),
-    lineFeed: "OK",
-    requests: Math.round(45 * scale),
-    pending: Math.round(4 * scale),
-    critical: Math.round(12 * scale),
-    safe: Math.round(85 * scale),
-    excess: Math.round(18 * scale)
+    availability: dbData?.kpis?.kitFulfillment || (tableData.length > 0 ? '100%' : '0%'),
+    shortage: dbData?.kpis?.criticalShortages || tableData.filter(d => d.status === 'Critical').length,
+    lineFeed: tableData.length > 0 ? 'OK' : 'No Data',
+    requests: dbData?.kpis?.totalInventory || tableData.length,
+    pending: 0,
+    critical: tableData.filter(d => d.status === 'Critical').length,
+    safe: tableData.filter(d => d.status === 'Safe').length,
+    excess: tableData.filter(d => d.status === 'Excess').length
   };
 
   const stockLevelData = [
@@ -42,27 +52,15 @@ export default function MaterialDashboard() {
     { name: 'Excess', value: kpi.excess }
   ].filter(d => d.value > 0);
 
-  const shortageData = [
-    { category: 'Engine Parts', count: Math.round(5 * scale) },
-    { category: 'Chassis Parts', count: Math.round(3 * scale) },
-    { category: 'Electrical', count: Math.round(8 * scale) },
-    { category: 'Fasteners', count: Math.round(2 * scale) },
-  ];
+  const shortageData = dbData?.shortages || [];
 
   const trendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map((time, idx) => ({
+    return generateTimeLabels(period, shift).map((time) => ({
       time,
-      shortages: idx % 5 === 0 ? 1 : 0,
-      requests: 5 + ((idx * 2) % 6)
+      shortages: kpi.shortage,
+      requests: tableData.length
     }));
-  }, [period, shift]);
-
-  const tableData = [
-    { material: 'MAT-001', available: Math.round(10 * scale), minLevel: Math.round(20 * scale), status: 'Critical' },
-    { material: 'MAT-002', available: Math.round(50 * scale), minLevel: Math.round(15 * scale), status: 'Safe' },
-    { material: 'MAT-003', available: Math.round(120 * scale), minLevel: Math.round(20 * scale), status: 'Excess' },
-    { material: 'MAT-004', available: Math.round(5 * scale), minLevel: Math.round(10 * scale), status: 'Critical' },
-  ];
+  }, [period, shift, kpi.shortage, tableData.length]);
 
   const columns = [
     { header: 'Material ID / Name', accessor: 'material' },

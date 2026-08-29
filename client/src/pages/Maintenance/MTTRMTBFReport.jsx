@@ -17,20 +17,18 @@ export default function MTTRMTBFReport() {
   const [station, setStation] = useState('All');
   const [machine, setMachine] = useState('All');
 
+  const [dbData, setDbData] = useState(null);
+
+  React.useEffect(() => {
+    fetch(`/api/maintenance/mttr-mtbf?period=${period}&shift=${shift}&line=${line}&station=${station}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, line, station]);
+
   const colors = ['#0369a1','#f97316'];
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
-  const v = (base) => Math.max(1, Math.round(base * (1 + scale * 0.1)));
-
-  const allData = [
-    { machine: 'M-01', line: 'Line 1', station: 'ST-01', mttr: v(45), mtbf: v(120), availability: 98, count: Math.round(20 * scale), totalTime: Math.round(900 * scale) },
-    { machine: 'M-02', line: 'Line 1', station: 'ST-02', mttr: v(60), mtbf: v(80), availability: 85, count: Math.round(50 * scale), totalTime: Math.round(3000 * scale) },
-    { machine: 'M-03', line: 'Line 2', station: 'ST-01', mttr: v(30), mtbf: v(200), availability: 95, count: Math.round(10 * scale), totalTime: Math.round(300 * scale) },
-    { machine: 'M-04', line: 'Line 2', station: 'ST-02', mttr: v(50), mtbf: v(150), availability: 92, count: Math.round(30 * scale), totalTime: Math.round(1500 * scale) },
-    { machine: 'M-05', line: 'Line 1', station: 'ST-01', mttr: v(40), mtbf: v(180), availability: 99, count: 0, totalTime: 0 },
-  ];
-
-  const tableData = allData.filter(d => 
+  const tableData = (dbData?.table || []).filter(d => 
     (line === 'All' || d.line === line) &&
     (station === 'All' || d.station === station) &&
     (machine === 'All' || d.machine === machine)
@@ -38,14 +36,14 @@ export default function MTTRMTBFReport() {
 
   const chartData = tableData.map(d => ({
     machine: d.machine,
-    mttr: d.mttr,
-    mtbf: d.mtbf
+    mttr: Number(d.mttr) || 0,
+    mtbf: Number(d.mtbf) || 0
   }));
 
-  const avgMTTR = Math.round(tableData.reduce((sum, d) => sum + d.mttr, 0) / (tableData.length || 1));
-  const avgMTBF = Math.round(tableData.reduce((sum, d) => sum + d.mtbf, 0) / (tableData.length || 1));
-  const bestMachine = tableData.length > 0 ? tableData.reduce((prev, curr) => prev.availability > curr.availability ? prev : curr).machine : 'M-05';
-  const worstMachine = tableData.length > 0 ? tableData.reduce((prev, curr) => prev.availability < curr.availability ? prev : curr).machine : 'M-02';
+  const avgMTTR = dbData?.kpis?.avgMTTR || (tableData.length > 0 ? Math.round(tableData.reduce((sum, d) => sum + Number(d.mttr), 0) / tableData.length) : 0);
+  const avgMTBF = dbData?.kpis?.avgMTBF || (tableData.length > 0 ? Math.round(tableData.reduce((sum, d) => sum + Number(d.mtbf), 0) / tableData.length) : 0);
+  const bestMachine = dbData?.kpis?.bestMachine || (tableData.length > 0 ? tableData.reduce((prev, curr) => prev.availability > curr.availability ? prev : curr).machine : 'N/A');
+  const worstMachine = dbData?.kpis?.worstMachine || (tableData.length > 0 ? tableData.reduce((prev, curr) => prev.availability < curr.availability ? prev : curr).machine : 'N/A');
 
   const columns = [
     { header: 'Machine', accessor: 'machine' },
