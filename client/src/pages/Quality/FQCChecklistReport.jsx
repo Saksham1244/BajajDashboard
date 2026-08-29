@@ -18,42 +18,36 @@ export default function FQCChecklistReport() {
   }, [period]);
 
   const kpiData = dbData?.kpis || {
-    totalChecklists: "200",
-    okChecklists: "195",
-    nokChecklists: "5",
-    compliance: 97.5,
+    totalChecklists: 0,
+    okChecklists: 0,
+    nokChecklists: 0,
+    compliance: 0,
   };
 
-  const tableData = dbData?.table || [
-    { id: 'FQC-001', name: 'Final Insp A', date: '2023-10-01 10:00', shift: 'Shift 1', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', inspector: 'Tom', total: 30, passed: 30, failed: 0, status: 'OK', remarks: '-' },
-    { id: 'FQC-002', name: 'Final Insp B', date: '2023-10-01 12:00', shift: 'Shift 1', line: 'Line 2', model: 'Dominar 400', sku: 'STD', inspector: 'Jerry', total: 35, passed: 34, failed: 1, status: 'NOK', remarks: 'Paint issue' },
-    { id: 'FQC-003', name: 'Final Insp C', date: '2023-10-01 15:00', shift: 'Shift 2', line: 'Line 1', model: 'Pulsar 220', sku: 'UG5', inspector: 'Spike', total: 25, passed: 25, failed: 0, status: 'OK', remarks: '-' },
-    { id: 'FQC-004', name: 'Final Insp D', date: '2023-10-02 09:00', shift: 'Shift 1', line: 'Sub-Assy', model: 'Avenger', sku: 'STD', inspector: 'Tyke', total: 20, passed: 20, failed: 0, status: 'OK', remarks: '-' },
-    { id: 'FQC-005', name: 'Final Insp E', date: '2023-10-02 11:30', shift: 'Shift 1', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', inspector: 'Tom', total: 30, passed: 29, failed: 1, status: 'NOK', remarks: 'Label missing' },
-  ];
+  const tableData = dbData?.table || [];
 
   const columns = [
-    { header: 'Checklist ID', accessorKey: 'id' },
-    { header: 'Checklist Name', accessorKey: 'name' },
-    { header: 'Date & Time', accessorKey: 'date' },
-    { header: 'Shift', accessorKey: 'shift' },
-    { header: 'Line', accessorKey: 'line' },
-    { header: 'Model', accessorKey: 'model' },
-    { header: 'SKU', accessorKey: 'sku' },
-    { header: 'Inspector Name', accessorKey: 'inspector' },
-    { header: 'Total Checkpoints', accessorKey: 'total' },
-    { header: 'Passed', accessorKey: 'passed' },
-    { header: 'Failed', accessorKey: 'failed' },
+    { header: 'Checklist ID', accessor: 'id' },
+    { header: 'Checklist Name', accessor: 'name' },
+    { header: 'Date & Time', accessor: 'date' },
+    { header: 'Shift', accessor: 'shift' },
+    { header: 'Line', accessor: 'line' },
+    { header: 'Model', accessor: 'model' },
+    { header: 'SKU', accessor: 'sku' },
+    { header: 'Inspector Name', accessor: 'inspector' },
+    { header: 'Total Checkpoints', accessor: 'total' },
+    { header: 'Passed', accessor: 'passed' },
+    { header: 'Failed', accessor: 'failed' },
     { 
       header: 'Overall Status', 
-      accessorKey: 'status',
-      cell: (row) => (
-        <span className={`px-2 py-1 rounded text-xs font-bold ${row.original.status === 'OK' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-          {row.original.status}
+      accessor: 'status',
+      render: (val) => (
+        <span className={`px-2 py-1 rounded text-xs font-bold ${val === 'OK' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {val}
         </span>
       )
     },
-    { header: 'Remarks', accessorKey: 'remarks' },
+    { header: 'Remarks', accessor: 'remarks' },
   ];
 
   const exportToExcel = () => {

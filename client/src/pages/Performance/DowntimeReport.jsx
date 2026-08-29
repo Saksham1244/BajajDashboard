@@ -19,59 +19,25 @@ export default function DowntimeReport() {
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
 
-  const [dbData, setDbData] = useState([]);
+  const [dbData, setDbData] = useState(null);
   
   React.useEffect(() => {
-        fetch(`/api/dashboard/performance?period=${period}&shift=${shift}`)
+    fetch(`/api/performance/downtime?period=${period}&shift=${shift}&line=${line}&station=${station}`)
       .then(res => res.json())
-      .then(data => {
-        setDbData(data.downtime || []);
-              })
-      .catch(err => {
-        console.error(err);
-              });
-  }, [period, shift]);
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, line, station]);
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
-
-  const totalDowntime = Math.round(420 * scale);
-  const noOfLosses = Math.max(1, Math.round(35 * scale));
-  const avgLossDuration = Math.round(totalDowntime / noOfLosses);
-  const mostLostCat = 'Equipment Failure';
-
-  const kpiData = { totalDowntime, noOfLosses, mostLostCat, avgLossDuration };
+  const kpiData = dbData?.kpis || {
+    totalDowntime: 0,
+    noOfLosses: 0,
+    mostLostCat: 'None',
+    avgLossDuration: 0
+  };
   
-  const hourlyData = useMemo(() => {
-    const labels = generateTimeLabels(period, shift);
-    const downtimePerLabel = Math.floor(totalDowntime / (labels.length || 1));
-    return labels.map((time, idx) => ({
-      time,
-      duration: Math.max(0, downtimePerLabel + ((idx % 3) - 1))
-    }));
-  }, [period, shift, totalDowntime]);
-
-  const categoryData = [
-    { category: 'Equipment Failure', duration: Math.round(180 * scale), occurrence: Math.max(1, Math.round(5 * scale)) },
-    { category: 'Material Shortage', duration: Math.round(120 * scale), occurrence: Math.max(1, Math.round(15 * scale)) },
-    { category: 'Setup/Adjustments', duration: Math.round(90 * scale), occurrence: Math.max(1, Math.round(8 * scale)) },
-    { category: 'Quality Issues', duration: Math.round(30 * scale), occurrence: Math.max(1, Math.round(7 * scale)) }
-  ].filter(d => d.duration > 0 || d.occurrence > 0);
-
-  const allTableData = [
-    { line: 'Line 1', station: 'ST-01', modelFamily: 'Pulsar', model: 'Pulsar 150', sku: 'UG5', category: 'Equipment Failure', subCategory: 'Motor Breakdown', startTime: '08:15', endTime: '09:00', duration: 45, occurrence: 1, machine: 'M-101', reason: 'Overheating' },
-    { line: 'Line 1', station: 'ST-02', modelFamily: 'Dominar', model: 'Dominar 400', sku: 'STD', category: 'Material Shortage', subCategory: 'Part XYZ Missing', startTime: '11:00', endTime: '12:00', duration: 60, occurrence: 1, machine: 'M-102', reason: 'Supply Delay' },
-    { line: 'Line 2', station: 'ST-01', modelFamily: 'Pulsar', model: 'Pulsar 220', sku: 'UG6', category: 'Setup/Adjustments', subCategory: 'Tool Change', startTime: '06:30', endTime: '06:45', duration: 15, occurrence: 1, machine: 'M-103', reason: 'Wear and Tear' },
-    { line: 'Line 2', station: 'ST-03', modelFamily: 'Pulsar', model: 'Pulsar 150', sku: 'UG5', category: 'Quality Issues', subCategory: 'Defective Batch', startTime: '10:00', endTime: '10:10', duration: 10, occurrence: 1, machine: 'M-101', reason: 'Calibration Error' },
-    { line: 'Line 1', station: 'ST-01', modelFamily: 'Avenger', model: 'Avenger 220', sku: 'STD', category: 'Equipment Failure', subCategory: 'Sensor Fault', startTime: '09:10', endTime: '09:30', duration: 20, occurrence: 1, machine: 'M-104', reason: 'Damaged wire' }
-  ];
-
-  const tableData = allTableData.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station) &&
-    (modelFamily === 'All' || d.modelFamily === modelFamily) &&
-    (model === 'All' || d.model === model) &&
-    (sku === 'All' || d.sku === sku)
-  );
+  const hourlyData = dbData?.hourly || [];
+  const categoryData = dbData?.categories || [];
+  const tableData = dbData?.table || [];
 
   const columns = [
     { header: 'Category', accessor: 'category' },

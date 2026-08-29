@@ -18,39 +18,33 @@ export default function FQCCheckpointReport() {
   }, [period]);
 
   const kpiData = dbData?.kpis || {
-    totalCheckpoints: "4000",
-    passed: "3960",
-    failed: "40",
-    passRate: 99.0,
+    totalCheckpoints: 0,
+    passed: 0,
+    failed: 0,
+    passRate: 0,
   };
 
-  const tableData = dbData?.table || [
-    { id: 'FQC-001', cpName: 'Engine Start', date: '2023-10-01 10:15', shift: 'Shift 1', line: 'Line 1', stage: 'Final', model: 'Pulsar 150', sku: 'UG6', inspector: 'Tom', category: 'Functional', stdValue: 'Starts < 2s', actValue: '1.5s', result: 'PASS' },
-    { id: 'FQC-002', cpName: 'Paint Finish', date: '2023-10-01 12:20', shift: 'Shift 1', line: 'Line 2', stage: 'Final', model: 'Dominar 400', sku: 'STD', inspector: 'Jerry', category: 'Visual', stdValue: 'No defects', actValue: 'Scratch', result: 'FAIL' },
-    { id: 'FQC-003', cpName: 'Horn Sound', date: '2023-10-01 15:30', shift: 'Shift 2', line: 'Line 1', stage: 'Final', model: 'Pulsar 220', sku: 'UG5', inspector: 'Spike', category: 'Functional', stdValue: 'Clear', actValue: 'Clear', result: 'PASS' },
-    { id: 'FQC-004', cpName: 'Tire Pressure', date: '2023-10-02 09:10', shift: 'Shift 1', line: 'Sub-Assy', stage: 'Final', model: 'Avenger', sku: 'STD', inspector: 'Tyke', category: 'Measurement', stdValue: '28 psi', actValue: '28 psi', result: 'PASS' },
-    { id: 'FQC-005', cpName: 'Light Check', date: '2023-10-02 11:45', shift: 'Shift 1', line: 'Line 1', stage: 'Final', model: 'Pulsar 150', sku: 'UG6', inspector: 'Tom', category: 'Functional', stdValue: 'All Working', actValue: 'Blinker fail', result: 'FAIL' },
-  ];
+  const tableData = dbData?.table || [];
 
   const columns = [
-    { header: 'Checklist ID', accessorKey: 'id' },
-    { header: 'Checkpoint Name', accessorKey: 'cpName' },
-    { header: 'Date & Time', accessorKey: 'date' },
-    { header: 'Shift', accessorKey: 'shift' },
-    { header: 'Line', accessorKey: 'line' },
-    { header: 'Stage', accessorKey: 'stage' },
-    { header: 'Model', accessorKey: 'model' },
-    { header: 'SKU', accessorKey: 'sku' },
-    { header: 'Inspector Name', accessorKey: 'inspector' },
-    { header: 'Category', accessorKey: 'category' },
-    { header: 'Standard Value', accessorKey: 'stdValue' },
-    { header: 'Actual Value', accessorKey: 'actValue' },
+    { header: 'Checklist ID', accessor: 'id' },
+    { header: 'Checkpoint Name', accessor: 'cpName' },
+    { header: 'Date & Time', accessor: 'date' },
+    { header: 'Shift', accessor: 'shift' },
+    { header: 'Line', accessor: 'line' },
+    { header: 'Stage', accessor: 'stage' },
+    { header: 'Model', accessor: 'model' },
+    { header: 'SKU', accessor: 'sku' },
+    { header: 'Inspector Name', accessor: 'inspector' },
+    { header: 'Category', accessor: 'category' },
+    { header: 'Standard Value', accessor: 'stdValue' },
+    { header: 'Actual Value', accessor: 'actValue' },
     { 
       header: 'Result', 
-      accessorKey: 'result',
-      cell: (row) => (
-        <span className={`px-2 py-1 rounded text-xs font-bold ${row.original.result === 'PASS' ? 'text-green-600' : 'text-red-600'}`}>
-          {row.original.result}
+      accessor: 'result',
+      render: (val) => (
+        <span className={`px-2 py-1 rounded text-xs font-bold ${val === 'PASS' ? 'text-green-600' : 'text-red-600'}`}>
+          {val}
         </span>
       )
     },

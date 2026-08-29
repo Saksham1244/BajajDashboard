@@ -15,23 +15,21 @@ export default function SkillMatrixDashboard() {
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
 
-  const allOperators = [
-    { name: 'John Doe', line: 'Line 1', station: 'ST-01', skillLevel: 'Expert', certified: 'Yes', lastAssessed: '2026-08-01' },
-    { name: 'Jane Smith', line: 'Line 1', station: 'ST-02', skillLevel: 'Intermediate', certified: 'Yes', lastAssessed: '2026-07-15' },
-    { name: 'Mike Johnson', line: 'Line 2', station: 'ST-03', skillLevel: 'Beginner', certified: 'No', lastAssessed: '2026-08-10' },
-    { name: 'Sarah Williams', line: 'Line 2', station: 'ST-04', skillLevel: 'Expert', certified: 'Yes', lastAssessed: '2026-06-20' },
-    { name: 'David Brown', line: 'Line 1', station: 'ST-05', skillLevel: 'Intermediate', certified: 'Yes', lastAssessed: '2026-07-25' }
-  ];
+  const [dbData, setDbData] = useState(null);
 
-  const tableData = allOperators.filter(d =>
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station)
-  );
+  React.useEffect(() => {
+    fetch(`/api/workforce/skill-matrix?period=${period}&shift=${shift}&line=${line}&station=${station}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, line, station]);
 
-  const beginnerCount = tableData.filter(d => d.skillLevel === 'Beginner').length || 1;
-  const intermediateCount = tableData.filter(d => d.skillLevel === 'Intermediate').length || 2;
-  const expertCount = tableData.filter(d => d.skillLevel === 'Expert').length || 2;
-  const totalCount = beginnerCount + intermediateCount + expertCount;
+  const tableData = dbData?.table || [];
+
+  const beginnerCount = dbData?.kpis?.beginner || tableData.filter(d => d.skillLevel === 'Beginner').length;
+  const intermediateCount = dbData?.kpis?.intermediate || tableData.filter(d => d.skillLevel === 'Intermediate').length;
+  const expertCount = dbData?.kpis?.expert || tableData.filter(d => d.skillLevel === 'Expert').length;
+  const totalCount = tableData.length;
 
   const kpiData = { total: totalCount, beginner: beginnerCount, intermediate: intermediateCount, expert: expertCount };
   
@@ -44,12 +42,10 @@ export default function SkillMatrixDashboard() {
   const COLORS = ['#f59e0b', '#3b82f6', '#10b981'];
 
   const coverageData = [
-    { station: 'ST-01', coverage: 95 },
-    { station: 'ST-02', coverage: 85 },
-    { station: 'ST-03', coverage: 100 },
-    { station: 'ST-04', coverage: 90 },
-    { station: 'ST-05', coverage: 100 }
-  ].filter(d => station === 'All' || d.station === station);
+    { station: 'Demo', coverage: tableData.length > 0 ? 100 : 0 },
+    { station: 'Line2', coverage: tableData.length > 0 ? 100 : 0 },
+    { station: 'Station2', coverage: tableData.length > 0 ? 100 : 0 }
+  ];
 
   const getBadgeColor = (level) => {
     switch (level) {

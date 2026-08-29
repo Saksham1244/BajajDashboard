@@ -17,51 +17,38 @@ export default function MaintenanceDashboard() {
   const [station, setStation] = useState('All');
   const [machine, setMachine] = useState('All');
 
+  const [dbData, setDbData] = useState(null);
+
+  React.useEffect(() => {
+    fetch(`/api/maintenance/dashboard?period=${period}&shift=${shift}&line=${line}&station=${station}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, line, station]);
+
   const colors = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const tableData = dbData?.table || [];
 
-  const allTableData = [
-    { machine: 'M-01', line: 'Line 1', station: 'ST-01', status: 'Running', lastBreakdown: '2026-08-20', downtimeToday: Math.round(0 * scale), mttr: 45, mtbf: 120, availability: 98 },
-    { machine: 'M-02', line: 'Line 1', station: 'ST-02', status: 'Breakdown', lastBreakdown: '2026-08-25', downtimeToday: Math.round(120 * scale), mttr: 60, mtbf: 80, availability: 85 },
-    { machine: 'M-03', line: 'Line 2', station: 'ST-01', status: 'Maintenance', lastBreakdown: '2026-08-15', downtimeToday: Math.round(60 * scale), mttr: 30, mtbf: 200, availability: 95 },
-    { machine: 'M-04', line: 'Line 2', station: 'ST-02', status: 'Idle', lastBreakdown: '2026-08-22', downtimeToday: Math.round(0 * scale), mttr: 50, mtbf: 150, availability: 92 },
-    { machine: 'M-05', line: 'Line 1', station: 'ST-01', status: 'Running', lastBreakdown: '2026-08-26', downtimeToday: Math.round(0 * scale), mttr: 40, mtbf: 180, availability: 99 },
-  ];
+  const runningCount = dbData?.kpis?.runningCount || tableData.filter(d => d.status === 'Running').length;
+  const breakdownCount = dbData?.kpis?.breakdownCount || tableData.filter(d => d.status === 'Breakdown').length;
+  const maintenanceCount = dbData?.kpis?.maintenanceCount || tableData.filter(d => d.status === 'Maintenance').length;
+  const idleCount = dbData?.kpis?.idleCount || tableData.filter(d => d.status === 'Idle').length;
 
-  const tableData = allTableData.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station) &&
-    (machine === 'All' || d.machine === machine)
-  );
-
-  const runningCount = tableData.filter(d => d.status === 'Running').length || 1;
-  const breakdownCount = tableData.filter(d => d.status === 'Breakdown').length;
-  const maintenanceCount = tableData.filter(d => d.status === 'Maintenance').length;
-  const idleCount = tableData.filter(d => d.status === 'Idle').length;
-
-  const machineStatusData = [
+  const machineStatusData = dbData?.statusData || [
     { name: 'Running', value: runningCount },
     { name: 'Breakdown', value: breakdownCount },
     { name: 'Maintenance', value: maintenanceCount },
     { name: 'Idle', value: idleCount },
   ].filter(d => d.value > 0);
 
-  const totalDowntime = Math.round(450 * scale);
-  const totalBreakdowns = Math.max(1, Math.round(12 * scale));
-  const avgMTTR = 45;
-  const avgMTBF = 146;
-  const machineAvailability = "94.5%";
+  const totalDowntime = dbData?.kpis?.totalDowntime || 0;
+  const totalBreakdowns = dbData?.kpis?.totalBreakdowns || 0;
+  const avgMTTR = dbData?.kpis?.avgMTTR || 0;
+  const avgMTBF = dbData?.kpis?.avgMTBF || 0;
+  const machineAvailability = dbData?.kpis?.machineAvailability || '0.0%';
 
-  const breakdownReasons = [
-    { reason: 'Motor Failure', duration: Math.round(120 * scale), count: Math.max(1, Math.round(5 * scale)) },
-    { reason: 'Sensor Error', duration: Math.round(90 * scale), count: Math.max(1, Math.round(8 * scale)) },
-    { reason: 'Belt Snapped', duration: Math.round(75 * scale), count: Math.max(1, Math.round(3 * scale)) },
-    { reason: 'Power Outage', duration: Math.round(60 * scale), count: Math.max(1, Math.round(2 * scale)) },
-    { reason: 'Jam', duration: Math.round(45 * scale), count: Math.max(1, Math.round(12 * scale)) },
-    { reason: 'Overheat', duration: Math.round(30 * scale), count: Math.max(1, Math.round(4 * scale)) },
-    { reason: 'Calibration', duration: Math.round(20 * scale), count: Math.max(1, Math.round(6 * scale)) },
-  ].filter(d => d.duration > 0 || d.count > 0);
+  const breakdownReasons = dbData?.breakdownReasons || [];
 
   const columns = [
     { header: 'Machine', accessor: 'machine' },

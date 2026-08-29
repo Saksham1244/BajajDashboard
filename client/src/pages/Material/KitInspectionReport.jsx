@@ -17,40 +17,38 @@ export default function KitInspectionReport() {
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
 
+  const [dbData, setDbData] = useState(null);
+
+  React.useEffect(() => {
+    fetch(`/api/material/kitting?period=${period}&shift=${shift}&model=${model}&sku=${sku}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, model, sku]);
+
   const customFilters = [
     { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const tableData = dbData?.table || [];
+
   const kpi = {
-    total: Math.round(150 * scale),
-    ok: Math.round(130 * scale),
-    nok: Math.round(20 * scale),
-    passRate: "86.6%"
+    total: dbData?.kpis?.planned || tableData.length,
+    ok: dbData?.kpis?.prepared || tableData.filter(d => d.status === 'OK').length,
+    nok: dbData?.kpis?.rejected || tableData.filter(d => d.status !== 'OK').length,
+    passRate: dbData?.kpis?.accuracy || (tableData.length > 0 ? '100.0%' : '0.0%')
   };
 
-  const defectData = [
-    { defect: 'Missing Part', count: Math.round(12 * scale) },
-    { defect: 'Wrong Part', count: Math.round(5 * scale) },
-    { defect: 'Damaged Part', count: Math.round(3 * scale) },
-  ].filter(d => d.count > 0);
+  const defectData = dbData?.defects || [];
 
   const trendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map((time, idx) => ({
+    return generateTimeLabels(period, shift).map((time) => ({
       time,
-      inspected: 25 + ((idx * 2) % 10),
-      defects: idx % 5 === 0 ? 1 : 0
+      inspected: tableData.length,
+      defects: 0
     }));
-  }, [period, shift]);
-
-  const tableData = [
-    { kitId: 'KIT-201', model: 'Pulsar 150', status: 'OK', defect: '-', operator: 'John Doe', time: '10:15' },
-    { kitId: 'KIT-202', model: 'Dominar 400', status: 'NOK', defect: 'Missing Part', operator: 'Jane Smith', time: '10:45' },
-    { kitId: 'KIT-203', model: 'Pulsar 150', status: 'OK', defect: '-', operator: 'John Doe', time: '11:00' },
-    { kitId: 'KIT-204', model: 'Avenger 220', status: 'OK', defect: '-', operator: 'Mike Ross', time: '11:30' },
-    { kitId: 'KIT-205', model: 'Pulsar 150', status: 'NOK', defect: 'Wrong Part', operator: 'Jane Smith', time: '12:00' },
-  ];
+  }, [period, shift, tableData.length]);
 
   const columns = [
     { header: 'Kit ID', accessor: 'kitId' },
@@ -59,7 +57,7 @@ export default function KitInspectionReport() {
       const color = val === 'OK' ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
       return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${color}`}>{val}</span>;
     }},
-    { header: 'Defect', accessor: 'defect' },
+    { header: 'Defect Reason', accessor: 'defect' },
     { header: 'Operator', accessor: 'operator' },
     { header: 'Time', accessor: 'time' },
   ];

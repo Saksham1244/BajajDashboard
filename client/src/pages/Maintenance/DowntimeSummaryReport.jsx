@@ -17,35 +17,24 @@ export default function DowntimeSummaryReport() {
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
 
+  const [dbData, setDbData] = useState(null);
+
+  React.useEffect(() => {
+    fetch(`/api/maintenance/downtime?period=${period}&shift=${shift}&line=${line}&station=${station}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, line, station]);
+
   const colors = ['#0369a1','#f97316'];
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
+  const chartData = dbData?.trend || [];
+  const tableData = dbData?.table || [];
 
-  const chartData = useMemo(() => {
-    return generateTimeLabels(period, shift).map((label, idx) => ({
-      time: label,
-      downtime: 20 + ((idx * 8) % 40)
-    }));
-  }, [period, shift]);
-
-  const allTableData = [
-    { date: '2026-08-25', line: 'Line 1', station: 'ST-01', shift: 'Shift 1', machine: 'M-01', downtime: Math.round(45 * scale) || 10, count: 1 },
-    { date: '2026-08-25', line: 'Line 1', station: 'ST-02', shift: 'Shift 2', machine: 'M-02', downtime: Math.round(120 * scale) || 25, count: 2 },
-    { date: '2026-08-26', line: 'Line 2', station: 'ST-01', shift: 'Shift 1', machine: 'M-03', downtime: Math.round(30 * scale) || 15, count: 1 },
-    { date: '2026-08-26', line: 'Line 2', station: 'ST-02', shift: 'Shift 2', machine: 'M-01', downtime: Math.round(90 * scale) || 20, count: 2 },
-    { date: '2026-08-27', line: 'Line 1', station: 'ST-01', shift: 'Shift 1', machine: 'M-04', downtime: Math.round(60 * scale) || 10, count: 1 },
-  ];
-
-  const tableData = allTableData.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station)
-  );
-
-  const totalDowntimeMins = tableData.reduce((acc, d) => acc + d.downtime, 0);
-  const totalDowntimeHrs = (totalDowntimeMins / 60).toFixed(1);
-  const avgDowntimeMins = Math.round(totalDowntimeMins / (tableData.length || 1));
-  const totalBreakdowns = tableData.reduce((acc, d) => acc + d.count, 0);
-  const mostAffected = tableData.length > 0 ? tableData[0].machine : 'M-01';
+  const totalDowntimeHrs = dbData?.kpis?.totalDowntimeHrs || '0.0';
+  const avgDowntimeMins = dbData?.kpis?.avgDowntimeMins || 0;
+  const totalBreakdowns = dbData?.kpis?.totalBreakdowns || tableData.length;
+  const mostAffected = dbData?.kpis?.mostAffected || (tableData.length > 0 ? tableData[0].machine : 'None');
 
   const columns = [
     { header: 'Date', accessor: 'date' },

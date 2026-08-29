@@ -18,45 +18,40 @@ export default function MaterialConsumptionReport() {
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
 
+  const [dbData, setDbData] = useState(null);
+
+  React.useEffect(() => {
+    fetch(`/api/material/consumption?period=${period}&shift=${shift}&line=${line}&model=${model}&sku=${sku}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, line, model, sku]);
+
   const customFilters = [
     { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
     { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
-
-  const allTableData = [
-    { material: 'Bolt M8', line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', consumed: Math.round(526 * scale), expected: Math.round(500 * scale), variance: Math.round(26 * scale), variancePct: 5.2 },
-    { material: 'Gasket', line: 'Line 1', model: 'Dominar 400', sku: 'UG6', consumed: Math.round(103 * scale), expected: Math.round(100 * scale), variance: Math.round(3 * scale), variancePct: 3.0 },
-    { material: 'O-Ring', line: 'Line 2', model: 'Pulsar 150', sku: 'UG5', consumed: Math.round(205 * scale), expected: Math.round(200 * scale), variance: Math.round(5 * scale), variancePct: 2.5 },
-    { material: 'Washer', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', consumed: Math.round(98 * scale), expected: Math.round(100 * scale), variance: Math.round(-2 * scale), variancePct: -2.0 },
-    { material: 'Screw', line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', consumed: Math.round(295 * scale), expected: Math.round(300 * scale), variance: Math.round(-5 * scale), variancePct: -1.6 },
-  ];
-
-  const tableData = allTableData.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (model === 'All' || d.model === model) &&
-    (sku === 'All' || d.sku === sku)
-  );
+  const tableData = dbData?.table || [];
 
   const varianceData = tableData.map(d => ({
     material: d.material,
-    variance: d.variancePct
+    variance: d.variancePct || 0
   }));
 
   const trendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map((time, idx) => ({
+    return generateTimeLabels(period, shift).map((time) => ({
       time,
-      expected: 250 + ((idx * 10) % 50),
-      consumed: 255 + ((idx * 12) % 50),
+      expected: tableData.reduce((acc, d) => acc + (d.expected || 0), 0),
+      consumed: tableData.reduce((acc, d) => acc + (d.consumed || 0), 0),
     }));
-  }, [period, shift]);
+  }, [period, shift, tableData]);
 
-  const totalMaterials = Math.max(1, Math.round(150 * scale));
-  const overConsumed = Math.max(0, Math.round(15 * scale));
-  const underConsumed = Math.max(0, Math.round(8 * scale));
-  const avgVariance = '+1.2%';
+  const totalMaterials = tableData.length;
+  const overConsumed = tableData.filter(d => (d.variance || 0) > 0).length;
+  const underConsumed = tableData.filter(d => (d.variance || 0) < 0).length;
+  const avgVariance = dbData?.kpis?.variancePct ? `${dbData.kpis.variancePct}%` : '0.0%';
 
   const columns = [
     { header: 'Material', accessor: 'material' },

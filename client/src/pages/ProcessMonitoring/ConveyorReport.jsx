@@ -11,49 +11,34 @@ import { useFilterOptions } from '../../hooks/useFilterOptions';
 export default function ConveyorReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
   const filterOptions = useFilterOptions();
-  const [dbData, setDbData] = React.useState({});
+  const [dbData, setDbData] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
 
   const [line, setLine] = React.useState('All');
   const [station, setStation] = React.useState('All');
+
+  React.useEffect(() => {
+    fetch(`/api/process/conveyor?period=${period}&shift=${shift}&line=${line}&station=${station}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, line, station]);
 
   const customFilters = [
     { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
     { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
   ];
 
-  const scale = period === 'Week' ? 0.25 : period === 'Day' ? 0.03 : period === 'Shift' ? 0.015 : 1;
-
-  const allTableData = [
-    { line: 'Line 1', station: 'ST-05', plannedSpeed: 10, actualSpeed: 8, deviation: '20%', stoppageCount: Math.max(1, Math.round(12 * scale)), totalStoppageTime: Math.round(180 * scale), status: 'Active' },
-    { line: 'Line 1', station: 'ST-12', plannedSpeed: 10, actualSpeed: 9, deviation: '10%', stoppageCount: Math.max(1, Math.round(8 * scale)), totalStoppageTime: Math.round(120 * scale), status: 'Active' },
-    { line: 'Line 2', station: 'ST-08', plannedSpeed: 10, actualSpeed: 7, deviation: '30%', stoppageCount: Math.max(1, Math.round(20 * scale)), totalStoppageTime: Math.round(100 * scale), status: 'Resolved' },
-    { line: 'Line 1', station: 'ST-01', plannedSpeed: 10, actualSpeed: 9.5, deviation: '5%', stoppageCount: Math.max(1, Math.round(4 * scale)), totalStoppageTime: Math.round(80 * scale), status: 'Active' },
-    { line: 'Line 2', station: 'ST-15', plannedSpeed: 10, actualSpeed: 8.5, deviation: '15%', stoppageCount: Math.max(1, Math.round(8 * scale)), totalStoppageTime: Math.round(60 * scale), status: 'Resolved' },
-  ];
-
-  const tableData = allTableData.filter(d =>
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station)
-  );
-
-  const affectedStationsData = tableData.map(d => ({
+  const tableData = dbData?.table || [];
+  const affectedStationsData = dbData?.stations || tableData.map(d => ({
     station: d.station,
-    downtime: d.totalStoppageTime
+    downtime: d.totalStoppageTime || 0
   }));
 
-  const affectedReasonsData = [
-    { reason: 'Part Shortage', count: Math.max(1, Math.round(12 * scale)) },
-    { reason: 'Quality Issue', count: Math.max(1, Math.round(8 * scale)) },
-    { reason: 'Machine Breakdown', count: Math.max(1, Math.round(6 * scale)) },
-    { reason: 'Operator Unavailable', count: Math.max(1, Math.round(4 * scale)) },
-    { reason: 'Material Jam', count: Math.max(1, Math.round(3 * scale)) },
-  ].filter(d => d.count > 0);
-
-  const totalStoppages = tableData.reduce((acc, d) => acc + d.stoppageCount, 0);
-  const avgSpeed = (tableData.reduce((acc, d) => acc + d.actualSpeed, 0) / (tableData.length || 1)).toFixed(1);
-  const maxDeviation = '30%';
-  const efficiency = '85.4%';
+  const totalStoppages = dbData?.kpis?.totalStoppages || tableData.reduce((acc, d) => acc + (d.stoppageCount || 0), 0);
+  const avgSpeed = dbData?.kpis?.speedMpm || (tableData.length > 0 ? (tableData.reduce((acc, d) => acc + d.actualSpeed, 0) / tableData.length).toFixed(1) : '0.0');
+  const maxDeviation = dbData?.kpis?.maxDeviation || '0%';
+  const efficiency = dbData?.kpis?.uptimePct ? `${dbData.kpis.uptimePct}%` : '0.0%';
 
   const tableColumns = [
     { header: 'Station', accessor: 'station' },

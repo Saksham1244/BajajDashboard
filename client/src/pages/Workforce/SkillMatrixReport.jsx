@@ -14,24 +14,20 @@ export default function SkillMatrixReport() {
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
 
-  const allOperators = [
-    { operator: 'John Doe', line: 'Line 1', station: 'ST-01', skillLevel: 'Expert', certified: 'Yes' },
-    { operator: 'Jane Smith', line: 'Line 1', station: 'ST-02', skillLevel: 'Intermediate', certified: 'Yes' },
-    { operator: 'Mike Johnson', line: 'Line 2', station: 'ST-03', skillLevel: 'Beginner', certified: 'No' },
-    { operator: 'Sarah Williams', line: 'Line 2', station: 'ST-04', skillLevel: 'Expert', certified: 'Yes' },
-    { operator: 'David Brown', line: 'Line 1', station: 'ST-05', skillLevel: 'Intermediate', certified: 'Yes' },
-    { operator: 'Emily Davis', line: 'Line 1', station: 'ST-01', skillLevel: 'Beginner', certified: 'No' },
-    { operator: 'Tom Wilson', line: 'Line 2', station: 'ST-02', skillLevel: 'Expert', certified: 'Yes' }
-  ];
+  const [dbData, setDbData] = useState(null);
 
-  const tableData = allOperators.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station)
-  );
+  React.useEffect(() => {
+    fetch(`/api/workforce/skill-matrix?period=${period}&shift=${shift}&line=${line}&station=${station}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, line, station]);
+
+  const tableData = dbData?.table || [];
 
   const totalOps = tableData.length;
   const certifiedCount = tableData.filter(d => d.certified === 'Yes').length;
-  const certifiedPct = totalOps > 0 ? Math.round((certifiedCount / totalOps) * 100) : 100;
+  const certifiedPct = totalOps > 0 ? Math.round((certifiedCount / totalOps) * 100) : 0;
   const multiSkilled = tableData.filter(d => d.skillLevel === 'Expert' || d.skillLevel === 'Intermediate').length;
   const skillGaps = tableData.filter(d => d.skillLevel === 'Beginner').length;
 

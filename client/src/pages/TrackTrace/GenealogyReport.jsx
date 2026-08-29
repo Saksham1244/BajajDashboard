@@ -17,13 +17,7 @@ export default function GenealogyReport() {
       .catch(err => console.error(err));
   }, [searchUID]);
 
-  const mockHistoryData = [
-    { id: 1, station: 'ST-01', operation: 'Block Assembly', startTime: '10:00:00', endTime: '10:05:00', duration: '5m', operator: 'OP-001', result: 'OK', remarks: '-' },
-    { id: 2, station: 'ST-02', operation: 'Piston Assembly', startTime: '10:06:00', endTime: '10:12:00', duration: '6m', operator: 'OP-002', result: 'OK', remarks: '-' },
-    { id: 3, station: 'ST-03', operation: 'Head Assembly', startTime: '10:13:00', endTime: '10:19:00', duration: '6m', operator: 'OP-003', result: 'NOK', remarks: 'Torque issue' },
-    { id: 4, station: 'RW-01', operation: 'Rework', startTime: '10:20:00', endTime: '10:35:00', duration: '15m', operator: 'OP-RW', result: 'OK', remarks: 'Retorqued' },
-    { id: 5, station: 'ST-03', operation: 'Head Assembly', startTime: '10:36:00', endTime: '10:40:00', duration: '4m', operator: 'OP-003', result: 'OK', remarks: '-' }
-  ];
+  const tableData = dbData?.table || [];
 
   const columns = [
     { header: 'Engine No', accessor: 'engineNo' },
@@ -41,8 +35,8 @@ export default function GenealogyReport() {
 
   const exportToExcel = () => {
     exportToXLSX('GenealogyReport.xlsx', [
-      { name: 'Engine Summary', rows: [['Engine UID', 'Engine Status', 'Total Stations', 'Total Rework Count', 'Assembly Duration'], [searchUID, 'OK', 4, 1, '40m']] },
-      { name: 'Station History', rows: [['Station', 'Operation', 'Start Time', 'End Time', 'Duration', 'Operator', 'Result', 'Remarks'], ...(dbData?.table || mockHistoryData).map(r => [r.station, r.operation, r.startTime, r.endTime, r.duration, r.operator, r.result, r.remarks])] }
+      { name: 'Engine Summary', rows: [['Engine UID', 'Engine Status', 'Total Stations', 'Total Rework Count', 'Assembly Duration'], [searchUID, dbData?.kpis?.status || 'N/A', dbData?.kpis?.totalStations || 0, 0, '20m']] },
+      { name: 'Station History', rows: [['Station', 'Operation', 'Start Time', 'End Time', 'Duration', 'Operator', 'Result', 'Remarks'], ...tableData.map(r => [r.station, r.operation, r.startTime, r.endTime, r.duration, r.operator, r.result, r.remarks])] }
     ]);
   };
 
@@ -64,14 +58,14 @@ export default function GenealogyReport() {
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <StatCard title="Engine Status" value="OK" sub="Passed Final Gate" color="green" />
-              <StatCard title="Total Stations Passed" value={dbData?.table?.length || 4} sub="Stages Completed" color="blue" />
-              <StatCard title="Total Rework Count" value="0" sub="Rework Iterations" color="amber" />
-              <StatCard title="Assembly Duration" value="40m" sub="Lead Time" color="purple" />
+              <StatCard title="Engine Status" value={dbData?.kpis?.status || 'N/A'} sub="Gate Status" color="green" />
+              <StatCard title="Total Stations Passed" value={dbData?.kpis?.completedStations || tableData.length} sub="Stages Completed" color="blue" />
+              <StatCard title="Current Station" value={dbData?.kpis?.currentStation || 'N/A'} sub="Live Position" color="amber" />
+              <StatCard title="Assembly Stages" value={tableData.length} sub="Trace Logs" color="purple" />
             </div>
             <div className="card p-4 flex-1">
               <h3 className="text-sm font-bold text-brand-dark mb-3">Station History</h3>
-              <DataTable columns={columns} data={dbData?.table || mockHistoryData} />
+              <DataTable columns={columns} data={tableData} />
             </div>
           </>
         )}

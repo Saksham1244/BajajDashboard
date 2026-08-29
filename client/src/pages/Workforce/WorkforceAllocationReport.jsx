@@ -15,22 +15,21 @@ export default function WorkforceAllocationReport() {
   
   const [line, setLine] = useState('All');
 
-  const allAllocations = [
-    { line: 'Line 1', station: 'ST-01', assignedOperator: 'John Doe, Jane Smith', plannedCount: 5, actualCount: 5, gap: 0 },
-    { line: 'Line 1', station: 'ST-02', assignedOperator: 'Mike Johnson', plannedCount: 4, actualCount: 3, gap: -1 },
-    { line: 'Line 2', station: 'ST-03', assignedOperator: 'Sarah Williams', plannedCount: 6, actualCount: 6, gap: 0 },
-    { line: 'Line 2', station: 'ST-04', assignedOperator: 'David Brown, Tom Wilson', plannedCount: 3, actualCount: 4, gap: 1 },
-    { line: 'Line 1', station: 'ST-05', assignedOperator: 'Emily Davis', plannedCount: 5, actualCount: 3, gap: -2 }
-  ];
+  const [dbData, setDbData] = useState(null);
 
-  const tableData = allAllocations.filter(d =>
-    line === 'All' || d.line === line
-  );
+  React.useEffect(() => {
+    fetch(`/api/workforce/allocation?period=${period}&shift=${shift}&line=${line}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, line]);
+
+  const tableData = dbData?.table || [];
 
   const allocationData = tableData.map(d => ({
     station: d.station,
-    planned: d.plannedCount,
-    actual: d.actualCount
+    planned: d.plannedCount || 0,
+    actual: d.actualCount || 0
   }));
 
   const totalStations = tableData.length;
