@@ -54,6 +54,8 @@ export default function MTTRMTBFReport() {
     { header: 'Total Repair Time', accessor: 'totalTime' },
   ];
 
+  const machineOptions = ['All', ...Array.from(new Set((dbData?.table || []).map(d => d.machine)))];
+
   const exportToExcel = () => {
     exportToXLSX('MTTRMTBFReport.xlsx', [
       { name: 'KPI', rows: [
@@ -78,31 +80,31 @@ export default function MTTRMTBFReport() {
           ...getBaseFilters(),
           { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
           { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
-          { type: 'dropdown', label: 'Machine', options: filterOptions.stations, value: machine, onChange: setMachine },
+          { type: 'dropdown', label: 'Machine', options: machineOptions, value: machine, onChange: setMachine },
         ]} 
       />
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg MTTR" value={`${avgMTTR} mins`} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg MTBF" value={`${avgMTBF} hrs`} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Best Machine" value={bestMachine} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Worst Machine" value={worstMachine} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg MTTR" value={`${avgMTTR} mins`} color="blue" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg MTBF" value={`${avgMTBF} hrs`} color="orange" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Best Machine" value={bestMachine} color="green" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Worst Machine" value={worstMachine} color="red" />
         </div>
 
         <div className="card p-4">
           <h3 className="text-sm font-bold text-brand-dark mb-3">MTTR vs MTBF by Machine</h3>
           <div className="h-[240px]">
-            <ResponsiveContainer>
-              <BarChart data={chartData}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="machine" />
-                <YAxis yAxisId="left" orientation="left" stroke={colors[0]} />
-                <YAxis yAxisId="right" orientation="right" stroke={colors[1]} />
+                <XAxis dataKey="machine" tick={{ fontSize: 12 }} />
+                <YAxis yAxisId="left" orientation="left" stroke={colors[0]} label={{ value: 'MTTR (mins)', angle: -90, position: 'insideLeft', style: { fill: colors[0], fontSize: 11 } }} />
+                <YAxis yAxisId="right" orientation="right" stroke={colors[1]} label={{ value: 'MTBF (hrs)', angle: 90, position: 'insideRight', style: { fill: colors[1], fontSize: 11 } }} />
                 <Tooltip />
                 <Legend />
-                <Bar yAxisId="left" dataKey="mttr" name="MTTR (mins)" fill={colors[0]} />
-                <Bar yAxisId="right" dataKey="mtbf" name="MTBF (hrs)" fill={colors[1]} />
+                <Bar yAxisId="left" dataKey="mttr" name="MTTR (mins)" fill={colors[0]} radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="right" dataKey="mtbf" name="MTBF (hrs)" fill={colors[1]} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
