@@ -66,7 +66,8 @@ export default function KitVsProductionReport() {
 
   const exportToExcel = () => {
     exportToXLSX('KitVsProductionReport.xlsx', [
-      { name: 'KPI', rows: [
+      { name: 'KPI Summary', rows: [
+        ['Metric', 'Value'],
         ['Total Kits', kpi.kits],
         ['Total Production', kpi.production],
         ['Gap Count', gap],

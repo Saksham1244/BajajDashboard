@@ -56,7 +56,8 @@ export default function EngineStockReport() {
 
   const exportToExcel = () => {
     exportToXLSX('EngineStockReport.xlsx', [
-      { name: 'Summary', rows: [
+      { name: 'KPI Summary', rows: [
+        ['Metric', 'Value'],
         ['Total Engine Count', totalEngines],
         ['Models Count', modelsCount],
         ['Oldest Entry Age', '2 Days']

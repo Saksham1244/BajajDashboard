@@ -150,7 +150,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     <motion.aside
       initial={false}
       animate={{ width: isOpen ? 280 : 80 }}
-      className="bg-brand-dark text-slate-300 flex-shrink-0 z-20 hidden md:flex flex-col relative h-full transition-all duration-300"
+      className="print:hidden bg-brand-dark text-slate-300 flex-shrink-0 z-20 hidden md:flex flex-col relative h-full transition-all duration-300"
     >
       {/* Search Header Area */}
       <div className="h-[72px] flex-shrink-0 border-b border-slate-800 px-4 flex items-center justify-center relative" ref={searchRef}>

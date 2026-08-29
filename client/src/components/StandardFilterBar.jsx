@@ -19,19 +19,48 @@ const today = () => new Date(new Date().getTime() - new Date().getTimezoneOffset
  *   { type: 'search', label, value, onChange, placeholder }
  */
 export default function StandardFilterBar({ title, icon: Icon, onExcelClick, filters = [], onPrintClick }) {
-  return (
-    <div className="print:hidden w-full bg-white border border-slate-200 rounded-lg shadow-sm p-3 sticky top-0 z-10">
-      <div className="flex flex-wrap items-end gap-3">
+  const currentDateFormatted = new Date().toLocaleDateString('en-IN', { 
+    day: '2-digit', 
+    month: 'short', 
+    year: 'numeric' 
+  });
+  const currentTimeFormatted = new Date().toLocaleTimeString('en-IN', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
 
-        {/* Title */}
-        <div className="flex items-center gap-2 pr-4 border-r border-slate-200 flex-shrink-0">
-          {Icon && (
-            <div className="w-8 h-8 bg-[#0369a1] rounded flex items-center justify-center">
-              <Icon className="w-5 h-5 text-white" />
-            </div>
-          )}
-          <h2 className="text-base font-black text-[#0369a1] leading-tight whitespace-nowrap">{title}</h2>
+  return (
+    <>
+      {/* Print-Only Executive Header Banner */}
+      <div className="hidden print:flex items-center justify-between pb-2 mb-3 border-b-2 border-[#0369a1] w-full">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-[#0369a1] text-white rounded flex items-center justify-center font-black text-xs tracking-wider">
+            PPMS
+          </div>
+          <div>
+            <h1 className="text-xl font-black text-[#0369a1] leading-none">{title}</h1>
+            <p className="text-[10px] text-slate-600 font-semibold mt-0.5">BAJAJ AUTO LIMITED • Plant Performance & Monitoring System</p>
+          </div>
         </div>
+        <div className="text-right text-[10px] text-slate-500 font-medium">
+          <div>Report Generated: <span className="font-bold text-slate-700">{currentDateFormatted} {currentTimeFormatted}</span></div>
+          <div className="text-[9px] text-slate-400">Confidential • Internal Operations Use Only</div>
+        </div>
+      </div>
+
+      {/* Screen Interactive Filter Bar */}
+      <div className="print:hidden w-full bg-white border border-slate-200 rounded-lg shadow-sm p-3 sticky top-0 z-10">
+        <div className="flex flex-wrap items-end gap-3">
+
+          {/* Title */}
+          <div className="flex items-center gap-2 pr-4 border-r border-slate-200 flex-shrink-0">
+            {Icon && (
+              <div className="w-8 h-8 bg-[#0369a1] rounded flex items-center justify-center">
+                <Icon className="w-5 h-5 text-white" />
+              </div>
+            )}
+            <h2 className="text-base font-black text-[#0369a1] leading-tight whitespace-nowrap">{title}</h2>
+          </div>
 
         {/* Filters */}
         {filters.map((f, i) => {
@@ -136,5 +165,6 @@ export default function StandardFilterBar({ title, icon: Icon, onExcelClick, fil
 
       </div>
     </div>
+    </>
   )
 }

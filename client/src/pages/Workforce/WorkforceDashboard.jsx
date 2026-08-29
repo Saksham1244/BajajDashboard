@@ -61,9 +61,10 @@ export default function WorkforceDashboard() {
 
   const exportToExcel = () => {
     exportToXLSX('WorkforceDashboard.xlsx', [
-      { name: 'KPI', rows: [['Metric', 'Value'], ['Assigned', kpiData.assigned], ['Present', kpiData.present], ['Absent', kpiData.absent], ['Skill Match %', kpiData.skillMatch], ['Utilization %', kpiData.utilization], ['Idle Time', kpiData.idleTime], ['Overtime', kpiData.overtime]] },
+      { name: 'KPI Summary', rows: [['Metric', 'Value'], ['Assigned', kpiData.assigned], ['Present', kpiData.present], ['Absent', kpiData.absent], ['Skill Match %', `${kpiData.skillMatch}%`], ['Utilization %', `${kpiData.utilization}%`], ['Idle Time', kpiData.idleTime], ['Overtime', kpiData.overtime]] },
       { name: 'Attendance', rows: [['Status', 'Count'], ...attendanceData.map(d => [d.name, d.value])] },
-      { name: 'Station Utilization', rows: [['Station', 'Utilization %'], ...utilizationData.map(d => [d.station, d.utilization])] }
+      { name: 'Station Utilization', rows: [['Station', 'Utilization %'], ...utilizationData.map(d => [d.station, `${d.utilization}%`])] },
+      { name: 'Station Details', rows: [['Station', 'Assigned', 'Present', 'Absent', 'Skill Match', 'Utilization', 'Idle Time (hrs)'], ...tableData.map(d => [d.station, d.assigned, d.present, d.absent, d.skillMatch, d.utilization, d.idleTime])] }
     ]);
   };
 

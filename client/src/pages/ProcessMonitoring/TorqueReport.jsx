@@ -62,7 +62,7 @@ export default function TorqueReport() {
     exportToXLSX('TorqueReport.xlsx', [
       { name: 'KPI Summary', rows: [['Metric', 'Value'], ['Total Readings', totalReadings], ['OK Count', okCount], ['NOT-OK Count', notOkCount], ['Avg Torque', `${avgTorque} Nm`]] },
       { name: 'Torque Trend', rows: [['Engine No', 'Torque Value'], ...torqueData.map(d => [d.engineNo, d.value])] },
-      { name: 'Torque Details', rows: [['Engine No', 'SKU', 'Device', 'Value', 'Min', 'Max', 'Result', 'Datetime', 'Operator'], ...torqueData.map(d => [d.engineNo, d.sku, d.device, d.value, d.minSpec, d.maxSpec, d.result, d.datetime, d.operator])] }
+      { name: 'Torque Details', rows: [['Engine No', 'SKU', 'Device', 'Value', 'Min', 'Max', 'Result', 'Datetime', 'Operator'], ...filteredData.map(d => [d.engineNo, d.sku, d.device, d.value, d.minSpec, d.maxSpec, d.result, d.datetime, d.operator])] }
     ]);
   };
 

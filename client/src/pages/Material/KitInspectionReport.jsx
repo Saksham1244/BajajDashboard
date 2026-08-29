@@ -64,7 +64,8 @@ export default function KitInspectionReport() {
 
   const exportToExcel = () => {
     exportToXLSX('KitInspectionReport.xlsx', [
-      { name: 'KPI', rows: [
+      { name: 'KPI Summary', rows: [
+        ['Metric', 'Value'],
         ['Total Inspected', kpi.total],
         ['OK', kpi.ok],
         ['NOK', kpi.nok],

@@ -72,7 +72,13 @@ export default function StraightPassReport() {
 
   const exportToExcel = () => {
     exportToXLSX('Straight_Pass_Report.xlsx', [
-      { name: 'KPI Summary', rows: [['Metric', 'Current', 'Last Month', 'Trend'], ['Straight Pass Ratio', '94.2%', '91.8%', 'UP'], ['Total Engines Tested', '450', '420', 'UP'], ['Rework Loop Count', '26', '34', 'DOWN']] },
+      { name: 'KPI Summary', rows: [
+        ['Metric', 'Value'],
+        ['Total Engines Produced', kpis.total],
+        ['Straight Pass (FTR)', kpis.straight],
+        ['Reworked Pass', kpis.rework],
+        ['Straight Pass Ratio', `${kpis.total > 0 ? ((kpis.straight / kpis.total) * 100).toFixed(1) : 100}%`]
+      ]},
       { name: 'Hourly Trend', rows: [['Time', 'Straight Pass', 'Rework'], ...hourlyData.map(r => [r.time, r.straight, r.rework])] },
       { name: 'Traceability Log', rows: [['Engine No', 'SKU', 'Date', 'Shift', 'Status', 'Time'], ...tableData.map(r => [r.engineNo, r.sku, r.date, r.shift, r.status, r.time])] }
     ]);

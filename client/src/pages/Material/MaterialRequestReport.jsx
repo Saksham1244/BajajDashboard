@@ -66,7 +66,8 @@ export default function MaterialRequestReport() {
 
   const exportToExcel = () => {
     exportToXLSX('MaterialRequestReport.xlsx', [
-      { name: 'KPI', rows: [
+      { name: 'KPI Summary', rows: [
+        ['Metric', 'Value'],
         ['Total Requests', kpi.total],
         ['Fulfilled', kpi.fulfilled],
         ['Pending', kpi.pending],

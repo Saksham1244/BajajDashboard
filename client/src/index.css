@@ -51,3 +51,121 @@
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ==========================================================================
+   Print & PDF Report Styles (@media print)
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm 10mm 10mm 10mm;
+  }
+
+  /* Force background colors, gradients, and borders to render in print */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html, body, #root {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide interactive controls in print */
+  .print\:hidden,
+  aside,
+  header,
+  nav,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Display print-only elements */
+  .print\:flex {
+    display: flex !important;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  /* Prevent page cutoff for cards, KPI blocks, and chart containers */
+  .card, 
+  .kpi-block, 
+  .recharts-responsive-container, 
+  .recharts-wrapper,
+  svg {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    overflow: visible !important;
+  }
+
+  /* Card formatting in print */
+  .card {
+    border: 1px solid #cbd5e1 !important;
+    background-color: #ffffff !important;
+    border-radius: 6px !important;
+    margin-bottom: 8px !important;
+    padding: 8px 12px !important;
+  }
+
+  /* Table pagination and crisp border styling */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tfoot {
+    display: table-footer-group !important;
+  }
+
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  th {
+    background-color: #f1f5f9 !important;
+    color: #334155 !important;
+    border-bottom: 1.5px solid #94a3b8 !important;
+    padding: 6px 8px !important;
+    font-size: 9pt !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+  }
+
+  td {
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 5px 8px !important;
+    font-size: 9pt !important;
+    color: #1e293b !important;
+  }
+
+  /* Charts and SVGs */
+  .recharts-surface {
+    overflow: visible !important;
+  }
+
+  /* Disable transitions and animations */
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
