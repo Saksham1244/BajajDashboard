@@ -30,16 +30,7 @@ export default function StockStatusReport() {
     { type: 'dropdown', label: 'Store Location', options: ['All', 'Main Store', ...filterOptions.lines.filter(l => l !== 'All')], value: location, onChange: setLocation },
   ];
 
-  const allTableData = dbData?.table || [
-    { material: 'Cylinder Block 150cc', matType: 'Raw', location: 'Main Store', available: 120, minLevel: 25, maxLevel: 150, status: 'Safe' },
-    { material: 'Piston Assembly 57mm', matType: 'Raw', location: 'Line 1', available: 18, minLevel: 25, maxLevel: 150, status: 'Critical' },
-    { material: 'Cylinder Head DOHC', matType: 'WIP', location: 'Line 2', available: 85, minLevel: 25, maxLevel: 150, status: 'Safe' },
-    { material: 'Crankshaft & Connecting Rod', matType: 'WIP', location: 'Main Store', available: 64, minLevel: 25, maxLevel: 150, status: 'Safe' },
-    { material: 'Camshaft Timing Gear Set', matType: 'WIP', location: 'Line 1', available: 12, minLevel: 25, maxLevel: 150, status: 'Critical' },
-    { material: 'Spark Plug Twin-Spark', matType: 'Finished', location: 'Main Store', available: 450, minLevel: 100, maxLevel: 300, status: 'Excess' }
-  ];
-
-  const tableData = allTableData.filter(d =>
+  const tableData = (dbData?.table || []).filter(d =>
     (matType === 'All' || d.matType === matType) &&
     (location === 'All' || d.location === location)
   );
@@ -47,17 +38,17 @@ export default function StockStatusReport() {
   const chartData = tableData.map(d => ({
     material: d.material,
     available: d.available,
-    minLevel: Math.round(d.minLevel * scale) || 2
+    minLevel: d.minLevel || 0
   }));
 
   const trendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map((time, idx) => ({
+    return generateTimeLabels(period, shift).map((time) => ({
       time,
-      stockValue: 12000 + ((idx * 350) % 3000)
+      stockValue: tableData.reduce((acc, d) => acc + (d.available || 0), 0)
     }));
-  }, [period, shift]);
+  }, [period, shift, tableData]);
 
-  const totalMaterials = Math.max(1, Math.round(115 * scale));
+  const totalMaterials = tableData.length;
   const criticalCount = tableData.filter(d => d.status === 'Critical').length;
   const safeCount = tableData.filter(d => d.status === 'Safe').length;
   const excessCount = tableData.filter(d => d.status === 'Excess').length;

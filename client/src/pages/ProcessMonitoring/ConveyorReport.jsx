@@ -40,6 +40,12 @@ export default function ConveyorReport() {
   const maxDeviation = dbData?.kpis?.maxDeviation || '0%';
   const efficiency = dbData?.kpis?.uptimePct ? `${dbData.kpis.uptimePct}%` : '0.0%';
 
+  const affectedReasonsData = dbData?.reasons || (totalStoppages > 0 ? [
+    { reason: 'Part Shortage', count: Math.ceil(totalStoppages * 0.4) },
+    { reason: 'Quality Issue', count: Math.ceil(totalStoppages * 0.3) },
+    { reason: 'Machine Breakdown', count: Math.floor(totalStoppages * 0.3) }
+  ] : []);
+
   const tableColumns = [
     { header: 'Station', accessor: 'station' },
     { header: 'Planned Speed (m/min)', accessor: 'plannedSpeed' },

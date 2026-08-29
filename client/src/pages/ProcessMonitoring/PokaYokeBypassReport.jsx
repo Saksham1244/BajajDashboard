@@ -32,7 +32,7 @@ export default function PokaYokeBypassReport() {
     { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
   ];
 
-  const tableData = dbData?.table || [];
+  const tableData = dbData?.table || dbData?.bypassLogs || [];
 
   const totalBypasses = dbData?.kpis?.totalBypasses || tableData.length;
   const activeBypasses = dbData?.kpis?.activeBypasses || tableData.filter(d => d.status === 'Active').length;
