@@ -4,12 +4,12 @@ import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
-import { ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { useReportFilters } from '../../hooks/useReportFilters';
 import { useFilterOptions } from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
-const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
+const COLORS = ['#0369a1', '#f97316', '#10b981', '#8b5cf6', '#f43f5e', '#06b6d4', '#eab308'];
 
 export default function DefectReport() {
   const { period, shift, startDate, endDate, getBaseFilters } = useReportFilters();
@@ -30,9 +30,9 @@ export default function DefectReport() {
   const [sku, setSku] = useState('All');
 
   const kpiData = dbData?.kpis || {
-    totalProduction: "1250",
-    totalDefects: "45",
-    rft: 96.4
+    totalProduction: "3188",
+    totalDefects: "10",
+    rft: 96.9
   };
 
   const defectTrendData = useMemo(() => {
@@ -42,21 +42,22 @@ export default function DefectReport() {
     }));
   }, [period, shift]);
 
-  const defVal = parseInt(kpiData.totalDefects) || 0;
-  
   const defectDistData = dbData?.distribution || [
-    { name: 'Half Engine', value: Math.ceil(defVal * 0.44) },
-    { name: 'Leakage', value: Math.floor(defVal * 0.33) },
-    { name: 'PV', value: defVal - Math.ceil(defVal * 0.44) - Math.floor(defVal * 0.33) },
-  ].filter(d => d.value > 0);
+    { name: 'Engine Fitment', value: 4 },
+    { name: 'Leakage & Sealing', value: 2 },
+    { name: 'Torque & Fastening', value: 2 },
+    { name: 'Cosmetic & Surface', value: 1 },
+    { name: 'Electrical & Other', value: 1 }
+  ];
 
   const defectReasonsData = dbData?.reasons || [
-    { name: 'Torque Failure', value: Math.ceil(defVal * 0.33) },
-    { name: 'Missing Part', value: Math.ceil(defVal * 0.27) },
-    { name: 'Scratch', value: Math.ceil(defVal * 0.18) },
-    { name: 'Alignment', value: Math.ceil(defVal * 0.13) },
-    { name: 'Other', value: defVal - Math.ceil(defVal * 0.33) - Math.ceil(defVal * 0.27) - Math.ceil(defVal * 0.18) - Math.ceil(defVal * 0.13) }
-  ].filter(d => d.value > 0);
+    { name: 'Torque Fail on Head Bolt #3', value: 2 },
+    { name: 'Casing Scratch on Clutch Cover', value: 2 },
+    { name: 'Leakage on Water Pump Seal', value: 2 },
+    { name: 'Valve Clearance Out of Spec', value: 1 },
+    { name: 'Oil Sump Gasket Misaligned', value: 1 },
+    { name: 'Camshaft Timing Out by 1 Tooth', value: 1 }
+  ];
 
   const tableData = dbData?.table || [
     { engineNo: 'ENG-3018', defect: 'Torque Fail on Head Bolt #3', station: 'Line2 (Head Tightening)', operator: 'Rahul Sharma', time: '08:35' },
@@ -79,6 +80,7 @@ export default function DefectReport() {
       { name: 'KPI', rows: [['Metric', 'Value'], ['Total Production', kpiData.totalProduction], ['Total Defects', kpiData.totalDefects], ['RFT %', kpiData.rft]] },
       { name: 'Defect Trend', rows: [['Time', 'Defects'], ...defectTrendData.map(d => [d.date, d.defects])] },
       { name: 'Defect Distribution', rows: [['Category', 'Count'], ...defectDistData.map(d => [d.name, d.value])] },
+      { name: 'Defect Reasons', rows: [['Defect Reason', 'Count'], ...defectReasonsData.map(d => [d.name, d.value])] },
       { name: 'Defect Details', rows: [['Engine No', 'Defect', 'Station', 'Operator', 'Time'], ...tableData.map(d => [d.engineNo, d.defect, d.station, d.operator, d.time])] },
     ]);
   };
@@ -102,58 +104,90 @@ export default function DefectReport() {
         filters={filters}
       />
       <div className="flex-1 flex flex-col gap-3">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Production" value={kpiData.totalProduction} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Defects" value={kpiData.totalDefects} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="RFT %" value={`${kpiData.rft}%`} />
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Production" value={kpiData.totalProduction} color="blue" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Defects" value={kpiData.totalDefects} color="red" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="RFT % (Right First Time)" value={`${kpiData.rft}%`} color="green" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="card p-4">
-            <h3 className="text-sm font-bold text-brand-dark mb-3">Defect Trend</h3>
-            <div className="h-[240px]">
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          {/* Defect Trend Line */}
+          <div className="card p-4 lg:col-span-1 flex flex-col">
+            <h3 className="text-sm font-bold text-brand-dark mb-2">Defect Trend Over Time</h3>
+            <div className="h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={defectTrendData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="defects" stroke={COLORS[0]} />
+                <LineChart data={defectTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
+                  <Line type="monotone" dataKey="defects" stroke="#f43f5e" strokeWidth={2.5} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
-          <div className="card p-4">
-            <h3 className="text-sm font-bold text-brand-dark mb-3">Defect Distribution</h3>
-            <div className="h-[240px]">
+
+          {/* Clean Donut Chart for Defect Category Distribution */}
+          <div className="card p-4 lg:col-span-1 flex flex-col">
+            <h3 className="text-sm font-bold text-brand-dark mb-2">Defect Distribution by Category</h3>
+            <div className="h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={defectDistData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label>
-                    {defectDistData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                  <Pie 
+                    data={defectDistData} 
+                    dataKey="value" 
+                    nameKey="name" 
+                    cx="50%" 
+                    cy="45%" 
+                    innerRadius={48} 
+                    outerRadius={75} 
+                    paddingAngle={3}
+                  >
+                    {defectDistData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
                   </Pie>
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
+                  <Legend verticalAlign="bottom" height={40} iconType="circle" wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           </div>
-          <div className="card p-4 md:col-span-2">
-            <h3 className="text-sm font-bold text-brand-dark mb-3">Top Defect Reasons</h3>
-            <div className="h-[240px]">
+
+          {/* Clean Pareto Horizontal Bar Chart */}
+          <div className="card p-4 lg:col-span-1 flex flex-col">
+            <h3 className="text-sm font-bold text-brand-dark mb-2">Top Defect Reasons (Pareto)</h3>
+            <div className="h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={defectReasonsData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label>
-                    {defectReasonsData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
+                <BarChart 
+                  layout="vertical" 
+                  data={defectReasonsData} 
+                  margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    width={130} 
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(val) => val.length > 20 ? val.substring(0, 18) + '…' : val}
+                  />
+                  <Tooltip contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
+                  <Bar dataKey="value" name="Defect Count" fill="#f97316" radius={[0, 4, 4, 0]}>
+                    {defectReasonsData.map((entry, index) => (
+                      <Cell key={`bar-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
         </div>
+
+        {/* Detailed Defect Table */}
         <div className="card p-4">
-          <h3 className="text-sm font-bold text-brand-dark mb-3">Defect Details</h3>
+          <h3 className="text-sm font-bold text-brand-dark mb-3">Live Defect Logs</h3>
           <DataTable columns={columns} data={tableData} />
         </div>
       </div>
