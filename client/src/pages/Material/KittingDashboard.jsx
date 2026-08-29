@@ -49,16 +49,15 @@ export default function KittingDashboard() {
     { name: 'Rejected', value: kpi.rejected },
   ].filter(d => d.value > 0);
 
-  const barData = dbData?.barData || [
-    { model: 'Pulsar 150', prepared: kpi.prepared },
-  ].filter(d => d.prepared > 0);
+  const barData = dbData?.barData || [];
 
   const trendData = useMemo(() => {
+    if (tableData.length === 0 && kpi.prepared === 0) return [];
     return generateTimeLabels(period, shift).map((time) => ({
       time,
       kitsPrepared: kpi.prepared
     }));
-  }, [period, shift, kpi.prepared]);
+  }, [period, shift, kpi.prepared, tableData.length]);
 
   const columns = [
     { header: 'Kit ID', accessor: 'kitId' },
@@ -73,28 +72,23 @@ export default function KittingDashboard() {
     }},
     { header: 'Prepared At', accessor: 'preparedAt' },
     { header: 'Accuracy %', accessor: 'accuracy' },
-    { header: 'Defect', accessor: 'defect' },
+    { header: 'Defect Reason', accessor: 'defect' },
   ];
 
   const exportToExcel = () => {
     exportToXLSX('KittingDashboard.xlsx', [
-      { name: 'KPI', rows: [
+      { name: 'KPI Summary', rows: [
         ['Metric', 'Value'],
-        ['Total Kits Planned', kpi.planned],
+        ['Kits Planned', kpi.planned],
         ['Kits Prepared', kpi.prepared],
         ['Kits Pending', kpi.pending],
         ['Kit Accuracy %', kpi.accuracy],
         ['Rejected Kits', kpi.rejected],
-        ['Preparation Status', kpi.status]
+        ['Preparation Status', kpi.status],
       ]},
-      { name: 'Kit Status', rows: [
-        ['Status', 'Count'],
-        ...pieData.map(d => [d.name, d.value])
-      ]},
-      { name: 'Kit Details', rows: [
-        ['Kit ID', 'Model', 'SKU', 'Status', 'Prepared At', 'Accuracy', 'Defect'],
-        ...tableData.map(d => [d.kitId, d.model, d.sku, d.status, d.preparedAt, d.accuracy, d.defect])
-      ]}
+      { name: 'Kitting Status', rows: [['Status', 'Count'], ...pieData.map(d => [d.name, d.value])] },
+      { name: 'Preparation by Model', rows: [['Model', 'Prepared'], ...barData.map(d => [d.model, d.prepared])] },
+      { name: 'Kit Inspection Details', rows: [['Kit ID', 'Model', 'SKU', 'Status', 'Prepared At', 'Accuracy %', 'Defect'], ...tableData.map(d => [d.kitId, d.model, d.sku, d.status, d.preparedAt, d.accuracy, d.defect])] }
     ]);
   };
 
@@ -104,21 +98,21 @@ export default function KittingDashboard() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Kits Planned" value={kpi.planned} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Kits Prepared" value={kpi.prepared} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Kits Pending" value={kpi.pending} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Kit Accuracy %" value={kpi.accuracy} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Rejected Kits" value={kpi.rejected} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Preparation Status" value={kpi.status} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Kits Planned" value={kpi.planned} color="blue" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Kits Prepared" value={kpi.prepared} color="green" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Kits Pending" value={kpi.pending} color="orange" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Kit Accuracy %" value={kpi.accuracy} color="purple" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Rejected Kits" value={kpi.rejected} color="red" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Preparation Status" value={kpi.status} color="blue" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="card p-4">
             <h3 className="text-sm font-bold text-brand-dark mb-3">Kit Status</h3>
             <div className="h-[240px]">
-              <ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="100%" startAngle={180} endAngle={0} innerRadius={60} outerRadius={80}>
+                  <Pie data={pieData.length > 0 ? pieData : [{ name: 'Prepared', value: 1 }]} dataKey="value" nameKey="name" cx="50%" cy="100%" startAngle={180} endAngle={0} innerRadius={60} outerRadius={80}>
                     {pieData.map((entry, index) => <Cell key={index} fill={index === 0 ? COLORS[2] : index === 1 ? COLORS[1] : COLORS[4]} />)}
                   </Pie>
                   <Tooltip />
@@ -130,14 +124,14 @@ export default function KittingDashboard() {
           <div className="card p-4">
             <h3 className="text-sm font-bold text-brand-dark mb-3">Preparation by Model</h3>
             <div className="h-[240px]">
-              <ResponsiveContainer>
-                <BarChart data={barData}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barData.length > 0 ? barData : [{ model: 'No Data', prepared: 0 }]}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="model" />
-                  <YAxis />
+                  <YAxis allowDecimals={false} />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="prepared" fill={COLORS[0]} />
+                  <Bar dataKey="prepared" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -145,14 +139,14 @@ export default function KittingDashboard() {
           <div className="card p-4">
             <h3 className="text-sm font-bold text-brand-dark mb-3">Kits Prepared Trend</h3>
             <div className="h-[240px]">
-              <ResponsiveContainer>
-                <LineChart data={trendData}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={trendData.length > 0 ? trendData : [{ time: '08:00', kitsPrepared: 0 }]}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="time" />
-                  <YAxis />
+                  <YAxis allowDecimals={false} />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="kitsPrepared" stroke={COLORS[2]} name="Prepared" />
+                  <Line type="monotone" dataKey="kitsPrepared" stroke={COLORS[2]} name="Prepared" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

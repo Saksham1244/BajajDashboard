@@ -1417,34 +1417,67 @@ app.get('/api/material/kitting', async (req, res) => {
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
-        SELECT 
-          ISNULL(SUM(PlanQty), 0) as planned,
-          ISNULL(SUM(KitAssembly_Qty), 0) as prepared,
-          ISNULL(SUM(PlanQty) - SUM(KitAssembly_Qty), 0) as pending
-        FROM Prod_EnginePlanExecution
-        WHERE ProdDate = CAST(GETDATE() AS DATE)
-      `);
-      if (result.recordset.length > 0) {
-        const r = result.recordset[0];
-        return res.json({
-          kpis: {
-            planned: r.planned,
-            prepared: r.prepared,
-            pending: Math.max(0, r.pending),
-            accuracy: "99.2%",
-            rejected: 2,
-            status: "On Track"
-          }
-        });
-      }
+      const [kpiRes, tableRes] = await Promise.all([
+        pool.request().query(`
+          SELECT 
+            ISNULL(SUM(PlanQty), 0) as planned,
+            ISNULL(SUM(KitAssembly_Qty), 0) as prepared,
+            ISNULL(SUM(PlanQty) - SUM(KitAssembly_Qty), 0) as pending
+          FROM Prod_EnginePlanExecution
+          WHERE ProdDate = CAST(GETDATE() AS DATE)
+        `),
+        pool.request().query(`
+          SELECT TOP 50
+            CONCAT('KIT-', W.EngineNo) as kitId,
+            CASE 
+              WHEN W.EngineNo LIKE 'P%' THEN 'Pulsar 150'
+              WHEN W.EngineNo LIKE 'D%' THEN 'Dominar 400'
+              ELSE 'Avenger 220'
+            END as model,
+            'UG6' as sku,
+            CASE WHEN D.EngineNo IS NOT NULL THEN 'Rejected' ELSE 'Prepared' END as status,
+            CONVERT(VARCHAR(5), W.StartTime, 108) as preparedAt,
+            CASE WHEN D.EngineNo IS NOT NULL THEN '92%' ELSE '100%' END as accuracy,
+            ISNULL(D.Remark, '-') as defect
+          FROM Prod_Engine_WIP W
+          LEFT JOIN Prod_Defect_Log D ON W.EngineNo = D.EngineNo
+          ORDER BY W.StartTime DESC
+        `)
+      ]);
+
+      const kpiRow = kpiRes.recordset[0] || { planned: 0, prepared: 0, pending: 0 };
+      const table = tableRes.recordset || [];
+      const preparedCount = table.filter(t => t.status === 'Prepared').length;
+      const rejectedCount = table.filter(t => t.status === 'Rejected').length;
+      const totalKits = table.length;
+
+      const barData = [
+        { model: 'Pulsar 150', prepared: table.filter(t => t.model === 'Pulsar 150' && t.status === 'Prepared').length },
+        { model: 'Dominar 400', prepared: table.filter(t => t.model === 'Dominar 400' && t.status === 'Prepared').length },
+        { model: 'Avenger 220', prepared: table.filter(t => t.model === 'Avenger 220' && t.status === 'Prepared').length },
+      ].filter(d => d.prepared > 0);
+
+      return res.json({
+        kpis: {
+          planned: kpiRow.planned || totalKits,
+          prepared: kpiRow.prepared || preparedCount,
+          pending: Math.max(0, kpiRow.pending),
+          accuracy: totalKits > 0 ? `${((preparedCount / totalKits) * 100).toFixed(1)}%` : (kpiRow.prepared > 0 ? '100.0%' : '0.0%'),
+          rejected: rejectedCount,
+          status: (totalKits > 0 || kpiRow.prepared > 0) ? 'On Track' : 'No Data'
+        },
+        barData,
+        table
+      });
     }
   } catch (err) {
-    console.warn('Kitting DB fallback:', err.message);
+    console.warn('Kitting DB query failed:', err.message);
   }
 
   res.json({
-    kpis: { planned: 1681, prepared: 1681, pending: 0, accuracy: "99.2%", rejected: 2, status: "On Track" }
+    kpis: { planned: 0, prepared: 0, pending: 0, accuracy: '0.0%', rejected: 0, status: 'No Data' },
+    barData: [],
+    table: []
   });
 });
 
