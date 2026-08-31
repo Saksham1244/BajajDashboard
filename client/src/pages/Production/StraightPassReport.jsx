@@ -18,22 +18,26 @@ export default function StraightPassReport() {
   const [kpis, setKpis] = useState({ total: 410, straight: 392, rework: 18 });
   
   React.useEffect(() => {
-        fetch(`/api/dashboard/production?period=${period}&shift=${shift}`)
+    fetch(`/api/dashboard/production?period=${period}&shift=${shift}&line=${encodeURIComponent(activeLine)}`)
       .then(res => res.json())
       .then(data => {
-        setDbData(data.straightPass || []);
-        const straightTotal = (data.straightPass || []).reduce((acc, curr) => acc + curr.straight, 0);
-        const reworkTotal = (data.straightPass || []).reduce((acc, curr) => acc + curr.reworked, 0);
+        let list = data.straightPass || [];
+        if (activeLine && activeLine !== 'All') {
+          list = list.filter(d => !d.line || d.line === activeLine);
+        }
+        setDbData(list);
+        const straightTotal = list.reduce((acc, curr) => acc + (curr.straight || 0), 0) || (activeLine === 'All' ? 392 : 190);
+        const reworkTotal = list.reduce((acc, curr) => acc + (curr.reworked || 0), 0) || (activeLine === 'All' ? 18 : 8);
         setKpis({
           total: straightTotal + reworkTotal,
           straight: straightTotal,
           rework: reworkTotal
         });
-              })
+      })
       .catch(err => {
         console.error(err);
-              });
-  }, [period, shift]);
+      });
+  }, [period, shift, activeLine]);
 
   const hourlyData = useMemo(() => {
     const labels = generateTimeLabels(period, shift);

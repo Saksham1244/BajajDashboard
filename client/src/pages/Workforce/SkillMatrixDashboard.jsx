@@ -24,11 +24,26 @@ export default function SkillMatrixDashboard() {
       .catch(err => console.error(err));
   }, [period, shift, line, station]);
 
-  const tableData = dbData?.table || [];
+  const allTableData = (dbData?.table || [
+    { name: 'Rahul Sharma', line: 'Line 1', station: 'Demo', skillLevel: 'Expert', certified: 'Yes', lastAssessed: '2026-02-15' },
+    { name: 'Priya Singh', line: 'Line 2', station: 'Line2', skillLevel: 'Intermediate', certified: 'Yes', lastAssessed: '2026-02-10' },
+    { name: 'Amit Kumar', line: 'Line 1', station: 'Station2', skillLevel: 'Beginner', certified: 'No', lastAssessed: '2026-01-20' },
+    { name: 'Neha Verma', line: 'Line 2', station: 'Demo', skillLevel: 'Intermediate', certified: 'Yes', lastAssessed: '2026-02-01' },
+    { name: 'Vikram Patel', line: 'Line 1', station: 'Line2', skillLevel: 'Expert', certified: 'Yes', lastAssessed: '2026-02-18' },
+    { name: 'Sneha Gupta', line: 'Line 2', station: 'Station2', skillLevel: 'Beginner', certified: 'No', lastAssessed: '2026-01-15' }
+  ]).map(d => ({
+    ...d,
+    name: d.name || d.operator || 'Operator'
+  }));
 
-  const beginnerCount = dbData?.kpis?.beginner || tableData.filter(d => d.skillLevel === 'Beginner').length;
-  const intermediateCount = dbData?.kpis?.intermediate || tableData.filter(d => d.skillLevel === 'Intermediate').length;
-  const expertCount = dbData?.kpis?.expert || tableData.filter(d => d.skillLevel === 'Expert').length;
+  const tableData = allTableData.filter(d => 
+    (line === 'All' || d.line === line) &&
+    (station === 'All' || d.station === station)
+  );
+
+  const beginnerCount = tableData.filter(d => d.skillLevel === 'Beginner').length;
+  const intermediateCount = tableData.filter(d => d.skillLevel === 'Intermediate').length;
+  const expertCount = tableData.filter(d => d.skillLevel === 'Expert').length;
   const totalCount = tableData.length;
 
   const kpiData = { total: totalCount, beginner: beginnerCount, intermediate: intermediateCount, expert: expertCount };

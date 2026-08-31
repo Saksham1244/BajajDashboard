@@ -6,49 +6,67 @@ import StatCard from '../../components/StatCard';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { exportToXLSX } from '../../utils/exportExcel';
 import useReportFilters from '../../hooks/useReportFilters';
+import useFilterOptions from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function ReworkStatusReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
+
+  const [line, setLine] = useState('All');
+  const [station, setStation] = useState('All');
+  const [model, setModel] = useState('All');
+  const [sku, setSku] = useState('All');
   const [status, setStatus] = useState('All');
 
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
-    fetch(`/api/trace/rework?period=${period}&shift=${shift}&status=${status}`)
+    fetch(`/api/trace/rework?period=${period}&shift=${shift}&status=${status}&line=${line}&station=${station}&model=${model}&sku=${sku}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
-  }, [period, shift, status]);
+  }, [period, shift, status, line, station, model, sku]);
 
-  const tableData = dbData?.table || [];
+  const rawData = dbData?.table || [
+    { engineNo: 'ENG-3018', line: 'Line 2', station: 'Line2 (Head Tightening)', model: 'Pulsar 150', sku: 'UG5', reason: 'Torque Fail on Head Bolt #3', detectedTime: '2026-02-28 08:35', reworkStart: '08:45', reworkEnd: '09:05', status: 'Completed', operator: 'Amit Kumar', location: 'Line 2' },
+    { engineNo: 'ENG-3022', line: 'Line 1', station: 'Demo (Block Assembly)', model: 'Pulsar 150', sku: 'UG5', reason: 'Casing Scratch defect', detectedTime: '2026-02-28 09:20', reworkStart: '09:30', reworkEnd: '-', status: 'In-Progress', operator: 'Rahul Sharma', location: 'Rework Bay 1' },
+    { engineNo: 'ENG-3025', line: 'Line 1', station: 'Station2 (Cold Inspection)', model: 'Avenger 220', sku: 'BS6', reason: 'Leakage in oil seal test', detectedTime: '2026-02-28 10:15', reworkStart: '-', reworkEnd: '-', status: 'Pending', operator: 'Priya Singh', location: 'Buffer Zone' },
+    { engineNo: 'ENG-3030', line: 'Line 2', station: 'Line2 (Head Tightening)', model: 'Dominar 400', sku: 'D400', reason: 'Thread Mismatch on crankcase', detectedTime: '2026-02-28 11:00', reworkStart: '11:15', reworkEnd: '11:50', status: 'Rejected', operator: 'Vikram Patel', location: 'Scrap Bin' }
+  ];
 
-  const filteredData = tableData.filter(d => 
-    status === 'All' || d.status === status
+  const filteredData = rawData.filter(d => 
+    (line === 'All' || d.line === line) &&
+    (station === 'All' || d.station === station || (d.station && d.station.includes(station))) &&
+    (model === 'All' || d.model === model) &&
+    (sku === 'All' || d.sku === sku) &&
+    (status === 'All' || d.status === status)
   );
 
   const topDefectsData = [
-    { name: 'Torque Fail', count: tableData.filter(t => t.reason?.includes('Torque')).length },
-    { name: 'Casing Scratch', count: tableData.filter(t => t.reason?.includes('Scratch')).length },
-    { name: 'Leakage', count: tableData.filter(t => t.reason?.includes('Leakage')).length },
-    { name: 'Thread Mismatch', count: tableData.filter(t => t.reason?.includes('Thread')).length }
+    { name: 'Torque Fail', count: filteredData.filter(t => t.reason?.includes('Torque')).length },
+    { name: 'Casing Scratch', count: filteredData.filter(t => t.reason?.includes('Scratch')).length },
+    { name: 'Leakage', count: filteredData.filter(t => t.reason?.includes('Leakage')).length },
+    { name: 'Thread Mismatch', count: filteredData.filter(t => t.reason?.includes('Thread')).length }
   ].filter(d => d.count > 0);
 
   const topStationsData = [
-    { name: 'Demo (Block Assembly)', count: tableData.filter(t => t.station?.includes('Demo')).length },
-    { name: 'Line2 (Head Tightening)', count: tableData.filter(t => t.station?.includes('Line2')).length },
-    { name: 'Station2 (Cold Inspection)', count: tableData.filter(t => t.station?.includes('Station2')).length }
+    { name: 'Demo (Block Assembly)', count: filteredData.filter(t => t.station?.includes('Demo')).length },
+    { name: 'Line2 (Head Tightening)', count: filteredData.filter(t => t.station?.includes('Line2')).length },
+    { name: 'Station2 (Cold Inspection)', count: filteredData.filter(t => t.station?.includes('Station2')).length }
   ].filter(d => d.count > 0);
 
-  const totalRework = dbData?.kpis?.totalRework || tableData.length;
-  const inProgressCount = dbData?.kpis?.inProgress || tableData.filter(t => t.status === 'In-Progress').length;
-  const completedCount = dbData?.kpis?.completed || tableData.filter(t => t.status === 'Completed').length;
-  const rejectedCount = dbData?.kpis?.rejected || tableData.filter(t => t.status === 'Rejected').length;
+  const totalRework = filteredData.length;
+  const inProgressCount = filteredData.filter(t => t.status === 'In-Progress').length;
+  const completedCount = filteredData.filter(t => t.status === 'Completed').length;
+  const rejectedCount = filteredData.filter(t => t.status === 'Rejected').length;
   const pendingCount = Math.max(0, totalRework - inProgressCount - completedCount - rejectedCount);
 
   const columns = [
     { header: 'Engine No (EIN)', accessor: 'engineNo' },
+    { header: 'Line', accessor: 'line' },
     { header: 'Model', accessor: 'model' },
+    { header: 'SKU', accessor: 'sku' },
     { header: 'Defect Station', accessor: 'station' },
     { header: 'Defect Reason', accessor: 'reason' },
     { header: 'Detected Date & Time', accessor: 'detectedTime' },
@@ -70,7 +88,7 @@ export default function ReworkStatusReport() {
     exportToXLSX('ReworkStatusReport.xlsx', [
       { name: 'KPI Summary', rows: [['Metric', 'Value'], ['Total Rework', totalRework], ['Pending', pendingCount], ['In-Progress', inProgressCount], ['Completed', completedCount]] },
       { name: 'Top Defects', rows: [['Defect Name', 'Count'], ...topDefectsData.map(r => [r.name, r.count])] },
-      { name: 'Rework Details', rows: [['Engine No', 'Model', 'Station', 'Reason', 'Detected Time', 'Start Time', 'End Time', 'Status', 'Operator', 'Location'], ...filteredData.map(r => [r.engineNo, r.model, r.station, r.reason, r.detectedTime, r.reworkStart, r.reworkEnd, r.status, r.operator, r.location])] }
+      { name: 'Rework Details', rows: [['Engine No', 'Line', 'Model', 'SKU', 'Station', 'Reason', 'Detected Time', 'Start Time', 'End Time', 'Status', 'Operator', 'Location'], ...filteredData.map(r => [r.engineNo, r.line, r.model, r.sku, r.station, r.reason, r.detectedTime, r.reworkStart, r.reworkEnd, r.status, r.operator, r.location])] }
     ]);
   };
 
@@ -83,6 +101,10 @@ export default function ReworkStatusReport() {
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
+          { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
+          { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
+          { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
+          { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
           { type: 'dropdown', label: 'Status', options: ['All', 'Pending', 'In-Progress', 'Completed', 'Rejected'], value: status, onChange: setStatus },
         ]}
       />

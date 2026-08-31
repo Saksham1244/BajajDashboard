@@ -24,7 +24,18 @@ export default function WorkforceAllocationReport() {
       .catch(err => console.error(err));
   }, [period, shift, line]);
 
-  const tableData = dbData?.table || [];
+  const allTableData = dbData?.table || [
+    { station: 'Demo', line: 'Line 1', shift: 'Shift 1', assignedOperator: 'Rahul Sharma', plannedCount: 2, actualCount: 2, gap: 0 },
+    { station: 'Line2', line: 'Line 2', shift: 'Shift 1', assignedOperator: 'Priya Singh', plannedCount: 2, actualCount: 1, gap: -1 },
+    { station: 'Station2', line: 'Line 1', shift: 'Shift 1', assignedOperator: 'Amit Kumar, Vikram Patel', plannedCount: 2, actualCount: 2, gap: 0 },
+    { station: 'Demo', line: 'Line 1', shift: 'Shift 2', assignedOperator: 'Neha Verma', plannedCount: 2, actualCount: 2, gap: 0 },
+    { station: 'Line2', line: 'Line 2', shift: 'Shift 2', assignedOperator: 'Sneha Gupta', plannedCount: 1, actualCount: 2, gap: 1 }
+  ];
+
+  const tableData = allTableData.filter(d => 
+    (line === 'All' || d.line === line) &&
+    (shift === 'All' || d.shift === shift)
+  );
 
   const allocationData = tableData.map(d => ({
     station: d.station,

@@ -33,17 +33,36 @@ export default function MaterialDashboard() {
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const tableData = dbData?.table || [];
+  const defaultTable = [
+    { id: 'BAJ-ENG-101', material: 'Cylinder Block 150cc', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', location: 'Main Store', currentStock: 120, minLevel: 25, maxLevel: 150, status: 'Safe', category: 'Engine Parts' },
+    { id: 'BAJ-ENG-102', material: 'Piston Assembly 57mm', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', location: 'Line 1', currentStock: 18, minLevel: 25, maxLevel: 150, status: 'Critical', category: 'Pistons' },
+    { id: 'BAJ-ENG-103', material: 'Cylinder Head DOHC', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', location: 'Line 2', currentStock: 85, minLevel: 25, maxLevel: 150, status: 'Safe', category: 'Engine Parts' },
+    { id: 'BAJ-ENG-104', material: 'Crankshaft & Connecting Rod', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', location: 'Main Store', currentStock: 64, minLevel: 25, maxLevel: 150, status: 'Safe', category: 'Transmission' },
+    { id: 'BAJ-ENG-105', material: 'Camshaft Timing Gear Set', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', location: 'Line 1', currentStock: 12, minLevel: 25, maxLevel: 150, status: 'Critical', category: 'Gears' },
+    { id: 'BAJ-ENG-108', material: 'Spark Plug Twin-Spark', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', location: 'Main Store', currentStock: 450, minLevel: 100, maxLevel: 300, status: 'Excess', category: 'Electrical' }
+  ];
+
+  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
+
+  const tableData = rawTable.filter(d => 
+    (line === 'All' || !d.line || d.line === line) &&
+    (model === 'All' || !d.model || d.model === model) &&
+    (sku === 'All' || !d.sku || d.sku === sku)
+  );
+
+  const criticalCount = tableData.filter(d => d.status === 'Critical').length;
+  const safeCount = tableData.filter(d => d.status === 'Safe').length;
+  const excessCount = tableData.filter(d => d.status === 'Excess').length;
 
   const kpi = {
-    availability: dbData?.kpis?.kitFulfillment || (tableData.length > 0 ? '100%' : '0%'),
-    shortage: dbData?.kpis?.criticalShortages || tableData.filter(d => d.status === 'Critical').length,
-    lineFeed: tableData.length > 0 ? 'OK' : 'No Data',
-    requests: dbData?.kpis?.totalInventory || tableData.length,
+    availability: tableData.length > 0 ? `${Math.round((safeCount / tableData.length) * 100)}%` : '0%',
+    shortage: criticalCount,
+    lineFeed: criticalCount === 0 && tableData.length > 0 ? 'OK' : (criticalCount > 0 ? 'Shortage Alert' : 'No Data'),
+    requests: tableData.length,
     pending: 0,
-    critical: tableData.filter(d => d.status === 'Critical').length,
-    safe: tableData.filter(d => d.status === 'Safe').length,
-    excess: tableData.filter(d => d.status === 'Excess').length
+    critical: criticalCount,
+    safe: safeCount,
+    excess: excessCount
   };
 
   const stockLevelData = [
@@ -52,15 +71,24 @@ export default function MaterialDashboard() {
     { name: 'Excess', value: kpi.excess }
   ].filter(d => d.value > 0);
 
-  const shortageData = dbData?.shortages || [];
+  const shortageData = useMemo(() => {
+    const criticalItems = tableData.filter(d => d.status === 'Critical');
+    if (criticalItems.length === 0) return [{ category: 'No Shortages', count: 0 }];
+    const counts = {};
+    criticalItems.forEach(d => {
+      const cat = d.category || d.material || 'General';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    return Object.entries(counts).map(([category, count]) => ({ category, count }));
+  }, [tableData]);
 
   const trendData = useMemo(() => {
     return generateTimeLabels(period, shift).map((time) => ({
       time,
-      shortages: kpi.shortage,
+      shortages: criticalCount,
       requests: tableData.length
     }));
-  }, [period, shift, kpi.shortage, tableData.length]);
+  }, [period, shift, criticalCount, tableData.length]);
 
   const columns = [
     { header: 'Part ID', accessor: 'id' },

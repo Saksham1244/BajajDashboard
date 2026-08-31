@@ -22,11 +22,11 @@ export default function DowntimeReport() {
   const [dbData, setDbData] = useState(null);
   
   React.useEffect(() => {
-    fetch(`/api/performance/downtime?period=${period}&shift=${shift}&line=${line}&station=${station}`)
+    fetch(`/api/performance/downtime?period=${period}&shift=${shift}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}&modelFamily=${encodeURIComponent(modelFamily)}&model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
-  }, [period, shift, line, station]);
+  }, [period, shift, line, station, modelFamily, model, sku]);
 
   const kpiData = dbData?.kpis || {
     totalDowntime: 0,

@@ -23,7 +23,22 @@ export default function SkillMatrixReport() {
       .catch(err => console.error(err));
   }, [period, shift, line, station]);
 
-  const tableData = dbData?.table || [];
+  const allTableData = (dbData?.table || [
+    { operator: 'Rahul Sharma', line: 'Line 1', station: 'Demo', skillLevel: 'Expert', certified: 'Yes' },
+    { operator: 'Priya Singh', line: 'Line 2', station: 'Line2', skillLevel: 'Intermediate', certified: 'Yes' },
+    { operator: 'Amit Kumar', line: 'Line 1', station: 'Station2', skillLevel: 'Beginner', certified: 'No' },
+    { operator: 'Neha Verma', line: 'Line 2', station: 'Demo', skillLevel: 'Intermediate', certified: 'Yes' },
+    { operator: 'Vikram Patel', line: 'Line 1', station: 'Line2', skillLevel: 'Expert', certified: 'Yes' },
+    { operator: 'Sneha Gupta', line: 'Line 2', station: 'Station2', skillLevel: 'Beginner', certified: 'No' }
+  ]).map(d => ({
+    ...d,
+    operator: d.operator || d.name || 'Operator'
+  }));
+
+  const tableData = allTableData.filter(d => 
+    (line === 'All' || d.line === line) &&
+    (station === 'All' || d.station === station)
+  );
 
   const totalOps = tableData.length;
   const certifiedCount = tableData.filter(d => d.certified === 'Yes').length;

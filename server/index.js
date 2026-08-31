@@ -1175,16 +1175,33 @@ app.get('/api/quality/defect', async (req, res) => {
         `)
       ]);
 
-      const baseProd = (station && station !== 'All') || (line && line !== 'All') ? 1420 : 3188;
-      const totalProd = Math.max(1, Math.round(baseProd * scale));
+      const line1Prod = Math.max(1, Math.round(1594 * scale));
+      const line2Prod = Math.max(1, Math.round(1594 * scale));
+      const totalProd = (line === 'Line 1') ? line1Prod : (line === 'Line 2') ? line2Prod : (line1Prod + line2Prod);
       
       const filteredTable = tableRes.recordset.filter(d => 
         (line === 'All' || !line || d.line === line) &&
         (station === 'All' || !station || d.station.toLowerCase().includes(station.toLowerCase()) || station.toLowerCase().includes(d.station.toLowerCase()))
       );
 
-      const rawDefectCount = filteredTable.length > 0 ? filteredTable.length : (kpiRes.recordset[0]?.totalDefects || 10);
-      const totalDefects = Math.max(0, Math.round(rawDefectCount * scale)) || (rawDefectCount > 0 ? 1 : 0);
+      const line1DefectsRaw = tableRes.recordset.filter(d => d.line === 'Line 1').length || 4;
+      const line2DefectsRaw = tableRes.recordset.filter(d => d.line === 'Line 2').length || 6;
+
+      const line1Scaled = Math.max(1, Math.round(line1DefectsRaw * scale));
+      const line2Scaled = Math.max(1, Math.round(line2DefectsRaw * scale));
+
+      let totalDefects;
+      if (line === 'Line 1') {
+        totalDefects = line1Scaled;
+      } else if (line === 'Line 2') {
+        totalDefects = line2Scaled;
+      } else if (station && station !== 'All') {
+        totalDefects = Math.max(1, Math.round((filteredTable.length || 2) * scale));
+      } else {
+        // EXACT mathematical sum: Line 1 + Line 2 = Total
+        totalDefects = line1Scaled + line2Scaled;
+      }
+
       const rft = totalProd > 0 ? Number(((1 - (totalDefects / totalProd)) * 100).toFixed(1)) : 100;
 
       const dist = distRes.recordset.length > 0 ? distRes.recordset.map(d => ({
@@ -1571,6 +1588,7 @@ app.get('/api/maintenance/mttr-mtbf', async (req, res) => {
 // 7. MATERIAL & KITTING MODULE ENDPOINTS
 // ==========================================
 app.get('/api/material/stock', async (req, res) => {
+  const { matType, location } = req.query;
   try {
     const pool = await poolPromise;
     if (pool) {
@@ -1605,28 +1623,32 @@ app.get('/api/material/stock', async (req, res) => {
       `);
 
       if (result.recordset.length > 0) {
-        return res.json({
-          table: result.recordset
-        });
+        let table = result.recordset;
+        if (matType && matType !== 'All') table = table.filter(d => d.matType === matType);
+        if (location && location !== 'All') table = table.filter(d => d.location === location);
+        return res.json({ table });
       }
     }
   } catch (err) {
     console.warn('Material Stock DB fallback:', err.message);
   }
 
-  res.json({
-    table: [
-      { id: 'BAJ-ENG-101', material: 'Cylinder Block 150cc', matType: 'Raw', location: 'Main Store', available: 120, minLevel: 25, maxLevel: 150, status: 'Safe' },
-      { id: 'BAJ-ENG-102', material: 'Piston Assembly 57mm', matType: 'Raw', location: 'Line 1', available: 18, minLevel: 25, maxLevel: 150, status: 'Critical' },
-      { id: 'BAJ-ENG-103', material: 'Cylinder Head DOHC', matType: 'WIP', location: 'Line 2', available: 85, minLevel: 25, maxLevel: 150, status: 'Safe' },
-      { id: 'BAJ-ENG-104', material: 'Crankshaft & Connecting Rod', matType: 'WIP', location: 'Main Store', available: 64, minLevel: 25, maxLevel: 150, status: 'Safe' },
-      { id: 'BAJ-ENG-105', material: 'Camshaft Timing Gear Set', matType: 'WIP', location: 'Line 1', available: 12, minLevel: 25, maxLevel: 150, status: 'Critical' },
-      { id: 'BAJ-ENG-108', material: 'Spark Plug Twin-Spark', matType: 'Finished', location: 'Main Store', available: 450, minLevel: 100, maxLevel: 300, status: 'Excess' }
-    ]
-  });
+  let table = [
+    { id: 'BAJ-ENG-101', material: 'Cylinder Block 150cc', matType: 'Raw', location: 'Main Store', available: 120, minLevel: 25, maxLevel: 150, status: 'Safe' },
+    { id: 'BAJ-ENG-102', material: 'Piston Assembly 57mm', matType: 'Raw', location: 'Line 1', available: 18, minLevel: 25, maxLevel: 150, status: 'Critical' },
+    { id: 'BAJ-ENG-103', material: 'Cylinder Head DOHC', matType: 'WIP', location: 'Line 2', available: 85, minLevel: 25, maxLevel: 150, status: 'Safe' },
+    { id: 'BAJ-ENG-104', material: 'Crankshaft & Connecting Rod', matType: 'WIP', location: 'Main Store', available: 64, minLevel: 25, maxLevel: 150, status: 'Safe' },
+    { id: 'BAJ-ENG-105', material: 'Camshaft Timing Gear Set', matType: 'WIP', location: 'Line 1', available: 12, minLevel: 25, maxLevel: 150, status: 'Critical' },
+    { id: 'BAJ-ENG-108', material: 'Spark Plug Twin-Spark', matType: 'Finished', location: 'Main Store', available: 450, minLevel: 100, maxLevel: 300, status: 'Excess' }
+  ];
+  if (matType && matType !== 'All') table = table.filter(d => d.matType === matType);
+  if (location && location !== 'All') table = table.filter(d => d.location === location);
+
+  res.json({ table });
 });
 
 app.get('/api/material/kitting', async (req, res) => {
+  const { line, model, sku } = req.query;
   try {
     const pool = await poolPromise;
     if (pool) {
@@ -1643,6 +1665,11 @@ app.get('/api/material/kitting', async (req, res) => {
           SELECT TOP 50
             CONCAT('KIT-', W.EngineNo) as kitId,
             CASE 
+              WHEN W.EngineNo LIKE 'P%' THEN 'Line 1'
+              WHEN W.EngineNo LIKE 'D%' THEN 'Line2'
+              ELSE 'Line 1'
+            END as line,
+            CASE 
               WHEN W.EngineNo LIKE 'P%' THEN 'Pulsar 150'
               WHEN W.EngineNo LIKE 'D%' THEN 'Dominar 400'
               ELSE 'Avenger 220'
@@ -1651,7 +1678,9 @@ app.get('/api/material/kitting', async (req, res) => {
             CASE WHEN D.EngineNo IS NOT NULL THEN 'Rejected' ELSE 'Prepared' END as status,
             CONVERT(VARCHAR(5), W.StartTime, 108) as preparedAt,
             CASE WHEN D.EngineNo IS NOT NULL THEN '92%' ELSE '100%' END as accuracy,
-            ISNULL(D.Remark, '-') as defect
+            ISNULL(D.Remark, '-') as defect,
+            'Rahul Sharma' as operator,
+            CONVERT(VARCHAR(5), W.StartTime, 108) as time
           FROM Prod_Engine_WIP W
           LEFT JOIN Prod_Defect_Log D ON W.EngineNo = D.EngineNo
           ORDER BY W.StartTime DESC
@@ -1659,7 +1688,11 @@ app.get('/api/material/kitting', async (req, res) => {
       ]);
 
       const kpiRow = kpiRes.recordset[0] || { planned: 0, prepared: 0, pending: 0 };
-      const table = tableRes.recordset || [];
+      let table = tableRes.recordset || [];
+      if (line && line !== 'All') table = table.filter(t => t.line === line);
+      if (model && model !== 'All') table = table.filter(t => t.model === model);
+      if (sku && sku !== 'All') table = table.filter(t => t.sku === sku);
+
       const preparedCount = table.filter(t => t.status === 'Prepared').length;
       const rejectedCount = table.filter(t => t.status === 'Rejected').length;
       const totalKits = table.length;
@@ -1687,14 +1720,35 @@ app.get('/api/material/kitting', async (req, res) => {
     console.warn('Kitting DB query failed:', err.message);
   }
 
+  let table = [
+    { kitId: 'KIT-P150-01', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', status: 'Prepared', preparedAt: '08:15', accuracy: '100%', defect: '-', operator: 'Rahul Sharma', time: '08:15' },
+    { kitId: 'KIT-P150-02', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', status: 'Prepared', preparedAt: '08:45', accuracy: '100%', defect: '-', operator: 'Priya Singh', time: '08:45' },
+    { kitId: 'KIT-D400-01', line: 'Line2', model: 'Dominar 400', sku: 'UG6', status: 'Prepared', preparedAt: '09:10', accuracy: '100%', defect: '-', operator: 'Amit Kumar', time: '09:10' },
+    { kitId: 'KIT-D400-02', line: 'Line2', model: 'Dominar 400', sku: 'UG6', status: 'Rejected', preparedAt: '09:35', accuracy: '92%', defect: 'Missing Gasket', operator: 'Rahul Sharma', time: '09:35' },
+    { kitId: 'KIT-A220-01', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', status: 'Prepared', preparedAt: '10:00', accuracy: '100%', defect: '-', operator: 'Priya Singh', time: '10:00' },
+    { kitId: 'KIT-A220-02', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', status: 'Rejected', preparedAt: '10:20', accuracy: '90%', defect: 'Wrong Bolt Grade', operator: 'Amit Kumar', time: '10:20' }
+  ];
+
+  if (line && line !== 'All') table = table.filter(t => t.line === line);
+  if (model && model !== 'All') table = table.filter(t => t.model === model);
+  if (sku && sku !== 'All') table = table.filter(t => t.sku === sku);
+
+  const preparedCount = table.filter(t => t.status === 'Prepared').length;
+  const rejectedCount = table.filter(t => t.status === 'Rejected').length;
+
   res.json({
-    kpis: { planned: 0, prepared: 0, pending: 0, accuracy: '0.0%', rejected: 0, status: 'No Data' },
-    barData: [],
-    table: []
+    kpis: { planned: table.length, prepared: preparedCount, pending: 0, accuracy: table.length > 0 ? `${((preparedCount / table.length) * 100).toFixed(1)}%` : '0.0%', rejected: rejectedCount, status: table.length > 0 ? 'On Track' : 'No Data' },
+    barData: [
+      { model: 'Pulsar 150', prepared: table.filter(t => t.model === 'Pulsar 150' && t.status === 'Prepared').length },
+      { model: 'Dominar 400', prepared: table.filter(t => t.model === 'Dominar 400' && t.status === 'Prepared').length },
+      { model: 'Avenger 220', prepared: table.filter(t => t.model === 'Avenger 220' && t.status === 'Prepared').length },
+    ].filter(d => d.prepared > 0),
+    table
   });
 });
 
 app.get('/api/material/engine-stock', async (req, res) => {
+  const { modelFamily, model, sku } = req.query;
   try {
     const pool = await poolPromise;
     if (pool) {
@@ -1716,7 +1770,11 @@ app.get('/api/material/engine-stock', async (req, res) => {
         FROM Prod_Engine_WIP
       `);
 
-      const table = result.recordset || [];
+      let table = result.recordset || [];
+      if (modelFamily && modelFamily !== 'All') table = table.filter(d => d.modelFamily === modelFamily);
+      if (model && model !== 'All') table = table.filter(d => d.model === model);
+      if (sku && sku !== 'All') table = table.filter(d => d.sku === sku);
+
       const pie = [
         { family: 'Pulsar', name: 'Pulsar 150', value: table.filter(d => d.modelFamily === 'Pulsar').length },
         { family: 'Dominar', name: 'Dominar 400', value: table.filter(d => d.modelFamily === 'Dominar').length },
@@ -1736,14 +1794,33 @@ app.get('/api/material/engine-stock', async (req, res) => {
     console.warn('Engine Stock DB query failed:', err.message);
   }
 
+  let table = [
+    { modelFamily: 'Pulsar', model: 'Pulsar 150', sku: 'UG6', engineNo: 'P-150-100234', dateTime: '2026-08-31 08:30:00' },
+    { modelFamily: 'Pulsar', model: 'Pulsar 150', sku: 'UG6', engineNo: 'P-150-100235', dateTime: '2026-08-31 09:15:00' },
+    { modelFamily: 'Dominar', model: 'Dominar 400', sku: 'UG6', engineNo: 'D-400-500120', dateTime: '2026-08-31 09:45:00' },
+    { modelFamily: 'Dominar', model: 'Dominar 400', sku: 'UG6', engineNo: 'D-400-500121', dateTime: '2026-08-31 10:20:00' },
+    { modelFamily: 'Avenger', model: 'Avenger 220', sku: 'SKU1', engineNo: 'A-220-300450', dateTime: '2026-08-31 11:00:00' },
+  ];
+
+  if (modelFamily && modelFamily !== 'All') table = table.filter(d => d.modelFamily === modelFamily);
+  if (model && model !== 'All') table = table.filter(d => d.model === model);
+  if (sku && sku !== 'All') table = table.filter(d => d.sku === sku);
+
+  const pie = [
+    { family: 'Pulsar', name: 'Pulsar 150', value: table.filter(d => d.modelFamily === 'Pulsar').length },
+    { family: 'Dominar', name: 'Dominar 400', value: table.filter(d => d.modelFamily === 'Dominar').length },
+    { family: 'Avenger', name: 'Avenger 220', value: table.filter(d => d.modelFamily === 'Avenger').length },
+  ].filter(d => d.value > 0);
+
   res.json({
-    kpis: { totalEngines: 0, modelsCount: 0 },
-    pie: [],
-    table: []
+    kpis: { totalEngines: table.length, modelsCount: pie.length },
+    pie,
+    table
   });
 });
 
 app.get('/api/material/dashboard', async (req, res) => {
+  const { line, model, sku } = req.query;
   try {
     const pool = await poolPromise;
     if (pool) {
@@ -1751,25 +1828,65 @@ app.get('/api/material/dashboard', async (req, res) => {
         SELECT 
           PartID as id,
           PartName as material,
-          'Main Store' as location,
-          100 as currentStock,
-          25 as minLevel,
-          150 as maxLevel,
-          'Safe' as status
+          CASE 
+            WHEN PartID LIKE '%102' OR PartID LIKE '%105' THEN 'Line 1'
+            ELSE 'Line 2'
+          END as line,
+          CASE 
+            WHEN PartID LIKE '%101' OR PartID LIKE '%102' OR PartID LIKE '%108' THEN 'Pulsar 150'
+            WHEN PartID LIKE '%103' OR PartID LIKE '%105' THEN 'Dominar 400'
+            ELSE 'Avenger 220'
+          END as model,
+          'UG6' as sku,
+          CASE 
+            WHEN PartID LIKE '%101' OR PartID LIKE '%104' THEN 'Main Store'
+            WHEN PartID LIKE '%102' OR PartID LIKE '%105' THEN 'Line 1'
+            ELSE 'Line 2'
+          END as location,
+          CASE 
+            WHEN PartID IN ('BAJ-ENG-102', 'BAJ-ENG-105') THEN 'Critical'
+            WHEN PartID = 'BAJ-ENG-108' THEN 'Excess'
+            ELSE 'Safe'
+          END as status,
+          CASE 
+            WHEN PartID = 'BAJ-ENG-102' THEN 18
+            WHEN PartID = 'BAJ-ENG-105' THEN 12
+            WHEN PartID = 'BAJ-ENG-108' THEN 450
+            ELSE 120
+          END as currentStock,
+          CASE WHEN PartID = 'BAJ-ENG-108' THEN 100 ELSE 25 END as minLevel,
+          CASE WHEN PartID = 'BAJ-ENG-108' THEN 300 ELSE 150 END as maxLevel,
+          CASE
+            WHEN PartID IN ('BAJ-ENG-101', 'BAJ-ENG-103') THEN 'Engine Parts'
+            WHEN PartID = 'BAJ-ENG-102' THEN 'Pistons'
+            WHEN PartID = 'BAJ-ENG-104' THEN 'Transmission'
+            WHEN PartID = 'BAJ-ENG-105' THEN 'Gears'
+            ELSE 'Electrical'
+          END as category
         FROM SAP_PartMaster
       `);
 
-      const table = result.recordset || [];
+      let table = result.recordset || [];
+      if (line && line !== 'All') table = table.filter(t => t.line === line);
+      if (model && model !== 'All') table = table.filter(t => t.model === model);
+      if (sku && sku !== 'All') table = table.filter(t => t.sku === sku);
+
+      const criticalCount = table.filter(d => d.status === 'Critical').length;
+      const safeCount = table.filter(d => d.status === 'Safe').length;
+
       return res.json({
         kpis: {
-          totalInventory: table.length * 100,
+          totalInventory: table.reduce((acc, d) => acc + (d.currentStock || 0), 0),
           inventoryValue: '₹4.8 Cr',
-          criticalShortages: 0,
-          stockoutRisk: 0,
-          kitFulfillment: '100%'
+          criticalShortages: criticalCount,
+          stockoutRisk: criticalCount,
+          kitFulfillment: table.length > 0 ? `${Math.round((safeCount / table.length) * 100)}%` : '100%'
         },
         stockLevels: table.map(d => ({ material: d.material, current: d.currentStock, min: d.minLevel })),
-        shortages: [],
+        shortages: [
+          { category: 'Pistons', count: table.filter(d => d.category === 'Pistons' && d.status === 'Critical').length },
+          { category: 'Gears', count: table.filter(d => d.category === 'Gears' && d.status === 'Critical').length }
+        ].filter(d => d.count > 0),
         table
       });
     }
@@ -1777,15 +1894,41 @@ app.get('/api/material/dashboard', async (req, res) => {
     console.warn('Material Dashboard DB query failed:', err.message);
   }
 
+  let table = [
+    { id: 'BAJ-ENG-101', material: 'Cylinder Block 150cc', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', location: 'Main Store', currentStock: 120, minLevel: 25, maxLevel: 150, status: 'Safe', category: 'Engine Parts' },
+    { id: 'BAJ-ENG-102', material: 'Piston Assembly 57mm', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', location: 'Line 1', currentStock: 18, minLevel: 25, maxLevel: 150, status: 'Critical', category: 'Pistons' },
+    { id: 'BAJ-ENG-103', material: 'Cylinder Head DOHC', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', location: 'Line 2', currentStock: 85, minLevel: 25, maxLevel: 150, status: 'Safe', category: 'Engine Parts' },
+    { id: 'BAJ-ENG-104', material: 'Crankshaft & Connecting Rod', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', location: 'Main Store', currentStock: 64, minLevel: 25, maxLevel: 150, status: 'Safe', category: 'Transmission' },
+    { id: 'BAJ-ENG-105', material: 'Camshaft Timing Gear Set', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', location: 'Line 1', currentStock: 12, minLevel: 25, maxLevel: 150, status: 'Critical', category: 'Gears' },
+    { id: 'BAJ-ENG-108', material: 'Spark Plug Twin-Spark', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', location: 'Main Store', currentStock: 450, minLevel: 100, maxLevel: 300, status: 'Excess', category: 'Electrical' }
+  ];
+
+  if (line && line !== 'All') table = table.filter(t => t.line === line);
+  if (model && model !== 'All') table = table.filter(t => t.model === model);
+  if (sku && sku !== 'All') table = table.filter(t => t.sku === sku);
+
+  const criticalCount = table.filter(d => d.status === 'Critical').length;
+  const safeCount = table.filter(d => d.status === 'Safe').length;
+
   res.json({
-    kpis: { totalInventory: 0, inventoryValue: '₹0', criticalShortages: 0, stockoutRisk: 0, kitFulfillment: '0%' },
-    stockLevels: [],
-    shortages: [],
-    table: []
+    kpis: {
+      totalInventory: table.reduce((acc, d) => acc + (d.currentStock || 0), 0),
+      inventoryValue: '₹4.8 Cr',
+      criticalShortages: criticalCount,
+      stockoutRisk: criticalCount,
+      kitFulfillment: table.length > 0 ? `${Math.round((safeCount / table.length) * 100)}%` : '0%'
+    },
+    stockLevels: table.map(d => ({ material: d.material, current: d.currentStock, min: d.minLevel })),
+    shortages: [
+      { category: 'Pistons', count: table.filter(d => d.category === 'Pistons' && d.status === 'Critical').length },
+      { category: 'Gears', count: table.filter(d => d.category === 'Gears' && d.status === 'Critical').length }
+    ].filter(d => d.count > 0),
+    table
   });
 });
 
 app.get('/api/material/request', async (req, res) => {
+  const { line, station } = req.query;
   try {
     const pool = await poolPromise;
     if (pool) {
@@ -1793,22 +1936,26 @@ app.get('/api/material/request', async (req, res) => {
         SELECT 
           PartID as reqId,
           PartName as material,
-          'Line 1' as line,
-          'Demo' as station,
+          CASE WHEN PartID LIKE '%102' OR PartID LIKE '%105' THEN 'Line 1' ELSE 'Line 2' END as line,
+          CASE WHEN PartID LIKE '%101' OR PartID LIKE '%102' THEN 'Demo' WHEN PartID LIKE '%103' THEN 'Line2' ELSE 'Station2' END as station,
           50 as requestedQty,
           50 as issuedQty,
-          'Approved' as status,
-          CONVERT(VARCHAR(5), GETDATE(), 108) as requestTime
+          CASE WHEN PartID LIKE '%105' THEN 'Pending' ELSE 'Fulfilled' END as status,
+          CONVERT(VARCHAR(5), GETDATE(), 108) as reqTime,
+          CONVERT(VARCHAR(5), DATEADD(minute, 10, GETDATE()), 108) as fullTime
         FROM SAP_PartMaster
       `);
 
-      const table = result.recordset || [];
+      let table = result.recordset || [];
+      if (line && line !== 'All') table = table.filter(t => t.line === line);
+      if (station && station !== 'All') table = table.filter(t => t.station === station);
+
       return res.json({
         kpis: {
           totalRequests: table.length,
-          fulfilled: table.length,
-          pending: 0,
-          fulfillmentRate: table.length > 0 ? '100.0%' : '0.0%'
+          fulfilled: table.filter(t => t.status === 'Fulfilled' || t.status === 'Approved').length,
+          pending: table.filter(t => t.status === 'Pending').length,
+          fulfillmentRate: table.length > 0 ? `${Math.round((table.filter(t => t.status === 'Fulfilled' || t.status === 'Approved').length / table.length) * 100)}%` : '0.0%'
         },
         table
       });
@@ -1817,9 +1964,98 @@ app.get('/api/material/request', async (req, res) => {
     console.warn('Material Request DB query failed:', err.message);
   }
 
+  let table = [
+    { reqId: 'REQ-1001', material: 'Cylinder Block 150cc', line: 'Line 1', station: 'Demo', requestedQty: 50, issuedQty: 50, status: 'Fulfilled', reqTime: '08:15', fullTime: '08:25' },
+    { reqId: 'REQ-1002', material: 'Piston Assembly 57mm', line: 'Line 1', station: 'Line2', requestedQty: 30, issuedQty: 30, status: 'Fulfilled', reqTime: '09:00', fullTime: '09:12' },
+    { reqId: 'REQ-1003', material: 'Cylinder Head DOHC', line: 'Line 2', station: 'Station2', requestedQty: 25, issuedQty: 25, status: 'Fulfilled', reqTime: '09:30', fullTime: '09:40' },
+    { reqId: 'REQ-1004', material: 'Camshaft Timing Gear Set', line: 'Line 1', station: 'Demo', requestedQty: 15, issuedQty: 0, status: 'Pending', reqTime: '10:10', fullTime: '-' },
+    { reqId: 'REQ-1005', material: 'Spark Plug Twin-Spark', line: 'Line 2', station: 'Line2', requestedQty: 100, issuedQty: 100, status: 'Fulfilled', reqTime: '10:45', fullTime: '10:55' },
+  ];
+
+  if (line && line !== 'All') table = table.filter(t => t.line === line);
+  if (station && station !== 'All') table = table.filter(t => t.station === station);
+
   res.json({
-    kpis: { totalRequests: 0, fulfilled: 0, pending: 0, fulfillmentRate: '0.0%' },
-    table: []
+    kpis: {
+      totalRequests: table.length,
+      fulfilled: table.filter(t => t.status === 'Fulfilled').length,
+      pending: table.filter(t => t.status === 'Pending').length,
+      fulfillmentRate: table.length > 0 ? `${Math.round((table.filter(t => t.status === 'Fulfilled').length / table.length) * 100)}%` : '0.0%'
+    },
+    table
+  });
+});
+
+app.get('/api/material/consumption', async (req, res) => {
+  const { line, model, sku } = req.query;
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const result = await pool.request().query(`
+        SELECT 
+          PartName as material,
+          CASE WHEN PartID LIKE '%102' OR PartID LIKE '%105' THEN 'Line 1' ELSE 'Line 2' END as line,
+          CASE 
+            WHEN PartID LIKE '%101' OR PartID LIKE '%102' OR PartID LIKE '%108' THEN 'Pulsar 150'
+            WHEN PartID LIKE '%103' OR PartID LIKE '%105' THEN 'Dominar 400'
+            ELSE 'Avenger 220'
+          END as model,
+          'UG6' as sku,
+          125 as consumed,
+          120 as expected,
+          5 as variance,
+          4.2 as variancePct
+        FROM SAP_PartMaster
+      `);
+
+      let table = result.recordset || [];
+      if (line && line !== 'All') table = table.filter(t => t.line === line);
+      if (model && model !== 'All') table = table.filter(t => t.model === model);
+      if (sku && sku !== 'All') table = table.filter(t => t.sku === sku);
+
+      const totalVariancePct = table.length > 0 
+        ? (table.reduce((acc, d) => acc + (d.variancePct || 0), 0) / table.length).toFixed(1)
+        : '0.0';
+
+      return res.json({
+        kpis: {
+          totalMaterials: table.length,
+          variancePct: totalVariancePct,
+          overConsumed: table.filter(d => d.variance > 0).length,
+          underConsumed: table.filter(d => d.variance < 0).length
+        },
+        table
+      });
+    }
+  } catch (err) {
+    console.warn('Material Consumption DB query failed:', err.message);
+  }
+
+  let table = [
+    { material: 'Cylinder Block 150cc', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', consumed: 125, expected: 120, variance: 5, variancePct: 4.2 },
+    { material: 'Piston Assembly 57mm', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', consumed: 122, expected: 120, variance: 2, variancePct: 1.7 },
+    { material: 'Cylinder Head DOHC', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', consumed: 80, expected: 85, variance: -5, variancePct: -5.9 },
+    { material: 'Crankshaft & Connecting Rod', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', consumed: 65, expected: 65, variance: 0, variancePct: 0.0 },
+    { material: 'Camshaft Timing Gear Set', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', consumed: 88, expected: 85, variance: 3, variancePct: 3.5 },
+    { material: 'Spark Plug Twin-Spark', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', consumed: 240, expected: 240, variance: 0, variancePct: 0.0 }
+  ];
+
+  if (line && line !== 'All') table = table.filter(t => t.line === line);
+  if (model && model !== 'All') table = table.filter(t => t.model === model);
+  if (sku && sku !== 'All') table = table.filter(t => t.sku === sku);
+
+  const totalVariancePct = table.length > 0 
+    ? (table.reduce((acc, d) => acc + (d.variancePct || 0), 0) / table.length).toFixed(1)
+    : '0.0';
+
+  res.json({
+    kpis: {
+      totalMaterials: table.length,
+      variancePct: totalVariancePct,
+      overConsumed: table.filter(d => d.variance > 0).length,
+      underConsumed: table.filter(d => d.variance < 0).length
+    },
+    table
   });
 });
 
@@ -1860,8 +2096,13 @@ app.get('/api/workforce/dashboard', async (req, res) => {
   }
 
   res.json({
-    kpis: { totalWorkforce: 0, present: 0, absent: 0, attendancePct: 0, avgSkillLevel: '0/5' },
-    table: []
+    kpis: { totalWorkforce: 4, present: 4, absent: 0, attendancePct: 100, avgSkillLevel: '4.0/5' },
+    table: [
+      { id: '1', operator: 'Rahul Sharma', line: 'Line 1', station: 'Demo', shift: 'Shift 1', skillLevel: 'Expert', status: 'Present' },
+      { id: '2', operator: 'Priya Singh', line: 'Line 2', station: 'Line2', shift: 'Shift 1', skillLevel: 'Intermediate', status: 'Present' },
+      { id: '3', operator: 'Amit Kumar', line: 'Line 1', station: 'Station2', shift: 'Shift 1', skillLevel: 'Expert', status: 'Present' },
+      { id: '4', operator: 'Neha Verma', line: 'Line 2', station: 'Demo', shift: 'Shift 2', skillLevel: 'Beginner', status: 'Present' }
+    ]
   });
 });
 
@@ -1903,25 +2144,37 @@ app.get('/api/workforce/attendance', async (req, res) => {
     table: [
       { id: '3', operator: 'Rahul Sharma', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
       { id: '4', operator: 'Priya Singh', line: 'Line 2', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
-      { id: '5', operator: 'Amit Kumar', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
-      { id: '6', operator: 'Neha Verma', line: 'Line 2', shift: 'Shift 1', inTime: '06:15', outTime: '14:00', status: 'Late', hoursWorked: 7.75 },
+      { id: '5', operator: 'Amit Kumar', line: 'Line 1', shift: 'Shift 2', inTime: '14:00', outTime: '22:00', status: 'Present', hoursWorked: 8 },
+      { id: '6', operator: 'Neha Verma', line: 'Line 2', shift: 'Shift 2', inTime: '14:15', outTime: '22:00', status: 'Late', hoursWorked: 7.75 },
       { id: '7', operator: 'Vikram Patel', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
-      { id: '8', operator: 'Sneha Gupta', line: 'Line 2', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 }
+      { id: '8', operator: 'Sneha Gupta', line: 'Line 2', shift: 'Shift 3', inTime: '22:00', outTime: '06:00', status: 'Absent', hoursWorked: 0 }
     ]
   });
 });
 
-app.get('/api/workforce/dashboard', async (req, res) => {
+app.get('/api/workforce/skill-matrix', async (req, res) => {
   res.json({
-    kpiData: {
-      assigned: 8,
-      present: 7,
-      absent: 1,
-      skillMatch: 98,
-      utilization: 94,
-      idleTime: 10,
-      overtime: 15
-    }
+    kpis: { beginner: 2, intermediate: 2, expert: 2 },
+    table: [
+      { name: 'Rahul Sharma', operator: 'Rahul Sharma', line: 'Line 1', station: 'Demo', skillLevel: 'Expert', certified: 'Yes', lastAssessed: '2026-02-15' },
+      { name: 'Priya Singh', operator: 'Priya Singh', line: 'Line 2', station: 'Line2', skillLevel: 'Intermediate', certified: 'Yes', lastAssessed: '2026-02-10' },
+      { name: 'Amit Kumar', operator: 'Amit Kumar', line: 'Line 1', station: 'Station2', skillLevel: 'Beginner', certified: 'No', lastAssessed: '2026-01-20' },
+      { name: 'Neha Verma', operator: 'Neha Verma', line: 'Line 2', station: 'Demo', skillLevel: 'Intermediate', certified: 'Yes', lastAssessed: '2026-02-01' },
+      { name: 'Vikram Patel', operator: 'Vikram Patel', line: 'Line 1', station: 'Line2', skillLevel: 'Expert', certified: 'Yes', lastAssessed: '2026-02-18' },
+      { name: 'Sneha Gupta', operator: 'Sneha Gupta', line: 'Line 2', station: 'Station2', skillLevel: 'Beginner', certified: 'No', lastAssessed: '2026-01-15' }
+    ]
+  });
+});
+
+app.get('/api/workforce/allocation', async (req, res) => {
+  res.json({
+    table: [
+      { station: 'Demo', line: 'Line 1', shift: 'Shift 1', assignedOperator: 'Rahul Sharma', plannedCount: 2, actualCount: 2, gap: 0 },
+      { station: 'Line2', line: 'Line 2', shift: 'Shift 1', assignedOperator: 'Priya Singh', plannedCount: 2, actualCount: 1, gap: -1 },
+      { station: 'Station2', line: 'Line 1', shift: 'Shift 1', assignedOperator: 'Amit Kumar, Vikram Patel', plannedCount: 2, actualCount: 2, gap: 0 },
+      { station: 'Demo', line: 'Line 1', shift: 'Shift 2', assignedOperator: 'Neha Verma', plannedCount: 2, actualCount: 2, gap: 0 },
+      { station: 'Line2', line: 'Line 2', shift: 'Shift 2', assignedOperator: 'Sneha Gupta', plannedCount: 1, actualCount: 2, gap: 1 }
+    ]
   });
 });
 

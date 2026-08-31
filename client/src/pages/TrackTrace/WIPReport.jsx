@@ -6,45 +6,62 @@ import StatCard from '../../components/StatCard';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { exportToXLSX } from '../../utils/exportExcel';
 import useReportFilters from '../../hooks/useReportFilters';
+import useFilterOptions from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function WIPReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
+  const filterOptions = useFilterOptions();
+  const [line, setLine] = useState('All');
   const [wipStatus, setWipStatus] = useState('All');
 
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
-    fetch(`/api/trace/wip?period=${period}&shift=${shift}&wipStatus=${wipStatus}`)
+    fetch(`/api/trace/wip?period=${period}&shift=${shift}&wipStatus=${wipStatus}&line=${line}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
-  }, [period, shift, wipStatus]);
+  }, [period, shift, wipStatus, line]);
   const COLORS = ['#0369a1', '#f97316', '#f43f5e', '#8b5cf6'];
   
-  const kpiValues = dbData?.kpis || {
-    total: 22,
-    inProcess: 14,
-    rework: 3,
-    blocked: 2,
-    idle: 3
+  const rawTableData = dbData?.details || dbData?.table || [
+    { engineNo: 'ENG-2026-00142', line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', station: 'Demo (Block Assembly)', status: 'In-Process', entryTime: '10:15', duration: 0.8, operator: 'Rahul Sharma' },
+    { engineNo: 'ENG-2026-00143', line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', station: 'Demo (Block Assembly)', status: 'In-Process', entryTime: '09:50', duration: 1.2, operator: 'Priya Singh' },
+    { engineNo: 'ENG-3018', line: 'Line 2', model: 'Pulsar 150', sku: 'UG5', station: 'Line2 (Head Tightening)', status: 'Rework', entryTime: '08:35', duration: 2.4, operator: 'Amit Kumar' },
+    { engineNo: 'ENG-3019', line: 'Line 2', model: 'Avenger 220', sku: 'BS6', station: 'Line2 (Head Tightening)', status: 'Blocked', entryTime: '08:00', duration: 3.1, operator: 'Vikram Patel' },
+    { engineNo: 'ENG-3020', line: 'Line 1', model: 'Dominar 400', sku: 'D400', station: 'Station2 (Cold Inspection)', status: 'Idle', entryTime: '07:30', duration: 3.5, operator: 'Neha Verma' }
+  ];
+
+  const filteredTableData = rawTableData.filter(row => 
+    (line === 'All' || row.line === line) &&
+    (wipStatus === 'All' || row.status === wipStatus)
+  );
+
+  const inProcessCount = filteredTableData.filter(d => d.status === 'In-Process').length;
+  const reworkCount = filteredTableData.filter(d => d.status === 'Rework').length;
+  const blockedCount = filteredTableData.filter(d => d.status === 'Blocked').length;
+  const idleCount = filteredTableData.filter(d => d.status === 'Idle').length;
+  const totalCount = filteredTableData.length;
+
+  const kpiValues = {
+    total: totalCount,
+    inProcess: inProcessCount,
+    rework: reworkCount,
+    blocked: blockedCount,
+    idle: idleCount
   };
 
-  const wipDistData = dbData?.distribution || [
+  const wipDistData = [
     { name: 'In-Process', value: kpiValues.inProcess },
     { name: 'Rework', value: kpiValues.rework },
     { name: 'Blocked', value: kpiValues.blocked },
     { name: 'Idle', value: kpiValues.idle },
   ];
 
-  const tableData = dbData?.details || [
-    { engineNo: 'ENG-2026-00142', model: 'Pulsar 150', sku: 'UG5', station: 'Demo (Block Assembly)', status: 'In-Process', entryTime: '10:15', duration: 0.8, operator: 'Rahul Sharma' },
-    { engineNo: 'ENG-2026-00143', model: 'Pulsar 150', sku: 'UG5', station: 'Demo (Block Assembly)', status: 'In-Process', entryTime: '09:50', duration: 1.2, operator: 'Priya Singh' },
-    { engineNo: 'ENG-3018', model: 'Pulsar 150', sku: 'UG5', station: 'Line2 (Head Tightening)', status: 'Rework', entryTime: '08:35', duration: 2.4, operator: 'Amit Kumar' }
-  ];
-
   const columns = [
     { header: 'Engine No', accessor: 'engineNo' },
+    { header: 'Line', accessor: 'line' },
     { header: 'Model', accessor: 'model' },
     { header: 'SKU', accessor: 'sku' },
     { header: 'Current Station', accessor: 'station' },
@@ -57,17 +74,13 @@ export default function WIPReport() {
   const exportToExcel = () => {
     exportToXLSX('WIPReport.xlsx', [
       { name: 'WIP Summary', rows: [['Status', 'Count'], ['In-Process', kpiValues.inProcess], ['Rework', kpiValues.rework], ['Blocked', kpiValues.blocked], ['Idle', kpiValues.idle], ['Total', kpiValues.total]] },
-      { name: 'Engine Details', rows: [['Engine No', 'Model', 'SKU', 'Current Station', 'WIP Status', 'Entry Time', 'Duration (hrs)', 'Operator'], ...filteredTableData.map(r => [r.engineNo, r.model, r.sku, r.station, r.status, r.entryTime, r.duration, r.operator])] }
+      { name: 'Engine Details', rows: [['Engine No', 'Line', 'Model', 'SKU', 'Current Station', 'WIP Status', 'Entry Time', 'Duration (hrs)', 'Operator'], ...filteredTableData.map(r => [r.engineNo, r.line, r.model, r.sku, r.station, r.status, r.entryTime, r.duration, r.operator])] }
     ]);
   };
 
   const filteredDistData = wipDistData.filter(
     item => wipStatus === 'All' || item.name === wipStatus
   ).filter(d => d.value > 0);
-
-  const filteredTableData = tableData.filter(
-    row => wipStatus === 'All' || row.status === wipStatus
-  );
 
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
@@ -78,6 +91,7 @@ export default function WIPReport() {
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
+          { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
           { type: 'dropdown', label: 'WIP Status', options: ['All', 'In-Process', 'Rework', 'Blocked', 'Idle'], value: wipStatus, onChange: setWipStatus }
         ]}
       />

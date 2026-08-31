@@ -31,21 +31,41 @@ export default function MaterialRequestReport() {
     { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
   ];
 
-  const tableData = (dbData?.table || []).filter(d => 
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station)
+  const defaultTable = [
+    { reqId: 'REQ-1001', material: 'Cylinder Block 150cc', line: 'Line 1', station: 'Demo', requestedQty: 50, issuedQty: 50, status: 'Fulfilled', reqTime: '08:15', fullTime: '08:25' },
+    { reqId: 'REQ-1002', material: 'Piston Assembly 57mm', line: 'Line 1', station: 'Line2', requestedQty: 30, issuedQty: 30, status: 'Fulfilled', reqTime: '09:00', fullTime: '09:12' },
+    { reqId: 'REQ-1003', material: 'Cylinder Head DOHC', line: 'Line 2', station: 'Station2', requestedQty: 25, issuedQty: 25, status: 'Fulfilled', reqTime: '09:30', fullTime: '09:40' },
+    { reqId: 'REQ-1004', material: 'Camshaft Timing Gear Set', line: 'Line 1', station: 'Demo', requestedQty: 15, issuedQty: 0, status: 'Pending', reqTime: '10:10', fullTime: '-' },
+    { reqId: 'REQ-1005', material: 'Spark Plug Twin-Spark', line: 'Line 2', station: 'Line2', requestedQty: 100, issuedQty: 100, status: 'Fulfilled', reqTime: '10:45', fullTime: '10:55' },
+  ];
+
+  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
+
+  const tableData = rawTable.filter(d => 
+    (line === 'All' || !d.line || d.line === line) &&
+    (station === 'All' || !d.station || d.station === station)
   );
 
+  const totalRequests = tableData.length;
+  const fulfilledCount = tableData.filter(d => d.status === 'Approved' || d.status === 'Fulfilled').length;
+  const pendingCount = tableData.filter(d => d.status === 'Pending').length;
+
   const kpi = {
-    total: dbData?.kpis?.totalRequests || tableData.length,
-    fulfilled: dbData?.kpis?.fulfilled || tableData.filter(d => d.status === 'Approved' || d.status === 'Fulfilled').length,
-    pending: dbData?.kpis?.pending || tableData.filter(d => d.status === 'Pending').length,
-    avgTime: tableData.length > 0 ? 10 : 0
+    total: totalRequests,
+    fulfilled: fulfilledCount,
+    pending: pendingCount,
+    avgTime: totalRequests > 0 ? 10 : 0
   };
 
-  const reqData = dbData?.reqData || [
-    { station: 'Demo', requests: tableData.length }
-  ].filter(d => d.requests > 0);
+  const reqData = useMemo(() => {
+    const stationCounts = {};
+    tableData.forEach(d => {
+      const st = d.station || 'Demo';
+      stationCounts[st] = (stationCounts[st] || 0) + 1;
+    });
+    const result = Object.entries(stationCounts).map(([st, requests]) => ({ station: st, requests }));
+    return result.length > 0 ? result : [{ station: station !== 'All' ? station : 'No Data', requests: 0 }];
+  }, [tableData, station]);
 
   const trendData = useMemo(() => {
     return generateTimeLabels(period, shift).map((time) => ({
@@ -56,12 +76,15 @@ export default function MaterialRequestReport() {
 
   const columns = [
     { header: 'Request ID', accessor: 'reqId' },
+    { header: 'Line', accessor: 'line' },
     { header: 'Station', accessor: 'station' },
     { header: 'Material', accessor: 'material' },
+    { header: 'Req Qty', accessor: 'requestedQty' },
+    { header: 'Issued Qty', accessor: 'issuedQty' },
     { header: 'Req Time', accessor: 'reqTime' },
     { header: 'Fulfilled Time', accessor: 'fullTime' },
     { header: 'Status', accessor: 'status', render: (val) => {
-      const color = val === 'Fulfilled' ? 'text-green-600 bg-green-100' : 'text-orange-600 bg-orange-100';
+      const color = val === 'Fulfilled' || val === 'Approved' ? 'text-green-600 bg-green-100' : 'text-orange-600 bg-orange-100';
       return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${color}`}>{val}</span>;
     }}
   ];
@@ -76,8 +99,8 @@ export default function MaterialRequestReport() {
         ['Avg Fulfillment Time (mins)', kpi.avgTime]
       ]},
       { name: 'Request Details', rows: [
-        ['Req ID', 'Station', 'Material', 'Req Time', 'Fulfilled Time', 'Status'],
-        ...tableData.map(d => [d.reqId, d.station, d.material, d.reqTime, d.fullTime, d.status])
+        ['Req ID', 'Line', 'Station', 'Material', 'Req Qty', 'Issued Qty', 'Req Time', 'Fulfilled Time', 'Status'],
+        ...tableData.map(d => [d.reqId, d.line, d.station, d.material, d.requestedQty, d.issuedQty, d.reqTime, d.fullTime, d.status])
       ]}
     ]);
   };

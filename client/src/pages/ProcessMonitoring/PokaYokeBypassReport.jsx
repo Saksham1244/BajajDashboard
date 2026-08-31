@@ -17,22 +17,37 @@ export default function PokaYokeBypassReport() {
   const [station, setStation] = React.useState('All');
   const [device, setDevice] = React.useState('All');
   const [model, setModel] = React.useState('All');
+  const [sku, setSku] = React.useState('All');
 
   React.useEffect(() => {
-    fetch(`/api/process/bypass?period=${period}&shift=${shift}&line=${line}&station=${station}`)
+    fetch(`/api/process/bypass?period=${period}&shift=${shift}&line=${line}&station=${station}&model=${model}&sku=${sku}&device=${device}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
-  }, [period, shift, line, station]);
+  }, [period, shift, line, station, model, sku, device]);
 
   const customFilters = [
     { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
     { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
     { type: 'dropdown', label: 'Device', options: ['All', 'PY-01 Torque', 'PY-02 Vision', 'PY-03 Sensor'], value: device, onChange: setDevice },
     { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
+    { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const tableData = dbData?.table || dbData?.bypassLogs || [];
+  const rawTable = dbData?.table || dbData?.bypassLogs || [
+    { id: '1', bypassId: 'BP-001', datetime: '2026-02-28 08:30', line: 'Line 1', station: 'Demo', device: 'PY-01 Torque', shift: 'Shift 1', model: 'Pulsar 150', sku: 'UG5', duration: 15, operator: 'Rahul Sharma', reason: 'Sensor calibration', authorizedBy: 'Supervisor Amit', status: 'Resolved' },
+    { id: '2', bypassId: 'BP-002', datetime: '2026-02-28 09:15', line: 'Line 2', station: 'Line2', device: 'PY-02 Vision', shift: 'Shift 1', model: 'Pulsar 150', sku: 'UG5', duration: 10, operator: 'Priya Singh', reason: 'Camera glare issue', authorizedBy: 'Supervisor Amit', status: 'Resolved' },
+    { id: '3', bypassId: 'BP-003', datetime: '2026-02-28 11:00', line: 'Line 1', station: 'Station2', device: 'PY-03 Sensor', shift: 'Shift 2', model: 'Avenger 220', sku: 'BS6', duration: 20, operator: 'Amit Kumar', reason: 'Proximity sensor glitch', authorizedBy: 'Supervisor Amit', status: 'Active' },
+    { id: '4', bypassId: 'BP-004', datetime: '2026-02-28 14:30', line: 'Line 2', station: 'Demo', device: 'PY-01 Torque', shift: 'Shift 2', model: 'Dominar 400', sku: 'D400', duration: 12, operator: 'Neha Verma', reason: 'Tool replacement', authorizedBy: 'Supervisor Amit', status: 'Resolved' }
+  ];
+
+  const tableData = rawTable.filter(d => 
+    (line === 'All' || d.line === line) &&
+    (station === 'All' || d.station === station) &&
+    (device === 'All' || d.device === device || (d.device && d.device.includes(device)) || (device && device.includes(d.device))) &&
+    (model === 'All' || d.model === model) &&
+    (sku === 'All' || d.sku === sku)
+  );
 
   const totalBypasses = dbData?.kpis?.totalBypasses || tableData.length;
   const activeBypasses = dbData?.kpis?.activeBypasses || tableData.filter(d => d.status === 'Active').length;
@@ -47,6 +62,7 @@ export default function PokaYokeBypassReport() {
     { header: 'Device', accessor: 'device' },
     { header: 'Shift', accessor: 'shift' },
     { header: 'Model', accessor: 'model' },
+    { header: 'SKU', accessor: 'sku' },
     { header: 'Duration (mins)', accessor: 'duration' },
     { header: 'Operator', accessor: 'operator' },
     { header: 'Reason', accessor: 'reason' },
@@ -56,7 +72,7 @@ export default function PokaYokeBypassReport() {
   const exportToExcel = () => {
     exportToXLSX('PokaYokeBypassReport.xlsx', [
       { name: 'KPI Summary', rows: [['Metric', 'Value'], ['Total Bypasses', totalBypasses], ['Active Bypasses', activeBypasses], ['Max Duration', `${maxDuration} mins`], ['Total Duration', `${totalDuration} mins`]] },
-      { name: 'Bypass Details', rows: [['Bypass ID', 'Date & Time', 'Line', 'Station', 'Device', 'Shift', 'Model', 'Duration', 'Operator', 'Reason', 'Authorized By'], ...tableData.map(d => [d.bypassId, d.datetime, d.line, d.station, d.device, d.shift, d.model, d.duration, d.operator, d.reason, d.authorizedBy])] }
+      { name: 'Bypass Details', rows: [['Bypass ID', 'Date & Time', 'Line', 'Station', 'Device', 'Shift', 'Model', 'SKU', 'Duration', 'Operator', 'Reason', 'Authorized By'], ...tableData.map(d => [d.bypassId, d.datetime, d.line, d.station, d.device, d.shift, d.model, d.sku, d.duration, d.operator, d.reason, d.authorizedBy])] }
     ]);
   };
 

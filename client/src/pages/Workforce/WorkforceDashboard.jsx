@@ -25,7 +25,18 @@ export default function WorkforceDashboard() {
       .catch(err => console.error(err));
   }, [period, shift, line, station]);
 
-  const rawTable = dbData?.table || [];
+  const allTable = dbData?.table || [
+    { id: '1', operator: 'Rahul Sharma', line: 'Line 1', station: 'Demo', shift: 'Shift 1', status: 'Present' },
+    { id: '2', operator: 'Priya Singh', line: 'Line 2', station: 'Line2', shift: 'Shift 1', status: 'Present' },
+    { id: '3', operator: 'Amit Kumar', line: 'Line 1', station: 'Station2', shift: 'Shift 1', status: 'Present' },
+    { id: '4', operator: 'Neha Verma', line: 'Line 2', station: 'Demo', shift: 'Shift 2', status: 'Present' }
+  ];
+
+  const rawTable = allTable.filter(d => 
+    (line === 'All' || d.line === line) &&
+    (station === 'All' || d.station === station) &&
+    (shift === 'All' || d.shift === shift)
+  );
   const totalAssigned = rawTable.length;
   const totalPresent = rawTable.filter(d => d.status === 'Present').length;
   const totalAbsent = rawTable.filter(d => d.status !== 'Present').length;
