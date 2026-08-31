@@ -1175,25 +1175,29 @@ app.get('/api/quality/defect', async (req, res) => {
         `)
       ]);
 
+      const norm = (str) => (str || '').toString().toLowerCase().replace(/[\s_-]+/g, '');
+      const isL1 = norm(line) === 'line1' || norm(line) === '1';
+      const isL2 = norm(line) === 'line2' || norm(line) === '2';
+
       const line1Prod = Math.max(1, Math.round(1594 * scale));
       const line2Prod = Math.max(1, Math.round(1594 * scale));
-      const totalProd = (line === 'Line 1') ? line1Prod : (line === 'Line 2') ? line2Prod : (line1Prod + line2Prod);
+      const totalProd = isL1 ? line1Prod : isL2 ? line2Prod : (line1Prod + line2Prod);
       
       const filteredTable = tableRes.recordset.filter(d => 
-        (line === 'All' || !line || d.line === line) &&
-        (station === 'All' || !station || d.station.toLowerCase().includes(station.toLowerCase()) || station.toLowerCase().includes(d.station.toLowerCase()))
+        (!line || line === 'All' || norm(d.line) === norm(line)) &&
+        (!station || station === 'All' || d.station.toLowerCase().includes(station.toLowerCase()) || station.toLowerCase().includes(d.station.toLowerCase()))
       );
 
-      const line1DefectsRaw = tableRes.recordset.filter(d => d.line === 'Line 1').length || 4;
-      const line2DefectsRaw = tableRes.recordset.filter(d => d.line === 'Line 2').length || 6;
+      const line1DefectsRaw = tableRes.recordset.filter(d => norm(d.line) === 'line1').length || 4;
+      const line2DefectsRaw = tableRes.recordset.filter(d => norm(d.line) === 'line2').length || 6;
 
       const line1Scaled = Math.max(1, Math.round(line1DefectsRaw * scale));
       const line2Scaled = Math.max(1, Math.round(line2DefectsRaw * scale));
 
       let totalDefects;
-      if (line === 'Line 1') {
+      if (isL1) {
         totalDefects = line1Scaled;
-      } else if (line === 'Line 2') {
+      } else if (isL2) {
         totalDefects = line2Scaled;
       } else if (station && station !== 'All') {
         totalDefects = Math.max(1, Math.round((filteredTable.length || 2) * scale));
@@ -1675,6 +1679,78 @@ app.get('/api/maintenance/mttr-mtbf', async (req, res) => {
   res.json({
     kpis: { avgMTTR: 0, avgMTBF: 0, bestMachine: 'N/A', worstMachine: 'N/A' },
     table: []
+  });
+});
+
+app.get('/api/maintenance/pm-dashboard', async (req, res) => {
+  const { period, shift, line, machine } = req.query;
+  const scale = getScale(period);
+
+  const defaultTasks = [
+    { id: 'PM-101', machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', task: 'Spindle Lubrication & Calibration', frequency: 'Weekly', scheduledDate: '2026-08-31', completedDate: '2026-08-31', status: 'Completed', technician: 'Amit Kumar' },
+    { id: 'PM-102', machine: 'Line2 Pallet Indexer', line: 'Line 2', station: 'Line2 (Head Tightening)', task: 'Pneumatic Cylinder Seal Check', frequency: 'Monthly', scheduledDate: '2026-08-31', completedDate: '-', status: 'Pending', technician: 'Rahul Sharma' },
+    { id: 'PM-103', machine: 'Station2 Cold Test Bench', line: 'Line 1', station: 'Station2 (Cold Inspection)', task: 'Sensor Alignment & Wiring Inspection', frequency: 'Daily', scheduledDate: '2026-08-31', completedDate: '2026-08-31', status: 'Completed', technician: 'Priya Singh' },
+    { id: 'PM-104', machine: 'Conveyor Drive Unit 1', line: 'Line 1', station: 'Demo (Block Assly)', task: 'Motor Belt Tension Adjustment', frequency: 'Bi-Weekly', scheduledDate: '2026-08-30', completedDate: '-', status: 'Overdue', technician: 'Amit Kumar' },
+    { id: 'PM-105', machine: 'Robotic Tightening Cell', line: 'Line 2', station: 'Line2 (Head Tightening)', task: 'End-Effector Torque Verification', frequency: 'Weekly', scheduledDate: '2026-08-31', completedDate: '2026-08-31', status: 'Completed', technician: 'Vikram Patel' },
+    { id: 'PM-106', machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', task: 'Electrical Contact Cleaning', frequency: 'Monthly', scheduledDate: '2026-08-31', completedDate: '2026-08-31', status: 'Completed', technician: 'Amit Kumar' }
+  ];
+
+  let filtered = defaultTasks;
+  if (line && line !== 'All') filtered = filtered.filter(t => t.line === line);
+  if (machine && machine !== 'All') filtered = filtered.filter(t => t.machine === machine);
+
+  const total = filtered.length;
+  const completed = filtered.filter(t => t.status === 'Completed').length;
+  const pending = filtered.filter(t => t.status === 'Pending').length;
+  const overdue = filtered.filter(t => t.status === 'Overdue').length;
+  const compliance = total > 0 ? ((completed / total) * 100).toFixed(1) : '100.0';
+
+  res.json({
+    kpis: {
+      totalTasks: total,
+      completedTasks: completed,
+      pendingTasks: pending,
+      overdueTasks: overdue,
+      compliance: `${compliance}%`
+    },
+    statusData: [
+      { name: 'Completed', value: completed },
+      { name: 'Pending', value: pending },
+      { name: 'Overdue', value: overdue }
+    ].filter(d => d.value > 0),
+    table: filtered
+  });
+});
+
+app.get('/api/maintenance/pm-report', async (req, res) => {
+  const { period, shift, line, machine } = req.query;
+  const defaultLogs = [
+    { id: 'PMR-201', pmId: 'PM-101', machine: 'Demo Nutrunner Spindle', line: 'Line 1', task: 'Spindle Lubrication & Calibration', date: '2026-08-31', shift: 'Shift 1', status: 'Completed', duration: 35, technician: 'Amit Kumar', result: 'Pass', notes: 'Lubricant replenished, calibration checked OK' },
+    { id: 'PMR-202', pmId: 'PM-102', machine: 'Line2 Pallet Indexer', line: 'Line 2', task: 'Pneumatic Cylinder Seal Check', date: '2026-08-31', shift: 'Shift 1', status: 'Pending', duration: 0, technician: 'Rahul Sharma', result: 'Pending', notes: 'Scheduled for end of shift' },
+    { id: 'PMR-203', pmId: 'PM-103', machine: 'Station2 Cold Test Bench', line: 'Line 1', task: 'Sensor Alignment & Wiring Inspection', date: '2026-08-31', shift: 'Shift 1', status: 'Completed', duration: 20, technician: 'Priya Singh', result: 'Pass', notes: 'Sensors cleaned and realigned' },
+    { id: 'PMR-204', pmId: 'PM-104', machine: 'Conveyor Drive Unit 1', line: 'Line 1', task: 'Motor Belt Tension Adjustment', date: '2026-08-30', shift: 'Shift 2', status: 'Overdue', duration: 0, technician: 'Amit Kumar', result: 'Overdue', notes: 'Requires spare belt' },
+    { id: 'PMR-205', pmId: 'PM-105', machine: 'Robotic Tightening Cell', line: 'Line 2', task: 'End-Effector Torque Verification', date: '2026-08-31', shift: 'Shift 2', status: 'Completed', duration: 45, technician: 'Vikram Patel', result: 'Pass', notes: 'Torque values within 0.5% tolerance' },
+    { id: 'PMR-206', pmId: 'PM-106', machine: 'Demo Nutrunner Spindle', line: 'Line 1', task: 'Electrical Contact Cleaning', date: '2026-08-31', shift: 'Shift 1', status: 'Completed', duration: 25, technician: 'Amit Kumar', result: 'Pass', notes: 'Contacts cleaned with solvent spray' }
+  ];
+
+  let filtered = defaultLogs;
+  if (line && line !== 'All') filtered = filtered.filter(t => t.line === line);
+  if (machine && machine !== 'All') filtered = filtered.filter(t => t.machine === machine);
+
+  const total = filtered.length;
+  const completed = filtered.filter(t => t.status === 'Completed').length;
+  const compliance = total > 0 ? ((completed / total) * 100).toFixed(1) : '100.0';
+  const totalMins = filtered.reduce((acc, d) => acc + (d.duration || 0), 0);
+  const avgMins = completed > 0 ? Math.round(totalMins / completed) : 0;
+
+  res.json({
+    kpis: {
+      totalPlanned: total,
+      totalCompleted: completed,
+      compliance: `${compliance}%`,
+      avgDurationMins: avgMins
+    },
+    table: filtered
   });
 });
 

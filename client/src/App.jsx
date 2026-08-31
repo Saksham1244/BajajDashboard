@@ -132,7 +132,11 @@ function App() {
             <Route path="dashboard" element={<Suspense fallback={<Loading />}><MaintenanceDashboard /></Suspense>} />
             <Route path="breakdown" element={<Suspense fallback={<Loading />}><BreakdownReport /></Suspense>} />
             <Route path="downtime-summary" element={<Suspense fallback={<Loading />}><DowntimeSummaryReport /></Suspense>} />
+            <Route path="downtime" element={<Suspense fallback={<Loading />}><DowntimeSummaryReport /></Suspense>} />
             <Route path="mttr-mtbf" element={<Suspense fallback={<Loading />}><MTTRMTBFReport /></Suspense>} />
+            <Route path="pm-dashboard" element={<Suspense fallback={<Loading />}><PMDashboard /></Suspense>} />
+            <Route path="pm-report" element={<Suspense fallback={<Loading />}><PMReport /></Suspense>} />
+            <Route path="pm" element={<Suspense fallback={<Loading />}><PMDashboard /></Suspense>} />
           </Route>
 
           {/* Material & Kitting Module */}

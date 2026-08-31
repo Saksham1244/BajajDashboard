@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 // Default baseline options from live database schema
 const DEFAULT_OPTIONS = {
-  lines: ['All', 'Line 1', 'Line2'],
+  lines: ['All', 'Line 1', 'Line 2'],
   stations: ['All', 'Demo', 'Line2', 'Station2'],
   modelFamilies: ['All', 'Bike'],
   models: ['All', 'A'],
@@ -31,8 +31,10 @@ export function useFilterOptions() {
           return res.json();
         })
         .then(data => {
+          const rawLines = data.lines || ['Line 1', 'Line 2'];
+          const cleanLines = ['All', ...Array.from(new Set(rawLines.map(l => l === 'Line2' ? 'Line 2' : l)))];
           const merged = {
-            lines: ['All', ...(data.lines || ['Line 1', 'Line2'])],
+            lines: cleanLines,
             stations: ['All', ...(data.stations || ['Demo', 'Line2', 'Station2'])],
             modelFamilies: ['All', ...(data.modelFamilies || ['Bike'])],
             models: ['All', ...(data.models || ['A'])],

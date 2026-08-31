@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Wrench } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
@@ -7,7 +7,6 @@ import { exportToXLSX } from '../../utils/exportExcel';
 import { ResponsiveContainer, PieChart, Pie, Cell, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import useReportFilters from '../../hooks/useReportFilters';
 import useFilterOptions from '../../hooks/useFilterOptions';
-import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function MaintenanceDashboard() {
   const { period, shift, getBaseFilters } = useReportFilters();
@@ -19,36 +18,56 @@ export default function MaintenanceDashboard() {
 
   const [dbData, setDbData] = useState(null);
 
-  React.useEffect(() => {
-    fetch(`/api/maintenance/dashboard?period=${period}&shift=${shift}&line=${line}&station=${station}`)
+  useEffect(() => {
+    fetch(`/api/maintenance/dashboard?period=${period}&shift=${shift}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}&machine=${encodeURIComponent(machine)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
-  }, [period, shift, line, station]);
+  }, [period, shift, line, station, machine]);
 
   const colors = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
-  const tableData = dbData?.table || [];
+  const defaultMachines = [
+    { id: 1, machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', status: 'Running', lastBreakdown: '08:15', downtimeToday: 18, mttr: 18, mtbf: 45, availability: 97.2 },
+    { id: 2, machine: 'Line2 Pallet Indexer', line: 'Line 2', station: 'Line2 (Head Tightening)', status: 'Breakdown', lastBreakdown: '09:10', downtimeToday: 25, mttr: 25, mtbf: 38, availability: 94.8 },
+    { id: 3, machine: 'Station2 Cold Test Bench', line: 'Line 1', station: 'Station2 (Cold Inspection)', status: 'Running', lastBreakdown: '10:00', downtimeToday: 0, mttr: 0, mtbf: 60, availability: 99.5 }
+  ];
 
-  const runningCount = dbData?.kpis?.runningCount || tableData.filter(d => d.status === 'Running').length;
-  const breakdownCount = dbData?.kpis?.breakdownCount || tableData.filter(d => d.status === 'Breakdown').length;
-  const maintenanceCount = dbData?.kpis?.maintenanceCount || tableData.filter(d => d.status === 'Maintenance').length;
-  const idleCount = dbData?.kpis?.idleCount || tableData.filter(d => d.status === 'Idle').length;
+  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultMachines;
 
-  const machineStatusData = dbData?.statusData || [
+  const tableData = rawTable.filter(d => 
+    (line === 'All' || d.line === line) &&
+    (station === 'All' || d.station === station) &&
+    (machine === 'All' || d.machine === machine)
+  );
+
+  const runningCount = tableData.filter(d => d.status === 'Running').length;
+  const breakdownCount = tableData.filter(d => d.status === 'Breakdown').length;
+  const maintenanceCount = tableData.filter(d => d.status === 'Maintenance').length;
+  const idleCount = tableData.filter(d => d.status === 'Idle').length;
+
+  const machineStatusData = [
     { name: 'Running', value: runningCount },
     { name: 'Breakdown', value: breakdownCount },
     { name: 'Maintenance', value: maintenanceCount },
     { name: 'Idle', value: idleCount },
   ].filter(d => d.value > 0);
 
-  const totalDowntime = dbData?.kpis?.totalDowntime || 0;
-  const totalBreakdowns = dbData?.kpis?.totalBreakdowns || 0;
-  const avgMTTR = dbData?.kpis?.avgMTTR || 0;
-  const avgMTBF = dbData?.kpis?.avgMTBF || 0;
-  const machineAvailability = dbData?.kpis?.machineAvailability || '0.0%';
+  const totalDowntime = tableData.reduce((acc, d) => acc + (Number(d.downtimeToday) || 0), 0);
+  const totalBreakdowns = breakdownCount;
+  const avgMTTR = tableData.length > 0 ? Math.round(tableData.reduce((acc, d) => acc + (Number(d.mttr) || 0), 0) / tableData.length) : 0;
+  const avgMTBF = tableData.length > 0 ? Math.round(tableData.reduce((acc, d) => acc + (Number(d.mtbf) || 0), 0) / tableData.length) : 0;
+  const avgAvailability = tableData.length > 0 ? (tableData.reduce((acc, d) => acc + (Number(d.availability) || 0), 0) / tableData.length).toFixed(1) : '100.0';
+  const machineAvailability = `${avgAvailability}%`;
 
-  const breakdownReasons = dbData?.breakdownReasons || [];
+  const breakdownReasons = dbData?.breakdownReasons || [
+    { reason: 'Preventive Maintenance', duration: 45, count: 3 },
+    { reason: 'Conveyor Jam', duration: 35, count: 2 },
+    { reason: 'Tool Wear', duration: 25, count: 2 },
+    { reason: 'Sensor Drift', duration: 18, count: 1 }
+  ];
+
+  const machineOptions = ['All', ...Array.from(new Set(rawTable.map(d => d.machine).filter(Boolean)))];
 
   const columns = [
     { header: 'Machine', accessor: 'machine' },
@@ -97,7 +116,7 @@ export default function MaintenanceDashboard() {
           ...getBaseFilters(),
           { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
           { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
-          { type: 'dropdown', label: 'Machine', options: filterOptions.stations, value: machine, onChange: setMachine },
+          { type: 'dropdown', label: 'Machine', options: machineOptions, value: machine, onChange: setMachine },
         ]} 
       />
       

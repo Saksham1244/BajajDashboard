@@ -77,6 +77,8 @@ const navItems = [
       { path: '/maintenance/breakdown', name: 'Breakdown Report' },
       { path: '/maintenance/downtime', name: 'Downtime Summary Report' },
       { path: '/maintenance/mttr-mtbf', name: 'MTTR MTBF Report' },
+      { path: '/maintenance/pm-dashboard', name: 'PM Dashboard' },
+      { path: '/maintenance/pm-report', name: 'PM Report' },
     ]
   },
   {
