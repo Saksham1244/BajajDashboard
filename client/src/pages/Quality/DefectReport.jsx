@@ -53,8 +53,8 @@ export default function DefectReport() {
   }, [period, shift, kpiData.totalDefects]);
 
   const defectDistData = dbData?.distribution || [];
-
   const defectReasonsData = dbData?.reasons || [];
+  const [selectedReason, setSelectedReason] = useState(null);
 
   const rawTableData = dbData?.table || [];
 
@@ -65,9 +65,10 @@ export default function DefectReport() {
       if (modelFamily !== 'All' && row.modelFamily && row.modelFamily !== modelFamily) return false;
       if (model !== 'All' && row.model && row.model !== model) return false;
       if (sku !== 'All' && row.sku && row.sku !== sku) return false;
+      if (selectedReason && row.defect && !row.defect.toLowerCase().includes(selectedReason.toLowerCase())) return false;
       return true;
     });
-  }, [rawTableData, line, station, modelFamily, model, sku]);
+  }, [rawTableData, line, station, modelFamily, model, sku, selectedReason]);
 
   const columns = [
     { header: 'Engine No', accessor: 'engineNo' },
@@ -131,7 +132,10 @@ export default function DefectReport() {
 
           {/* Clean Donut Chart for Defect Category Distribution */}
           <div className="card p-4 lg:col-span-1 flex flex-col">
-            <h3 className="text-sm font-bold text-brand-dark mb-2">Defect Distribution by Category</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-bold text-brand-dark">Defect Distribution by Category</h3>
+              <span className="text-[10px] text-gray-400 font-semibold">Click slice to filter</span>
+            </div>
             <div className="h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -144,6 +148,12 @@ export default function DefectReport() {
                     innerRadius={48} 
                     outerRadius={75} 
                     paddingAngle={3}
+                    onClick={(entry) => {
+                      if (entry && entry.name) {
+                        setSelectedReason(prev => prev === entry.name ? null : entry.name);
+                      }
+                    }}
+                    cursor="pointer"
                   >
                     {defectDistData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -158,13 +168,21 @@ export default function DefectReport() {
 
           {/* Clean Pareto Horizontal Bar Chart */}
           <div className="card p-4 lg:col-span-1 flex flex-col">
-            <h3 className="text-sm font-bold text-brand-dark mb-2">Top Defect Reasons (Pareto)</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-bold text-brand-dark">Top Defect Reasons (Pareto)</h3>
+              <span className="text-[10px] text-gray-400 font-semibold">Click bar to filter</span>
+            </div>
             <div className="h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart 
                   layout="vertical" 
                   data={defectReasonsData} 
                   margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                  onClick={(e) => {
+                    const reason = e?.activePayload?.[0]?.payload?.name || e?.activeLabel;
+                    if (reason) setSelectedReason(prev => prev === reason ? null : reason);
+                  }}
+                  className="cursor-pointer"
                 >
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
                   <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
@@ -178,7 +196,7 @@ export default function DefectReport() {
                   <Tooltip contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
                   <Bar dataKey="value" name="Defect Count" fill="#f97316" radius={[0, 4, 4, 0]}>
                     {defectReasonsData.map((entry, index) => (
-                      <Cell key={`bar-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`bar-${index}`} fill={selectedReason === entry.name ? '#0284c7' : COLORS[index % COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -189,7 +207,22 @@ export default function DefectReport() {
 
         {/* Detailed Defect Table */}
         <div className="card p-4">
-          <h3 className="text-sm font-bold text-brand-dark mb-3">Live Defect Logs</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-brand-dark">Live Defect Logs</h3>
+            {selectedReason && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded border border-sky-300">
+                  Filtered by: {selectedReason}
+                </span>
+                <button
+                  onClick={() => setSelectedReason(null)}
+                  className="text-xs text-rose-600 hover:text-rose-800 font-bold underline cursor-pointer"
+                >
+                  Reset Filter
+                </button>
+              </div>
+            )}
+          </div>
           <DataTable columns={columns} data={tableData} />
         </div>
       </div>

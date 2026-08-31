@@ -282,11 +282,9 @@ export default function Production() {
                 <ComposedChart
                   data={paretoData}
                   onClick={(e) => {
-                    if (e && e.activePayload && e.activePayload[0]) {
-                      const clickedReason = e.activePayload[0].payload.reason;
-                      if (clickedReason) {
-                        setSelectedLoss(prev => prev === clickedReason ? null : clickedReason);
-                      }
+                    const clickedReason = e?.activePayload?.[0]?.payload?.reason || e?.activeLabel;
+                    if (clickedReason) {
+                      setSelectedLoss(prev => prev === clickedReason ? null : clickedReason);
                     }
                   }}
                   className="cursor-pointer"
@@ -296,12 +294,11 @@ export default function Production() {
                   <YAxis yAxisId="left" />
                   <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
                   <Tooltip
-                    wrapperStyle={{ pointerEvents: 'none' }}
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         const data = payload[0].payload;
                         return (
-                          <div className="bg-slate-900 text-white text-xs p-2.5 rounded shadow-lg border border-slate-700 pointer-events-none">
+                          <div className="bg-slate-900 text-white text-xs p-2.5 rounded shadow-lg border border-slate-700">
                             <p className="font-bold text-amber-400">{data.reason}</p>
                             <p className="mt-1">Loss Events: <span className="font-semibold text-white">{data.count}</span></p>
                             <p>Cumulative: <span className="font-semibold text-rose-400">{data.cumPercent}%</span></p>
@@ -324,9 +321,7 @@ export default function Production() {
                       <Cell
                         key={`cell-${index}`}
                         fill={selectedLoss === entry.reason ? '#0284c7' : '#f59e0b'}
-                        stroke={selectedLoss === entry.reason ? '#0f172a' : 'transparent'}
-                        strokeWidth={selectedLoss === entry.reason ? 2 : 0}
-                        className="cursor-pointer transition-all hover:opacity-80"
+                        className="cursor-pointer hover:opacity-85 transition-opacity"
                       />
                     ))}
                   </Bar>
