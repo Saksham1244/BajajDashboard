@@ -667,6 +667,15 @@ app.get(['/api/dashboard/performance', '/api/performance/ole'], async (req, res)
       const dtRow = (dtRes.status === 'fulfilled' && dtRes.value?.recordset?.[0]) || { totalDT: 0, mechanicalDT: 0, electricalDT: 0, qualityDT: 0, setupDT: 0, processDT: 0 };
       const hourlyRow = (hourlyRes.status === 'fulfilled' && hourlyRes.value?.recordset?.[0]) || {};
 
+      const hasData = (prodRow.totalPlan > 0 || prodRow.totalProd > 0 || dtRow.totalDT > 0 || (hourlyRow.avgOLE !== null && hourlyRow.avgOLE !== undefined));
+
+      if (!hasData) {
+        return res.json({
+          kpis: { ole: 0, oee: 0, availability: 0, performance: 0 },
+          downtime: []
+        });
+      }
+
       const days = Math.max(1, prodRow.dayCount || 1);
       const plannedMinutes = days * 480;
       const totalDT = dtRow.totalDT || 0;
@@ -675,21 +684,21 @@ app.get(['/api/dashboard/performance', '/api/performance/ole'], async (req, res)
       let performance = prodRow.totalPlan > 0 ? Number(((prodRow.totalProd / prodRow.totalPlan) * 100).toFixed(1)) : 0;
       let quality = prodRow.totalProd > 0 ? Number((((prodRow.totalProd - prodRow.totalRework - prodRow.totalNotOk) / prodRow.totalProd) * 100).toFixed(1)) : 0;
 
-      if (hourlyRow.avgAvail) availability = Number(hourlyRow.avgAvail.toFixed(1));
-      if (hourlyRow.avgPerf) performance = Number(hourlyRow.avgPerf.toFixed(1));
-      if (hourlyRow.avgQuality) quality = Number(hourlyRow.avgQuality.toFixed(1));
+      if (hourlyRow.avgAvail !== null && hourlyRow.avgAvail !== undefined) availability = Number(hourlyRow.avgAvail.toFixed(1));
+      if (hourlyRow.avgPerf !== null && hourlyRow.avgPerf !== undefined) performance = Number(hourlyRow.avgPerf.toFixed(1));
+      if (hourlyRow.avgQuality !== null && hourlyRow.avgQuality !== undefined) quality = Number(hourlyRow.avgQuality.toFixed(1));
 
       const oee = Number(((availability * performance * quality) / 10000).toFixed(1));
-      const ole = hourlyRow.avgOLE ? Number(hourlyRow.avgOLE.toFixed(1)) : Number(Math.min(99.9, oee * 1.05).toFixed(1));
+      const ole = (hourlyRow.avgOLE !== null && hourlyRow.avgOLE !== undefined) ? Number(hourlyRow.avgOLE.toFixed(1)) : Number(Math.min(99.9, oee * 1.05).toFixed(1));
 
       const kpis = { ole, oee, availability, performance };
 
-      const downtime = [
+      const downtime = (dtRow.totalDT > 0 || plannedMinutes > 0) ? [
         { name: 'Mechanical', downTime: dtRow.mechanicalDT || 0, runTime: Math.max(0, Math.round(plannedMinutes * 0.25) - (dtRow.mechanicalDT || 0)) },
         { name: 'Electrical', downTime: dtRow.electricalDT || 0, runTime: Math.max(0, Math.round(plannedMinutes * 0.25) - (dtRow.electricalDT || 0)) },
         { name: 'Process', downTime: dtRow.processDT || 0, runTime: Math.max(0, Math.round(plannedMinutes * 0.25) - (dtRow.processDT || 0)) },
         { name: 'Setup', downTime: dtRow.setupDT || 0, runTime: Math.max(0, Math.round(plannedMinutes * 0.25) - (dtRow.setupDT || 0)) }
-      ];
+      ] : [];
 
       return res.json({ kpis, downtime });
     }
