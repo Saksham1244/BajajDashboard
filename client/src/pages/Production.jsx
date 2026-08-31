@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { ResponsiveContainer, BarChart, Bar, LineChart, Line, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts';
-import { LayoutDashboard, AlertTriangle, X, Wrench, ShieldAlert, Package, Clock, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ResponsiveContainer, BarChart, Bar, LineChart, Line, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { LayoutDashboard } from 'lucide-react';
 import StandardFilterBar from '../components/StandardFilterBar';
 import StatCard from '../components/StatCard';
 import DataTable from '../components/DataTable';
@@ -15,7 +14,6 @@ export default function Production() {
   const filterOptions = useFilterOptions();
   const [activeLine, setActiveLine] = useState('All');
   const [activeModel, setActiveModel] = useState('All');
-  const [selectedLoss, setSelectedLoss] = useState(null);
 
   const [dbData, setDbData] = useState(null);
 
@@ -23,11 +21,7 @@ export default function Production() {
     fetch(`/api/dashboard/production?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}&line=${encodeURIComponent(activeLine)}&model=${encodeURIComponent(activeModel)}`)
       .then(res => res.json())
       .then(data => {
-        if (data && data.kpis) {
-          setDbData(data);
-        } else {
-          setDbData(data);
-        }
+        setDbData(data);
       })
       .catch(err => {
         console.error('Error loading live production metrics:', err);
@@ -63,109 +57,44 @@ export default function Production() {
 
   const paretoData = dbData?.pareto || [];
 
-  const currentLossDetails = useMemo(() => {
-    if (!selectedLoss) return null;
-    const match = paretoData.find(p => p.reason === selectedLoss);
-    if (!match) return null;
-
-    const rLower = selectedLoss.toLowerCase();
-    let dept = 'Plant Maintenance';
-    let route = '/maintenance';
-    let badge = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-    let action = 'Logged in PPMS. Line cycle time recovered to nominal takt.';
-
-    if (rLower.includes('quality') || rLower.includes('inspection') || rLower.includes('defect') || rLower.includes('hold')) {
-      dept = 'Quality Assurance';
-      route = '/quality';
-      badge = 'bg-purple-100 text-purple-800 border-purple-300';
-      action = 'Quality checkpoint inspected and verified.';
-    } else if (rLower.includes('tool') || rLower.includes('wear') || rLower.includes('conveyor') || rLower.includes('jam')) {
-      dept = 'Process & Tooling';
-      route = '/process';
-      badge = 'bg-blue-100 text-blue-800 border-blue-300';
-      action = 'Tooling verified and station sensor realigned.';
-    } else if (rLower.includes('material') || rLower.includes('short')) {
-      dept = 'Material & Kitting';
-      route = '/material';
-      badge = 'bg-amber-100 text-amber-800 border-amber-300';
-      action = 'Material buffer replenished at line station.';
-    }
-
-    return {
-      dept,
-      route,
-      badge,
-      rootCause: `Downtime incident logged on ${match.line} (${match.station}) under reason: "${selectedLoss}".`,
-      impactMinutes: match.duration || 0,
-      engineer: match.loggedBy || 'Line Engineer',
-      action,
-      engines: match.engines || []
-    };
-  }, [selectedLoss, paretoData]);
-
   const columns = [
     { header: 'SKU Name', accessor: 'name' },
     { header: 'Plan Qty', accessor: 'plan' },
     { header: 'Actual Qty', accessor: 'actual' },
     { header: 'WIP Status', accessor: 'wip' },
-    { header: 'Rollover Plan', accessor: 'rollover' }
+    { header: 'Rollover', accessor: 'rollover' },
   ];
 
   const exportToExcel = () => {
-    exportToXLSX('Production_Report.xlsx', [
-      { name: 'KPI Summary', rows: [['Metric', 'Value'], ['Total Production', totalProd], ['Production Shortfall', shortfall], ['Current WIP', wip], ['Rollover Quantity', rollover]] },
-      { name: 'Hourly Plan vs Actual', rows: [['Time', 'Plan', 'Actual', 'Variance'], ...hourlyData.map(r => [r.time, r.plan, r.actual, r.actual - r.plan])] },
-      { name: 'Loss Analysis', rows: [['Reason', 'Loss Count', 'Cumulative %'], ...paretoData.map(r => [r.reason, r.count, r.cumPercent + '%'])] },
-      { name: 'SKU Production Status', rows: [['SKU Name', 'Plan Qty', 'Actual Qty', 'WIP Status', 'Rollover Plan'], ...skuData.map(r => [r.name, r.plan, r.actual, r.wip, r.rollover])] }
+    exportToXLSX('ProductionOverview.xlsx', [
+      { name: 'KPI', rows: [['Metric', 'Value'], ['Total Plan', totalPlan], ['Total Actual', totalProd], ['Shortfall', shortfall], ['WIP Status', wip], ['Rollover', rollover]] },
+      { name: 'Plan vs Actual', rows: [['Time', 'Plan', 'Actual'], ...hourlyData.map(d => [d.time, d.plan, d.actual])] },
+      { name: 'Shortfall Pareto', rows: [['Reason', 'Loss Events', 'Cumulative %'], ...paretoData.map(d => [d.reason, d.count, `${d.cumPercent}%`])] },
+      { name: 'Model SKU Status', rows: [['SKU Name', 'Plan Qty', 'Actual Qty', 'WIP Status', 'Rollover'], ...skuData.map(d => [d.name, d.plan, d.actual, d.wip, d.rollover])] }
     ]);
   };
 
   return (
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
       <StandardFilterBar
-        title="Production Report"
+        title="Production Overview"
         icon={LayoutDashboard}
         period={period}
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
-          { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2', 'Sub-Assy'], value: activeLine, onChange: setActiveLine },
-          { type: 'dropdown', label: 'Model Family', options: ['All', 'Pulsar', 'Dominar', 'Avenger'], value: activeModel, onChange: setActiveModel }
+          { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: activeLine, onChange: setActiveLine },
+          { type: 'dropdown', label: 'Model', options: filterOptions.models, value: activeModel, onChange: setActiveModel }
         ]}
       />
 
       <div className="flex-1 flex flex-col gap-3">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard
-            period={typeof period !== "undefined" ? period : "Month"}
-            title="Total Production"
-            value={totalProd}
-            trend={12.4}
-            subtitle="vs Last Period"
-            color="blue"
-          />
-          <StatCard
-            period={typeof period !== "undefined" ? period : "Month"}
-            title="Production Shortfall"
-            value={shortfall}
-            trend={-4.2}
-            subtitle="vs Last Period"
-            color="red"
-          />
-          <StatCard
-            period={typeof period !== "undefined" ? period : "Month"}
-            title="Current WIP"
-            value={wip}
-            sub="Mainline Assembly Buffer"
-            color="amber"
-          />
-          <StatCard
-            period={typeof period !== "undefined" ? period : "Month"}
-            title="Rollover Quantity"
-            value={rollover}
-            sub="QC & Material Holds"
-            color="purple"
-          />
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Plan Qty" value={totalPlan} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Actual Qty" value={totalProd} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Shortfall / Gap" value={shortfall} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="WIP Status" value={wip} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Rollover" value={rollover} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -186,32 +115,11 @@ export default function Production() {
             </div>
           </div>
 
-          <div className="card p-4 relative">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-brand-dark">Shortfall Pareto (Loss Analysis)</h3>
-              <button
-                onClick={() => {
-                  const topReason = paretoData[0]?.reason;
-                  if (topReason) setSelectedLoss(selectedLoss === topReason ? null : topReason);
-                }}
-                className="text-[10px] text-sky-700 hover:text-sky-800 font-bold uppercase tracking-wider bg-sky-50 hover:bg-sky-100 border border-sky-200 px-2 py-0.5 rounded cursor-pointer transition-colors"
-                title="Click to view root cause breakdown"
-              >
-                {selectedLoss ? `Viewing: ${selectedLoss}` : 'Click bar for root cause'}
-              </button>
-            </div>
+          <div className="card p-4">
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Shortfall Pareto (Loss Analysis)</h3>
             <div className="h-[240px]">
               <ResponsiveContainer>
-                <ComposedChart
-                  data={paretoData}
-                  onClick={(e) => {
-                    const clickedReason = e?.activePayload?.[0]?.payload?.reason || e?.activeLabel;
-                    if (clickedReason) {
-                      setSelectedLoss(prev => prev === clickedReason ? null : clickedReason);
-                    }
-                  }}
-                  className="cursor-pointer"
-                >
+                <ComposedChart data={paretoData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="reason" tick={{ fontSize: 11 }} />
                   <YAxis yAxisId="left" />
@@ -224,8 +132,8 @@ export default function Production() {
                           <div className="bg-slate-900 text-white text-xs p-2.5 rounded shadow-lg border border-slate-700">
                             <p className="font-bold text-amber-400">{data.reason}</p>
                             <p className="mt-1">Loss Events: <span className="font-semibold text-white">{data.count}</span></p>
+                            <p>Duration: <span className="font-semibold text-sky-400">{data.duration} mins</span></p>
                             <p>Cumulative: <span className="font-semibold text-rose-400">{data.cumPercent}%</span></p>
-                            <p className="text-[10px] text-sky-300 mt-1 font-semibold">👉 Click bar to inspect root cause</p>
                           </div>
                         );
                       }
@@ -238,89 +146,13 @@ export default function Production() {
                     dataKey="count"
                     name="Loss Count"
                     fill="#f59e0b"
-                    cursor="pointer"
-                  >
-                    {paretoData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={selectedLoss === entry.reason ? '#0284c7' : '#f59e0b'}
-                        className="cursor-pointer hover:opacity-85 transition-opacity"
-                      />
-                    ))}
-                  </Bar>
+                  />
                   <Line yAxisId="right" type="monotone" dataKey="cumPercent" name="Cumulative %" stroke="#ef4444" strokeWidth={2} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
           </div>
         </div>
-
-        {selectedLoss && currentLossDetails && (
-          <div className="bg-slate-900 text-white rounded-xl p-5 border border-sky-500/50 shadow-2xl animate-in fade-in slide-in-from-top-3 duration-200 ring-2 ring-sky-400/20">
-            <div className="flex items-start justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
-                  <AlertTriangle className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-black text-white flex items-center gap-2">
-                    Root Cause Incident: <span className="text-amber-400">{selectedLoss}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded border font-bold ${currentLossDetails.badge}`}>
-                      {currentLossDetails.dept}
-                    </span>
-                  </h4>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Impact: <span className="text-amber-400 font-bold">{currentLossDetails.impactMinutes} mins line downtime</span> • Assigned to: <span className="text-slate-200">{currentLossDetails.engineer}</span>
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedLoss(null)}
-                className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
-                title="Close incident details"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 text-xs">
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Diagnosed Root Cause</span>
-                <p className="text-slate-200 font-medium leading-relaxed bg-slate-800/80 p-3 rounded-lg border border-slate-700/60">
-                  {currentLossDetails.rootCause}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Corrective Action Taken</span>
-                <p className="text-slate-200 font-medium leading-relaxed bg-slate-800/80 p-3 rounded-lg border border-slate-700/60">
-                  {currentLossDetails.action}
-                </p>
-              </div>
-
-              <div className="flex flex-col justify-between">
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Affected Engine Barcodes</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {currentLossDetails.engines.map((eng, i) => (
-                      <span key={i} className="font-mono text-[11px] bg-slate-800 text-sky-400 px-2 py-1 rounded border border-slate-700 font-semibold">
-                        {eng}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <Link
-                  to={currentLossDetails.route}
-                  className="inline-flex items-center justify-center gap-1.5 mt-3 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-3 rounded-lg transition-colors text-xs shadow"
-                >
-                  Inspect in {currentLossDetails.dept.split(' ')[0]} Module
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="card p-4 flex-1">
           <h3 className="text-sm font-bold text-brand-dark mb-3">Model & SKU Wise Production Status</h3>
@@ -330,12 +162,3 @@ export default function Production() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
