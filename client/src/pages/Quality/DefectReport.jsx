@@ -15,32 +15,35 @@ export default function DefectReport() {
   const { period, shift, startDate, endDate, getBaseFilters } = useReportFilters();
   const filterOptions = useFilterOptions();
   
-  const [dbData, setDbData] = useState(null);
-  React.useEffect(() => {
-    fetch(`/api/quality/defect?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}`)
-      .then(res => res.json())
-      .then(data => setDbData(data))
-      .catch(err => console.error(err));
-  }, [period, shift, startDate, endDate]);
-
   const [line, setLine] = useState('All');
   const [station, setStation] = useState('All');
   const [modelFamily, setModelFamily] = useState('All');
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
 
+  const [dbData, setDbData] = useState(null);
+
+  React.useEffect(() => {
+    fetch(`/api/quality/defect?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}&modelFamily=${encodeURIComponent(modelFamily)}&model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}`)
+      .then(res => res.json())
+      .then(data => setDbData(data))
+      .catch(err => console.error(err));
+  }, [period, shift, startDate, endDate, line, station, modelFamily, model, sku]);
+
   const kpiData = dbData?.kpis || {
-    totalProduction: "3188",
-    totalDefects: "10",
+    totalProduction: 3188,
+    totalDefects: 10,
     rft: 96.9
   };
 
   const defectTrendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map((label, idx) => ({
+    const defects = Number(kpiData.totalDefects) || 1;
+    const labels = generateTimeLabels(period, shift);
+    return labels.map((label, idx) => ({
       date: label,
-      defects: idx % 3 === 0 ? 2 : 1
+      defects: Math.max(0, Math.round(defects / (labels.length || 1) + (idx % 2 === 0 ? 1 : -0.5)))
     }));
-  }, [period, shift]);
+  }, [period, shift, kpiData.totalDefects]);
 
   const defectDistData = dbData?.distribution || [
     { name: 'Engine Fitment', value: 4 },
@@ -105,9 +108,9 @@ export default function DefectReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Production" value={kpiData.totalProduction} color="blue" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="Total Defects" value={kpiData.totalDefects} color="red" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} autoScale title="RFT % (Right First Time)" value={`${kpiData.rft}%`} color="green" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Production" value={kpiData.totalProduction} color="blue" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Defects" value={kpiData.totalDefects} color="red" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="RFT % (Right First Time)" value={`${kpiData.rft}%`} color="green" />
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">

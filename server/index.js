@@ -1105,83 +1105,132 @@ app.get('/api/trace/engine-rework', async (req, res) => {
 // ==========================================
 // 5. QUALITY MODULE ENDPOINTS
 app.get('/api/quality/defect', async (req, res) => {
+  const { period, shift, line, station, modelFamily, model, sku } = req.query;
+  const scale = getScale(period);
+
   try {
     const pool = await poolPromise;
     if (pool) {
+      // Build dynamic where clause for defects
+      let whereClause = "WHERE 1=1";
+      if (station && station !== 'All') {
+        whereClause += ` AND (D.Remark LIKE '%${station}%' OR '${station}' = 'All')`;
+      }
+
       const [kpiRes, distRes, reasonsRes, tableRes] = await Promise.all([
         pool.request().query(`
           SELECT 
-            3188 as totalProduction,
-            COUNT(UID) as totalDefects,
-            CAST(ROUND((1.0 - (COUNT(UID) / 3188.0)) * 100, 1) AS DECIMAL(4,1)) as rft
-          FROM Prod_Defect_Log
+            COUNT(D.UID) as totalDefects
+          FROM Prod_Defect_Log D
+          ${whereClause}
         `),
         pool.request().query(`
           SELECT 
             CASE 
-              WHEN Remark LIKE '%Torque%' OR Remark LIKE '%Bolt%' THEN 'Torque & Fastening'
-              WHEN Remark LIKE '%Scratch%' OR Remark LIKE '%Casing%' THEN 'Cosmetic & Surface'
-              WHEN Remark LIKE '%Leakage%' OR Remark LIKE '%Gasket%' OR Remark LIKE '%Seal%' THEN 'Leakage & Sealing'
-              WHEN Remark LIKE '%Valve%' OR Remark LIKE '%Piston%' OR Remark LIKE '%Timing%' THEN 'Engine Fitment'
+              WHEN D.Remark LIKE '%Torque%' OR D.Remark LIKE '%Bolt%' THEN 'Torque & Fastening'
+              WHEN D.Remark LIKE '%Scratch%' OR D.Remark LIKE '%Casing%' THEN 'Cosmetic & Surface'
+              WHEN D.Remark LIKE '%Leakage%' OR D.Remark LIKE '%Gasket%' OR D.Remark LIKE '%Seal%' THEN 'Leakage & Sealing'
+              WHEN D.Remark LIKE '%Valve%' OR D.Remark LIKE '%Piston%' OR D.Remark LIKE '%Timing%' THEN 'Engine Fitment'
               ELSE 'Electrical & Other'
             END as name,
-            COUNT(UID) as [value]
-          FROM Prod_Defect_Log
+            COUNT(D.UID) as [value]
+          FROM Prod_Defect_Log D
+          ${whereClause}
           GROUP BY 
             CASE 
-              WHEN Remark LIKE '%Torque%' OR Remark LIKE '%Bolt%' THEN 'Torque & Fastening'
-              WHEN Remark LIKE '%Scratch%' OR Remark LIKE '%Casing%' THEN 'Cosmetic & Surface'
-              WHEN Remark LIKE '%Leakage%' OR Remark LIKE '%Gasket%' OR Remark LIKE '%Seal%' THEN 'Leakage & Sealing'
-              WHEN Remark LIKE '%Valve%' OR Remark LIKE '%Piston%' OR Remark LIKE '%Timing%' THEN 'Engine Fitment'
+              WHEN D.Remark LIKE '%Torque%' OR D.Remark LIKE '%Bolt%' THEN 'Torque & Fastening'
+              WHEN D.Remark LIKE '%Scratch%' OR D.Remark LIKE '%Casing%' THEN 'Cosmetic & Surface'
+              WHEN D.Remark LIKE '%Leakage%' OR D.Remark LIKE '%Gasket%' OR D.Remark LIKE '%Seal%' THEN 'Leakage & Sealing'
+              WHEN D.Remark LIKE '%Valve%' OR D.Remark LIKE '%Piston%' OR D.Remark LIKE '%Timing%' THEN 'Engine Fitment'
               ELSE 'Electrical & Other'
             END
           ORDER BY [value] DESC
         `),
         pool.request().query(`
           SELECT TOP 6
-            Remark as name,
-            COUNT(UID) as [value]
-          FROM Prod_Defect_Log
-          GROUP BY Remark
-          ORDER BY [value] DESC, Remark ASC
+            D.Remark as name,
+            COUNT(D.UID) as [value]
+          FROM Prod_Defect_Log D
+          ${whereClause}
+          GROUP BY D.Remark
+          ORDER BY [value] DESC, D.Remark ASC
         `),
         pool.request().query(`
           SELECT 
-            EngineNo as engineNo,
-            ISNULL(Remark, 'Defect') as defect,
+            D.EngineNo as engineNo,
+            ISNULL(D.Remark, 'Defect') as defect,
             CASE 
-              WHEN UID % 3 = 0 THEN 'Demo (Block Assembly)'
-              WHEN UID % 3 = 1 THEN 'Line2 (Head Tightening)'
+              WHEN D.UID % 3 = 0 THEN 'Demo (Block Assembly)'
+              WHEN D.UID % 3 = 1 THEN 'Line2 (Head Tightening)'
               ELSE 'Station2 (Cold Inspection)'
             END as station,
-            ISNULL(UpdatedBy, 'Rahul Sharma') as operator,
-            CONVERT(VARCHAR(5), Timestamp, 108) as [time]
-          FROM Prod_Defect_Log
-          ORDER BY Timestamp DESC
+            CASE WHEN D.UID % 2 = 0 THEN 'Line 1' ELSE 'Line 2' END as line,
+            'Pulsar 150' as model,
+            'UG5' as sku,
+            ISNULL(D.UpdatedBy, 'Rahul Sharma') as operator,
+            CONVERT(VARCHAR(5), D.Timestamp, 108) as [time]
+          FROM Prod_Defect_Log D
+          ${whereClause}
+          ORDER BY D.Timestamp DESC
         `)
       ]);
 
-      const kpi = kpiRes.recordset[0] || { totalProduction: 3188, totalDefects: 10, rft: 96.9 };
+      const baseProd = (station && station !== 'All') || (line && line !== 'All') ? 1420 : 3188;
+      const totalProd = Math.max(1, Math.round(baseProd * scale));
+      
+      const filteredTable = tableRes.recordset.filter(d => 
+        (line === 'All' || !line || d.line === line) &&
+        (station === 'All' || !station || d.station.toLowerCase().includes(station.toLowerCase()) || station.toLowerCase().includes(d.station.toLowerCase()))
+      );
+
+      const rawDefectCount = filteredTable.length > 0 ? filteredTable.length : (kpiRes.recordset[0]?.totalDefects || 10);
+      const totalDefects = Math.max(0, Math.round(rawDefectCount * scale)) || (rawDefectCount > 0 ? 1 : 0);
+      const rft = totalProd > 0 ? Number(((1 - (totalDefects / totalProd)) * 100).toFixed(1)) : 100;
+
+      const dist = distRes.recordset.length > 0 ? distRes.recordset.map(d => ({
+        name: d.name,
+        value: Math.max(1, Math.round(d.value * scale))
+      })) : [
+        { name: 'Engine Fitment', value: Math.max(1, Math.round(4 * scale)) },
+        { name: 'Leakage & Sealing', value: Math.max(1, Math.round(2 * scale)) },
+        { name: 'Torque & Fastening', value: Math.max(1, Math.round(2 * scale)) }
+      ];
+
+      const reasons = reasonsRes.recordset.length > 0 ? reasonsRes.recordset.map(r => ({
+        name: r.name,
+        value: Math.max(1, Math.round(r.value * scale))
+      })) : [
+        { name: 'Torque Fail on Head Bolt #3', value: Math.max(1, Math.round(2 * scale)) },
+        { name: 'Casing Scratch on Clutch Cover', value: Math.max(1, Math.round(2 * scale)) }
+      ];
 
       return res.json({
-        kpis: kpi,
-        distribution: distRes.recordset,
-        reasons: reasonsRes.recordset,
-        table: tableRes.recordset
+        kpis: {
+          totalProduction: totalProd,
+          totalDefects: totalDefects,
+          rft: rft
+        },
+        distribution: dist,
+        reasons: reasons,
+        table: filteredTable.length > 0 ? filteredTable : tableRes.recordset
       });
     }
   } catch (err) {
-    console.warn('Quality Defect DB fallback:', err.message);
+    console.warn('Quality Defect DB query error:', err.message);
   }
 
+  const baseProd = (station && station !== 'All') || (line && line !== 'All') ? 1420 : 3188;
+  const totalProd = Math.max(1, Math.round(baseProd * scale));
+  const totalDefects = (station && station !== 'All') ? Math.max(1, Math.round(4 * scale)) : Math.max(1, Math.round(10 * scale));
+  const rft = Number(((1 - (totalDefects / totalProd)) * 100).toFixed(1));
+
   res.json({
-    kpis: { totalProduction: 3188, totalDefects: 10, rft: 96.9 },
+    kpis: { totalProduction: totalProd, totalDefects: totalDefects, rft: rft },
     distribution: [
-      { name: 'Engine Fitment', value: 4 },
-      { name: 'Leakage & Sealing', value: 2 },
-      { name: 'Torque & Fastening', value: 2 },
-      { name: 'Cosmetic & Surface', value: 1 },
-      { name: 'Electrical & Other', value: 1 }
+      { name: 'Engine Fitment', value: Math.max(1, Math.round(4 * scale)) },
+      { name: 'Leakage & Sealing', value: Math.max(1, Math.round(2 * scale)) },
+      { name: 'Torque & Fastening', value: Math.max(1, Math.round(2 * scale)) },
+      { name: 'Cosmetic & Surface', value: Math.max(1, Math.round(1 * scale)) }
     ],
     reasons: [
       { name: 'Torque Fail on Head Bolt #3', value: 2 },
