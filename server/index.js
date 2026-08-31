@@ -968,7 +968,10 @@ app.get('/api/process/torque', async (req, res) => {
         SELECT 
           T.RowID as id,
           'ENG-2026-00' + CAST(T.RowID AS VARCHAR) as engineNo,
-          ISNULL(S.SKUName, 'SKU1') as sku,
+          ISNULL(M.ModelName, 'Pulsar 150') as model,
+          ISNULL(S.SKUName, 'SKU-001') as sku,
+          'Line 1' as line,
+          'Station 1' as station,
           'TD-0' + CAST(ISNULL(T.ActivityID, 1) AS VARCHAR) as device,
           CAST(T.ActivityValue AS FLOAT) as [value],
           CAST(ISNULL(T.LowerLimit, 40.0) AS FLOAT) as minSpec,
@@ -978,6 +981,7 @@ app.get('/api/process/torque', async (req, res) => {
           'OP-001' as operator
         FROM Prod_TorqueData_Log T
         LEFT JOIN Config_SKU S ON T.SKUID = S.SKUID
+        LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
         WHERE (@StartDate IS NULL OR CAST(T.Timestamp AS DATE) >= @StartDate)
           AND (@EndDate IS NULL OR CAST(T.Timestamp AS DATE) <= @EndDate)
           AND (@SKU IS NULL OR S.SKUName = @SKU)
