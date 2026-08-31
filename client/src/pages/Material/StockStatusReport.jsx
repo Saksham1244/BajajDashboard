@@ -115,7 +115,7 @@ export default function StockStatusReport() {
             </div>
           </div>
           <div className="card p-4">
-            <h3 className="text-sm font-bold text-brand-dark mb-3">Stock Value Trend</h3>
+            <h3 className="text-sm font-bold text-brand-dark mb-3">Stock Quantity Trend</h3>
             <div className="h-[240px]">
               <ResponsiveContainer>
                 <LineChart data={trendData}>
@@ -124,7 +124,7 @@ export default function StockStatusReport() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="stockValue" stroke={COLORS[3]} name="Stock Value ($)" />
+                  <Line type="monotone" dataKey="stockValue" stroke={COLORS[3]} name="Available Qty" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
