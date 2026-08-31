@@ -28,13 +28,7 @@ export default function DowntimeSummaryReport() {
 
   const colors = ['#0369a1','#f97316'];
 
-  const defaultTable = [
-    { date: '2026-08-31', shift: 'Shift 1', line: 'Line 1', station: 'Demo', machine: 'Demo Nutrunner Spindle', downtime: 18, count: 1 },
-    { date: '2026-08-31', shift: 'Shift 1', line: 'Line 2', station: 'Line2', machine: 'Line2 Pallet Indexer', downtime: 25, count: 1 },
-    { date: '2026-08-31', shift: 'Shift 2', line: 'Line 1', station: 'Station2', machine: 'Station2 Cold Test Bench', downtime: 12, count: 1 },
-  ];
-
-  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
+  const rawTable = dbData?.table || [];
 
   const tableData = rawTable.filter(d => 
     matchFilter(d.line, line) &&
@@ -42,10 +36,10 @@ export default function DowntimeSummaryReport() {
   );
 
   const totalDowntimeMins = tableData.reduce((acc, d) => acc + (Number(d.downtime) || 0), 0);
-  const totalDowntimeHrs = (totalDowntimeMins / 60).toFixed(1);
+  const totalDowntimeHrs = tableData.length > 0 ? (totalDowntimeMins / 60).toFixed(1) : '0.0';
   const avgDowntimeMins = tableData.length > 0 ? Math.round(totalDowntimeMins / tableData.length) : 0;
   const totalBreakdowns = tableData.reduce((acc, d) => acc + (Number(d.count) || 0), 0);
-  const mostAffected = tableData.length > 0 ? tableData.reduce((prev, curr) => (Number(curr.downtime) > Number(prev.downtime) ? curr : prev)).machine : 'None';
+  const mostAffected = tableData.length > 0 ? tableData.reduce((prev, curr) => (Number(curr.downtime) > Number(prev.downtime) ? curr : prev)).machine : 'N/A';
 
   const chartData = dbData?.trend || generateTimeLabels(period, shift).map((time) => ({
     time,

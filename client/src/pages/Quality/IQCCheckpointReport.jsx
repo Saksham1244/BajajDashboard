@@ -24,16 +24,7 @@ export default function IQCCheckpointReport() {
   }, [period, shift, startDate, endDate, line, model]);
 
   const rawTableData = useMemo(() => {
-    return dbData?.table || [
-      { id: 'IQC-CP-01', cpName: 'Casting Surface Roughness', date: '2026-08-31 08:20', shift: 'Shift 1', line: 'Line 1', stage: 'Incoming', model: 'Pulsar 150', sku: 'UG5', inspector: 'Rahul Sharma', category: 'Surface', stdValue: 'Ra <= 1.6 um', actValue: '1.4 um', result: 'PASS' },
-      { id: 'IQC-CP-02', cpName: 'Cylinder Wall Thickness', date: '2026-08-31 09:35', shift: 'Shift 1', line: 'Line 2', stage: 'Incoming', model: 'Dominar 400', sku: 'D400-ABS', inspector: 'Priya Singh', category: 'Measurement', stdValue: '4.50 ± 0.10 mm', actValue: '4.52 mm', result: 'PASS' },
-      { id: 'IQC-CP-03', cpName: 'M8 Bolt Thread Pitch', date: '2026-08-31 10:50', shift: 'Shift 1', line: 'Line 1', stage: 'Incoming', model: 'Pulsar 220', sku: 'P220-F', inspector: 'Amit Kumar', category: 'Measurement', stdValue: '1.25 mm', actValue: '1.29 mm', result: 'FAIL' },
-      { id: 'IQC-CP-04', cpName: 'Gasket Shore A Hardness', date: '2026-08-31 12:05', shift: 'Shift 1', line: 'Line 2', stage: 'Incoming', model: 'Avenger', sku: 'AV-220', inspector: 'Neha Verma', category: 'Material', stdValue: '70 ± 5 Shore A', actValue: '72 Shore A', result: 'PASS' },
-      { id: 'IQC-CP-05', cpName: 'Piston Pin Outer Diameter', date: '2026-08-31 14:25', shift: 'Shift 2', line: 'Line 1', stage: 'Incoming', model: 'Pulsar 150', sku: 'UG5', inspector: 'Vikram Patel', category: 'Measurement', stdValue: '14.000 -0.005 mm', actValue: '13.998 mm', result: 'PASS' },
-      { id: 'IQC-CP-06', cpName: 'Spark Plug Electrode Gap', date: '2026-08-31 15:55', shift: 'Shift 2', line: 'Line 2', stage: 'Incoming', model: 'Dominar 400', sku: 'D400-ABS', inspector: 'Rahul Sharma', category: 'Measurement', stdValue: '0.80 - 0.90 mm', actValue: '0.96 mm', result: 'FAIL' },
-      { id: 'IQC-CP-07', cpName: 'TPS Sensor Internal Resistance', date: '2026-08-31 17:20', shift: 'Shift 2', line: 'Line 1', stage: 'Incoming', model: 'Pulsar 220', sku: 'P220-F', inspector: 'Amit Kumar', category: 'Electrical', stdValue: '4.8 - 5.2 kOhm', actValue: '5.0 kOhm', result: 'PASS' },
-      { id: 'IQC-CP-08', cpName: 'Oil Viscosity at 40°C', date: '2026-08-31 18:45', shift: 'Shift 2', line: 'Line 2', stage: 'Incoming', model: 'Avenger', sku: 'AV-220', inspector: 'Priya Singh', category: 'Chemical', stdValue: '110 ± 5 cSt', actValue: '112 cSt', result: 'PASS' },
-    ];
+    return dbData?.table || [];
   }, [dbData]);
 
   const tableData = useMemo(() => {
@@ -49,7 +40,7 @@ export default function IQCCheckpointReport() {
     const total = tableData.length;
     const passed = tableData.filter(d => d.result === 'PASS' || d.result === 'OK').length;
     const failed = tableData.filter(d => d.result === 'FAIL' || d.result === 'NOK').length;
-    const passRate = total > 0 ? Number(((passed / total) * 100).toFixed(1)) : 100;
+    const passRate = total > 0 ? Number(((passed / total) * 100).toFixed(1)) : 0;
     return {
       totalCheckpoints: total,
       passed,

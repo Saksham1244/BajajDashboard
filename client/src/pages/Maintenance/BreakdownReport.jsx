@@ -24,11 +24,7 @@ export default function BreakdownReport() {
       .catch(err => console.error(err));
   }, [period, shift, line, station, machine]);
 
-  const allBreakdowns = dbData?.table || [
-    { id: 1, machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', start: '08:15', end: '08:33', duration: 18, reason: 'Nutrunner Spindle #2 Stall', tech: 'Amit Kumar', status: 'Resolved' },
-    { id: 2, machine: 'Line2 Pallet Indexer', line: 'Line 2', station: 'Line2 (Head Tightening)', start: '09:10', end: '09:35', duration: 25, reason: 'Conveyor Pallet Stop Cylinder Jam', tech: 'Rahul Sharma', status: 'Resolved' },
-    { id: 3, machine: 'Station2 Cold Test Bench', line: 'Line 1', station: 'Station2 (Cold Inspection)', start: '10:40', end: '10:52', duration: 12, reason: 'Vision Camera Communication Timeout', tech: 'Priya Singh', status: 'Resolved' }
-  ];
+  const allBreakdowns = dbData?.table || [];
 
   const tableData = allBreakdowns.filter(d => 
     matchFilter(d.line, line) &&
@@ -40,7 +36,7 @@ export default function BreakdownReport() {
   const totalDuration = tableData.reduce((acc, d) => acc + (Number(d.duration) || 0), 0);
   const avgMins = totalBreakdowns > 0 ? Math.round(totalDuration / totalBreakdowns) : 0;
   const maxMins = totalBreakdowns > 0 ? Math.max(...tableData.map(d => Number(d.duration) || 0)) : 0;
-  const totalDowntimeHours = (totalDuration / 60).toFixed(1);
+  const totalDowntimeHours = totalBreakdowns > 0 ? (totalDuration / 60).toFixed(1) : '0.0';
 
   const machineOptions = ['All', ...Array.from(new Set(allBreakdowns.map(d => d.machine).filter(Boolean)))];
 

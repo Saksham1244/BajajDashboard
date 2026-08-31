@@ -3,7 +3,6 @@ import React, { useState, useMemo } from 'react';
 import { GraduationCap } from 'lucide-react';
 import useReportFilters from '../../hooks/useReportFilters';
 import useFilterOptions from '../../hooks/useFilterOptions';
-import { generateTimeLabels } from '../../utils/timeDataGenerator';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
@@ -18,20 +17,13 @@ export default function SkillMatrixReport() {
   const [dbData, setDbData] = useState(null);
 
   React.useEffect(() => {
-    fetch(`/api/workforce/skill-matrix?period=${period}&shift=${shift}&line=${line}&station=${station}`)
+    fetch(`/api/workforce/skill-matrix?period=${period}&shift=${shift}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
   }, [period, shift, line, station]);
 
-  const allTableData = (dbData?.table || [
-    { operator: 'Rahul Sharma', line: 'Line 1', station: 'Demo', skillLevel: 'Expert', certified: 'Yes' },
-    { operator: 'Priya Singh', line: 'Line 2', station: 'Line2', skillLevel: 'Intermediate', certified: 'Yes' },
-    { operator: 'Amit Kumar', line: 'Line 1', station: 'Station2', skillLevel: 'Beginner', certified: 'No' },
-    { operator: 'Neha Verma', line: 'Line 2', station: 'Demo', skillLevel: 'Intermediate', certified: 'Yes' },
-    { operator: 'Vikram Patel', line: 'Line 1', station: 'Line2', skillLevel: 'Expert', certified: 'Yes' },
-    { operator: 'Sneha Gupta', line: 'Line 2', station: 'Station2', skillLevel: 'Beginner', certified: 'No' }
-  ]).map(d => ({
+  const allTableData = (dbData?.table || []).map(d => ({
     ...d,
     operator: d.operator || d.name || 'Operator'
   }));

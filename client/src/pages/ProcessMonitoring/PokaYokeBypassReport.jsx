@@ -12,7 +12,6 @@ export default function PokaYokeBypassReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
   const filterOptions = useFilterOptions();
   const [dbData, setDbData] = React.useState(null);
-  const [loading, setLoading] = React.useState(false);
 
   const [line, setLine] = React.useState('All');
   const [station, setStation] = React.useState('All');
@@ -21,7 +20,7 @@ export default function PokaYokeBypassReport() {
   const [sku, setSku] = React.useState('All');
 
   React.useEffect(() => {
-    fetch(`/api/process/bypass?period=${period}&shift=${shift}&line=${line}&station=${station}&model=${model}&sku=${sku}&device=${device}`)
+    fetch(`/api/process/bypass?period=${period}&shift=${shift}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}&model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}&device=${encodeURIComponent(device)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
@@ -35,12 +34,7 @@ export default function PokaYokeBypassReport() {
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const rawTable = dbData?.table || dbData?.bypassLogs || [
-    { id: '1', bypassId: 'BP-001', datetime: '2026-02-28 08:30', line: 'Line 1', station: 'Demo', device: 'PY-01 Torque', shift: 'Shift 1', model: 'Pulsar 150', sku: 'UG5', duration: 15, operator: 'Rahul Sharma', reason: 'Sensor calibration', authorizedBy: 'Supervisor Amit', status: 'Resolved' },
-    { id: '2', bypassId: 'BP-002', datetime: '2026-02-28 09:15', line: 'Line 2', station: 'Line2', device: 'PY-02 Vision', shift: 'Shift 1', model: 'Pulsar 150', sku: 'UG5', duration: 10, operator: 'Priya Singh', reason: 'Camera glare issue', authorizedBy: 'Supervisor Amit', status: 'Resolved' },
-    { id: '3', bypassId: 'BP-003', datetime: '2026-02-28 11:00', line: 'Line 1', station: 'Station2', device: 'PY-03 Sensor', shift: 'Shift 2', model: 'Avenger 220', sku: 'BS6', duration: 20, operator: 'Amit Kumar', reason: 'Proximity sensor glitch', authorizedBy: 'Supervisor Amit', status: 'Active' },
-    { id: '4', bypassId: 'BP-004', datetime: '2026-02-28 14:30', line: 'Line 2', station: 'Demo', device: 'PY-01 Torque', shift: 'Shift 2', model: 'Dominar 400', sku: 'D400', duration: 12, operator: 'Neha Verma', reason: 'Tool replacement', authorizedBy: 'Supervisor Amit', status: 'Resolved' }
-  ];
+  const rawTable = dbData?.table || dbData?.bypassLogs || [];
 
   const tableData = rawTable.filter(d => 
     matchFilter(d.line, line) &&
@@ -50,10 +44,10 @@ export default function PokaYokeBypassReport() {
     matchFilter(d.sku, sku)
   );
 
-  const totalBypasses = dbData?.kpis?.totalBypasses || tableData.length;
-  const activeBypasses = dbData?.kpis?.activeBypasses || tableData.filter(d => d.status === 'Active').length;
-  const maxDuration = tableData.length > 0 ? Math.max(...tableData.map(d => d.duration || 0), 0) : 0;
-  const totalDuration = tableData.reduce((acc, d) => acc + (d.duration || 0), 0);
+  const totalBypasses = dbData?.kpis?.totalBypasses ?? tableData.length;
+  const activeBypasses = dbData?.kpis?.activeBypasses ?? tableData.filter(d => d.status === 'Active').length;
+  const maxDuration = tableData.length > 0 ? Math.max(...tableData.map(d => Number(d.duration) || 0), 0) : 0;
+  const totalDuration = tableData.reduce((acc, d) => acc + (Number(d.duration) || 0), 0);
 
   const tableColumns = [
     { header: 'Bypass ID', accessor: 'bypassId' },

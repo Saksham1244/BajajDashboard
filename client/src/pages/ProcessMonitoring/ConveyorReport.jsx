@@ -13,7 +13,6 @@ export default function ConveyorReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
   const filterOptions = useFilterOptions();
   const [dbData, setDbData] = React.useState(null);
-  const [loading, setLoading] = React.useState(false);
 
   const [line, setLine] = React.useState('All');
   const [station, setStation] = React.useState('All');
@@ -21,7 +20,7 @@ export default function ConveyorReport() {
   const [sku, setSku] = React.useState('All');
 
   React.useEffect(() => {
-    fetch(`/api/process/conveyor?period=${period}&shift=${shift}&line=${line}&station=${station}&model=${model}&sku=${sku}`)
+    fetch(`/api/process/conveyor?period=${period}&shift=${shift}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}&model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
@@ -34,12 +33,7 @@ export default function ConveyorReport() {
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const rawTable = dbData?.table || [
-    { line: 'Line 1', station: 'Demo', model: 'Pulsar 150', sku: 'UG5', plannedSpeed: 2.5, actualSpeed: 2.4, deviation: '-4.0%', stoppageCount: 2, totalStoppageTime: 8, status: 'Active' },
-    { line: 'Line 2', station: 'Line2', model: 'Pulsar 150', sku: 'UG5', plannedSpeed: 2.5, actualSpeed: 2.5, deviation: '0.0%', stoppageCount: 0, totalStoppageTime: 0, status: 'Normal' },
-    { line: 'Line 1', station: 'Station2', model: 'Avenger 220', sku: 'BS6', plannedSpeed: 2.5, actualSpeed: 2.1, deviation: '-16.0%', stoppageCount: 3, totalStoppageTime: 15, status: 'Active' },
-    { line: 'Line 2', station: 'Demo', model: 'Dominar 400', sku: 'D400', plannedSpeed: 2.5, actualSpeed: 2.3, deviation: '-8.0%', stoppageCount: 1, totalStoppageTime: 5, status: 'Normal' }
-  ];
+  const rawTable = dbData?.table || [];
 
   const tableData = rawTable.filter(d => 
     matchFilter(d.line, line) &&
@@ -53,16 +47,12 @@ export default function ConveyorReport() {
     downtime: d.totalStoppageTime || 0
   }));
 
-  const totalStoppages = dbData?.kpis?.totalStoppages || tableData.reduce((acc, d) => acc + (d.stoppageCount || 0), 0);
-  const avgSpeed = dbData?.kpis?.speedMpm || (tableData.length > 0 ? (tableData.reduce((acc, d) => acc + d.actualSpeed, 0) / tableData.length).toFixed(1) : '0.0');
-  const maxDeviation = dbData?.kpis?.maxDeviation || (tableData.length > 0 ? tableData[0].deviation : '0%');
-  const efficiency = dbData?.kpis?.uptimePct ? `${dbData.kpis.uptimePct}%` : '96.2%';
+  const totalStoppages = dbData?.kpis?.totalStoppages ?? tableData.reduce((acc, d) => acc + (Number(d.stoppageCount) || 0), 0);
+  const avgSpeed = dbData?.kpis?.speedMpm ?? (tableData.length > 0 ? (tableData.reduce((acc, d) => acc + (Number(d.actualSpeed) || 0), 0) / tableData.length).toFixed(1) : '0.0');
+  const maxDeviation = dbData?.kpis?.maxDeviation ?? (tableData.length > 0 ? tableData[0].deviation : '0%');
+  const efficiency = dbData?.kpis?.uptimePct ? `${dbData.kpis.uptimePct}%` : (tableData.length > 0 ? '100%' : '0%');
 
-  const affectedReasonsData = dbData?.reasons || (totalStoppages > 0 ? [
-    { reason: 'Part Shortage', count: Math.ceil(totalStoppages * 0.4) },
-    { reason: 'Quality Issue', count: Math.ceil(totalStoppages * 0.3) },
-    { reason: 'Machine Breakdown', count: Math.floor(totalStoppages * 0.3) }
-  ] : []);
+  const affectedReasonsData = dbData?.reasons || [];
 
   const tableColumns = [
     { header: 'Station', accessor: 'station' },

@@ -33,17 +33,7 @@ export default function EngineStockReport() {
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const defaultTable = [
-    { modelFamily: 'Pulsar', model: 'Pulsar 150', sku: 'UG6', engineNo: 'P-150-100234', dateTime: '2026-08-31 08:30:00' },
-    { modelFamily: 'Pulsar', model: 'Pulsar 150', sku: 'UG6', engineNo: 'P-150-100235', dateTime: '2026-08-31 09:15:00' },
-    { modelFamily: 'Dominar', model: 'Dominar 400', sku: 'UG6', engineNo: 'D-400-500120', dateTime: '2026-08-31 09:45:00' },
-    { modelFamily: 'Dominar', model: 'Dominar 400', sku: 'UG6', engineNo: 'D-400-500121', dateTime: '2026-08-31 10:20:00' },
-    { modelFamily: 'Avenger', model: 'Avenger 220', sku: 'SKU1', engineNo: 'A-220-300450', dateTime: '2026-08-31 11:00:00' },
-  ];
-
-  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
-
-  const tableData = rawTable.filter(d => 
+  const tableData = (dbData?.table || []).filter(d => 
     (modelFamily === 'All' || !d.modelFamily || d.modelFamily === modelFamily) &&
     matchFilter(d.model, model) &&
     matchFilter(d.sku, sku)
@@ -55,12 +45,23 @@ export default function EngineStockReport() {
       const name = d.model || 'Unknown';
       counts[name] = (counts[name] || 0) + 1;
     });
-    const result = Object.entries(counts).map(([name, value]) => ({ name, value }));
-    return result.length > 0 ? result : [{ name: model !== 'All' ? model : 'No Data', value: 1 }];
-  }, [tableData, model]);
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [tableData]);
 
   const totalEngines = tableData.length;
-  const modelsCount = new Set(tableData.map(d => d.model)).size;
+  const modelsCount = tableData.length > 0 ? new Set(tableData.map(d => d.model)).size : 0;
+
+  const oldestEntryAge = useMemo(() => {
+    if (dbData?.kpi?.oldestEntryAge) return dbData.kpi.oldestEntryAge;
+    if (tableData.length === 0) return '0 Days';
+    const dates = tableData
+      .map(d => d.dateTime ? new Date(d.dateTime).getTime() : null)
+      .filter(t => t && !isNaN(t));
+    if (dates.length === 0) return '0 Days';
+    const oldest = Math.min(...dates);
+    const diffDays = Math.max(0, Math.floor((Date.now() - oldest) / (1000 * 60 * 60 * 24)));
+    return `${diffDays} Days`;
+  }, [tableData, dbData]);
 
   const columns = [
     { header: 'Model Family', accessor: 'modelFamily' },
@@ -76,7 +77,7 @@ export default function EngineStockReport() {
         ['Metric', 'Value'],
         ['Total Engine Count', totalEngines],
         ['Models Count', modelsCount],
-        ['Oldest Entry Age', '2 Days']
+        ['Oldest Entry Age', oldestEntryAge]
       ]},
       { name: 'Engine Details', rows: [
         ['Model Family', 'Model', 'SKU', 'Engine No', 'DateTime'],
@@ -93,7 +94,7 @@ export default function EngineStockReport() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Engine Count" value={totalEngines} />
           <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Models Count" value={modelsCount} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Oldest Entry Age" value="2 Days" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Oldest Entry Age" value={oldestEntryAge} />
         </div>
 
         <div className="card p-4">

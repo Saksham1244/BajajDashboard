@@ -18,19 +18,14 @@ export default function TorqueReport() {
   const [sku, setSku] = useState('All');
   const [device, setDevice] = useState('All');
   const [torqueData, setTorqueData] = useState([]);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    fetch(`/api/process/torque?device=${device}&sku=${sku}&line=${line}&station=${station}&model=${model}&period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}`)
+    fetch(`/api/process/torque?device=${encodeURIComponent(device)}&sku=${encodeURIComponent(sku)}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}&model=${encodeURIComponent(model)}&period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}`)
       .then(res => res.json())
       .then(data => {
-        if (data.table) {
-          setTorqueData(data.table);
-        }
+        setTorqueData(data.table || []);
       })
-      .catch(err => console.error('Torque fetch error:', err))
-      .finally(() => setLoading(false));
+      .catch(err => console.error('Torque fetch error:', err));
   }, [device, sku, line, station, model, period, shift, startDate, endDate]);
 
   const customFilters = [
@@ -41,14 +36,7 @@ export default function TorqueReport() {
     { type: 'dropdown', label: 'Torque Device', options: ['All', 'TD-01', 'TD-02', 'TD-03'], value: device, onChange: setDevice },
   ];
 
-  const rawData = (torqueData.length > 0 ? torqueData : [
-    { engineNo: 'ENG-2026-001', model: 'Pulsar 150', sku: 'UG5', line: 'Line 1', station: 'Demo', device: 'TD-01', value: 45.2, minSpec: 42.0, maxSpec: 48.0, result: 'OK', datetime: '2026-02-28 08:30', operator: 'Rahul Sharma' },
-    { engineNo: 'ENG-2026-002', model: 'Pulsar 150', sku: 'UG5', line: 'Line 1', station: 'Demo', device: 'TD-01', value: 44.8, minSpec: 42.0, maxSpec: 48.0, result: 'OK', datetime: '2026-02-28 08:45', operator: 'Rahul Sharma' },
-    { engineNo: 'ENG-2026-003', model: 'Avenger 220', sku: 'BS6', line: 'Line 2', station: 'Line2', device: 'TD-02', value: 50.1, minSpec: 42.0, maxSpec: 48.0, result: 'NOK', datetime: '2026-02-28 09:10', operator: 'Priya Singh' },
-    { engineNo: 'ENG-2026-004', model: 'Dominar 400', sku: 'D400', line: 'Line 1', station: 'Station2', device: 'TD-03', value: 46.5, minSpec: 42.0, maxSpec: 48.0, result: 'OK', datetime: '2026-02-28 09:30', operator: 'Amit Kumar' }
-  ]);
-
-  const filteredData = rawData.filter(d => 
+  const filteredData = (torqueData || []).filter(d => 
     matchFilter(d.line, line) &&
     matchFilter(d.station, station) &&
     matchFilter(d.model, model) &&

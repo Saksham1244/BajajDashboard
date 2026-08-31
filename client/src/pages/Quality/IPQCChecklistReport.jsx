@@ -24,16 +24,7 @@ export default function IPQCChecklistReport() {
   }, [period, shift, startDate, endDate, line, model]);
 
   const rawTableData = useMemo(() => {
-    return dbData?.table || [
-      { id: 'IPQC-2001', name: 'Crankcase Bolt Torquing Audit', date: '2026-08-31 08:30', shift: 'Shift 1', line: 'Line 1', model: 'Pulsar 150', inspector: 'Rahul Sharma', total: 10, passed: 10, failed: 0, status: 'OK', remarks: 'All bolts torque verified at 25 Nm' },
-      { id: 'IPQC-2002', name: 'Piston Ring Gap & Assembly Audit', date: '2026-08-31 09:45', shift: 'Shift 1', line: 'Line 2', model: 'Dominar 400', inspector: 'Priya Singh', total: 12, passed: 12, failed: 0, status: 'OK', remarks: 'Orientation and stagger verified' },
-      { id: 'IPQC-2003', name: 'Cylinder Head Cover Sealing', date: '2026-08-31 11:00', shift: 'Shift 1', line: 'Line 1', model: 'Pulsar 220', inspector: 'Amit Kumar', total: 14, passed: 13, failed: 1, status: 'NOK', remarks: 'Excess liquid gasket bead' },
-      { id: 'IPQC-2004', name: 'Camshaft Timing Chain Tension Audit', date: '2026-08-31 12:15', shift: 'Shift 1', line: 'Line 2', model: 'Avenger', inspector: 'Neha Verma', total: 8, passed: 8, failed: 0, status: 'OK', remarks: 'Timing mark aligned' },
-      { id: 'IPQC-2005', name: 'Clutch Cover & Basket Fitment QA', date: '2026-08-31 14:30', shift: 'Shift 2', line: 'Line 1', model: 'Pulsar 150', inspector: 'Vikram Patel', total: 10, passed: 10, failed: 0, status: 'OK', remarks: 'Free play within limits' },
-      { id: 'IPQC-2006', name: 'Oil Pump Gear Backlash Inspection', date: '2026-08-31 16:00', shift: 'Shift 2', line: 'Line 2', model: 'Dominar 400', inspector: 'Rahul Sharma', total: 12, passed: 11, failed: 1, status: 'NOK', remarks: 'Gear tooth burr cleaned' },
-      { id: 'IPQC-2007', name: 'Flywheel Magneto Torquing QA', date: '2026-08-31 17:30', shift: 'Shift 2', line: 'Line 1', model: 'Pulsar 220', inspector: 'Amit Kumar', total: 15, passed: 15, failed: 0, status: 'OK', remarks: 'Keyway engagement OK' },
-      { id: 'IPQC-2008', name: 'Valve Tappet Clearance Check', date: '2026-08-31 19:00', shift: 'Shift 2', line: 'Line 2', model: 'Avenger', inspector: 'Priya Singh', total: 8, passed: 8, failed: 0, status: 'OK', remarks: 'Feeler gauge checked' },
-    ];
+    return dbData?.table || [];
   }, [dbData]);
 
   const tableData = useMemo(() => {
@@ -49,7 +40,7 @@ export default function IPQCChecklistReport() {
     const total = tableData.length;
     const ok = tableData.filter(d => d.status === 'OK').length;
     const nok = tableData.filter(d => d.status === 'NOK' || d.status === 'FAIL' || d.status === 'FAILED').length;
-    const compliance = total > 0 ? Number(((ok / total) * 100).toFixed(1)) : 100;
+    const compliance = total > 0 ? Number(((ok / total) * 100).toFixed(1)) : 0;
     return {
       totalChecklists: total,
       okChecklists: ok,

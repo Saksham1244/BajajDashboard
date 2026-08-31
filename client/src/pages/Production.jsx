@@ -17,28 +17,15 @@ export default function Production() {
   const [activeModel, setActiveModel] = useState('All');
   const [selectedLoss, setSelectedLoss] = useState(null);
 
-  const [dbData, setDbData] = useState({
-    kpis: { totalPlan: 1300, totalProd: 265, shortfall: 1035, wip: 10, rollover: 8 },
-    planVsActual: [{ name: 'Shift A', plan: 1300, actual: 265 }],
-    straightPass: [{ name: 'Line 1', straight: 252, reworked: 13 }],
-    skuData: [
-      { line: 'Line 1', name: 'SKU-1', modelFamily: 'Family-1', plan: 500, actual: 85, wip: 5, rollover: 3 },
-      { line: 'Line 1', name: 'SKU-2', modelFamily: 'Family-2', plan: 800, actual: 180, wip: 5, rollover: 5 }
-    ],
-    pareto: [
-      { reason: 'Preventive maintenance', count: 1, duration: 237, cumPercent: 23 },
-      { reason: 'Line changeover', count: 1, duration: 219, cumPercent: 44 },
-      { reason: 'Power', count: 1, duration: 204, cumPercent: 64 },
-      { reason: 'Failure', count: 1, duration: 192, cumPercent: 83 },
-      { reason: 'Conveyor jam', count: 1, duration: 180, cumPercent: 100 }
-    ]
-  });
+  const [dbData, setDbData] = useState(null);
 
   React.useEffect(() => {
-    fetch(`/api/dashboard/production?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}&line=${activeLine}&model=${activeModel}`)
+    fetch(`/api/dashboard/production?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}&line=${encodeURIComponent(activeLine)}&model=${encodeURIComponent(activeModel)}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.kpis) {
+          setDbData(data);
+        } else {
           setDbData(data);
         }
       })
@@ -47,32 +34,29 @@ export default function Production() {
       });
   }, [period, shift, startDate, endDate, activeLine, activeModel]);
 
-  const totalPlan = dbData.kpis?.totalPlan ?? (totalProd + shortfall);
-  const totalProd = dbData.kpis?.totalProd ?? 265;
-  const shortfall = dbData.kpis?.shortfall ?? 1035;
-  const wip = dbData.kpis?.wip ?? 10;
-  const rollover = dbData.kpis?.rollover ?? 8;
+  const totalPlan = dbData?.kpis?.totalPlan ?? 0;
+  const totalProd = dbData?.kpis?.totalProd ?? 0;
+  const shortfall = dbData?.kpis?.shortfall ?? 0;
+  const wip = dbData?.kpis?.wip ?? 0;
+  const rollover = dbData?.kpis?.rollover ?? 0;
 
   const hourlyData = useMemo(() => {
-    if (dbData.planVsActual && dbData.planVsActual.length > 0) {
+    if (dbData?.planVsActual && dbData.planVsActual.length > 0) {
       return dbData.planVsActual.map(r => ({
         time: r.time || r.name,
-        plan: r.plan,
-        actual: r.actual
+        plan: r.plan || 0,
+        actual: r.actual || 0
       }));
     }
     const labels = generateTimeLabels(period, shift);
-    const planPerLabel = Math.floor((totalProd + shortfall) / (labels.length || 1));
-    const actualPerLabel = Math.floor(totalProd / (labels.length || 1));
-
     return labels.map(time => ({
       time,
-      plan: planPerLabel,
-      actual: actualPerLabel
+      plan: 0,
+      actual: 0
     }));
-  }, [period, shift, totalProd, shortfall, dbData.planVsActual]);
+  }, [period, shift, dbData?.planVsActual]);
 
-  const skuData = (dbData.skuData || []).filter(d => 
+  const skuData = (dbData?.skuData || []).filter(d => 
     (activeLine === 'All' || d.line === activeLine) &&
     (activeModel === 'All' || d.modelFamily === activeModel)
   );
@@ -192,13 +176,7 @@ export default function Production() {
     };
   };
 
-  const paretoData = dbData.pareto && dbData.pareto.length > 0 ? dbData.pareto : [
-    { reason: 'Preventive Maintenance', count: 9, duration: 237, cumPercent: 25 },
-    { reason: 'Quality Inspection Delay', count: 7, duration: 219, cumPercent: 48 },
-    { reason: 'Tool Wear & Replacement', count: 7, duration: 204, cumPercent: 68 },
-    { reason: 'Line Changeover', count: 6, duration: 192, cumPercent: 84 },
-    { reason: 'Conveyor Jam', count: 6, duration: 180, cumPercent: 100 },
-  ];
+  const paretoData = dbData?.pareto || [];
 
   const currentLossDetails = selectedLoss ? getLossDetails(selectedLoss) : null;
 

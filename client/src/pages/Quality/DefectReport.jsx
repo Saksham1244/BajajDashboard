@@ -31,9 +31,9 @@ export default function DefectReport() {
   }, [period, shift, startDate, endDate, line, station, modelFamily, model, sku]);
 
   const kpiData = dbData?.kpis || {
-    totalProduction: 3188,
-    totalDefects: 10,
-    rft: 96.9
+    totalProduction: 0,
+    totalDefects: 0,
+    rft: 0
   };
 
   const defectTrendData = useMemo(() => {
@@ -52,30 +52,22 @@ export default function DefectReport() {
     return result;
   }, [period, shift, kpiData.totalDefects]);
 
-  const defectDistData = dbData?.distribution || [
-    { name: 'Engine Fitment', value: 4 },
-    { name: 'Leakage & Sealing', value: 2 },
-    { name: 'Torque & Fastening', value: 2 },
-    { name: 'Cosmetic & Surface', value: 1 },
-    { name: 'Electrical & Other', value: 1 }
-  ];
+  const defectDistData = dbData?.distribution || [];
 
-  const defectReasonsData = dbData?.reasons || [
-    { name: 'Torque Fail on Head Bolt #3', value: 2 },
-    { name: 'Casing Scratch on Clutch Cover', value: 2 },
-    { name: 'Leakage on Water Pump Seal', value: 2 },
-    { name: 'Valve Clearance Out of Spec', value: 1 },
-    { name: 'Oil Sump Gasket Misaligned', value: 1 },
-    { name: 'Camshaft Timing Out by 1 Tooth', value: 1 }
-  ];
+  const defectReasonsData = dbData?.reasons || [];
 
-  const tableData = dbData?.table || [
-    { engineNo: 'ENG-3018', defect: 'Torque Fail on Head Bolt #3', station: 'Line2 (Head Tightening)', operator: 'Rahul Sharma', time: '08:35' },
-    { engineNo: 'ENG-3019', defect: 'Casing Scratch on Clutch Cover', station: 'Demo (Block Assembly)', operator: 'Priya Singh', time: '09:20' },
-    { engineNo: 'ENG-3020', defect: 'Leakage on Water Pump Seal', station: 'Station2 (Cold Inspection)', operator: 'Amit Kumar', time: '10:05' },
-    { engineNo: 'ENG-2026-00120', defect: 'Thread Mismatch on Crankcase', station: 'Demo (Block Assembly)', operator: 'Neha Verma', time: '11:15' },
-    { engineNo: 'ENG-2026-00125', defect: 'Valve Clearance Out of Spec', station: 'Line2 (Head Tightening)', operator: 'Vikram Patel', time: '12:30' }
-  ];
+  const rawTableData = dbData?.table || [];
+
+  const tableData = useMemo(() => {
+    return rawTableData.filter(row => {
+      if (line !== 'All' && row.line && row.line !== line) return false;
+      if (station !== 'All' && row.station && !row.station.toLowerCase().includes(station.toLowerCase())) return false;
+      if (modelFamily !== 'All' && row.modelFamily && row.modelFamily !== modelFamily) return false;
+      if (model !== 'All' && row.model && row.model !== model) return false;
+      if (sku !== 'All' && row.sku && row.sku !== sku) return false;
+      return true;
+    });
+  }, [rawTableData, line, station, modelFamily, model, sku]);
 
   const columns = [
     { header: 'Engine No', accessor: 'engineNo' },

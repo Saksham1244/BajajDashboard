@@ -21,21 +21,22 @@ export default function PokaYokeReport() {
   const [device, setDevice] = useState('All');
 
   const [bypassLogs, setBypassLogs] = useState([]);
-  const [kpiData, setKpiData] = useState({ totalChecks: 1578, okCount: 1570, notOkCount: 8, bypassCount: 3 });
-  const [loading, setLoading] = useState(false);
+  const [kpiData, setKpiData] = useState({ totalChecks: 0, okCount: 0, notOkCount: 0, bypassCount: 0 });
 
   useEffect(() => {
-    setLoading(true);
     Promise.all([
-      fetch(`/api/process/bypass?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}&line=${line}&station=${station}&model=${model}&sku=${sku}&device=${device}`).then(r => r.json()),
-      fetch(`/api/process/pokayoke?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}&line=${line}&station=${station}&model=${model}&sku=${sku}&device=${device}`).then(r => r.json())
+      fetch(`/api/process/bypass?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}&model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}&device=${encodeURIComponent(device)}`).then(r => r.json()),
+      fetch(`/api/process/pokayoke?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}&model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}&device=${encodeURIComponent(device)}`).then(r => r.json())
     ])
       .then(([bypassRes, pokaRes]) => {
-        if (bypassRes.bypassLogs || bypassRes.table) setBypassLogs(bypassRes.bypassLogs || bypassRes.table);
-        if (pokaRes.kpis) setKpiData(pokaRes.kpis);
+        setBypassLogs(bypassRes?.bypassLogs || bypassRes?.table || []);
+        if (pokaRes?.kpis) {
+          setKpiData(pokaRes.kpis);
+        } else {
+          setKpiData({ totalChecks: 0, okCount: 0, notOkCount: 0, bypassCount: 0 });
+        }
       })
-      .catch(err => console.error('PokaYoke fetch error:', err))
-      .finally(() => setLoading(false));
+      .catch(err => console.error('PokaYoke fetch error:', err));
   }, [period, shift, startDate, endDate, line, station, model, sku, device]);
 
   const customFilters = [
@@ -46,13 +47,7 @@ export default function PokaYokeReport() {
     { type: 'dropdown', label: 'Poka Yoke Device', options: ['All', 'PY-01 Torque', 'PY-02 Vision', 'PY-03 Sensor'], value: device, onChange: setDevice },
   ];
 
-  const allBypassLogs = (bypassLogs.length > 0 ? bypassLogs : [
-    { id: 1, bypassId: 'BP-001', line: 'Line 1', station: 'Demo', model: 'Pulsar 150', sku: 'UG5', startTime: '08:30', endTime: '08:45', duration: 15, device: 'PY-01 Torque', operator: 'Rahul Sharma', reason: 'Sensor calibration', authorizedBy: 'Supervisor Amit', status: 'Resolved' },
-    { id: 2, bypassId: 'BP-002', line: 'Line 2', station: 'Line2', model: 'Pulsar 150', sku: 'UG5', startTime: '09:15', endTime: '09:25', duration: 10, device: 'PY-02 Vision', operator: 'Priya Singh', reason: 'Camera glare issue', authorizedBy: 'Supervisor Amit', status: 'Resolved' },
-    { id: 3, bypassId: 'BP-003', line: 'Line 1', station: 'Station2', model: 'Avenger 220', sku: 'BS6', startTime: '11:00', endTime: '11:20', duration: 20, device: 'PY-03 Sensor', operator: 'Amit Kumar', reason: 'Proximity sensor glitch', authorizedBy: 'Supervisor Amit', status: 'Resolved' }
-  ]);
-
-  const bypassLogData = allBypassLogs.filter(d => 
+  const bypassLogData = (bypassLogs || []).filter(d => 
     matchFilter(d.line, line) &&
     matchFilter(d.station, station) &&
     matchFilter(d.model, model) &&
@@ -60,13 +55,16 @@ export default function PokaYokeReport() {
     (device === 'All' || d.device === device || (d.device && d.device.includes(device)) || (device && device.includes(d.device)))
   );
 
-  const totalChecks = Number(kpiData.totalChecks) || 1578;
-  const okSum = Number(kpiData.okCount) || 1570;
-  const nokSum = Number(kpiData.notOkCount) || 8;
-  const bypassSum = Number(kpiData.bypassCount) || 3;
+  const totalChecks = Number(kpiData.totalChecks) || 0;
+  const okSum = Number(kpiData.okCount) || 0;
+  const nokSum = Number(kpiData.notOkCount) || 0;
+  const bypassSum = Number(kpiData.bypassCount) || 0;
 
   const hourlyData = useMemo(() => {
     const labels = generateTimeLabels(period, shift);
+    if (labels.length === 0 || totalChecks === 0) {
+      return labels.map(hour => ({ hour, ok: 0, nok: 0, bypass: 0 }));
+    }
     const n = Math.max(1, labels.length);
     const baseOkPerSlot = Math.floor(okSum / n);
     const remainder = okSum % n;
@@ -77,7 +75,7 @@ export default function PokaYokeReport() {
       nok: idx < nokSum ? Math.ceil(nokSum / Math.min(n, 4)) : 0,
       bypass: idx < bypassSum ? 1 : 0,
     }));
-  }, [period, shift, okSum, nokSum, bypassSum]);
+  }, [period, shift, totalChecks, okSum, nokSum, bypassSum]);
 
   const tableColumns = [
     { header: 'Start Time', accessor: 'startTime' },

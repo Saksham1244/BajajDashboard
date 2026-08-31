@@ -25,16 +25,7 @@ export default function FQCChecklistReport() {
   }, [period, shift, startDate, endDate, line, model, sku]);
 
   const rawTableData = useMemo(() => {
-    return dbData?.table || [
-      { id: 'FQC-3001', name: 'End-of-Line Cold Test Inspection', date: '2026-08-31 08:45', shift: 'Shift 1', line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', inspector: 'Rahul Sharma', total: 10, passed: 10, failed: 0, status: 'OK', remarks: 'Vibration & oil pressure OK' },
-      { id: 'FQC-3002', name: 'Dyno Performance & Power Audit', date: '2026-08-31 10:00', shift: 'Shift 1', line: 'Line 2', model: 'Dominar 400', sku: 'D400-ABS', inspector: 'Priya Singh', total: 12, passed: 12, failed: 0, status: 'OK', remarks: 'BHP curve matches spec' },
-      { id: 'FQC-3003', name: 'Hot Run Emission & Leakage Test', date: '2026-08-31 11:15', shift: 'Shift 1', line: 'Line 1', model: 'Pulsar 220', sku: 'P220-F', inspector: 'Amit Kumar', total: 14, passed: 13, failed: 1, status: 'NOK', remarks: 'Exhaust joint clamp retightened' },
-      { id: 'FQC-3004', name: 'Gear Shifting Smoothness Audit', date: '2026-08-31 12:30', shift: 'Shift 1', line: 'Line 2', model: 'Avenger', sku: 'AV-220', inspector: 'Neha Verma', total: 8, passed: 8, failed: 0, status: 'OK', remarks: 'Neutral switch verified' },
-      { id: 'FQC-3005', name: 'Electrical & Sensor Diagnostic Test', date: '2026-08-31 14:45', shift: 'Shift 2', line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', inspector: 'Vikram Patel', total: 10, passed: 10, failed: 0, status: 'OK', remarks: 'ECU DTC scan clean' },
-      { id: 'FQC-3006', name: 'Final Paint & Surface Finish QA', date: '2026-08-31 16:15', shift: 'Shift 2', line: 'Line 2', model: 'Dominar 400', sku: 'D400-ABS', inspector: 'Rahul Sharma', total: 12, passed: 11, failed: 1, status: 'NOK', remarks: 'Buffed casing scuff mark' },
-      { id: 'FQC-3007', name: 'Fastener Torque Audit (Critical)', date: '2026-08-31 17:45', shift: 'Shift 2', line: 'Line 1', model: 'Pulsar 220', sku: 'P220-F', inspector: 'Amit Kumar', total: 15, passed: 15, failed: 0, status: 'OK', remarks: '100% torque marks verified' },
-      { id: 'FQC-3008', name: 'Decal Alignment & Badge QA', date: '2026-08-31 19:15', shift: 'Shift 2', line: 'Line 2', model: 'Avenger', sku: 'AV-220', inspector: 'Priya Singh', total: 8, passed: 8, failed: 0, status: 'OK', remarks: 'Visual inspection pass' },
-    ];
+    return dbData?.table || [];
   }, [dbData]);
 
   const tableData = useMemo(() => {
@@ -51,7 +42,7 @@ export default function FQCChecklistReport() {
     const total = tableData.length;
     const ok = tableData.filter(d => d.status === 'OK').length;
     const nok = tableData.filter(d => d.status === 'NOK' || d.status === 'FAIL' || d.status === 'FAILED').length;
-    const compliance = total > 0 ? Number(((ok / total) * 100).toFixed(1)) : 100;
+    const compliance = total > 0 ? Number(((ok / total) * 100).toFixed(1)) : 0;
     return {
       totalChecklists: total,
       okChecklists: ok,

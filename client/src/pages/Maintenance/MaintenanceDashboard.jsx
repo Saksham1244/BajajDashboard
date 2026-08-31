@@ -28,13 +28,7 @@ export default function MaintenanceDashboard() {
 
   const colors = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
 
-  const defaultMachines = [
-    { id: 1, machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', status: 'Running', lastBreakdown: '08:15', downtimeToday: 18, mttr: 18, mtbf: 45, availability: 97.2 },
-    { id: 2, machine: 'Line2 Pallet Indexer', line: 'Line 2', station: 'Line2 (Head Tightening)', status: 'Breakdown', lastBreakdown: '09:10', downtimeToday: 25, mttr: 25, mtbf: 38, availability: 94.8 },
-    { id: 3, machine: 'Station2 Cold Test Bench', line: 'Line 1', station: 'Station2 (Cold Inspection)', status: 'Running', lastBreakdown: '10:00', downtimeToday: 0, mttr: 0, mtbf: 60, availability: 99.5 }
-  ];
-
-  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultMachines;
+  const rawTable = dbData?.table || [];
 
   const tableData = rawTable.filter(d => 
     matchFilter(d.line, line) &&
@@ -58,15 +52,10 @@ export default function MaintenanceDashboard() {
   const totalBreakdowns = breakdownCount;
   const avgMTTR = tableData.length > 0 ? Math.round(tableData.reduce((acc, d) => acc + (Number(d.mttr) || 0), 0) / tableData.length) : 0;
   const avgMTBF = tableData.length > 0 ? Math.round(tableData.reduce((acc, d) => acc + (Number(d.mtbf) || 0), 0) / tableData.length) : 0;
-  const avgAvailability = tableData.length > 0 ? (tableData.reduce((acc, d) => acc + (Number(d.availability) || 0), 0) / tableData.length).toFixed(1) : '100.0';
-  const machineAvailability = `${avgAvailability}%`;
+  const avgAvailability = tableData.length > 0 ? (tableData.reduce((acc, d) => acc + (Number(d.availability) || 0), 0) / tableData.length).toFixed(1) : '0.0';
+  const machineAvailability = tableData.length > 0 ? `${avgAvailability}%` : '0%';
 
-  const breakdownReasons = dbData?.breakdownReasons || [
-    { reason: 'Preventive Maintenance', duration: 45, count: 3 },
-    { reason: 'Conveyor Jam', duration: 35, count: 2 },
-    { reason: 'Tool Wear', duration: 25, count: 2 },
-    { reason: 'Sensor Drift', duration: 18, count: 1 }
-  ];
+  const breakdownReasons = dbData?.breakdownReasons || [];
 
   const machineOptions = ['All', ...Array.from(new Set(rawTable.map(d => d.machine).filter(Boolean)))];
 

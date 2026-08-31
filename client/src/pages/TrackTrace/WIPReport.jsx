@@ -18,20 +18,14 @@ export default function WIPReport() {
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
-    fetch(`/api/trace/wip?period=${period}&shift=${shift}&wipStatus=${wipStatus}&line=${line}`)
+    fetch(`/api/trace/wip?period=${period}&shift=${shift}&wipStatus=${encodeURIComponent(wipStatus)}&line=${encodeURIComponent(line)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
   }, [period, shift, wipStatus, line]);
   const COLORS = ['#0369a1', '#f97316', '#f43f5e', '#8b5cf6'];
   
-  const rawTableData = dbData?.details || dbData?.table || [
-    { engineNo: 'ENG-2026-00142', line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', station: 'Demo (Block Assembly)', status: 'In-Process', entryTime: '10:15', duration: 0.8, operator: 'Rahul Sharma' },
-    { engineNo: 'ENG-2026-00143', line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', station: 'Demo (Block Assembly)', status: 'In-Process', entryTime: '09:50', duration: 1.2, operator: 'Priya Singh' },
-    { engineNo: 'ENG-3018', line: 'Line 2', model: 'Pulsar 150', sku: 'UG5', station: 'Line2 (Head Tightening)', status: 'Rework', entryTime: '08:35', duration: 2.4, operator: 'Amit Kumar' },
-    { engineNo: 'ENG-3019', line: 'Line 2', model: 'Avenger 220', sku: 'BS6', station: 'Line2 (Head Tightening)', status: 'Blocked', entryTime: '08:00', duration: 3.1, operator: 'Vikram Patel' },
-    { engineNo: 'ENG-3020', line: 'Line 1', model: 'Dominar 400', sku: 'D400', station: 'Station2 (Cold Inspection)', status: 'Idle', entryTime: '07:30', duration: 3.5, operator: 'Neha Verma' }
-  ];
+  const rawTableData = dbData?.details || dbData?.table || [];
 
   const filteredTableData = rawTableData.filter(row => 
     (line === 'All' || row.line === line) &&

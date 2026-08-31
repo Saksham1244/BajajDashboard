@@ -24,16 +24,7 @@ export default function IQCChecklistReport() {
   }, [period, shift, startDate, endDate, line, model]);
 
   const rawTableData = useMemo(() => {
-    return dbData?.table || [
-      { id: 'IQC-1001', name: 'Raw Material Castings Audit', date: '2026-08-31 08:15', shift: 'Shift 1', line: 'Line 1', model: 'Pulsar 150', inspector: 'Rahul Sharma', total: 10, passed: 10, failed: 0, status: 'OK', remarks: 'Density and dimensions verified' },
-      { id: 'IQC-1002', name: 'Cylinder Block Inward Check', date: '2026-08-31 09:30', shift: 'Shift 1', line: 'Line 2', model: 'Dominar 400', inspector: 'Priya Singh', total: 12, passed: 12, failed: 0, status: 'OK', remarks: 'Honing angle within limits' },
-      { id: 'IQC-1003', name: 'Fasteners Batch Inspection', date: '2026-08-31 10:45', shift: 'Shift 1', line: 'Line 1', model: 'Pulsar 220', inspector: 'Amit Kumar', total: 15, passed: 14, failed: 1, status: 'NOK', remarks: 'Thread burr on M8 sample' },
-      { id: 'IQC-1004', name: 'Gasket & O-Ring Inward Verification', date: '2026-08-31 12:00', shift: 'Shift 1', line: 'Line 2', model: 'Avenger', inspector: 'Neha Verma', total: 8, passed: 8, failed: 0, status: 'OK', remarks: 'Shore hardness tested' },
-      { id: 'IQC-1005', name: 'Piston & Rings Incoming Audit', date: '2026-08-31 14:20', shift: 'Shift 2', line: 'Line 1', model: 'Pulsar 150', inspector: 'Vikram Patel', total: 10, passed: 10, failed: 0, status: 'OK', remarks: 'Pin bore dia OK' },
-      { id: 'IQC-1006', name: 'Spark Plug Supplier Audit', date: '2026-08-31 15:50', shift: 'Shift 2', line: 'Line 2', model: 'Dominar 400', inspector: 'Rahul Sharma', total: 12, passed: 11, failed: 1, status: 'NOK', remarks: 'Electrode gap deviation' },
-      { id: 'IQC-1007', name: 'Sensor & Actuator Incoming QA', date: '2026-08-31 17:15', shift: 'Shift 2', line: 'Line 1', model: 'Pulsar 220', inspector: 'Amit Kumar', total: 14, passed: 14, failed: 0, status: 'OK', remarks: 'Resistance specs conform' },
-      { id: 'IQC-1008', name: 'Engine Oil Batch Chemical Test', date: '2026-08-31 18:40', shift: 'Shift 2', line: 'Line 2', model: 'Avenger', inspector: 'Priya Singh', total: 6, passed: 6, failed: 0, status: 'OK', remarks: 'Viscosity verified' },
-    ];
+    return dbData?.table || [];
   }, [dbData]);
 
   const tableData = useMemo(() => {
@@ -49,7 +40,7 @@ export default function IQCChecklistReport() {
     const total = tableData.length;
     const ok = tableData.filter(d => d.status === 'OK').length;
     const nok = tableData.filter(d => d.status === 'NOK' || d.status === 'FAIL' || d.status === 'FAILED').length;
-    const compliance = total > 0 ? Number(((ok / total) * 100).toFixed(1)) : 100;
+    const compliance = total > 0 ? Number(((ok / total) * 100).toFixed(1)) : 0;
     return {
       totalChecklists: total,
       okChecklists: ok,

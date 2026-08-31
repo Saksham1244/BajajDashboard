@@ -3,7 +3,6 @@ import React, { useState, useMemo } from 'react';
 import { UserCheck } from 'lucide-react';
 import useReportFilters from '../../hooks/useReportFilters';
 import useFilterOptions from '../../hooks/useFilterOptions';
-import { generateTimeLabels } from '../../utils/timeDataGenerator';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
@@ -19,19 +18,13 @@ export default function WorkforceAllocationReport() {
   const [dbData, setDbData] = useState(null);
 
   React.useEffect(() => {
-    fetch(`/api/workforce/allocation?period=${period}&shift=${shift}&line=${line}`)
+    fetch(`/api/workforce/allocation?period=${period}&shift=${shift}&line=${encodeURIComponent(line)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
   }, [period, shift, line]);
 
-  const allTableData = dbData?.table || [
-    { station: 'Demo', line: 'Line 1', shift: 'Shift 1', assignedOperator: 'Rahul Sharma', plannedCount: 2, actualCount: 2, gap: 0 },
-    { station: 'Line2', line: 'Line 2', shift: 'Shift 1', assignedOperator: 'Priya Singh', plannedCount: 2, actualCount: 1, gap: -1 },
-    { station: 'Station2', line: 'Line 1', shift: 'Shift 1', assignedOperator: 'Amit Kumar, Vikram Patel', plannedCount: 2, actualCount: 2, gap: 0 },
-    { station: 'Demo', line: 'Line 1', shift: 'Shift 2', assignedOperator: 'Neha Verma', plannedCount: 2, actualCount: 2, gap: 0 },
-    { station: 'Line2', line: 'Line 2', shift: 'Shift 2', assignedOperator: 'Sneha Gupta', plannedCount: 1, actualCount: 2, gap: 1 }
-  ];
+  const allTableData = dbData?.table || [];
 
   const tableData = allTableData.filter(d => 
     matchFilter(d.line, line) &&

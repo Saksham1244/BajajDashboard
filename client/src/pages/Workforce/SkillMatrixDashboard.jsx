@@ -3,7 +3,6 @@ import React, { useState, useMemo } from 'react';
 import { Network } from 'lucide-react';
 import useReportFilters from '../../hooks/useReportFilters';
 import useFilterOptions from '../../hooks/useFilterOptions';
-import { generateTimeLabels } from '../../utils/timeDataGenerator';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
@@ -19,20 +18,13 @@ export default function SkillMatrixDashboard() {
   const [dbData, setDbData] = useState(null);
 
   React.useEffect(() => {
-    fetch(`/api/workforce/skill-matrix?period=${period}&shift=${shift}&line=${line}&station=${station}`)
+    fetch(`/api/workforce/skill-matrix?period=${period}&shift=${shift}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
   }, [period, shift, line, station]);
 
-  const allTableData = (dbData?.table || [
-    { name: 'Rahul Sharma', line: 'Line 1', station: 'Demo', skillLevel: 'Expert', certified: 'Yes', lastAssessed: '2026-02-15' },
-    { name: 'Priya Singh', line: 'Line 2', station: 'Line2', skillLevel: 'Intermediate', certified: 'Yes', lastAssessed: '2026-02-10' },
-    { name: 'Amit Kumar', line: 'Line 1', station: 'Station2', skillLevel: 'Beginner', certified: 'No', lastAssessed: '2026-01-20' },
-    { name: 'Neha Verma', line: 'Line 2', station: 'Demo', skillLevel: 'Intermediate', certified: 'Yes', lastAssessed: '2026-02-01' },
-    { name: 'Vikram Patel', line: 'Line 1', station: 'Line2', skillLevel: 'Expert', certified: 'Yes', lastAssessed: '2026-02-18' },
-    { name: 'Sneha Gupta', line: 'Line 2', station: 'Station2', skillLevel: 'Beginner', certified: 'No', lastAssessed: '2026-01-15' }
-  ]).map(d => ({
+  const allTableData = (dbData?.table || []).map(d => ({
     ...d,
     name: d.name || d.operator || 'Operator'
   }));
@@ -57,11 +49,21 @@ export default function SkillMatrixDashboard() {
   
   const COLORS = ['#f59e0b', '#3b82f6', '#10b981'];
 
-  const coverageData = [
-    { station: 'Demo', coverage: tableData.length > 0 ? 100 : 0 },
-    { station: 'Line2', coverage: tableData.length > 0 ? 100 : 0 },
-    { station: 'Station2', coverage: tableData.length > 0 ? 100 : 0 }
-  ];
+  const stationCoverageMap = {};
+  tableData.forEach(d => {
+    if (d.station) {
+      if (!stationCoverageMap[d.station]) stationCoverageMap[d.station] = { total: 0, qualified: 0 };
+      stationCoverageMap[d.station].total += 1;
+      if (d.skillLevel === 'Expert' || d.skillLevel === 'Intermediate' || d.certified === 'Yes') {
+        stationCoverageMap[d.station].qualified += 1;
+      }
+    }
+  });
+
+  const coverageData = Object.keys(stationCoverageMap).map(st => ({
+    station: st,
+    coverage: stationCoverageMap[st].total > 0 ? Math.round((stationCoverageMap[st].qualified / stationCoverageMap[st].total) * 100) : 0
+  }));
 
   const getBadgeColor = (level) => {
     switch (level) {

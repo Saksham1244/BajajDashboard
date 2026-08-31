@@ -1,4 +1,4 @@
-﻿import { matchFilter } from '../../utils/filterUtils';
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useMemo, useEffect } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
@@ -34,33 +34,27 @@ export default function KitVsProductionReport() {
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const defaultRawData = [
-    { line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', kits: 150, production: 145 },
-    { line: 'Line 2', model: 'Dominar 400', sku: 'D400', kits: 85, production: 80 },
-    { line: 'Line 1', model: 'Avenger 220', sku: 'BS6', kits: 60, production: 65 },
-    { line: 'Line 2', model: 'Pulsar 150', sku: 'UG5', kits: 45, production: 40 },
-    { line: 'Line 1', model: 'Dominar 400', sku: 'D400', kits: 70, production: 72 },
-    { line: 'Line 2', model: 'Avenger 220', sku: 'BS6', kits: 55, production: 50 },
-  ];
-
-  const scaleMultiplier = period === 'Month' ? 5 : period === 'Week' ? 2 : 1;
-
   const rawData = useMemo(() => {
-    if (dbData?.table && dbData.table.length > 0) {
-      const modelMap = {};
-      dbData.table.forEach(d => {
-        const key = `${d.line || 'Line 1'}_${d.model || 'Pulsar 150'}_${d.sku || 'UG5'}`;
-        if (!modelMap[key]) {
-          modelMap[key] = { line: d.line || 'Line 1', model: d.model || 'Pulsar 150', sku: d.sku || 'UG5', kits: 0, production: 0 };
-        }
-        if (d.status === 'Prepared') modelMap[key].kits += (1 * scaleMultiplier);
-        modelMap[key].production += (1 * scaleMultiplier);
-      });
-      const arr = Object.values(modelMap);
-      return arr.length > 0 ? arr : defaultRawData;
-    }
-    return defaultRawData;
-  }, [dbData, scaleMultiplier]);
+    if (!dbData?.table || dbData.table.length === 0) return [];
+    const modelMap = {};
+    dbData.table.forEach(d => {
+      const key = `${d.line || 'Line 1'}_${d.model || 'Pulsar 150'}_${d.sku || 'UG5'}`;
+      if (!modelMap[key]) {
+        modelMap[key] = {
+          line: d.line || 'Line 1',
+          model: d.model || 'Pulsar 150',
+          sku: d.sku || 'UG5',
+          kits: d.kits !== undefined ? d.kits : 0,
+          production: d.production !== undefined ? d.production : 0
+        };
+      }
+      if (d.kits === undefined && d.production === undefined) {
+        if (d.status === 'Prepared' || d.status === 'OK') modelMap[key].kits += 1;
+        modelMap[key].production += 1;
+      }
+    });
+    return Object.values(modelMap);
+  }, [dbData]);
 
   const filteredItems = useMemo(() => {
     return rawData.filter(d => 
@@ -71,6 +65,7 @@ export default function KitVsProductionReport() {
   }, [rawData, line, model, sku]);
 
   const chartData = useMemo(() => {
+    if (filteredItems.length === 0) return [];
     const map = {};
     filteredItems.forEach(d => {
       if (!map[d.model]) {
@@ -79,9 +74,8 @@ export default function KitVsProductionReport() {
       map[d.model].kits += d.kits;
       map[d.model].production += d.production;
     });
-    const res = Object.values(map);
-    return res.length > 0 ? res : [{ model: model !== 'All' ? model : 'No Data', kits: 0, production: 0 }];
-  }, [filteredItems, model]);
+    return Object.values(map);
+  }, [filteredItems]);
 
   const kpi = {
     kits: filteredItems.reduce((acc, d) => acc + (d.kits || 0), 0),
@@ -91,12 +85,13 @@ export default function KitVsProductionReport() {
   const gapPercent = kpi.kits > 0 ? Math.round((gap / kpi.kits) * 100) : 0;
 
   const trendData = useMemo(() => {
+    if (filteredItems.length === 0 && kpi.kits === 0 && kpi.production === 0) return [];
     return generateTimeLabels(period, shift).map((time) => ({
       time,
       kits: kpi.kits,
       production: kpi.production
     }));
-  }, [period, shift, kpi]);
+  }, [period, shift, kpi, filteredItems.length]);
 
   const tableData = filteredItems.map(d => ({
     line: d.line,

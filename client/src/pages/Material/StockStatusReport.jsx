@@ -30,18 +30,7 @@ export default function StockStatusReport() {
     { type: 'dropdown', label: 'Store Location', options: ['All', 'Main Store', ...filterOptions.lines.filter(l => l !== 'All')], value: location, onChange: setLocation },
   ];
 
-  const defaultTable = [
-    { id: 'BAJ-ENG-101', material: 'Cylinder Block 150cc', matType: 'Raw', location: 'Main Store', available: 120, minLevel: 25, maxLevel: 150, status: 'Safe' },
-    { id: 'BAJ-ENG-102', material: 'Piston Assembly 57mm', matType: 'Raw', location: 'Line 1', available: 18, minLevel: 25, maxLevel: 150, status: 'Critical' },
-    { id: 'BAJ-ENG-103', material: 'Cylinder Head DOHC', matType: 'WIP', location: 'Line 2', available: 85, minLevel: 25, maxLevel: 150, status: 'Safe' },
-    { id: 'BAJ-ENG-104', material: 'Crankshaft & Connecting Rod', matType: 'WIP', location: 'Main Store', available: 64, minLevel: 25, maxLevel: 150, status: 'Safe' },
-    { id: 'BAJ-ENG-105', material: 'Camshaft Timing Gear Set', matType: 'WIP', location: 'Line 1', available: 12, minLevel: 25, maxLevel: 150, status: 'Critical' },
-    { id: 'BAJ-ENG-108', material: 'Spark Plug Twin-Spark', matType: 'Finished', location: 'Main Store', available: 450, minLevel: 100, maxLevel: 300, status: 'Excess' }
-  ];
-
-  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
-
-  const tableData = rawTable.filter(d =>
+  const tableData = (dbData?.table || []).filter(d =>
     (matType === 'All' || d.matType === matType) &&
     (location === 'All' || d.location === location)
   );
@@ -50,9 +39,10 @@ export default function StockStatusReport() {
     material: d.material,
     available: d.available || 0,
     minLevel: d.minLevel || 0
-  })) : [{ material: 'No Data', available: 0, minLevel: 0 }];
+  })) : [];
 
   const trendData = useMemo(() => {
+    if (tableData.length === 0) return [];
     return generateTimeLabels(period, shift).map((time) => ({
       time,
       stockValue: tableData.reduce((acc, d) => acc + (d.available || 0), 0)

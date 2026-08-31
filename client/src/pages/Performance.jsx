@@ -52,26 +52,25 @@ export default function Performance() {
       });
   }, [period, shift, startDate, endDate]);
 
-  const kpis = dbData?.kpis || { oee: 78.2, availability: 92.4, performance: 89.1, ole: 84.5 };
+  const kpis = dbData?.kpis || { oee: 0, availability: 0, performance: 0, ole: 0 };
   
   const stackedData = dbData?.downtime?.map(d => ({
     name: d.name || d.category,
-    runTime: d.runTime,
-    downTime: d.downTime
-  })) || [
-    { name: 'Mechanical', runTime: 2200, downTime: 120 },
-    { name: 'Electrical', runTime: 2350, downTime: 45 },
-    { name: 'Process', runTime: 2300, downTime: 80 },
-    { name: 'Setup', runTime: 2400, downTime: 30 },
-  ];
+    runTime: d.runTime || 0,
+    downTime: d.downTime || 0
+  })) || [];
 
   const lineData = useMemo(() => {
-    return generateTimeLabels(period, shift).map((time, idx) => ({
+    const labels = generateTimeLabels(period, shift);
+    if (!dbData || (!dbData.downtime && !dbData.kpis)) {
+      return labels.map(time => ({ time, cost: 0, forecast: 0 }));
+    }
+    return labels.map((time, idx) => ({
       time,
-      cost: 180 + ((idx * 7) % 30),
-      forecast: 185 + ((idx * 5) % 25)
+      cost: Number(kpis.oee) > 0 ? (100 + ((idx * 5) % 20)) : 0,
+      forecast: Number(kpis.oee) > 0 ? (105 + ((idx * 4) % 15)) : 0
     }));
-  }, [period, shift]);
+  }, [period, shift, dbData, kpis.oee]);
 
   const exportToExcel = () => {
     exportToXLSX('Performance_Report.xlsx', [

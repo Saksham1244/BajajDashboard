@@ -29,16 +29,7 @@ export default function PQCAReport() {
   }, [period, shift, startDate, endDate, line, modelFamily, model]);
 
   const rawTableData = useMemo(() => {
-    return dbData?.table || [
-      { checkpoint: 'Oil Level', category: 'Visual', status: 'OK', why: '-', action: '-', repeated: 'No', model: 'Pulsar 150', modelFamily: 'Bike', line: 'Line 1', shift: 'Shift 1' },
-      { checkpoint: 'Torque Value', category: 'Measurement', status: 'NC', why: 'Tool issue', action: 'Recalibrated', repeated: 'No', model: 'Dominar 400', modelFamily: 'Bike', line: 'Line 2', shift: 'Shift 1' },
-      { checkpoint: 'Engine Noise', category: 'Functional', status: 'OK', why: '-', action: '-', repeated: 'No', model: 'Pulsar 220', modelFamily: 'Bike', line: 'Line 1', shift: 'Shift 2' },
-      { checkpoint: 'Paint Quality', category: 'Visual', status: 'NC', why: 'Dust', action: 'Cleaned', repeated: 'Yes', model: 'Avenger', modelFamily: 'Bike', line: 'Line 2', shift: 'Shift 1' },
-      { checkpoint: 'Clearance', category: 'Measurement', status: 'OK', why: '-', action: '-', repeated: 'No', model: 'Pulsar 150', modelFamily: 'Bike', line: 'Line 1', shift: 'Shift 2' },
-      { checkpoint: 'Spark Plug Gap', category: 'Measurement', status: 'NC', why: 'Worn electrode', action: 'Replaced', repeated: 'No', model: 'Dominar 400', modelFamily: 'Bike', line: 'Line 2', shift: 'Shift 2' },
-      { checkpoint: 'Gasket Integrity', category: 'Visual', status: 'OK', why: '-', action: '-', repeated: 'No', model: 'Pulsar 220', modelFamily: 'Bike', line: 'Line 1', shift: 'Shift 1' },
-      { checkpoint: 'Valve Seating', category: 'Functional', status: 'OK', why: '-', action: '-', repeated: 'No', model: 'Avenger', modelFamily: 'Bike', line: 'Line 2', shift: 'Shift 2' },
-    ];
+    return dbData?.table || [];
   }, [dbData]);
 
   const tableData = useMemo(() => {
@@ -66,10 +57,13 @@ export default function PQCAReport() {
     };
   }, [tableData]);
 
-  const complianceData = useMemo(() => [
-    { name: 'OK', value: kpiData.ok },
-    { name: 'NC', value: kpiData.nc },
-  ], [kpiData.ok, kpiData.nc]);
+  const complianceData = useMemo(() => {
+    if (kpiData.totalCheckpoints === 0) return [];
+    return [
+      { name: 'OK', value: kpiData.ok },
+      { name: 'NC', value: kpiData.nc },
+    ];
+  }, [kpiData.ok, kpiData.nc, kpiData.totalCheckpoints]);
 
   const categoryNcData = useMemo(() => {
     const counts = {};
@@ -77,8 +71,7 @@ export default function PQCAReport() {
       const cat = d.category || 'Visual';
       counts[cat] = (counts[cat] || 0) + 1;
     });
-    const items = Object.entries(counts).map(([name, value]) => ({ name, value }));
-    return items.length > 0 ? items : [{ name: 'None', value: 0 }];
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [tableData]);
 
   const ncTrendData = useMemo(() => {

@@ -15,7 +15,7 @@ export default function StraightPassReport() {
   const [activeLine, setActiveLine] = useState('All');
 
   const [dbData, setDbData] = useState([]);
-  const [kpis, setKpis] = useState({ total: 410, straight: 392, rework: 18 });
+  const [kpis, setKpis] = useState({ total: 0, straight: 0, rework: 0 });
   
   React.useEffect(() => {
     fetch(`/api/dashboard/production?period=${period}&shift=${shift}&line=${encodeURIComponent(activeLine)}`)
@@ -26,8 +26,8 @@ export default function StraightPassReport() {
           list = list.filter(d => !d.line || d.line === activeLine);
         }
         setDbData(list);
-        const straightTotal = list.reduce((acc, curr) => acc + (curr.straight || 0), 0) || (activeLine === 'All' ? 392 : 190);
-        const reworkTotal = list.reduce((acc, curr) => acc + (curr.reworked || 0), 0) || (activeLine === 'All' ? 18 : 8);
+        const straightTotal = list.reduce((acc, curr) => acc + (curr.straight || 0), 0);
+        const reworkTotal = list.reduce((acc, curr) => acc + (curr.reworked || 0), 0);
         setKpis({
           total: straightTotal + reworkTotal,
           straight: straightTotal,
@@ -41,15 +41,19 @@ export default function StraightPassReport() {
 
   const hourlyData = useMemo(() => {
     const labels = generateTimeLabels(period, shift);
-    const totalStraight = dbData.reduce((acc, curr) => acc + curr.straight, 0) || 400;
-    const totalRework = dbData.reduce((acc, curr) => acc + curr.reworked, 0) || 50;
+    const totalStraight = dbData.reduce((acc, curr) => acc + (curr.straight || 0), 0);
+    const totalRework = dbData.reduce((acc, curr) => acc + (curr.reworked || 0), 0);
     
+    if (labels.length === 0 || (totalStraight === 0 && totalRework === 0)) {
+      return labels.map(time => ({ time, straight: 0, rework: 0 }));
+    }
+
     const straightPerLabel = Math.floor(totalStraight / (labels.length || 1));
     const reworkPerLabel = Math.floor(totalRework / (labels.length || 1));
 
     return labels.map((time, idx) => ({
       time,
-      straight: Math.max(0, straightPerLabel + ((idx % 3) - 1)),
+      straight: Math.max(0, straightPerLabel),
       rework: Math.max(0, reworkPerLabel)
     }));
   }, [period, shift, dbData]);

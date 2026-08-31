@@ -24,16 +24,7 @@ export default function PMReport() {
       .catch(err => console.error(err));
   }, [period, shift, line, machine]);
 
-  const defaultLogs = [
-    { id: 'PMR-201', pmId: 'PM-101', machine: 'Demo Nutrunner Spindle', line: 'Line 1', task: 'Spindle Lubrication & Calibration', date: '2026-08-31', shift: 'Shift 1', status: 'Completed', duration: 35, technician: 'Amit Kumar', result: 'Pass', notes: 'Lubricant replenished, calibration checked OK' },
-    { id: 'PMR-202', pmId: 'PM-102', machine: 'Line2 Pallet Indexer', line: 'Line 2', task: 'Pneumatic Cylinder Seal Check', date: '2026-08-31', shift: 'Shift 1', status: 'Pending', duration: 0, technician: 'Rahul Sharma', result: 'Pending', notes: 'Scheduled for end of shift' },
-    { id: 'PMR-203', pmId: 'PM-103', machine: 'Station2 Cold Test Bench', line: 'Line 1', task: 'Sensor Alignment & Wiring Inspection', date: '2026-08-31', shift: 'Shift 1', status: 'Completed', duration: 20, technician: 'Priya Singh', result: 'Pass', notes: 'Sensors cleaned and realigned' },
-    { id: 'PMR-204', pmId: 'PM-104', machine: 'Conveyor Drive Unit 1', line: 'Line 1', task: 'Motor Belt Tension Adjustment', date: '2026-08-30', shift: 'Shift 2', status: 'Overdue', duration: 0, technician: 'Amit Kumar', result: 'Overdue', notes: 'Requires spare belt' },
-    { id: 'PMR-205', pmId: 'PM-105', machine: 'Robotic Tightening Cell', line: 'Line 2', task: 'End-Effector Torque Verification', date: '2026-08-31', shift: 'Shift 2', status: 'Completed', duration: 45, technician: 'Vikram Patel', result: 'Pass', notes: 'Torque values within 0.5% tolerance' },
-    { id: 'PMR-206', pmId: 'PM-106', machine: 'Demo Nutrunner Spindle', line: 'Line 1', task: 'Electrical Contact Cleaning', date: '2026-08-31', shift: 'Shift 1', status: 'Completed', duration: 25, technician: 'Amit Kumar', result: 'Pass', notes: 'Contacts cleaned with solvent spray' }
-  ];
-
-  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultLogs;
+  const rawTable = dbData?.table || [];
 
   const tableData = rawTable.filter(d => 
     matchFilter(d.line, line) &&
@@ -42,7 +33,7 @@ export default function PMReport() {
 
   const totalPlanned = tableData.length;
   const totalCompleted = tableData.filter(d => d.status === 'Completed').length;
-  const compliance = totalPlanned > 0 ? Number(((totalCompleted / totalPlanned) * 100).toFixed(1)) : 100.0;
+  const compliance = totalPlanned > 0 ? Number(((totalCompleted / totalPlanned) * 100).toFixed(1)) : 0;
   const totalDuration = tableData.reduce((acc, d) => acc + (Number(d.duration) || 0), 0);
   const avgDuration = totalCompleted > 0 ? Math.round(totalDuration / totalCompleted) : 0;
 

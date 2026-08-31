@@ -27,16 +27,7 @@ export default function PMDashboard() {
 
   const colors = ['#10b981', '#f59e0b', '#ef4444', '#0369a1', '#8b5cf6'];
 
-  const defaultTasks = [
-    { id: 'PM-101', machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', task: 'Spindle Lubrication & Calibration', frequency: 'Weekly', scheduledDate: '2026-08-31', completedDate: '2026-08-31', status: 'Completed', technician: 'Amit Kumar' },
-    { id: 'PM-102', machine: 'Line2 Pallet Indexer', line: 'Line 2', station: 'Line2 (Head Tightening)', task: 'Pneumatic Cylinder Seal Check', frequency: 'Monthly', scheduledDate: '2026-08-31', completedDate: '-', status: 'Pending', technician: 'Rahul Sharma' },
-    { id: 'PM-103', machine: 'Station2 Cold Test Bench', line: 'Line 1', station: 'Station2 (Cold Inspection)', task: 'Sensor Alignment & Wiring Inspection', frequency: 'Daily', scheduledDate: '2026-08-31', completedDate: '2026-08-31', status: 'Completed', technician: 'Priya Singh' },
-    { id: 'PM-104', machine: 'Conveyor Drive Unit 1', line: 'Line 1', station: 'Demo (Block Assly)', task: 'Motor Belt Tension Adjustment', frequency: 'Bi-Weekly', scheduledDate: '2026-08-30', completedDate: '-', status: 'Overdue', technician: 'Amit Kumar' },
-    { id: 'PM-105', machine: 'Robotic Tightening Cell', line: 'Line 2', station: 'Line2 (Head Tightening)', task: 'End-Effector Torque Verification', frequency: 'Weekly', scheduledDate: '2026-08-31', completedDate: '2026-08-31', status: 'Completed', technician: 'Vikram Patel' },
-    { id: 'PM-106', machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', task: 'Electrical Contact Cleaning', frequency: 'Monthly', scheduledDate: '2026-08-31', completedDate: '2026-08-31', status: 'Completed', technician: 'Amit Kumar' }
-  ];
-
-  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTasks;
+  const rawTable = dbData?.table || [];
 
   const tableData = rawTable.filter(d => 
     matchFilter(d.line, line) &&
@@ -47,7 +38,7 @@ export default function PMDashboard() {
   const completedTasks = tableData.filter(d => d.status === 'Completed').length;
   const pendingTasks = tableData.filter(d => d.status === 'Pending').length;
   const overdueTasks = tableData.filter(d => d.status === 'Overdue').length;
-  const compliance = totalTasks > 0 ? Number(((completedTasks / totalTasks) * 100).toFixed(1)) : 100.0;
+  const compliance = totalTasks > 0 ? Number(((completedTasks / totalTasks) * 100).toFixed(1)) : 0;
 
   const statusData = [
     { name: 'Completed', value: completedTasks },

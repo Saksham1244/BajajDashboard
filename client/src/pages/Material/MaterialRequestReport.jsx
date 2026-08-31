@@ -32,17 +32,7 @@ export default function MaterialRequestReport() {
     { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
   ];
 
-  const defaultTable = [
-    { reqId: 'REQ-1001', material: 'Cylinder Block 150cc', line: 'Line 1', station: 'Demo', requestedQty: 50, issuedQty: 50, status: 'Fulfilled', reqTime: '08:15', fullTime: '08:25' },
-    { reqId: 'REQ-1002', material: 'Piston Assembly 57mm', line: 'Line 1', station: 'Line2', requestedQty: 30, issuedQty: 30, status: 'Fulfilled', reqTime: '09:00', fullTime: '09:12' },
-    { reqId: 'REQ-1003', material: 'Cylinder Head DOHC', line: 'Line 2', station: 'Station2', requestedQty: 25, issuedQty: 25, status: 'Fulfilled', reqTime: '09:30', fullTime: '09:40' },
-    { reqId: 'REQ-1004', material: 'Camshaft Timing Gear Set', line: 'Line 1', station: 'Demo', requestedQty: 15, issuedQty: 0, status: 'Pending', reqTime: '10:10', fullTime: '-' },
-    { reqId: 'REQ-1005', material: 'Spark Plug Twin-Spark', line: 'Line 2', station: 'Line2', requestedQty: 100, issuedQty: 100, status: 'Fulfilled', reqTime: '10:45', fullTime: '10:55' },
-  ];
-
-  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
-
-  const tableData = rawTable.filter(d => 
+  const tableData = (dbData?.table || []).filter(d => 
     matchFilter(d.line, line) &&
     matchFilter(d.station, station)
   );
@@ -51,24 +41,45 @@ export default function MaterialRequestReport() {
   const fulfilledCount = tableData.filter(d => d.status === 'Approved' || d.status === 'Fulfilled').length;
   const pendingCount = tableData.filter(d => d.status === 'Pending').length;
 
+  const avgTime = useMemo(() => {
+    if (dbData?.kpi?.avgTime !== undefined) return dbData.kpi.avgTime;
+    const fulfilledRows = tableData.filter(d => (d.status === 'Fulfilled' || d.status === 'Approved') && d.reqTime && d.fullTime && d.fullTime !== '-');
+    if (fulfilledRows.length === 0) return 0;
+    let totalMinutes = 0;
+    let validCount = 0;
+    fulfilledRows.forEach(d => {
+      const [rh, rm] = (d.reqTime || '').split(':').map(Number);
+      const [fh, fm] = (d.fullTime || '').split(':').map(Number);
+      if (!isNaN(rh) && !isNaN(rm) && !isNaN(fh) && !isNaN(fm)) {
+        const diff = (fh * 60 + fm) - (rh * 60 + rm);
+        if (diff >= 0) {
+          totalMinutes += diff;
+          validCount++;
+        }
+      }
+    });
+    return validCount > 0 ? Math.round(totalMinutes / validCount) : 0;
+  }, [tableData, dbData]);
+
   const kpi = {
     total: totalRequests,
     fulfilled: fulfilledCount,
     pending: pendingCount,
-    avgTime: totalRequests > 0 ? 10 : 0
+    avgTime: avgTime
   };
 
   const reqData = useMemo(() => {
+    if (tableData.length === 0) return [];
     const stationCounts = {};
     tableData.forEach(d => {
-      const st = d.station || 'Demo';
+      const st = d.station || 'Station';
       stationCounts[st] = (stationCounts[st] || 0) + 1;
     });
-    const result = Object.entries(stationCounts).map(([st, requests]) => ({ station: st, requests }));
-    return result.length > 0 ? result : [{ station: station !== 'All' ? station : 'No Data', requests: 0 }];
-  }, [tableData, station]);
+    return Object.entries(stationCounts).map(([st, requests]) => ({ station: st, requests }));
+  }, [tableData]);
 
   const trendData = useMemo(() => {
+    if (tableData.length === 0) return [];
     return generateTimeLabels(period, shift).map((time) => ({
       time,
       requests: tableData.length

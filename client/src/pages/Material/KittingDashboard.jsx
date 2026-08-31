@@ -33,18 +33,7 @@ export default function KittingDashboard() {
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const defaultTable = [
-    { kitId: 'KIT-P150-01', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', status: 'Prepared', preparedAt: '08:15', accuracy: '100%', defect: '-', operator: 'Rahul Sharma', time: '08:15' },
-    { kitId: 'KIT-P150-02', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', status: 'Prepared', preparedAt: '08:45', accuracy: '100%', defect: '-', operator: 'Priya Singh', time: '08:45' },
-    { kitId: 'KIT-D400-01', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', status: 'Prepared', preparedAt: '09:10', accuracy: '100%', defect: '-', operator: 'Amit Kumar', time: '09:10' },
-    { kitId: 'KIT-D400-02', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', status: 'Rejected', preparedAt: '09:35', accuracy: '92%', defect: 'Missing Gasket', operator: 'Rahul Sharma', time: '09:35' },
-    { kitId: 'KIT-A220-01', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', status: 'Prepared', preparedAt: '10:00', accuracy: '100%', defect: '-', operator: 'Priya Singh', time: '10:00' },
-    { kitId: 'KIT-A220-02', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', status: 'Rejected', preparedAt: '10:20', accuracy: '90%', defect: 'Wrong Bolt Grade', operator: 'Amit Kumar', time: '10:20' }
-  ];
-
-  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
-
-  const tableData = rawTable.filter(d => 
+  const tableData = (dbData?.table || []).filter(d => 
     matchFilter(d.line, line) &&
     matchFilter(d.model, model) &&
     matchFilter(d.sku, sku)
@@ -62,7 +51,7 @@ export default function KittingDashboard() {
     pending: pendingCount,
     accuracy: accuracy,
     rejected: rejectedCount,
-    status: totalCount > 0 ? (rejectedCount === 0 ? 'On Track' : 'Action Required') : 'No Data'
+    status: totalCount > 0 ? (rejectedCount === 0 ? 'On Track' : 'Action Required') : '0'
   };
 
   const pieData = [
@@ -79,9 +68,8 @@ export default function KittingDashboard() {
         counts[m] = (counts[m] || 0) + 1;
       }
     });
-    const result = Object.entries(counts).map(([mod, prep]) => ({ model: mod, prepared: prep }));
-    return result.length > 0 ? result : [{ model: model !== 'All' ? model : 'No Data', prepared: 0 }];
-  }, [tableData, model]);
+    return Object.entries(counts).map(([mod, prep]) => ({ model: mod, prepared: prep }));
+  }, [tableData]);
 
   const trendData = useMemo(() => {
     if (tableData.length === 0 && preparedCount === 0) return [];
@@ -145,7 +133,7 @@ export default function KittingDashboard() {
             <div className="h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={pieData.length > 0 ? pieData : [{ name: 'Prepared', value: 1 }]} dataKey="value" nameKey="name" cx="50%" cy="100%" startAngle={180} endAngle={0} innerRadius={60} outerRadius={80}>
+                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="100%" startAngle={180} endAngle={0} innerRadius={60} outerRadius={80}>
                     {pieData.map((entry, index) => <Cell key={index} fill={index === 0 ? COLORS[2] : index === 1 ? COLORS[1] : COLORS[4]} />)}
                   </Pie>
                   <Tooltip />
@@ -158,7 +146,7 @@ export default function KittingDashboard() {
             <h3 className="text-sm font-bold text-brand-dark mb-3">Preparation by Model</h3>
             <div className="h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barData.length > 0 ? barData : [{ model: 'No Data', prepared: 0 }]}>
+                <BarChart data={barData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="model" />
                   <YAxis allowDecimals={false} />
@@ -173,7 +161,7 @@ export default function KittingDashboard() {
             <h3 className="text-sm font-bold text-brand-dark mb-3">Kits Prepared Trend</h3>
             <div className="h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={trendData.length > 0 ? trendData : [{ time: '08:00', kitsPrepared: 0 }]}>
+                <LineChart data={trendData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="time" />
                   <YAxis allowDecimals={false} />

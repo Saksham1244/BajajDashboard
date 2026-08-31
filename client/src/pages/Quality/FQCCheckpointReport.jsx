@@ -25,16 +25,7 @@ export default function FQCCheckpointReport() {
   }, [period, shift, startDate, endDate, line, model, sku]);
 
   const rawTableData = useMemo(() => {
-    return dbData?.table || [
-      { id: 'FQC-CP-01', cpName: 'Cold Test Peak Vibration', date: '2026-08-31 08:50', shift: 'Shift 1', line: 'Line 1', stage: 'Testing', model: 'Pulsar 150', sku: 'UG5', inspector: 'Rahul Sharma', category: 'Functional', stdValue: '< 2.5 mm/s', actValue: '1.8 mm/s', result: 'PASS' },
-      { id: 'FQC-CP-02', cpName: 'Dyno Max Power Output', date: '2026-08-31 10:05', shift: 'Shift 1', line: 'Line 2', stage: 'Testing', model: 'Dominar 400', sku: 'D400-ABS', inspector: 'Priya Singh', category: 'Performance', stdValue: '39.5 ± 0.5 HP', actValue: '39.6 HP', result: 'PASS' },
-      { id: 'FQC-CP-03', cpName: 'Hot Run Oil Pressure at 4k RPM', date: '2026-08-31 11:20', shift: 'Shift 1', line: 'Line 1', stage: 'Testing', model: 'Pulsar 220', sku: 'P220-F', inspector: 'Amit Kumar', category: 'Measurement', stdValue: '2.8 - 3.2 bar', actValue: '2.5 bar', result: 'FAIL' },
-      { id: 'FQC-CP-04', cpName: 'Idle Engine RPM Stability', date: '2026-08-31 12:35', shift: 'Shift 1', line: 'Line 2', stage: 'Testing', model: 'Avenger', sku: 'AV-220', inspector: 'Neha Verma', category: 'Functional', stdValue: '1400 ± 50 RPM', actValue: '1410 RPM', result: 'PASS' },
-      { id: 'FQC-CP-05', cpName: 'ECU CAN Bus DTC Error Count', date: '2026-08-31 14:50', shift: 'Shift 2', line: 'Line 1', stage: 'Diagnostics', model: 'Pulsar 150', sku: 'UG5', inspector: 'Vikram Patel', category: 'Electrical', stdValue: '0 DTC', actValue: '0 DTC', result: 'PASS' },
-      { id: 'FQC-CP-06', cpName: 'Exhaust CO% Emission at Idle', date: '2026-08-31 16:20', shift: 'Shift 2', line: 'Line 2', stage: 'Emission', model: 'Dominar 400', sku: 'D400-ABS', inspector: 'Rahul Sharma', category: 'Chemical', stdValue: '< 0.50 %', actValue: '0.62 %', result: 'FAIL' },
-      { id: 'FQC-CP-07', cpName: 'Oil Sump Drain Plug Torque', date: '2026-08-31 17:50', shift: 'Shift 2', line: 'Line 1', stage: 'Final Dressing', model: 'Pulsar 220', sku: 'P220-F', inspector: 'Amit Kumar', category: 'Torque', stdValue: '28 ± 2 Nm', actValue: '28.4 Nm', result: 'PASS' },
-      { id: 'FQC-CP-08', cpName: 'Tank Decal & Logo Alignment', date: '2026-08-31 19:20', shift: 'Shift 2', line: 'Line 2', stage: 'Final Dressing', model: 'Avenger', sku: 'AV-220', inspector: 'Priya Singh', category: 'Visual', stdValue: 'Centered ± 1 mm', actValue: 'Centered', result: 'PASS' },
-    ];
+    return dbData?.table || [];
   }, [dbData]);
 
   const tableData = useMemo(() => {
@@ -51,7 +42,7 @@ export default function FQCCheckpointReport() {
     const total = tableData.length;
     const passed = tableData.filter(d => d.result === 'PASS' || d.result === 'OK').length;
     const failed = tableData.filter(d => d.result === 'FAIL' || d.result === 'NOK').length;
-    const passRate = total > 0 ? Number(((passed / total) * 100).toFixed(1)) : 100;
+    const passRate = total > 0 ? Number(((passed / total) * 100).toFixed(1)) : 0;
     return {
       totalCheckpoints: total,
       passed,

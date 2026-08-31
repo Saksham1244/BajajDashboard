@@ -34,18 +34,7 @@ export default function MaterialDashboard() {
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const defaultTable = [
-    { id: 'BAJ-ENG-101', material: 'Cylinder Block 150cc', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', location: 'Main Store', currentStock: 120, minLevel: 25, maxLevel: 150, status: 'Safe', category: 'Engine Parts' },
-    { id: 'BAJ-ENG-102', material: 'Piston Assembly 57mm', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', location: 'Line 1', currentStock: 18, minLevel: 25, maxLevel: 150, status: 'Critical', category: 'Pistons' },
-    { id: 'BAJ-ENG-103', material: 'Cylinder Head DOHC', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', location: 'Line 2', currentStock: 85, minLevel: 25, maxLevel: 150, status: 'Safe', category: 'Engine Parts' },
-    { id: 'BAJ-ENG-104', material: 'Crankshaft & Connecting Rod', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', location: 'Main Store', currentStock: 64, minLevel: 25, maxLevel: 150, status: 'Safe', category: 'Transmission' },
-    { id: 'BAJ-ENG-105', material: 'Camshaft Timing Gear Set', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', location: 'Line 1', currentStock: 12, minLevel: 25, maxLevel: 150, status: 'Critical', category: 'Gears' },
-    { id: 'BAJ-ENG-108', material: 'Spark Plug Twin-Spark', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', location: 'Main Store', currentStock: 450, minLevel: 100, maxLevel: 300, status: 'Excess', category: 'Electrical' }
-  ];
-
-  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
-
-  const tableData = rawTable.filter(d => 
+  const tableData = (dbData?.table || []).filter(d => 
     matchFilter(d.line, line) &&
     matchFilter(d.model, model) &&
     matchFilter(d.sku, sku)
@@ -58,9 +47,9 @@ export default function MaterialDashboard() {
   const kpi = {
     availability: tableData.length > 0 ? `${Math.round((safeCount / tableData.length) * 100)}%` : '0%',
     shortage: criticalCount,
-    lineFeed: criticalCount === 0 && tableData.length > 0 ? 'OK' : (criticalCount > 0 ? 'Shortage Alert' : 'No Data'),
+    lineFeed: tableData.length > 0 ? (criticalCount === 0 ? 'OK' : 'Shortage Alert') : '0',
     requests: tableData.length,
-    pending: 0,
+    pending: tableData.filter(d => d.status === 'Pending').length,
     critical: criticalCount,
     safe: safeCount,
     excess: excessCount
@@ -74,7 +63,7 @@ export default function MaterialDashboard() {
 
   const shortageData = useMemo(() => {
     const criticalItems = tableData.filter(d => d.status === 'Critical');
-    if (criticalItems.length === 0) return [{ category: 'No Shortages', count: 0 }];
+    if (criticalItems.length === 0) return [];
     const counts = {};
     criticalItems.forEach(d => {
       const cat = d.category || d.material || 'General';
@@ -84,6 +73,7 @@ export default function MaterialDashboard() {
   }, [tableData]);
 
   const trendData = useMemo(() => {
+    if (tableData.length === 0) return [];
     return generateTimeLabels(period, shift).map((time) => ({
       time,
       shortages: criticalCount,
@@ -117,7 +107,7 @@ export default function MaterialDashboard() {
         ['Line Feed Status', kpi.lineFeed],
         ['Material Request Count', kpi.requests],
         ['Pending Requests', kpi.pending],
-        ['Stock Level', `${kpi.critical} C / ${kpi.safe} S / ${kpi.excess} E`],
+        ['Stock Level', tableData.length > 0 ? `${kpi.critical} C / ${kpi.safe} S / ${kpi.excess} E` : '0'],
       ]},
       { name: 'Shortages Details', rows: [['Part ID', 'Material', 'Location', 'Available Qty', 'Min Stock Level', 'Status'], ...tableData.map(d => [d.id, d.material, d.location, d.currentStock || d.available, d.minLevel, d.status])] }
     ]);
@@ -134,7 +124,7 @@ export default function MaterialDashboard() {
           <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Line Feed Status" value={kpi.lineFeed} color="blue" />
           <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Request Count" value={kpi.requests} color="blue" />
           <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Pending Requests" value={kpi.pending} color="orange" />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Stock Level" value={`${kpi.critical} C / ${kpi.safe} S / ${kpi.excess} E`} color="purple" />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Stock Level" value={tableData.length > 0 ? `${kpi.critical} C / ${kpi.safe} S / ${kpi.excess} E` : '0'} color="purple" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -143,7 +133,7 @@ export default function MaterialDashboard() {
             <div className="h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={stockLevelData.length > 0 ? stockLevelData : [{ name: 'Safe', value: 1 }]} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                  <Pie data={stockLevelData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
                     {stockLevelData.map((entry, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}
                   </Pie>
                   <Tooltip />
@@ -156,7 +146,7 @@ export default function MaterialDashboard() {
             <h3 className="text-sm font-bold text-brand-dark mb-3">Shortage by Category</h3>
             <div className="h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={shortageData.length > 0 ? shortageData : [{ category: 'No Shortages', count: 0 }]}>
+                <BarChart data={shortageData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="category" />
                   <YAxis allowDecimals={false} />

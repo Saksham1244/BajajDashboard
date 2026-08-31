@@ -18,20 +18,13 @@ export default function AttendanceReport() {
   const [dbData, setDbData] = useState(null);
 
   React.useEffect(() => {
-    fetch(`/api/workforce/attendance?period=${period}&shift=${shift}&line=${line}`)
+    fetch(`/api/workforce/attendance?period=${period}&shift=${shift}&line=${encodeURIComponent(line)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
   }, [period, shift, line]);
 
-  const allTableData = dbData?.table || [
-    { id: '3', operator: 'Rahul Sharma', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
-    { id: '4', operator: 'Priya Singh', line: 'Line 2', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
-    { id: '5', operator: 'Amit Kumar', line: 'Line 1', shift: 'Shift 2', inTime: '14:00', outTime: '22:00', status: 'Present', hoursWorked: 8 },
-    { id: '6', operator: 'Neha Verma', line: 'Line 2', shift: 'Shift 2', inTime: '14:15', outTime: '22:00', status: 'Late', hoursWorked: 7.75 },
-    { id: '7', operator: 'Vikram Patel', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
-    { id: '8', operator: 'Sneha Gupta', line: 'Line 2', shift: 'Shift 3', inTime: '22:00', outTime: '06:00', status: 'Absent', hoursWorked: 0 }
-  ];
+  const allTableData = dbData?.table || [];
 
   const tableData = allTableData.filter(d => 
     matchFilter(d.line, line) &&
@@ -51,11 +44,14 @@ export default function AttendanceReport() {
   };
   
   const trendData = useMemo(() => {
-    return generateTimeLabels(period, shift).map((label, idx) => ({
+    const labels = generateTimeLabels(period, shift);
+    if (labels.length === 0 || tableData.length === 0) return [];
+    const pctNum = parseFloat(attendancePct) || 0;
+    return labels.map((label) => ({
       date: label,
-      pct: 94 + (idx % 3)
+      pct: pctNum
     }));
-  }, [period, shift]);
+  }, [period, shift, tableData.length, attendancePct]);
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -110,7 +106,7 @@ export default function AttendanceReport() {
               <LineChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
-                <YAxis domain={[80, 100]} />
+                <YAxis domain={[0, 100]} />
                 <Tooltip />
                 <Legend />
                 <Line type="monotone" dataKey="pct" stroke="#0369a1" name="Attendance %" strokeWidth={2} />

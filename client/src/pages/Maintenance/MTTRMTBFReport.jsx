@@ -29,13 +29,7 @@ export default function MTTRMTBFReport() {
 
   const colors = ['#0369a1','#f97316'];
 
-  const defaultTable = [
-    { machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo', mttr: 18, mtbf: 45, availability: 97.2, count: 2, totalTime: 36 },
-    { machine: 'Line2 Pallet Indexer', line: 'Line 2', station: 'Line2', mttr: 25, mtbf: 38, availability: 94.8, count: 3, totalTime: 75 },
-    { machine: 'Station2 Cold Test Bench', line: 'Line 1', station: 'Station2', mttr: 12, mtbf: 60, availability: 99.1, count: 1, totalTime: 12 }
-  ];
-
-  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
+  const rawTable = dbData?.table || [];
 
   const tableData = rawTable.filter(d => 
     matchFilter(d.line, line) &&

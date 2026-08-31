@@ -8,7 +8,6 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import { exportToXLSX } from '../../utils/exportExcel';
 import useReportFilters from '../../hooks/useReportFilters';
 import useFilterOptions from '../../hooks/useFilterOptions';
-import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function ReworkStatusReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
@@ -23,18 +22,13 @@ export default function ReworkStatusReport() {
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
-    fetch(`/api/trace/rework?period=${period}&shift=${shift}&status=${status}&line=${line}&station=${station}&model=${model}&sku=${sku}`)
+    fetch(`/api/trace/rework?period=${period}&shift=${shift}&status=${encodeURIComponent(status)}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}&model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
   }, [period, shift, status, line, station, model, sku]);
 
-  const rawData = dbData?.table || [
-    { engineNo: 'ENG-3018', line: 'Line 2', station: 'Line2 (Head Tightening)', model: 'Pulsar 150', sku: 'UG5', reason: 'Torque Fail on Head Bolt #3', detectedTime: '2026-02-28 08:35', reworkStart: '08:45', reworkEnd: '09:05', status: 'Completed', operator: 'Amit Kumar', location: 'Line 2' },
-    { engineNo: 'ENG-3022', line: 'Line 1', station: 'Demo (Block Assembly)', model: 'Pulsar 150', sku: 'UG5', reason: 'Casing Scratch defect', detectedTime: '2026-02-28 09:20', reworkStart: '09:30', reworkEnd: '-', status: 'In-Progress', operator: 'Rahul Sharma', location: 'Rework Bay 1' },
-    { engineNo: 'ENG-3025', line: 'Line 1', station: 'Station2 (Cold Inspection)', model: 'Avenger 220', sku: 'BS6', reason: 'Leakage in oil seal test', detectedTime: '2026-02-28 10:15', reworkStart: '-', reworkEnd: '-', status: 'Pending', operator: 'Priya Singh', location: 'Buffer Zone' },
-    { engineNo: 'ENG-3030', line: 'Line 2', station: 'Line2 (Head Tightening)', model: 'Dominar 400', sku: 'D400', reason: 'Thread Mismatch on crankcase', detectedTime: '2026-02-28 11:00', reworkStart: '11:15', reworkEnd: '11:50', status: 'Rejected', operator: 'Vikram Patel', location: 'Scrap Bin' }
-  ];
+  const rawData = dbData?.table || [];
 
   const filteredData = rawData.filter(d => 
     matchFilter(d.line, line) &&

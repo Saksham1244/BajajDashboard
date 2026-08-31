@@ -6,7 +6,7 @@ import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 
 export default function GenealogyReport() {
-  const [searchUID, setSearchUID] = useState('ENG-2026-00123');
+  const [searchUID, setSearchUID] = useState('');
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function GenealogyReport() {
   const exportToExcel = () => {
     if (!hasRecords) return;
     exportToXLSX('GenealogyReport.xlsx', [
-      { name: 'Engine Summary', rows: [['Engine UID', 'Engine Status', 'Total Stations', 'Total Rework Count', 'Assembly Duration'], [searchUID, dbData?.kpis?.status || 'OK', dbData?.kpis?.completedStations || tableData.length, 0, '20m']] },
+      { name: 'Engine Summary', rows: [['Engine UID', 'Engine Status', 'Total Stations', 'Total Rework Count'], [searchUID, dbData?.kpis?.status || 'OK', dbData?.kpis?.completedStations || tableData.length, 0]] },
       { name: 'Station History', rows: [['Station', 'Operation', 'Start Time', 'End Time', 'Duration', 'Operator', 'Result', 'Remarks'], ...tableData.map(r => [r.station, r.operation, r.startTime, r.endTime, r.duration, r.operator, r.result, r.remarks])] }
     ]);
   };

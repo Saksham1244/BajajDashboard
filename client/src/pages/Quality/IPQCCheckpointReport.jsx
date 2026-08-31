@@ -24,16 +24,7 @@ export default function IPQCCheckpointReport() {
   }, [period, shift, startDate, endDate, line, model]);
 
   const rawTableData = useMemo(() => {
-    return dbData?.table || [
-      { id: 'IPQC-CP-01', cpName: 'Crankcase Bolt #1 Torque', date: '2026-08-31 08:35', shift: 'Shift 1', line: 'Line 1', stage: 'Assembly', model: 'Pulsar 150', sku: 'UG5', inspector: 'Rahul Sharma', category: 'Torque', stdValue: '25 ± 1.5 Nm', actValue: '25.3 Nm', result: 'PASS' },
-      { id: 'IPQC-CP-02', cpName: 'Piston Ring Top End Gap', date: '2026-08-31 09:50', shift: 'Shift 1', line: 'Line 2', stage: 'Assembly', model: 'Dominar 400', sku: 'D400-ABS', inspector: 'Priya Singh', category: 'Measurement', stdValue: '0.20 - 0.35 mm', actValue: '0.26 mm', result: 'PASS' },
-      { id: 'IPQC-CP-03', cpName: 'Liquid Gasket Bead Uniformity', date: '2026-08-31 11:05', shift: 'Shift 1', line: 'Line 1', stage: 'Assembly', model: 'Pulsar 220', sku: 'P220-F', inspector: 'Amit Kumar', category: 'Visual', stdValue: '1.5 - 2.0 mm', actValue: '2.8 mm', result: 'FAIL' },
-      { id: 'IPQC-CP-04', cpName: 'Camshaft Axial End Play', date: '2026-08-31 12:20', shift: 'Shift 1', line: 'Line 2', stage: 'Assembly', model: 'Avenger', sku: 'AV-220', inspector: 'Neha Verma', category: 'Measurement', stdValue: '0.05 - 0.15 mm', actValue: '0.11 mm', result: 'PASS' },
-      { id: 'IPQC-CP-05', cpName: 'Clutch Spring Free Length', date: '2026-08-31 14:35', shift: 'Shift 2', line: 'Line 1', stage: 'Assembly', model: 'Pulsar 150', sku: 'UG5', inspector: 'Vikram Patel', category: 'Measurement', stdValue: '32.5 ± 0.5 mm', actValue: '32.6 mm', result: 'PASS' },
-      { id: 'IPQC-CP-06', cpName: 'Oil Pump Backlash Clearance', date: '2026-08-31 16:05', shift: 'Shift 2', line: 'Line 2', stage: 'Assembly', model: 'Dominar 400', sku: 'D400-ABS', inspector: 'Rahul Sharma', category: 'Measurement', stdValue: '0.04 - 0.10 mm', actValue: '0.14 mm', result: 'FAIL' },
-      { id: 'IPQC-CP-07', cpName: 'Flywheel Magneto Bolt Torque', date: '2026-08-31 17:35', shift: 'Shift 2', line: 'Line 1', stage: 'Assembly', model: 'Pulsar 220', sku: 'P220-F', inspector: 'Amit Kumar', category: 'Torque', stdValue: '55 ± 3 Nm', actValue: '56.1 Nm', result: 'PASS' },
-      { id: 'IPQC-CP-08', cpName: 'Inlet Valve Tappet Clearance', date: '2026-08-31 19:05', shift: 'Shift 2', line: 'Line 2', stage: 'Assembly', model: 'Avenger', sku: 'AV-220', inspector: 'Priya Singh', category: 'Measurement', stdValue: '0.08 ± 0.02 mm', actValue: '0.09 mm', result: 'PASS' },
-    ];
+    return dbData?.table || [];
   }, [dbData]);
 
   const tableData = useMemo(() => {
@@ -49,7 +40,7 @@ export default function IPQCCheckpointReport() {
     const total = tableData.length;
     const passed = tableData.filter(d => d.result === 'PASS' || d.result === 'OK').length;
     const failed = tableData.filter(d => d.result === 'FAIL' || d.result === 'NOK').length;
-    const passRate = total > 0 ? Number(((passed / total) * 100).toFixed(1)) : 100;
+    const passRate = total > 0 ? Number(((passed / total) * 100).toFixed(1)) : 0;
     return {
       totalCheckpoints: total,
       passed,

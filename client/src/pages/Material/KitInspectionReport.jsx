@@ -1,5 +1,5 @@
-import { matchFilter } from '../../utils/filterUtils';
-import React, { useState, useMemo } from 'react';
+﻿import { matchFilter } from '../../utils/filterUtils';
+import React, { useState, useMemo, useEffect } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
@@ -21,7 +21,7 @@ export default function KitInspectionReport() {
 
   const [dbData, setDbData] = useState(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetch(`/api/material/kitting?period=${period}&shift=${shift}&line=${encodeURIComponent(line)}&model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
@@ -34,18 +34,7 @@ export default function KitInspectionReport() {
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const defaultTable = [
-    { kitId: 'KIT-P150-01', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', status: 'OK', defect: '-', operator: 'Rahul Sharma', time: '08:30' },
-    { kitId: 'KIT-P150-02', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', status: 'OK', defect: '-', operator: 'Priya Singh', time: '09:10' },
-    { kitId: 'KIT-D400-01', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', status: 'OK', defect: '-', operator: 'Amit Kumar', time: '09:40' },
-    { kitId: 'KIT-D400-02', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', status: 'NOK', defect: 'Missing Gasket', operator: 'Rahul Sharma', time: '10:15' },
-    { kitId: 'KIT-A220-01', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', status: 'OK', defect: '-', operator: 'Priya Singh', time: '10:50' },
-    { kitId: 'KIT-A220-02', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', status: 'NOK', defect: 'Wrong Bolt Grade', operator: 'Amit Kumar', time: '11:20' }
-  ];
-
-  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
-
-  const tableData = rawTable.filter(d => 
+  const tableData = (dbData?.table || []).filter(d => 
     matchFilter(d.line, line) &&
     matchFilter(d.model, model) &&
     matchFilter(d.sku, sku)
@@ -68,11 +57,11 @@ export default function KitInspectionReport() {
     tableData.filter(d => d.defect && d.defect !== '-').forEach(d => {
       counts[d.defect] = (counts[d.defect] || 0) + 1;
     });
-    const result = Object.entries(counts).map(([defect, count]) => ({ defect, count }));
-    return result.length > 0 ? result : [{ defect: 'No Defects', count: 0 }];
+    return Object.entries(counts).map(([defect, count]) => ({ defect, count }));
   }, [tableData]);
 
   const trendData = useMemo(() => {
+    if (tableData.length === 0) return [];
     return generateTimeLabels(period, shift).map((time) => ({
       time,
       inspected: totalInspected,
@@ -132,7 +121,6 @@ export default function KitInspectionReport() {
                   <XAxis dataKey="defect" />
                   <YAxis />
                   <Tooltip />
-                  <Legend />
                   <Bar dataKey="count" fill={COLORS[4]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -148,15 +136,18 @@ export default function KitInspectionReport() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="inspected" stroke={COLORS[0]} name="Inspected" />
-                  <Line type="monotone" dataKey="defects" stroke={COLORS[4]} name="Defects" />
+                  <Line type="monotone" dataKey="inspected" stroke={COLORS[0]} strokeWidth={2} name="Total Inspected" />
+                  <Line type="monotone" dataKey="defects" stroke={COLORS[4]} strokeWidth={2} name="Defects Found" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
         </div>
 
-        <DataTable columns={columns} data={tableData} />
+        <div className="card p-4">
+          <h3 className="text-sm font-bold text-brand-dark mb-3">Inspection Logs</h3>
+          <DataTable columns={columns} data={tableData} />
+        </div>
       </div>
     </div>
   );

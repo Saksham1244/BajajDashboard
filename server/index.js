@@ -9,9 +9,63 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// ==========================================
+// HEALTH CHECK
+// ==========================================
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Bajaj PPMS Command Center API is running with live database connectivity' });
 });
+
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+const normalizeShift = (s) => {
+  if (!s || s === 'All') return null;
+  const str = String(s).trim();
+  if (str === 'Shift 1' || str === '1') return 'A';
+  if (str === 'Shift 2' || str === '2') return 'B';
+  if (str === 'Shift 3' || str === '3') return 'C';
+  return str;
+};
+
+const computeDateRange = (period, startDate, endDate) => {
+  let effectiveStartDate = startDate;
+  let effectiveEndDate = endDate;
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  const todayStr = `${y}-${m}-${d}`;
+
+  if (!effectiveStartDate || (period === 'Week' && effectiveStartDate === effectiveEndDate) || (period === 'Month' && effectiveStartDate === effectiveEndDate)) {
+    if (period === 'Day' || period === 'Shift') {
+      effectiveStartDate = effectiveStartDate || todayStr;
+      effectiveEndDate = effectiveEndDate || todayStr;
+    } else if (period === 'Week') {
+      const past7 = new Date(today);
+      past7.setDate(today.getDate() - 7);
+      effectiveStartDate = `${past7.getFullYear()}-${String(past7.getMonth() + 1).padStart(2, '0')}-${String(past7.getDate()).padStart(2, '0')}`;
+      effectiveEndDate = todayStr;
+    } else if (period === 'Month') {
+      const past30 = new Date(today);
+      past30.setDate(today.getDate() - 30);
+      effectiveStartDate = `${past30.getFullYear()}-${String(past30.getMonth() + 1).padStart(2, '0')}-${String(past30.getDate()).padStart(2, '0')}`;
+      effectiveEndDate = todayStr;
+    }
+  }
+
+  return { effectiveStartDate: effectiveStartDate || null, effectiveEndDate: effectiveEndDate || null };
+};
+
+const createSqlRequest = (pool, params = {}) => {
+  const req = pool.request();
+  for (const [key, config] of Object.entries(params)) {
+    if (config.type && config.value !== undefined) {
+      req.input(key, config.type, config.value);
+    }
+  }
+  return req;
+};
 
 // ==========================================
 // AUTHENTICATION ENDPOINTS (Config_User)
@@ -67,20 +121,11 @@ app.post('/api/auth/login', async (req, res) => {
         });
       }
     }
+    return res.status(500).json({ success: false, message: 'Database connection unavailable.' });
   } catch (err) {
     console.error('Login DB error:', err);
     return res.status(500).json({ success: false, message: 'Database authentication error: ' + err.message });
   }
-
-  if ((username === 'coolsuper' && password === '1234') || (username === 'admin' && password === '12345')) {
-    return res.json({
-      success: true,
-      message: 'Demo login successful',
-      user: { UserID: '1', UserName: username, EmailID: `${username}@bajaj.com`, DepartmentID: 1, DepartmentRoleID: 1 }
-    });
-  }
-
-  res.status(401).json({ success: false, message: 'Invalid credentials' });
 });
 
 app.get('/api/auth/users', async (req, res) => {
@@ -94,244 +139,164 @@ app.get('/api/auth/users', async (req, res) => {
           DepartmentRoleID,
           UserName,
           EmailID,
-          MobileNo,
-          [Password]
+          MobileNo
         FROM Config_User
         ORDER BY UserID ASC
       `);
-      return res.json({ users: result.recordset });
+      return res.json({ users: result.recordset || [] });
     }
   } catch (err) {
-    console.warn('Auth users fallback:', err.message);
+    console.error('Auth users DB error:', err.message);
   }
-
-  res.json({
-    users: [
-      { UserID: '1', UserName: 'coolsuper', EmailID: 'super@ullu.com', Password: '1234' },
-      { UserID: '2', UserName: 'admin', EmailID: 'ullu@gmail.com', Password: '12345' },
-      { UserID: '3', UserName: 'Rahul Sharma', EmailID: 'rahul.sharma@example.com', Password: 'Pass@123' }
-    ]
-  });
+  res.json({ users: [] });
 });
 
-// Helper function for period scaling fallback
-const getScale = (period) => {
-  if (period === 'Week') return 0.25;
-  if (period === 'Day') return 0.03;
-  if (period === 'Shift') return 0.015;
-  return 1; // Month
-};
-
-const normStr = (str) => (str === null || str === undefined ? '' : String(str).toLowerCase().replace(/[\s_\-\(\)\/]+/g, ''));
-
-const matchFilter = (itemVal, filterVal) => {
-  if (!filterVal || filterVal === 'All') return true;
-  if (itemVal === null || itemVal === undefined) return false;
-  const nItem = normStr(itemVal);
-  const nFilter = normStr(filterVal);
-  if (nItem === nFilter) return true;
-  if (nItem.includes(nFilter) || nFilter.includes(nItem)) return true;
-  return false;
-};
-
 // ==========================================
-// 0. LIVE METADATA FILTERS ENDPOINT
+// 0. METADATA FILTERS ENDPOINT
 // ==========================================
 app.get('/api/metadata/filters', async (req, res) => {
   try {
     const pool = await poolPromise;
-    if (!pool) {
+    if (pool) {
+      const [lineRes, stationRes, familyRes, modelRes, skuRes, lossRes, userRes] = await Promise.allSettled([
+        pool.request().query("SELECT DISTINCT LineName FROM Config_Line WHERE LineName IS NOT NULL ORDER BY LineName"),
+        pool.request().query("SELECT DISTINCT StationName FROM Config_Station WHERE StationName IS NOT NULL ORDER BY StationName"),
+        pool.request().query("SELECT DISTINCT ModelFamilyName FROM Config_ModelFamily WHERE ModelFamilyName IS NOT NULL ORDER BY ModelFamilyName"),
+        pool.request().query("SELECT DISTINCT ModelName FROM Config_Model WHERE ModelName IS NOT NULL ORDER BY ModelName"),
+        pool.request().query("SELECT DISTINCT SKUName FROM Config_SKU WHERE SKUName IS NOT NULL ORDER BY SKUName"),
+        pool.request().query("SELECT DISTINCT LossName FROM Config_LossCategory WHERE LossName IS NOT NULL ORDER BY LossName"),
+        pool.request().query("SELECT DISTINCT UserName FROM Config_User WHERE UserName IS NOT NULL AND UserName NOT IN ('admin', 'coolsuper') ORDER BY UserName")
+      ]);
+
       return res.json({
-        lines: ['Line 1', 'Line2'],
-        stations: ['Demo', 'Line2', 'Station2'],
-        modelFamilies: ['Bike'],
-        models: ['A'],
-        skus: ['SKU1', 'SKU2'],
-        lossCategories: ['Breakdown Loss'],
-        operators: ['Rahul Sharma', 'Priya Singh', 'Amit Kumar']
+        lines: lineRes.status === 'fulfilled' && lineRes.value?.recordset ? lineRes.value.recordset.map(r => r.LineName) : [],
+        stations: stationRes.status === 'fulfilled' && stationRes.value?.recordset ? stationRes.value.recordset.map(r => r.StationName) : [],
+        modelFamilies: familyRes.status === 'fulfilled' && familyRes.value?.recordset ? familyRes.value.recordset.map(r => r.ModelFamilyName) : [],
+        models: modelRes.status === 'fulfilled' && modelRes.value?.recordset ? modelRes.value.recordset.map(r => r.ModelName) : [],
+        skus: skuRes.status === 'fulfilled' && skuRes.value?.recordset ? skuRes.value.recordset.map(r => r.SKUName) : [],
+        lossCategories: lossRes.status === 'fulfilled' && lossRes.value?.recordset ? lossRes.value.recordset.map(r => r.LossName) : [],
+        operators: userRes.status === 'fulfilled' && userRes.value?.recordset ? userRes.value.recordset.map(r => r.UserName) : []
       });
     }
-
-    const [lineRes, stationRes, familyRes, modelRes, skuRes, lossRes, userRes] = await Promise.allSettled([
-      pool.request().query("SELECT DISTINCT LineName FROM Config_Line WHERE LineName IS NOT NULL ORDER BY LineName"),
-      pool.request().query("SELECT DISTINCT StationName FROM Config_Station WHERE StationName IS NOT NULL ORDER BY StationName"),
-      pool.request().query("SELECT DISTINCT ModelFamilyName FROM Config_ModelFamily WHERE ModelFamilyName IS NOT NULL ORDER BY ModelFamilyName"),
-      pool.request().query("SELECT DISTINCT ModelName FROM Config_Model WHERE ModelName IS NOT NULL ORDER BY ModelName"),
-      pool.request().query("SELECT DISTINCT SKUName FROM Config_SKU WHERE SKUName IS NOT NULL ORDER BY SKUName"),
-      pool.request().query("SELECT DISTINCT LossName FROM Config_LossCategory WHERE LossName IS NOT NULL ORDER BY LossName"),
-      pool.request().query("SELECT DISTINCT UserName FROM Config_User WHERE UserName IS NOT NULL AND UserName NOT IN ('admin', 'coolsuper') ORDER BY UserName")
-    ]);
-
-    const lines = lineRes.status === 'fulfilled' && lineRes.value?.recordset?.length
-      ? lineRes.value.recordset.map(r => r.LineName)
-      : ['Line 1', 'Line2'];
-
-    const stations = stationRes.status === 'fulfilled' && stationRes.value?.recordset?.length
-      ? stationRes.value.recordset.map(r => r.StationName)
-      : ['Demo', 'Line2', 'Station2'];
-
-    const modelFamilies = familyRes.status === 'fulfilled' && familyRes.value?.recordset?.length
-      ? familyRes.value.recordset.map(r => r.ModelFamilyName)
-      : ['Bike'];
-
-    const models = modelRes.status === 'fulfilled' && modelRes.value?.recordset?.length
-      ? modelRes.value.recordset.map(r => r.ModelName)
-      : ['A'];
-
-    const skus = skuRes.status === 'fulfilled' && skuRes.value?.recordset?.length
-      ? skuRes.value.recordset.map(r => r.SKUName)
-      : ['SKU1', 'SKU2'];
-
-    const lossCategories = lossRes.status === 'fulfilled' && lossRes.value?.recordset?.length
-      ? lossRes.value.recordset.map(r => r.LossName)
-      : ['Breakdown Loss'];
-
-    const operators = userRes.status === 'fulfilled' && userRes.value?.recordset?.length
-      ? userRes.value.recordset.map(r => r.UserName)
-      : ['Rahul Sharma', 'Priya Singh', 'Amit Kumar'];
-
-    res.json({
-      lines,
-      stations,
-      modelFamilies,
-      models,
-      skus,
-      lossCategories,
-      operators
-    });
   } catch (err) {
-    console.warn('Metadata filters fallback:', err.message);
-    res.json({
-      lines: ['Line 1', 'Line2'],
-      stations: ['Demo', 'Line2', 'Station2'],
-      modelFamilies: ['Bike'],
-      models: ['A'],
-      skus: ['SKU1', 'SKU2'],
-      lossCategories: ['Breakdown Loss'],
-      operators: ['Rahul Sharma', 'Priya Singh', 'Amit Kumar']
-    });
+    console.error('Metadata filters DB error:', err.message);
   }
-});
 
-// Helper function to normalize shift names between UI and database (Shift 1 -> A, Shift 2 -> B, Shift 3 -> C)
-const normalizeShift = (s) => {
-  if (!s || s === 'All') return null;
-  if (s === 'Shift 1' || s === '1') return 'A';
-  if (s === 'Shift 2' || s === '2') return 'B';
-  if (s === 'Shift 3' || s === '3') return 'C';
-  return s;
-};
+  res.json({
+    lines: [],
+    stations: [],
+    modelFamilies: [],
+    models: [],
+    skus: [],
+    lossCategories: [],
+    operators: []
+  });
+});
 
 // ==========================================
 // 1. PRODUCTION MODULE ENDPOINTS
 // ==========================================
-app.get(['/api/dashboard/production', '/api/production/report'], async (req, res) => {
-  const { period, shift, startDate, endDate, line, model } = req.query;
+app.get(['/api/dashboard/production', '/api/production/overview', '/api/production/report'], async (req, res) => {
+  const { period, shift, startDate, endDate, line, model, sku } = req.query;
   const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
     const pool = await poolPromise;
     if (pool) {
-      const request = pool.request();
-
-      // Compute effective date range based on period
-      let effectiveStartDate = startDate;
-      let effectiveEndDate = endDate;
-      const today = new Date();
-      const y = today.getFullYear();
-      const m = String(today.getMonth() + 1).padStart(2, '0');
-      const d = String(today.getDate()).padStart(2, '0');
-      const todayStr = `${y}-${m}-${d}`;
-
-      if (!effectiveStartDate || (period === 'Week' && effectiveStartDate === effectiveEndDate) || (period === 'Month' && effectiveStartDate === effectiveEndDate)) {
-        if (period === 'Day' || period === 'Shift') {
-          effectiveStartDate = effectiveStartDate || todayStr;
-          effectiveEndDate = effectiveEndDate || todayStr;
-        } else if (period === 'Week') {
-          const past7 = new Date(today);
-          past7.setDate(today.getDate() - 7);
-          const py = past7.getFullYear();
-          const pm = String(past7.getMonth() + 1).padStart(2, '0');
-          const pd = String(past7.getDate()).padStart(2, '0');
-          effectiveStartDate = `${py}-${pm}-${pd}`;
-          effectiveEndDate = todayStr;
-        } else if (period === 'Month') {
-          const past30 = new Date(today);
-          past30.setDate(today.getDate() - 30);
-          const py = past30.getFullYear();
-          const pm = String(past30.getMonth() + 1).padStart(2, '0');
-          const pd = String(past30.getDate()).padStart(2, '0');
-          effectiveStartDate = `${py}-${pm}-${pd}`;
-          effectiveEndDate = todayStr;
-        }
-      }
-
-      const makeRequest = () => {
-        const req = pool.request();
-        req.input('StartDate', sql.Date, effectiveStartDate || null);
-        req.input('EndDate', sql.Date, effectiveEndDate || null);
-        req.input('Shift', sql.VarChar(20), dbShift || null);
-        req.input('Line', sql.VarChar(50), (line && line !== 'All') ? line : null);
-        req.input('Model', sql.VarChar(50), (model && model !== 'All') ? model : null);
-        return req;
+      const getReq = () => {
+        return createSqlRequest(pool, {
+          StartDate: { type: sql.Date, value: effectiveStartDate },
+          EndDate: { type: sql.Date, value: effectiveEndDate },
+          Shift: { type: sql.VarChar(20), value: dbShift },
+          Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+          Model: { type: sql.VarChar(50), value: (model && model !== 'All') ? model : null },
+          SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
+        });
       };
 
       let planVsActualQuery = `
         SELECT 
-          'Shift ' + ProdShift as name,
-          ISNULL(SUM(PlanQty), 0) as [plan],
-          ISNULL(SUM(ENGCompleted_Qty), 0) as actual
-        FROM Prod_EnginePlanExecution
-        WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
-          AND (@EndDate IS NULL OR ProdDate <= @EndDate)
-          AND (@Shift IS NULL OR ProdShift = @Shift)
-        GROUP BY ProdShift
+          'Shift ' + E.ProdShift as name,
+          ISNULL(SUM(E.PlanQty), 0) as [plan],
+          ISNULL(SUM(E.ENGCompleted_Qty), 0) as actual
+        FROM Prod_EnginePlanExecution E
+        LEFT JOIN Config_Line L ON E.LineID = L.LineID
+        LEFT JOIN Config_SKU S ON E.SKUID = S.SKUID
+        LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+        LEFT JOIN Config_ModelFamily F ON M.ModelFamilyID = F.ModelFamilyID
+        WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR E.ProdShift = @Shift)
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
+          AND (@Model IS NULL OR M.ModelName = @Model)
+          AND (@SKU IS NULL OR S.SKUName = @SKU)
+        GROUP BY E.ProdShift
       `;
 
       if (period === 'Month' || period === 'Week') {
         planVsActualQuery = `
           SELECT 
-            CONVERT(VARCHAR(10), ProdDate, 120) as name,
-            ISNULL(SUM(PlanQty), 0) as [plan],
-            ISNULL(SUM(ENGCompleted_Qty), 0) as actual
-          FROM Prod_EnginePlanExecution
-          WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
-            AND (@EndDate IS NULL OR ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR ProdShift = @Shift)
-          GROUP BY ProdDate
-          ORDER BY ProdDate ASC
+            CONVERT(VARCHAR(10), E.ProdDate, 120) as name,
+            ISNULL(SUM(E.PlanQty), 0) as [plan],
+            ISNULL(SUM(E.ENGCompleted_Qty), 0) as actual
+          FROM Prod_EnginePlanExecution E
+          LEFT JOIN Config_Line L ON E.LineID = L.LineID
+          LEFT JOIN Config_SKU S ON E.SKUID = S.SKUID
+          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+          LEFT JOIN Config_ModelFamily F ON M.ModelFamilyID = F.ModelFamilyID
+          WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR E.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
+            AND (@Model IS NULL OR M.ModelName = @Model)
+            AND (@SKU IS NULL OR S.SKUName = @SKU)
+          GROUP BY E.ProdDate
+          ORDER BY E.ProdDate ASC
         `;
       }
 
       const [kpiRes, planRes, straightRes, skuRes, paretoRes] = await Promise.allSettled([
-        makeRequest().query(`
+        getReq().query(`
           SELECT 
-            ISNULL(SUM(PlanQty), 0) as totalPlan,
-            ISNULL(SUM(ENGCompleted_Qty), 0) as totalProd,
-            ISNULL(SUM(PlanQty) - SUM(ENGCompleted_Qty), 0) as shortfall,
-            ISNULL(SUM(ENGMainLine_Qty) - SUM(ENGCompleted_Qty), 0) as wip,
-            ISNULL(SUM(ENGMaterialHold_Qty) + SUM(ENGQualityHold_Qty), 0) as rollover
-          FROM Prod_EnginePlanExecution
-          WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
-            AND (@EndDate IS NULL OR ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR ProdShift = @Shift)
+            ISNULL(SUM(E.PlanQty), 0) as totalPlan,
+            ISNULL(SUM(E.ENGCompleted_Qty), 0) as totalProd,
+            ISNULL(SUM(E.PlanQty) - SUM(E.ENGCompleted_Qty), 0) as shortfall,
+            ISNULL(SUM(E.ENGMainLine_Qty) - SUM(E.ENGCompleted_Qty), 0) as wip,
+            ISNULL(SUM(E.ENGMaterialHold_Qty) + SUM(E.ENGQualityHold_Qty), 0) as rollover
+          FROM Prod_EnginePlanExecution E
+          LEFT JOIN Config_Line L ON E.LineID = L.LineID
+          LEFT JOIN Config_SKU S ON E.SKUID = S.SKUID
+          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+          LEFT JOIN Config_ModelFamily F ON M.ModelFamilyID = F.ModelFamilyID
+          WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR E.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
+            AND (@Model IS NULL OR M.ModelName = @Model)
+            AND (@SKU IS NULL OR S.SKUName = @SKU)
         `),
-        makeRequest().query(planVsActualQuery),
-        makeRequest().query(`
+        getReq().query(planVsActualQuery),
+        getReq().query(`
           SELECT 
             ISNULL(L.LineName, 'Line ' + CAST(E.LineID AS VARCHAR)) as name,
             ISNULL(SUM(E.ENGCompleted_Qty) - SUM(E.ENGReworkOK_Qty), 0) as straight,
             ISNULL(SUM(E.ENGReworkOK_Qty), 0) as reworked
           FROM Prod_EnginePlanExecution E
           LEFT JOIN Config_Line L ON E.LineID = L.LineID
+          LEFT JOIN Config_SKU S ON E.SKUID = S.SKUID
+          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
           WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
             AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
             AND (@Shift IS NULL OR E.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
+            AND (@Model IS NULL OR M.ModelName = @Model)
+            AND (@SKU IS NULL OR S.SKUName = @SKU)
           GROUP BY L.LineName, E.LineID
         `),
-        makeRequest().query(`
+        getReq().query(`
           SELECT 
-            ISNULL(L.LineName, 'Line 1') as line,
+            ISNULL(L.LineName, 'Line ' + CAST(E.LineID AS VARCHAR)) as line,
             ISNULL(S.SKUName, 'SKU-' + CAST(E.SKUID AS VARCHAR)) as name,
             ISNULL(F.ModelFamilyName, 'Family-' + CAST(E.SKUID AS VARCHAR)) as modelFamily,
             ISNULL(SUM(E.PlanQty), 0) as [plan],
@@ -346,58 +311,42 @@ app.get(['/api/dashboard/production', '/api/production/report'], async (req, res
           WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
             AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
             AND (@Shift IS NULL OR E.ProdShift = @Shift)
-          GROUP BY L.LineName, S.SKUName, F.ModelFamilyName, E.SKUID
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
+            AND (@Model IS NULL OR M.ModelName = @Model)
+            AND (@SKU IS NULL OR S.SKUName = @SKU)
+          GROUP BY L.LineName, S.SKUName, F.ModelFamilyName, E.SKUID, E.LineID
         `),
-        makeRequest().query(`
+        getReq().query(`
           SELECT TOP 5
-            ISNULL(Reason, 'Other') as reason,
-            ISNULL(SUM(TotalDT), 0) as duration,
-            COUNT(DowntimeID) as [count]
-          FROM Perf_Downtime
-          WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
-            AND (@EndDate IS NULL OR ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR ProdShift = @Shift)
-          GROUP BY Reason
+            ISNULL(LC.LossName, ISNULL(D.Reason, 'Other')) as reason,
+            ISNULL(SUM(D.TotalDT), 0) as duration,
+            COUNT(D.DowntimeID) as [count]
+          FROM Perf_Downtime D
+          LEFT JOIN Config_LossCategory LC ON D.LossID = LC.LossID
+          LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
+          WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+          GROUP BY LC.LossName, D.Reason
           ORDER BY duration DESC
         `)
       ]);
 
-      if (kpiRes.status === 'rejected') console.error('kpiRes Rejected:', kpiRes.reason);
-      if (planRes.status === 'rejected') console.error('planRes Rejected:', planRes.reason);
-      if (straightRes.status === 'rejected') console.error('straightRes Rejected:', straightRes.reason);
-      if (skuRes.status === 'rejected') console.error('skuRes Rejected:', skuRes.reason);
-      if (paretoRes.status === 'rejected') console.error('paretoRes Rejected:', paretoRes.reason);
+      const kpis = (kpiRes.status === 'fulfilled' && kpiRes.value?.recordset?.[0]) || {
+        totalPlan: 0,
+        totalProd: 0,
+        shortfall: 0,
+        wip: 0,
+        rollover: 0
+      };
 
-      const kpis = kpiRes.status === 'fulfilled' && kpiRes.value?.recordset?.length && kpiRes.value.recordset[0].totalPlan > 0
-        ? kpiRes.value.recordset[0]
-        : { totalPlan: 1300, totalProd: 265, shortfall: 1035, wip: 10, rollover: 8 };
+      const planVsActual = (planRes.status === 'fulfilled' && planRes.value?.recordset) || [];
+      const straightPass = (straightRes.status === 'fulfilled' && straightRes.value?.recordset) || [];
+      const skuData = (skuRes.status === 'fulfilled' && skuRes.value?.recordset) || [];
+      const rawPareto = (paretoRes.status === 'fulfilled' && paretoRes.value?.recordset) || [];
 
-      const planVsActual = planRes.status === 'fulfilled' && planRes.value?.recordset?.length
-        ? planRes.value.recordset
-        : [{ name: 'Shift A', plan: 1300, actual: 265 }];
-
-      const straightPass = straightRes.status === 'fulfilled' && straightRes.value?.recordset?.length
-        ? straightRes.value.recordset
-        : [{ name: 'Line 1', straight: 252, reworked: 13 }];
-
-      const skuData = skuRes.status === 'fulfilled' && skuRes.value?.recordset?.length
-        ? skuRes.value.recordset
-        : [
-            { line: 'Line 1', name: 'SKU1', modelFamily: 'Bike', plan: 500, actual: 85, wip: 5, rollover: 3 },
-            { line: 'Line 1', name: 'SKU2', modelFamily: 'Bike', plan: 800, actual: 180, wip: 5, rollover: 5 }
-          ];
-
-      const rawPareto = paretoRes.status === 'fulfilled' && paretoRes.value?.recordset?.length
-        ? paretoRes.value.recordset
-        : [
-            { reason: 'Preventive maintenance', count: 1, duration: 237 },
-            { reason: 'Line changeover', count: 1, duration: 219 },
-            { reason: 'Power', count: 1, duration: 204 },
-            { reason: 'Failure', count: 1, duration: 192 },
-            { reason: 'Conveyor jam', count: 1, duration: 180 }
-          ];
-
-      const totalDuration = rawPareto.reduce((a, b) => a + b.duration, 0) || 1;
+      const totalDuration = rawPareto.reduce((a, b) => a + (b.duration || 0), 0) || 1;
       let runningSum = 0;
       const pareto = rawPareto.map(item => {
         runningSum += item.duration;
@@ -416,60 +365,207 @@ app.get(['/api/dashboard/production', '/api/production/report'], async (req, res
       });
     }
   } catch (err) {
-    console.warn('Production endpoint DB query fallback:', err.message);
+    console.error('Production endpoint error:', err.message);
   }
 
   res.json({
-    kpis: { totalPlan: 1300, totalProd: 265, shortfall: 1035, wip: 10, rollover: 8 },
-    planVsActual: [{ name: 'Shift A', plan: 1300, actual: 265 }],
-    straightPass: [{ name: 'Line 1', straight: 252, reworked: 13 }],
-    skuData: [
-      { line: 'Line 1', name: 'SKU1', modelFamily: 'Bike', plan: 500, actual: 85, wip: 5, rollover: 3 },
-      { line: 'Line 1', name: 'SKU2', modelFamily: 'Bike', plan: 800, actual: 180, wip: 5, rollover: 5 }
-    ],
-    pareto: [
-      { reason: 'Preventive maintenance', count: 1, duration: 237, cumPercent: 23 },
-      { reason: 'Line changeover', count: 1, duration: 219, cumPercent: 44 },
-      { reason: 'Power', count: 1, duration: 204, cumPercent: 64 },
-      { reason: 'Failure', count: 1, duration: 192, cumPercent: 83 },
-      { reason: 'Conveyor jam', count: 1, duration: 180, cumPercent: 100 }
-    ]
+    kpis: { totalPlan: 0, totalProd: 0, shortfall: 0, wip: 0, rollover: 0 },
+    planVsActual: [],
+    straightPass: [],
+    skuData: [],
+    pareto: []
   });
 });
 
-app.get('/api/production/straight-pass', async (req, res) => {
-  const { period, shift, line } = req.query;
+app.get('/api/production/plan', async (req, res) => {
+  const { period, shift, startDate, endDate, line, model, sku } = req.query;
+  const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
     const pool = await poolPromise;
     if (pool) {
-      const request = pool.request();
-      if (shift && shift !== 'All') request.input('Shift', sql.VarChar(20), shift);
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Model: { type: sql.VarChar(50), value: (model && model !== 'All') ? model : null },
+        SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
+      });
 
-      const [kpiRes, tableRes] = await Promise.all([
-        request.query(`
+      const result = await request.query(`
+        SELECT 
+          P.PlanID as id,
+          CONVERT(VARCHAR(10), P.ProdDate, 120) as [date],
+          'Shift ' + P.ProdShift as shift,
+          ISNULL(L.LineName, 'Line ' + CAST(P.LineID AS VARCHAR)) as line,
+          ISNULL(M.ModelName, '-') as model,
+          ISNULL(S.SKUName, '-') as sku,
+          ISNULL(P.PlanQty, 0) as plannedQty,
+          ISNULL(P.LineSpeed, 0) as lineSpeed,
+          CASE WHEN P.Status = 1 THEN 'Active' WHEN P.Status = 2 THEN 'Completed' ELSE 'Pending' END as [status]
+        FROM Prod_Shift_Plan P
+        LEFT JOIN Config_Line L ON P.LineID = L.LineID
+        LEFT JOIN Config_SKU S ON P.SKUID = S.SKUID
+        LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+        LEFT JOIN Config_ModelFamily F ON M.ModelFamilyID = F.ModelFamilyID
+        WHERE (@StartDate IS NULL OR P.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR P.ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR P.ProdShift = @Shift)
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(P.LineID AS VARCHAR) = @Line)
+          AND (@Model IS NULL OR M.ModelName = @Model)
+          AND (@SKU IS NULL OR S.SKUName = @SKU)
+        ORDER BY P.ProdDate DESC, P.PlanID DESC
+      `);
+
+      const table = result.recordset || [];
+      const totalPlanned = table.reduce((sum, r) => sum + (r.plannedQty || 0), 0);
+      const activePlans = table.filter(r => r.status === 'Active').length;
+      const completedPlans = table.filter(r => r.status === 'Completed').length;
+
+      return res.json({
+        kpis: {
+          totalPlanned,
+          activePlans,
+          completedPlans,
+          totalPlans: table.length
+        },
+        table
+      });
+    }
+  } catch (err) {
+    console.error('Production Plan endpoint error:', err.message);
+  }
+
+  res.json({
+    kpis: { totalPlanned: 0, activePlans: 0, completedPlans: 0, totalPlans: 0 },
+    table: []
+  });
+});
+
+app.get('/api/production/hourly', async (req, res) => {
+  const { period, shift, startDate, endDate, line } = req.query;
+  const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null }
+      });
+
+      const result = await request.query(`
+        SELECT 
+          H.UID as id,
+          CONVERT(VARCHAR(10), H.ProdDate, 120) as [date],
+          ISNULL(H.ProdShift, 'A') as shift,
+          ISNULL(L.LineName, 'Line ' + CAST(H.SubAsslyLineID AS VARCHAR)) as line,
+          CONVERT(VARCHAR(5), ISNULL(H.Timestamp, H.TotalTime), 108) as [hour],
+          ISNULL(H.PlannedQuantity, 0) as planned,
+          ISNULL(H.TotalQuantity, 0) as actual,
+          ISNULL(H.GoodQuantity, 0) as good,
+          ISNULL(H.RejectionQuantity, 0) as rejected,
+          CAST(ISNULL(H.OLE, 0) AS FLOAT) as ole,
+          CAST(ISNULL(H.Availability, 0) AS FLOAT) as availability,
+          CAST(ISNULL(H.Performance, 0) AS FLOAT) as performance,
+          CAST(ISNULL(H.Quality, 0) AS FLOAT) as quality
+        FROM Perf_Hourly_OLE H
+        LEFT JOIN Config_Line L ON H.SubAsslyLineID = L.LineID
+        WHERE (@StartDate IS NULL OR H.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR H.ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR H.ProdShift = @Shift OR H.ProdShift = 'Shift ' + @Shift)
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(H.SubAsslyLineID AS VARCHAR) = @Line)
+        ORDER BY H.ProdDate DESC, H.UID ASC
+      `);
+
+      const table = result.recordset || [];
+      const totalPlanned = table.reduce((sum, r) => sum + r.planned, 0);
+      const totalActual = table.reduce((sum, r) => sum + r.actual, 0);
+      const totalGood = table.reduce((sum, r) => sum + r.good, 0);
+      const totalRejected = table.reduce((sum, r) => sum + r.rejected, 0);
+      const avgOLE = table.length > 0 ? Number((table.reduce((sum, r) => sum + r.ole, 0) / table.length).toFixed(1)) : 0;
+
+      return res.json({
+        kpis: { totalPlanned, totalActual, totalGood, totalRejected, avgOLE },
+        hourlyData: table.map(r => ({ time: r.hour || r.date, planned: r.planned, actual: r.actual })),
+        table
+      });
+    }
+  } catch (err) {
+    console.error('Hourly production error:', err.message);
+  }
+
+  res.json({
+    kpis: { totalPlanned: 0, totalActual: 0, totalGood: 0, totalRejected: 0, avgOLE: 0 },
+    hourlyData: [],
+    table: []
+  });
+});
+
+app.get('/api/production/straight-pass', async (req, res) => {
+  const { period, shift, startDate, endDate, line } = req.query;
+  const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const reqKpi = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null }
+      });
+
+      const reqTable = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null }
+      });
+
+      const [kpiRes, tableRes] = await Promise.allSettled([
+        reqKpi.query(`
           SELECT 
-            ISNULL(SUM(ENGCompleted_Qty), 0) as total,
-            ISNULL(SUM(ENGCompleted_Qty) - SUM(ENGReworkOK_Qty), 0) as straight,
-            ISNULL(SUM(ENGReworkOK_Qty), 0) as rework
-          FROM Prod_EnginePlanExecution
+            ISNULL(SUM(E.ENGCompleted_Qty), 0) as total,
+            ISNULL(SUM(E.ENGCompleted_Qty) - SUM(E.ENGReworkOK_Qty), 0) as straight,
+            ISNULL(SUM(E.ENGReworkOK_Qty), 0) as rework
+          FROM Prod_EnginePlanExecution E
+          LEFT JOIN Config_Line L ON E.LineID = L.LineID
+          WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR E.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
         `),
-        pool.request().query(`
-          SELECT TOP 50
+        reqTable.query(`
+          SELECT TOP 100
             W.EngineNo as engineNo,
-            'Pulsar 150 UG5' as sku,
-            CONVERT(VARCHAR(10), W.StartTime, 120) as date,
+            ISNULL(S.SKUName, 'SKU-' + CAST(W.SKUID AS VARCHAR)) as sku,
+            ISNULL(M.ModelName, 'Pulsar 150') as model,
+            CONVERT(VARCHAR(10), W.StartTime, 120) as [date],
             'Shift 1' as shift,
-            CASE WHEN D.EngineNo IS NOT NULL THEN 'Reworked Pass' ELSE 'Straight Pass' END as status,
-            CONVERT(VARCHAR(8), W.StartTime, 108) as time
+            ISNULL(L.LineName, 'Line ' + CAST(W.LineID AS VARCHAR)) as line,
+            CASE WHEN D.EngineNo IS NOT NULL THEN 'Reworked Pass' ELSE 'Straight Pass' END as [status],
+            CONVERT(VARCHAR(8), W.StartTime, 108) as [time]
           FROM Prod_Engine_WIP W
           LEFT JOIN Prod_Defect_Log D ON W.EngineNo = D.EngineNo
+          LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
+          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+          LEFT JOIN Config_Line L ON W.LineID = L.LineID
+          WHERE (@StartDate IS NULL OR CAST(W.StartTime AS DATE) >= @StartDate)
+            AND (@EndDate IS NULL OR CAST(W.StartTime AS DATE) <= @EndDate)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(W.LineID AS VARCHAR) = @Line)
           ORDER BY W.StartTime DESC
         `)
       ]);
 
-      const row = kpiRes.recordset[0] || { total: 0, straight: 0, rework: 0 };
-      const table = tableRes.recordset || [];
+      const row = (kpiRes.status === 'fulfilled' && kpiRes.value?.recordset?.[0]) || { total: 0, straight: 0, rework: 0 };
+      const table = (tableRes.status === 'fulfilled' && tableRes.value?.recordset) || [];
+
       return res.json({
         kpis: {
           total: row.total || table.length,
@@ -480,7 +576,7 @@ app.get('/api/production/straight-pass', async (req, res) => {
       });
     }
   } catch (err) {
-    console.warn('Straight pass endpoint DB query failed:', err.message);
+    console.error('Straight pass endpoint DB error:', err.message);
   }
 
   res.json({
@@ -492,138 +588,217 @@ app.get('/api/production/straight-pass', async (req, res) => {
 // ==========================================
 // 2. PERFORMANCE MODULE ENDPOINTS
 // ==========================================
-app.get(['/api/dashboard/performance', '/api/performance/downtime'], async (req, res) => {
+app.get(['/api/dashboard/performance', '/api/performance/ole'], async (req, res) => {
   const { period, shift, startDate, endDate, line } = req.query;
   const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
     const pool = await poolPromise;
     if (pool) {
-      // Compute effective date range based on period
-      let effectiveStartDate = startDate;
-      let effectiveEndDate = endDate;
-      const today = new Date();
-      const y = today.getFullYear();
-      const m = String(today.getMonth() + 1).padStart(2, '0');
-      const d = String(today.getDate()).padStart(2, '0');
-      const todayStr = `${y}-${m}-${d}`;
+      const getReq = () => createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null }
+      });
 
-      if (!effectiveStartDate || (period === 'Week' && effectiveStartDate === effectiveEndDate) || (period === 'Month' && effectiveStartDate === effectiveEndDate)) {
-        if (period === 'Day' || period === 'Shift') {
-          effectiveStartDate = effectiveStartDate || todayStr;
-          effectiveEndDate = effectiveEndDate || todayStr;
-        } else if (period === 'Week') {
-          const past7 = new Date(today);
-          past7.setDate(today.getDate() - 7);
-          const py = past7.getFullYear();
-          const pm = String(past7.getMonth() + 1).padStart(2, '0');
-          const pd = String(past7.getDate()).padStart(2, '0');
-          effectiveStartDate = `${py}-${pm}-${pd}`;
-          effectiveEndDate = todayStr;
-        } else if (period === 'Month') {
-          const past30 = new Date(today);
-          past30.setDate(today.getDate() - 30);
-          const py = past30.getFullYear();
-          const pm = String(past30.getMonth() + 1).padStart(2, '0');
-          const pd = String(past30.getDate()).padStart(2, '0');
-          effectiveStartDate = `${py}-${pm}-${pd}`;
-          effectiveEndDate = todayStr;
-        }
-      }
-
-      const makeRequest = () => {
-        const r = pool.request();
-        r.input('StartDate', sql.Date, effectiveStartDate || null);
-        r.input('EndDate', sql.Date, effectiveEndDate || null);
-        r.input('Shift', sql.VarChar(20), dbShift || null);
-        return r;
-      };
-
-      const [prodRes, dtRes] = await Promise.allSettled([
-        makeRequest().query(`
+      const [prodRes, dtRes, hourlyRes] = await Promise.allSettled([
+        getReq().query(`
           SELECT 
-            ISNULL(SUM(PlanQty), 0) as totalPlan,
-            ISNULL(SUM(ENGCompleted_Qty), 0) as totalProd,
-            ISNULL(SUM(ENGReworkOK_Qty), 0) as totalRework,
-            ISNULL(SUM(ENGNotOK_Qty), 0) as totalNotOk,
-            COUNT(DISTINCT ProdDate) as dayCount
-          FROM Prod_EnginePlanExecution
-          WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
-            AND (@EndDate IS NULL OR ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR ProdShift = @Shift)
+            ISNULL(SUM(E.PlanQty), 0) as totalPlan,
+            ISNULL(SUM(E.ENGCompleted_Qty), 0) as totalProd,
+            ISNULL(SUM(E.ENGReworkOK_Qty), 0) as totalRework,
+            ISNULL(SUM(E.ENGNotOK_Qty), 0) as totalNotOk,
+            COUNT(DISTINCT E.ProdDate) as dayCount
+          FROM Prod_EnginePlanExecution E
+          LEFT JOIN Config_Line L ON E.LineID = L.LineID
+          WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR E.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
         `),
-        makeRequest().query(`
+        getReq().query(`
           SELECT 
-            ISNULL(SUM(TotalDT), 0) as totalDT,
-            ISNULL(SUM(CASE WHEN Reason LIKE '%Motor%' OR Reason LIKE '%Conveyor%' OR Reason LIKE '%Tool%' THEN TotalDT ELSE 0 END), 0) as mechanicalDT,
-            ISNULL(SUM(CASE WHEN Reason LIKE '%Power%' OR Reason LIKE '%Sensor%' THEN TotalDT ELSE 0 END), 0) as electricalDT,
-            ISNULL(SUM(CASE WHEN Reason LIKE '%Quality%' OR Reason LIKE '%Inspection%' THEN TotalDT ELSE 0 END), 0) as qualityDT,
-            ISNULL(SUM(CASE WHEN Reason LIKE '%Changeover%' OR Reason LIKE '%Setup%' THEN TotalDT ELSE 0 END), 0) as setupDT,
-            ISNULL(SUM(CASE WHEN Reason LIKE '%Maintenance%' OR Reason LIKE '%Preventive%' THEN TotalDT ELSE 0 END), 0) as processDT
-          FROM Perf_Downtime
-          WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
-            AND (@EndDate IS NULL OR ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR ProdShift = @Shift)
+            ISNULL(SUM(D.TotalDT), 0) as totalDT,
+            ISNULL(SUM(CASE WHEN D.Reason LIKE '%Motor%' OR D.Reason LIKE '%Conveyor%' OR D.Reason LIKE '%Tool%' THEN D.TotalDT ELSE 0 END), 0) as mechanicalDT,
+            ISNULL(SUM(CASE WHEN D.Reason LIKE '%Power%' OR D.Reason LIKE '%Sensor%' THEN D.TotalDT ELSE 0 END), 0) as electricalDT,
+            ISNULL(SUM(CASE WHEN D.Reason LIKE '%Quality%' OR D.Reason LIKE '%Inspection%' THEN D.TotalDT ELSE 0 END), 0) as qualityDT,
+            ISNULL(SUM(CASE WHEN D.Reason LIKE '%Changeover%' OR D.Reason LIKE '%Setup%' THEN D.TotalDT ELSE 0 END), 0) as setupDT,
+            ISNULL(SUM(CASE WHEN D.Reason LIKE '%Maintenance%' OR D.Reason LIKE '%Preventive%' THEN D.TotalDT ELSE 0 END), 0) as processDT
+          FROM Perf_Downtime D
+          LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
+          WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+        `),
+        getReq().query(`
+          SELECT 
+            AVG(H.OLE) as avgOLE,
+            AVG(H.Availability) as avgAvail,
+            AVG(H.Performance) as avgPerf,
+            AVG(H.Quality) as avgQuality
+          FROM Perf_Hourly_OLE H
+          LEFT JOIN Config_Line L ON H.SubAsslyLineID = L.LineID
+          WHERE (@StartDate IS NULL OR H.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR H.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR H.ProdShift = @Shift OR H.ProdShift = 'Shift ' + @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(H.SubAsslyLineID AS VARCHAR) = @Line)
         `)
       ]);
 
-      const prodRow = (prodRes.status === 'fulfilled' && prodRes.value?.recordset?.[0]) || { totalPlan: 1300, totalProd: 265, totalRework: 13, totalNotOk: 2, dayCount: 1 };
-      const dtRow = (dtRes.status === 'fulfilled' && dtRes.value?.recordset?.[0]) || { totalDT: 60, mechanicalDT: 20, electricalDT: 10, qualityDT: 10, setupDT: 10, processDT: 10 };
+      const prodRow = (prodRes.status === 'fulfilled' && prodRes.value?.recordset?.[0]) || { totalPlan: 0, totalProd: 0, totalRework: 0, totalNotOk: 0, dayCount: 0 };
+      const dtRow = (dtRes.status === 'fulfilled' && dtRes.value?.recordset?.[0]) || { totalDT: 0, mechanicalDT: 0, electricalDT: 0, qualityDT: 0, setupDT: 0, processDT: 0 };
+      const hourlyRow = (hourlyRes.status === 'fulfilled' && hourlyRes.value?.recordset?.[0]) || {};
 
       const days = Math.max(1, prodRow.dayCount || 1);
-      const isSingleDayToday = (days === 1 && (!effectiveStartDate || effectiveStartDate === todayStr));
-      const plannedMinutes = days * (dbShift ? 480 : (isSingleDayToday ? 480 : 960));
-      const activePlan = (isSingleDayToday && !dbShift && prodRow.totalPlan > prodRow.totalProd * 1.5)
-        ? Math.round(prodRow.totalPlan / 2) // Target for active Shift 1
-        : prodRow.totalPlan;
-
+      const plannedMinutes = days * 480;
       const totalDT = dtRow.totalDT || 0;
 
-      const availability = Math.max(50, Math.min(99.9, Number((((plannedMinutes - totalDT) / plannedMinutes) * 100).toFixed(1))));
-      const performance = activePlan > 0 ? Math.max(50, Math.min(99.9, Number(((prodRow.totalProd / activePlan) * 100).toFixed(1)))) : 90.0;
-      const quality = prodRow.totalProd > 0 ? Math.max(70, Math.min(99.9, Number((((prodRow.totalProd - prodRow.totalRework - prodRow.totalNotOk) / prodRow.totalProd) * 100).toFixed(1)))) : 98.0;
+      let availability = plannedMinutes > 0 ? Number((((plannedMinutes - Math.min(plannedMinutes, totalDT)) / plannedMinutes) * 100).toFixed(1)) : 0;
+      let performance = prodRow.totalPlan > 0 ? Number(((prodRow.totalProd / prodRow.totalPlan) * 100).toFixed(1)) : 0;
+      let quality = prodRow.totalProd > 0 ? Number((((prodRow.totalProd - prodRow.totalRework - prodRow.totalNotOk) / prodRow.totalProd) * 100).toFixed(1)) : 0;
+
+      if (hourlyRow.avgAvail) availability = Number(hourlyRow.avgAvail.toFixed(1));
+      if (hourlyRow.avgPerf) performance = Number(hourlyRow.avgPerf.toFixed(1));
+      if (hourlyRow.avgQuality) quality = Number(hourlyRow.avgQuality.toFixed(1));
+
       const oee = Number(((availability * performance * quality) / 10000).toFixed(1));
-      const ole = Number(Math.min(99.5, oee * 1.05).toFixed(1));
+      const ole = hourlyRow.avgOLE ? Number(hourlyRow.avgOLE.toFixed(1)) : Number(Math.min(99.9, oee * 1.05).toFixed(1));
 
       const kpis = { ole, oee, availability, performance };
 
       const downtime = [
-        {
-          name: 'Mechanical',
-          downTime: dtRow.mechanicalDT || Math.round(totalDT * 0.35) || 25,
-          runTime: Math.max(100, Math.round(plannedMinutes * 0.25) - (dtRow.mechanicalDT || 25))
-        },
-        {
-          name: 'Electrical',
-          downTime: dtRow.electricalDT || Math.round(totalDT * 0.20) || 15,
-          runTime: Math.max(100, Math.round(plannedMinutes * 0.25) - (dtRow.electricalDT || 15))
-        },
-        {
-          name: 'Process',
-          downTime: dtRow.processDT || Math.round(totalDT * 0.20) || 20,
-          runTime: Math.max(100, Math.round(plannedMinutes * 0.25) - (dtRow.processDT || 20))
-        },
-        {
-          name: 'Setup',
-          downTime: dtRow.setupDT || Math.round(totalDT * 0.25) || 30,
-          runTime: Math.max(100, Math.round(plannedMinutes * 0.25) - (dtRow.setupDT || 30))
-        }
+        { name: 'Mechanical', downTime: dtRow.mechanicalDT || 0, runTime: Math.max(0, Math.round(plannedMinutes * 0.25) - (dtRow.mechanicalDT || 0)) },
+        { name: 'Electrical', downTime: dtRow.electricalDT || 0, runTime: Math.max(0, Math.round(plannedMinutes * 0.25) - (dtRow.electricalDT || 0)) },
+        { name: 'Process', downTime: dtRow.processDT || 0, runTime: Math.max(0, Math.round(plannedMinutes * 0.25) - (dtRow.processDT || 0)) },
+        { name: 'Setup', downTime: dtRow.setupDT || 0, runTime: Math.max(0, Math.round(plannedMinutes * 0.25) - (dtRow.setupDT || 0)) }
       ];
 
       return res.json({ kpis, downtime });
     }
   } catch (err) {
-    console.warn('Performance endpoint DB fallback:', err.message);
+    console.error('Performance endpoint error:', err.message);
   }
 
   res.json({
-    kpis: { ole: 84.5, oee: 78.2, availability: 92.4, performance: 89.1 },
-    downtime: [
-      { name: 'Mechanical', runTime: 2200, downTime: 120 },
-      { name: 'Electrical', runTime: 2350, downTime: 45 },
-      { name: 'Process', runTime: 2300, downTime: 80 },
-      { name: 'Setup', runTime: 2400, downTime: 30 }
-    ]
+    kpis: { ole: 0, oee: 0, availability: 0, performance: 0 },
+    downtime: []
+  });
+});
+
+app.get('/api/performance/downtime', async (req, res) => {
+  const { period, shift, startDate, endDate, line, station, modelFamily, model, sku } = req.query;
+  const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Station: { type: sql.VarChar(50), value: (station && station !== 'All') ? station : null }
+      });
+
+      const [dtTableRes, catRes, kpiRes] = await Promise.allSettled([
+        request.query(`
+          SELECT 
+            D.DowntimeID as id,
+            ISNULL(LC.LossName, 'General Loss') as category,
+            ISNULL(SLC.SubLossName, ISNULL(D.Reason, 'Unspecified')) as subCategory,
+            CONVERT(VARCHAR(5), D.StartTime, 108) as startTime,
+            CONVERT(VARCHAR(5), D.EndTime, 108) as endTime,
+            ISNULL(D.TotalDT, 0) as duration,
+            1 as occurrence,
+            ISNULL(S.StationName, 'Line ' + CAST(D.SubAsslyLineID AS VARCHAR)) as machine,
+            ISNULL(D.Reason, 'Breakdown') as reason,
+            CONVERT(VARCHAR(10), D.ProdDate, 120) as [date],
+            ISNULL(D.ProdShift, 'A') as shift,
+            ISNULL(L.LineName, 'Line ' + CAST(D.SubAsslyLineID AS VARCHAR)) as line,
+            ISNULL(S.StationName, 'ST-01') as station
+          FROM Perf_Downtime D
+          LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
+          LEFT JOIN Config_Station S ON D.StationID = S.StationID
+          LEFT JOIN Config_LossCategory LC ON D.LossID = LC.LossID
+          LEFT JOIN Config_SubLossCategory SLC ON D.SubLossID = SLC.SubLossID
+          WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
+          ORDER BY D.StartTime DESC
+        `),
+        request.query(`
+          SELECT 
+            ISNULL(LC.LossName, 'Other') as category,
+            ISNULL(SUM(D.TotalDT), 0) as duration,
+            COUNT(D.DowntimeID) as occurrence
+          FROM Perf_Downtime D
+          LEFT JOIN Config_LossCategory LC ON D.LossID = LC.LossID
+          LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
+          LEFT JOIN Config_Station S ON D.StationID = S.StationID
+          WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
+          GROUP BY LC.LossName
+          ORDER BY duration DESC
+        `),
+        request.query(`
+          SELECT 
+            ISNULL(SUM(D.TotalDT), 0) as totalDowntime,
+            COUNT(D.DowntimeID) as noOfLosses,
+            ISNULL(AVG(D.TotalDT), 0) as avgLossDuration
+          FROM Perf_Downtime D
+          LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
+          LEFT JOIN Config_Station S ON D.StationID = S.StationID
+          WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
+        `)
+      ]);
+
+      const table = (dtTableRes.status === 'fulfilled' && dtTableRes.value?.recordset) || [];
+      const categories = (catRes.status === 'fulfilled' && catRes.value?.recordset) || [];
+      const kpiRow = (kpiRes.status === 'fulfilled' && kpiRes.value?.recordset?.[0]) || { totalDowntime: 0, noOfLosses: 0, avgLossDuration: 0 };
+
+      const mostLostCat = categories.length > 0 ? categories[0].category : 'None';
+
+      const hourlyMap = {};
+      table.forEach(r => {
+        const h = r.startTime ? r.startTime.split(':')[0] + ':00' : '08:00';
+        hourlyMap[h] = (hourlyMap[h] || 0) + (r.duration || 0);
+      });
+      const hourly = Object.entries(hourlyMap).map(([time, duration]) => ({ time, duration }));
+
+      return res.json({
+        kpis: {
+          totalDowntime: kpiRow.totalDowntime || 0,
+          noOfLosses: kpiRow.noOfLosses || table.length,
+          mostLostCat,
+          avgLossDuration: Math.round(kpiRow.avgLossDuration || 0)
+        },
+        hourly,
+        categories,
+        table
+      });
+    }
+  } catch (err) {
+    console.error('Performance Downtime error:', err.message);
+  }
+
+  res.json({
+    kpis: { totalDowntime: 0, noOfLosses: 0, mostLostCat: 'None', avgLossDuration: 0 },
+    hourly: [],
+    categories: [],
+    table: []
   });
 });
 
@@ -631,147 +806,101 @@ app.get(['/api/dashboard/performance', '/api/performance/downtime'], async (req,
 // 3. PROCESS MONITORING MODULE ENDPOINTS
 // ==========================================
 app.get('/api/process/pokayoke', async (req, res) => {
-  const { period, shift, startDate, endDate } = req.query;
+  const { period, shift, startDate, endDate, line, station } = req.query;
   const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
     const pool = await poolPromise;
     if (pool) {
-      let effectiveStartDate = startDate;
-      let effectiveEndDate = endDate;
-      const today = new Date();
-      const y = today.getFullYear();
-      const m = String(today.getMonth() + 1).padStart(2, '0');
-      const d = String(today.getDate()).padStart(2, '0');
-      const todayStr = `${y}-${m}-${d}`;
-
-      if (!effectiveStartDate || (period === 'Week' && effectiveStartDate === effectiveEndDate) || (period === 'Month' && effectiveStartDate === effectiveEndDate)) {
-        if (period === 'Day' || period === 'Shift') {
-          effectiveStartDate = effectiveStartDate || todayStr;
-          effectiveEndDate = effectiveEndDate || todayStr;
-        } else if (period === 'Week') {
-          const past7 = new Date(today);
-          past7.setDate(today.getDate() - 7);
-          effectiveStartDate = `${past7.getFullYear()}-${String(past7.getMonth() + 1).padStart(2, '0')}-${String(past7.getDate()).padStart(2, '0')}`;
-          effectiveEndDate = todayStr;
-        } else if (period === 'Month') {
-          const past30 = new Date(today);
-          past30.setDate(today.getDate() - 30);
-          effectiveStartDate = `${past30.getFullYear()}-${String(past30.getMonth() + 1).padStart(2, '0')}-${String(past30.getDate()).padStart(2, '0')}`;
-          effectiveEndDate = todayStr;
-        }
-      }
-
-      const makeRequest = () => {
-        const r = pool.request();
-        r.input('StartDate', sql.Date, effectiveStartDate || null);
-        r.input('EndDate', sql.Date, effectiveEndDate || null);
-        r.input('Shift', sql.VarChar(20), dbShift || null);
-        return r;
-      };
+      const getReq = () => createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Station: { type: sql.VarChar(50), value: (station && station !== 'All') ? station : null }
+      });
 
       const [prodRes, dtRes] = await Promise.allSettled([
-        makeRequest().query(`
+        getReq().query(`
           SELECT 
-            ISNULL(SUM(ENGCompleted_Qty), 0) as totalProd,
-            ISNULL(SUM(ENGNotOK_Qty), 0) as totalNotOk,
-            COUNT(DISTINCT ProdDate) as dayCount
-          FROM Prod_EnginePlanExecution
-          WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
-            AND (@EndDate IS NULL OR ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR ProdShift = @Shift)
+            ISNULL(SUM(E.ENGCompleted_Qty), 0) as totalProd,
+            ISNULL(SUM(E.ENGNotOK_Qty), 0) as totalNotOk
+          FROM Prod_EnginePlanExecution E
+          LEFT JOIN Config_Line L ON E.LineID = L.LineID
+          WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR E.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
         `),
-        makeRequest().query(`
-          SELECT COUNT(DowntimeID) as bypassCount
-          FROM Perf_Downtime
-          WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
-            AND (@EndDate IS NULL OR ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR ProdShift = @Shift)
+        getReq().query(`
+          SELECT COUNT(D.DowntimeID) as bypassCount
+          FROM Perf_Downtime D
+          LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
+          LEFT JOIN Config_Station S ON D.StationID = S.StationID
+          WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
         `)
       ]);
 
-      const prodRow = (prodRes.status === 'fulfilled' && prodRes.value?.recordset?.[0]) || { totalProd: 1578, totalNotOk: 8, dayCount: 1 };
-      const dtRow = (dtRes.status === 'fulfilled' && dtRes.value?.recordset?.[0]) || { bypassCount: 3 };
+      const prodRow = (prodRes.status === 'fulfilled' && prodRes.value?.recordset?.[0]) || { totalProd: 0, totalNotOk: 0 };
+      const dtRow = (dtRes.status === 'fulfilled' && dtRes.value?.recordset?.[0]) || { bypassCount: 0 };
 
-      const totalChecks = prodRow.totalProd > 0 ? prodRow.totalProd : (period === 'Month' ? 47340 : period === 'Week' ? 11046 : 1578);
-      const notOkCount = prodRow.totalNotOk > 0 ? prodRow.totalNotOk : (period === 'Month' ? 180 : period === 'Week' ? 45 : 8);
+      const totalChecks = prodRow.totalProd || 0;
+      const notOkCount = prodRow.totalNotOk || 0;
       const okCount = Math.max(0, totalChecks - notOkCount);
-      const bypassCount = dtRow.bypassCount > 0 ? dtRow.bypassCount : (period === 'Month' ? 60 : period === 'Week' ? 15 : 3);
+      const bypassCount = dtRow.bypassCount || 0;
 
       return res.json({
         kpis: { totalChecks, okCount, notOkCount, bypassCount }
       });
     }
   } catch (err) {
-    console.warn('PokaYoke DB fallback:', err.message);
+    console.error('PokaYoke DB error:', err.message);
   }
 
-  const scale = period === 'Month' ? 30 : period === 'Week' ? 7 : 1;
   res.json({
-    kpis: {
-      totalChecks: 1578 * scale,
-      okCount: 1570 * scale,
-      notOkCount: 8 * scale,
-      bypassCount: 3 * scale
-    }
+    kpis: { totalChecks: 0, okCount: 0, notOkCount: 0, bypassCount: 0 }
   });
 });
 
 app.get('/api/process/bypass', async (req, res) => {
-  const { period, shift, startDate, endDate } = req.query;
+  const { period, shift, startDate, endDate, line, station, device } = req.query;
   const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
     const pool = await poolPromise;
     if (pool) {
-      let effectiveStartDate = startDate;
-      let effectiveEndDate = endDate;
-      const today = new Date();
-      const y = today.getFullYear();
-      const m = String(today.getMonth() + 1).padStart(2, '0');
-      const d = String(today.getDate()).padStart(2, '0');
-      const todayStr = `${y}-${m}-${d}`;
-
-      if (!effectiveStartDate || (period === 'Week' && effectiveStartDate === effectiveEndDate) || (period === 'Month' && effectiveStartDate === effectiveEndDate)) {
-        if (period === 'Day' || period === 'Shift') {
-          effectiveStartDate = effectiveStartDate || todayStr;
-          effectiveEndDate = effectiveEndDate || todayStr;
-        } else if (period === 'Week') {
-          const past7 = new Date(today);
-          past7.setDate(today.getDate() - 7);
-          effectiveStartDate = `${past7.getFullYear()}-${String(past7.getMonth() + 1).padStart(2, '0')}-${String(past7.getDate()).padStart(2, '0')}`;
-          effectiveEndDate = todayStr;
-        } else if (period === 'Month') {
-          const past30 = new Date(today);
-          past30.setDate(today.getDate() - 30);
-          effectiveStartDate = `${past30.getFullYear()}-${String(past30.getMonth() + 1).padStart(2, '0')}-${String(past30.getDate()).padStart(2, '0')}`;
-          effectiveEndDate = todayStr;
-        }
-      }
-
-      const request = pool.request();
-      request.input('StartDate', sql.Date, effectiveStartDate || null);
-      request.input('EndDate', sql.Date, effectiveEndDate || null);
-      request.input('Shift', sql.VarChar(20), dbShift || null);
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Station: { type: sql.VarChar(50), value: (station && station !== 'All') ? station : null }
+      });
 
       const result = await request.query(`
-        SELECT TOP 20
+        SELECT 
           D.DowntimeID as id,
           'BP-00' + CAST(D.DowntimeID AS VARCHAR) as bypassId,
           CONVERT(VARCHAR(5), D.StartTime, 108) as startTime,
-          CONVERT(VARCHAR(5), DATEADD(minute, ISNULL(D.TotalDT, 15), D.StartTime), 108) as endTime,
+          CONVERT(VARCHAR(5), D.EndTime, 108) as endTime,
           CONVERT(VARCHAR(16), D.StartTime, 120) as [date],
-          CONVERT(VARCHAR(16), D.StartTime, 120) as datetime,
-          ISNULL(L.LineName, 'Line 1') as line,
+          CONVERT(VARCHAR(16), D.StartTime, 120) as [datetime],
+          ISNULL(L.LineName, 'Line ' + CAST(D.SubAsslyLineID AS VARCHAR)) as line,
           ISNULL(S.StationName, 'Demo') as station,
           'PY-01 Torque Bypass' as device,
           'Shift ' + ISNULL(D.ProdShift, 'A') as shift,
           'SKU1' as model,
-          ISNULL(D.TotalDT, 15) as duration,
-          ISNULL(U.UserName, 'Rahul Sharma') as operator,
-          ISNULL(D.Reason, 'Sensor Calibration') as reason,
-          'Supervisor Amit' as authorizedBy,
-          'Resolved' as status
+          ISNULL(D.TotalDT, 0) as duration,
+          ISNULL(U.UserName, 'Operator') as operator,
+          ISNULL(D.Reason, 'Bypass Triggered') as reason,
+          'Supervisor' as authorizedBy,
+          'Resolved' as [status]
         FROM Perf_Downtime D
         LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
         LEFT JOIN Config_Station S ON D.StationID = S.StationID
@@ -779,88 +908,167 @@ app.get('/api/process/bypass', async (req, res) => {
         WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
           AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
           AND (@Shift IS NULL OR D.ProdShift = @Shift)
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+          AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
         ORDER BY D.StartTime DESC
       `);
 
-      if (result.recordset.length > 0) {
-        return res.json({ bypassLogs: result.recordset });
-      }
+      return res.json({ bypassLogs: result.recordset || [] });
     }
   } catch (err) {
-    console.warn('Bypass DB fallback:', err.message);
+    console.error('Bypass DB error:', err.message);
   }
 
-  res.json({
-    bypassLogs: [
-      { id: 1, bypassId: 'BP-001', startTime: '08:30', endTime: '08:45', datetime: '2026-08-29 08:30', date: '2026-08-29 08:30', line: 'Line 1', station: 'ST-01', device: 'PY-01 Torque Bypass', shift: 'Shift A', model: 'SKU1', duration: 15, operator: 'Rahul Sharma', reason: 'Sensor Calibration', authorizedBy: 'Supervisor Amit', status: 'Resolved' }
-    ]
-  });
+  res.json({ bypassLogs: [] });
 });
 
 app.get('/api/process/torque', async (req, res) => {
+  const { period, shift, startDate, endDate, sku, device } = req.query;
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
-        SELECT TOP 30
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
+      });
+
+      const result = await request.query(`
+        SELECT 
           T.RowID as id,
-          ISNULL('ENG-2026-00' + CAST(T.RowID AS VARCHAR), 'ENG-001') as engineNo,
+          'ENG-2026-00' + CAST(T.RowID AS VARCHAR) as engineNo,
           ISNULL(S.SKUName, 'SKU1') as sku,
-          ISNULL('TD-0' + CAST(T.ActivityID AS VARCHAR), 'TD-01') as device,
-          CAST(T.ActivityValue AS FLOAT) as value,
+          'TD-0' + CAST(ISNULL(T.ActivityID, 1) AS VARCHAR) as device,
+          CAST(T.ActivityValue AS FLOAT) as [value],
           CAST(ISNULL(T.LowerLimit, 40.0) AS FLOAT) as minSpec,
           CAST(ISNULL(T.UpperLimit, 50.0) AS FLOAT) as maxSpec,
           CASE WHEN T.ActivityValue >= ISNULL(T.LowerLimit, 40.0) AND T.ActivityValue <= ISNULL(T.UpperLimit, 50.0) THEN 'OK' ELSE 'NOK' END as result,
-          CONVERT(VARCHAR(19), ISNULL(T.Timestamp, GETDATE()), 120) as datetime,
+          CONVERT(VARCHAR(19), ISNULL(T.Timestamp, GETDATE()), 120) as [datetime],
           'OP-001' as operator
         FROM Prod_TorqueData_Log T
         LEFT JOIN Config_SKU S ON T.SKUID = S.SKUID
+        WHERE (@StartDate IS NULL OR CAST(T.Timestamp AS DATE) >= @StartDate)
+          AND (@EndDate IS NULL OR CAST(T.Timestamp AS DATE) <= @EndDate)
+          AND (@SKU IS NULL OR S.SKUName = @SKU)
         ORDER BY T.RowID DESC
       `);
-      if (result.recordset.length > 0) {
-        return res.json({ table: result.recordset });
-      }
+
+      const table = result.recordset || [];
+      const totalFastenings = table.length;
+      const okCount = table.filter(r => r.result === 'OK').length;
+      const nokCount = totalFastenings - okCount;
+      const passRate = totalFastenings > 0 ? Number(((okCount / totalFastenings) * 100).toFixed(1)) : 0;
+
+      return res.json({
+        kpis: { totalFastenings, okCount, nokCount, passRate },
+        table
+      });
     }
   } catch (err) {
-    console.warn('Torque DB fallback:', err.message);
+    console.error('Torque DB error:', err.message);
   }
 
   res.json({
-    table: [
-      { id: 1, engineNo: 'ENG-2026-001', sku: 'SKU1', device: 'TD-01', value: 45.2, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2026-08-29 08:30:00', operator: 'OP-001' },
-      { id: 2, engineNo: 'ENG-2026-002', sku: 'SKU1', device: 'TD-01', value: 48.1, minSpec: 40, maxSpec: 50, result: 'OK', datetime: '2026-08-29 08:45:00', operator: 'OP-001' }
-    ]
+    kpis: { totalFastenings: 0, okCount: 0, nokCount: 0, passRate: 0 },
+    table: []
   });
 });
 
 app.get('/api/process/conveyor', async (req, res) => {
+  const { period, shift, startDate, endDate, line, station } = req.query;
+  const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
-        SELECT TOP 5
-          ISNULL(S.StationName, 'Demo') as station,
-          ISNULL(SUM(D.TotalDT), 0) as downtimeMins
-        FROM Perf_Downtime D
-        LEFT JOIN Config_Station S ON D.StationID = S.StationID
-        GROUP BY S.StationName
-      `);
-      if (result.recordset.length > 0) {
-        return res.json({
-          topStations: result.recordset.map(r => ({ name: r.station, value: r.downtimeMins })),
-          topReasons: [{ name: 'Conveyor Jam', value: 45 }, { name: 'Motor Overload', value: 30 }],
-          performanceTable: [{ id: 1, line: 'Line 1', station: 'Demo', reason: 'Conveyor Jam', duration: '45 min', time: '09:00' }]
-        });
-      }
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Station: { type: sql.VarChar(50), value: (station && station !== 'All') ? station : null }
+      });
+
+      const [stationRes, reasonRes, tableRes] = await Promise.allSettled([
+        request.query(`
+          SELECT TOP 5
+            ISNULL(S.StationName, 'Demo') as name,
+            ISNULL(SUM(D.TotalDT), 0) as [value]
+          FROM Perf_Downtime D
+          LEFT JOIN Config_Station S ON D.StationID = S.StationID
+          LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
+          WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
+          GROUP BY S.StationName
+          ORDER BY [value] DESC
+        `),
+        request.query(`
+          SELECT TOP 5
+            ISNULL(LC.LossName, ISNULL(D.Reason, 'Other')) as name,
+            ISNULL(SUM(D.TotalDT), 0) as [value]
+          FROM Perf_Downtime D
+          LEFT JOIN Config_LossCategory LC ON D.LossID = LC.LossID
+          LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
+          LEFT JOIN Config_Station S ON D.StationID = S.StationID
+          WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
+          GROUP BY LC.LossName, D.Reason
+          ORDER BY [value] DESC
+        `),
+        request.query(`
+          SELECT TOP 50
+            D.DowntimeID as id,
+            ISNULL(L.LineName, 'Line ' + CAST(D.SubAsslyLineID AS VARCHAR)) as line,
+            ISNULL(S.StationName, 'Demo') as station,
+            ISNULL(D.Reason, 'Conveyor Issue') as reason,
+            CAST(ISNULL(D.TotalDT, 0) AS VARCHAR) + ' min' as duration,
+            CONVERT(VARCHAR(5), D.StartTime, 108) as [time]
+          FROM Perf_Downtime D
+          LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
+          LEFT JOIN Config_Station S ON D.StationID = S.StationID
+          WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
+          ORDER BY D.StartTime DESC
+        `)
+      ]);
+
+      const topStations = (stationRes.status === 'fulfilled' && stationRes.value?.recordset) || [];
+      const topReasons = (reasonRes.status === 'fulfilled' && reasonRes.value?.recordset) || [];
+      const performanceTable = (tableRes.status === 'fulfilled' && tableRes.value?.recordset) || [];
+
+      const totalDowntime = performanceTable.reduce((sum, r) => sum + (parseInt(r.duration, 10) || 0), 0);
+
+      return res.json({
+        kpis: {
+          totalDowntime,
+          totalIncidents: performanceTable.length
+        },
+        topStations,
+        topReasons,
+        performanceTable
+      });
     }
   } catch (err) {
-    console.warn('Conveyor DB fallback:', err.message);
+    console.error('Conveyor DB error:', err.message);
   }
 
   res.json({
-    topStations: [{ name: 'Demo', value: 45 }],
-    topReasons: [{ name: 'Conveyor Jam', value: 45 }],
-    performanceTable: [{ id: 1, line: 'Line 1', station: 'Demo', reason: 'Conveyor Jam', duration: '45 min', time: '09:00' }]
+    kpis: { totalDowntime: 0, totalIncidents: 0 },
+    topStations: [],
+    topReasons: [],
+    performanceTable: []
   });
 });
 
@@ -869,7 +1077,11 @@ app.get('/api/process/conveyor', async (req, res) => {
 // ==========================================
 app.get('/api/trace/genealogy', async (req, res) => {
   const { uid, engineNo } = req.query;
-  const searchEngine = uid || engineNo || 'ENG-2026-00123';
+  const searchEngine = (uid || engineNo || '').trim();
+
+  if (!searchEngine) {
+    return res.json({ found: false, table: [] });
+  }
 
   try {
     const pool = await poolPromise;
@@ -886,172 +1098,194 @@ app.get('/api/trace/genealogy', async (req, res) => {
           CONVERT(VARCHAR(8), G.Timestamp, 108) as startTime,
           CONVERT(VARCHAR(8), DATEADD(minute, 5, G.Timestamp), 108) as endTime,
           '5m' as duration,
-          ISNULL(U.UserName, 'Rahul Sharma') as operator,
+          ISNULL(U.UserName, 'Operator') as operator,
           ISNULL(G.ActivityValue, 'OK') as result,
           CASE WHEN G.ActivityValue = 'NOK' THEN 'Torque variance detected' ELSE '-' END as remarks
         FROM Prod_Engine_Geneology G
         LEFT JOIN Config_Station S ON G.StationID = S.StationID
         LEFT JOIN Config_User U ON G.UsersID = U.UserID
-        WHERE (@EngineNo IS NULL OR G.EngineNo = @EngineNo OR G.EngineNo LIKE '%' + @EngineNo + '%')
-        ORDER BY G.Timestamp DESC
+        WHERE G.EngineNo = @EngineNo OR G.EngineNo LIKE '%' + @EngineNo + '%'
+        ORDER BY G.Timestamp ASC
       `);
 
-      if (result.recordset.length > 0) {
-        return res.json({ found: true, table: result.recordset });
-      } else {
-        return res.json({ found: false, table: [] });
-      }
+      const table = result.recordset || [];
+      return res.json({
+        found: table.length > 0,
+        table
+      });
     }
   } catch (err) {
-    console.warn('Genealogy DB fallback:', err.message);
+    console.error('Genealogy DB error:', err.message);
   }
 
-  // Fallback only if searchEngine matches mock known UIDs
-  const mockUids = ['ENG-2026-00123', 'ENG-3018', 'ENG-3019'];
-  const isMatch = mockUids.some(u => u.toLowerCase().includes(searchEngine.toLowerCase()));
-
-  if (isMatch) {
-    return res.json({
-      found: true,
-      table: [
-        { id: 1, engineNo: 'ENG-2026-00123', station: 'ST-01', operation: 'Block Assembly', startTime: '10:00:00', endTime: '10:05:00', duration: '5m', operator: 'OP-001', result: 'OK', remarks: '-' },
-        { id: 2, engineNo: 'ENG-2026-00123', station: 'ST-02', operation: 'Piston Assembly', startTime: '10:06:00', endTime: '10:12:00', duration: '6m', operator: 'OP-002', result: 'OK', remarks: '-' },
-        { id: 3, engineNo: 'ENG-2026-00123', station: 'ST-03', operation: 'Head Assembly', startTime: '10:13:00', endTime: '10:19:00', duration: '6m', operator: 'OP-003', result: 'NOK', remarks: 'Torque issue' },
-        { id: 4, engineNo: 'ENG-2026-00123', station: 'RW-01', operation: 'Rework', startTime: '10:20:00', endTime: '10:35:00', duration: '15m', operator: 'OP-RW', result: 'OK', remarks: 'Retorqued' },
-        { id: 5, engineNo: 'ENG-2026-00123', station: 'ST-03', operation: 'Head Assembly', startTime: '10:36:00', endTime: '10:40:00', duration: '4m', operator: 'OP-003', result: 'OK', remarks: '-' }
-      ]
-    });
-  }
-
-  res.json({
-    found: false,
-    table: []
-  });
+  res.json({ found: false, table: [] });
 });
 
 app.get('/api/trace/wip', async (req, res) => {
+  const { period, shift, startDate, endDate, line, wipStatus } = req.query;
+  const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null }
+      });
+
+      const result = await request.query(`
         SELECT 
           W.EngineNo as engineNo,
           ISNULL(M.ModelName, 'Pulsar 150') as model,
           ISNULL(S.SKUName, 'UG5') as sku,
-          CASE 
-            WHEN W.LineID = 1 THEN 'Demo (Block Assembly)'
-            WHEN W.LineID = 2 THEN 'Line2 (Head Tightening)'
-            ELSE 'Station2 (Cold Inspection)'
-          END as station,
+          ISNULL(L.LineName, 'Line ' + CAST(W.LineID AS VARCHAR)) as line,
+          ISNULL(ST.StationName, 'Demo') as station,
           CASE 
             WHEN W.Status = 1 THEN 'In-Process'
             WHEN W.Status = 2 THEN 'Rework'
             WHEN W.Status = 3 THEN 'Blocked'
             ELSE 'Idle'
-          END as status,
+          END as [status],
           CONVERT(VARCHAR(5), W.StartTime, 108) as entryTime,
           CAST(ROUND(DATEDIFF(minute, W.StartTime, GETDATE()) / 60.0, 1) AS DECIMAL(4,1)) as duration,
-          CASE 
-            WHEN (CHECKSUM(W.EngineNo) % 4) = 0 THEN 'Rahul Sharma'
-            WHEN (CHECKSUM(W.EngineNo) % 4) = 1 THEN 'Priya Singh'
-            WHEN (CHECKSUM(W.EngineNo) % 4) = 2 THEN 'Amit Kumar'
-            ELSE 'Neha Verma'
-          END as operator
+          'Operator' as operator
         FROM Prod_Engine_WIP W
         LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
         LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+        LEFT JOIN Config_Line L ON W.LineID = L.LineID
+        LEFT JOIN Config_Station ST ON W.NotOkStation = ST.StationID
+        WHERE (@StartDate IS NULL OR CAST(W.StartTime AS DATE) >= @StartDate)
+          AND (@EndDate IS NULL OR CAST(W.StartTime AS DATE) <= @EndDate)
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(W.LineID AS VARCHAR) = @Line)
         ORDER BY W.StartTime DESC
       `);
 
-      if (result.recordset.length > 0) {
-        const rows = result.recordset;
-        const total = rows.length;
-        const inProcess = rows.filter(r => r.status === 'In-Process').length;
-        const rework = rows.filter(r => r.status === 'Rework').length;
-        const blocked = rows.filter(r => r.status === 'Blocked').length;
-        const idle = rows.filter(r => r.status === 'Idle').length;
-
-        return res.json({
-          kpis: { total, inProcess, rework, blocked, idle },
-          distribution: [
-            { name: 'In-Process', value: inProcess },
-            { name: 'Rework', value: rework },
-            { name: 'Blocked', value: blocked },
-            { name: 'Idle', value: idle }
-          ],
-          details: rows
-        });
+      let rows = result.recordset || [];
+      if (wipStatus && wipStatus !== 'All') {
+        rows = rows.filter(r => r.status.toLowerCase() === wipStatus.toLowerCase());
       }
+
+      const total = rows.length;
+      const inProcess = rows.filter(r => r.status === 'In-Process').length;
+      const rework = rows.filter(r => r.status === 'Rework').length;
+      const blocked = rows.filter(r => r.status === 'Blocked').length;
+      const idle = rows.filter(r => r.status === 'Idle').length;
+
+      return res.json({
+        kpis: { total, inProcess, rework, blocked, idle },
+        distribution: [
+          { name: 'In-Process', value: inProcess },
+          { name: 'Rework', value: rework },
+          { name: 'Blocked', value: blocked },
+          { name: 'Idle', value: idle }
+        ],
+        details: rows,
+        table: rows
+      });
     }
   } catch (err) {
-    console.warn('WIP DB fallback:', err.message);
+    console.error('WIP DB error:', err.message);
   }
 
   res.json({
-    kpis: { total: 22, inProcess: 14, rework: 3, blocked: 2, idle: 3 },
-    distribution: [
-      { name: 'In-Process', value: 14 },
-      { name: 'Rework', value: 3 },
-      { name: 'Blocked', value: 2 },
-      { name: 'Idle', value: 3 }
-    ],
-    details: [
-      { engineNo: 'ENG-2026-00142', model: 'Pulsar 150', sku: 'UG5', station: 'Demo (Block Assembly)', status: 'In-Process', entryTime: '10:15', duration: 0.8, operator: 'Rahul Sharma' },
-      { engineNo: 'ENG-2026-00143', model: 'Pulsar 150', sku: 'UG5', station: 'Demo (Block Assembly)', status: 'In-Process', entryTime: '09:50', duration: 1.2, operator: 'Priya Singh' },
-      { engineNo: 'ENG-3018', model: 'Pulsar 150', sku: 'UG5', station: 'Line2 (Head Tightening)', status: 'Rework', entryTime: '08:35', duration: 2.4, operator: 'Amit Kumar' }
-    ]
+    kpis: { total: 0, inProcess: 0, rework: 0, blocked: 0, idle: 0 },
+    distribution: [],
+    details: [],
+    table: []
   });
 });
 
 app.get('/api/trace/rework', async (req, res) => {
+  const { period, shift, startDate, endDate, line, station, model, sku, status } = req.query;
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Model: { type: sql.VarChar(50), value: (model && model !== 'All') ? model : null },
+        SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
+      });
+
+      const result = await request.query(`
         SELECT 
           D.UID as id,
           D.EngineNo as engineNo,
-          'Pulsar 150' as model,
+          ISNULL(M.ModelName, 'Pulsar 150') as model,
+          ISNULL(S.SKUName, 'UG5') as sku,
+          ISNULL(L.LineName, 'Line 1') as line,
           'Demo (Block Assembly)' as station,
-          ISNULL(D.Remark, 'Torque Fail') as reason,
+          ISNULL(D.Remark, 'Defect Detected') as reason,
           CONVERT(VARCHAR(5), D.Timestamp, 108) as detectedTime,
           CONVERT(VARCHAR(5), DATEADD(minute, 15, D.Timestamp), 108) as reworkStart,
           CONVERT(VARCHAR(5), DATEADD(minute, 35, D.Timestamp), 108) as reworkEnd,
-          'Completed' as status,
-          ISNULL(D.UpdatedBy, 'Rahul Sharma') as operator,
-          'Rework Bay 1' as location
+          CASE 
+            WHEN D.Status = 1 THEN 'Completed'
+            WHEN D.Status = 2 THEN 'In-Progress'
+            WHEN D.Status = 3 THEN 'Rejected'
+            ELSE 'Pending'
+          END as [status],
+          ISNULL(D.UpdatedBy, 'Operator') as operator,
+          'Rework Bay 1' as [location]
         FROM Prod_Defect_Log D
+        LEFT JOIN Prod_Engine_WIP W ON D.EngineNo = W.EngineNo
+        LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
+        LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+        LEFT JOIN Config_Line L ON W.LineID = L.LineID
+        WHERE (@StartDate IS NULL OR CAST(D.Timestamp AS DATE) >= @StartDate)
+          AND (@EndDate IS NULL OR CAST(D.Timestamp AS DATE) <= @EndDate)
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(W.LineID AS VARCHAR) = @Line)
+          AND (@Model IS NULL OR M.ModelName = @Model)
+          AND (@SKU IS NULL OR S.SKUName = @SKU)
         ORDER BY D.Timestamp DESC
       `);
 
-      if (result.recordset.length > 0) {
-        return res.json({
-          kpis: {
-            totalRework: result.recordset.length,
-            inProgress: Math.max(1, Math.round(result.recordset.length * 0.2)),
-            completed: Math.max(1, Math.round(result.recordset.length * 0.7)),
-            rejected: Math.max(0, Math.round(result.recordset.length * 0.1))
-          },
-          table: result.recordset
-        });
+      let rows = result.recordset || [];
+      if (status && status !== 'All') {
+        rows = rows.filter(r => r.status.toLowerCase() === status.toLowerCase());
       }
+
+      const totalRework = rows.length;
+      const inProgress = rows.filter(r => r.status === 'In-Progress').length;
+      const completed = rows.filter(r => r.status === 'Completed').length;
+      const rejected = rows.filter(r => r.status === 'Rejected').length;
+
+      return res.json({
+        kpis: {
+          totalRework,
+          inProgress,
+          completed,
+          rejected
+        },
+        table: rows
+      });
     }
   } catch (err) {
-    console.warn('Trace Rework DB fallback:', err.message);
+    console.error('Trace Rework DB error:', err.message);
   }
 
   res.json({
-    kpis: { totalRework: 10, inProgress: 2, completed: 7, rejected: 1 },
-    table: [
-      { id: 1, engineNo: 'ENG-3018', model: 'Pulsar 150', station: 'Line2 (Head Tightening)', reason: 'Torque Fail on Head Bolt #3', detectedTime: '08:35', reworkStart: '08:50', reworkEnd: '09:10', status: 'Completed', operator: 'Rahul Sharma', location: 'Rework Bay 1' },
-      { id: 2, engineNo: 'ENG-3019', model: 'Dominar 400', station: 'Demo (Block Assembly)', reason: 'Casing Scratch on Clutch Cover', detectedTime: '09:20', reworkStart: '09:30', reworkEnd: '09:55', status: 'Completed', operator: 'Priya Singh', location: 'Rework Bay 2' }
-    ]
+    kpis: { totalRework: 0, inProgress: 0, completed: 0, rejected: 0 },
+    table: []
   });
 });
 
 app.get('/api/trace/engine-rework', async (req, res) => {
-  const { uid } = req.query;
-  const searchEngine = uid || 'ENG-3018';
+  const { uid, engineNo } = req.query;
+  const searchEngine = (uid || engineNo || '').trim();
+
+  if (!searchEngine) {
+    return res.json({
+      found: false,
+      kpis: { totalDefects: 0, reworkCount: 0, finalStatus: 'N/A', totalReworkTime: '0m' },
+      table: []
+    });
+  }
 
   try {
     const pool = await poolPromise;
@@ -1063,48 +1297,36 @@ app.get('/api/trace/engine-rework', async (req, res) => {
         SELECT 
           D.UID as id,
           D.EngineNo as engineNo,
-          'Pulsar 150' as model,
+          ISNULL(M.ModelName, 'Pulsar 150') as model,
           'Line2 (Head Tightening)' as station,
           ISNULL(D.Remark, 'Torque Fail') as reason,
           CONVERT(VARCHAR(16), D.Timestamp, 120) as detectedTime,
           CONVERT(VARCHAR(5), DATEADD(minute, 15, D.Timestamp), 108) as reworkStart,
           CONVERT(VARCHAR(5), DATEADD(minute, 35, D.Timestamp), 108) as reworkEnd,
-          'Completed' as status,
-          ISNULL(D.UpdatedBy, 'Rahul Sharma') as operator
+          CASE WHEN D.Status = 1 THEN 'Completed' ELSE 'In-Progress' END as [status],
+          ISNULL(D.UpdatedBy, 'Operator') as operator
         FROM Prod_Defect_Log D
+        LEFT JOIN Prod_Engine_WIP W ON D.EngineNo = W.EngineNo
+        LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
+        LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
         WHERE D.EngineNo = @EngineNo OR D.EngineNo LIKE '%' + @EngineNo + '%'
+        ORDER BY D.Timestamp DESC
       `);
 
-      if (result.recordset.length > 0) {
-        return res.json({
-          found: true,
-          kpis: { totalDefects: result.recordset.length, reworkCount: result.recordset.length, finalStatus: 'OK', totalReworkTime: `${result.recordset.length * 20}m` },
-          table: result.recordset
-        });
-      } else {
-        return res.json({
-          found: false,
-          kpis: { totalDefects: 0, reworkCount: 0, finalStatus: 'N/A', totalReworkTime: '0m' },
-          table: []
-        });
-      }
+      const table = result.recordset || [];
+      return res.json({
+        found: table.length > 0,
+        kpis: {
+          totalDefects: table.length,
+          reworkCount: table.length,
+          finalStatus: table.length > 0 ? (table.every(t => t.status === 'Completed') ? 'OK' : 'In-Progress') : 'N/A',
+          totalReworkTime: `${table.length * 20}m`
+        },
+        table
+      });
     }
   } catch (err) {
-    console.warn('Engine Rework DB fallback:', err.message);
-  }
-
-  // Fallback only if searchEngine matches mock known UIDs
-  const mockUids = ['ENG-3018', 'ENG-3019', 'ENG-2026-00123'];
-  const isMatch = mockUids.some(u => u.toLowerCase().includes(searchEngine.toLowerCase()));
-
-  if (isMatch) {
-    return res.json({
-      found: true,
-      kpis: { totalDefects: 1, reworkCount: 1, finalStatus: 'OK', totalReworkTime: '20m' },
-      table: [
-        { id: 1, engineNo: 'ENG-3018', model: 'Pulsar 150', station: 'Line2 (Head Tightening)', reason: 'Torque Fail on Head Bolt #3', detectedTime: '2026-08-29 08:35', reworkStart: '08:50', reworkEnd: '09:10', status: 'Completed', operator: 'Rahul Sharma' }
-      ]
-    });
+    console.error('Engine Rework DB error:', err.message);
   }
 
   res.json({
@@ -1116,27 +1338,70 @@ app.get('/api/trace/engine-rework', async (req, res) => {
 
 // ==========================================
 // 5. QUALITY MODULE ENDPOINTS
+// ==========================================
 app.get('/api/quality/defect', async (req, res) => {
-  const { period, shift, line, station, modelFamily, model, sku } = req.query;
-  const scale = getScale(period);
+  const { period, shift, startDate, endDate, line, station, modelFamily, model, sku } = req.query;
+  const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
     const pool = await poolPromise;
     if (pool) {
-      // Build dynamic where clause for defects
-      let whereClause = "WHERE 1=1";
-      if (station && station !== 'All') {
-        whereClause += ` AND (D.Remark LIKE '%${station}%' OR '${station}' = 'All')`;
-      }
+      const getReq = () => createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Model: { type: sql.VarChar(50), value: (model && model !== 'All') ? model : null },
+        ModelFamily: { type: sql.VarChar(50), value: (modelFamily && modelFamily !== 'All') ? modelFamily : null },
+        SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
+      });
 
-      const [kpiRes, distRes, reasonsRes, tableRes] = await Promise.all([
-        pool.request().query(`
+      const [kpiProdRes, defectRes, distRes, reasonsRes] = await Promise.allSettled([
+        getReq().query(`
           SELECT 
-            COUNT(D.UID) as totalDefects
-          FROM Prod_Defect_Log D
-          ${whereClause}
+            ISNULL(SUM(E.ENGCompleted_Qty), 0) as totalProd
+          FROM Prod_EnginePlanExecution E
+          LEFT JOIN Config_Line L ON E.LineID = L.LineID
+          LEFT JOIN Config_SKU S ON E.SKUID = S.SKUID
+          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+          LEFT JOIN Config_ModelFamily F ON M.ModelFamilyID = F.ModelFamilyID
+          WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR E.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
+            AND (@Model IS NULL OR M.ModelName = @Model)
+            AND (@ModelFamily IS NULL OR F.ModelFamilyName = @ModelFamily)
+            AND (@SKU IS NULL OR S.SKUName = @SKU)
         `),
-        pool.request().query(`
+        getReq().query(`
+          SELECT 
+            D.UID as id,
+            D.EngineNo as engineNo,
+            ISNULL(D.Remark, 'Defect Detected') as defect,
+            ISNULL(L.LineName, 'Line 1') as line,
+            'Demo (Block Assembly)' as station,
+            ISNULL(M.ModelName, 'Pulsar 150') as model,
+            ISNULL(S.SKUName, 'UG5') as sku,
+            ISNULL(F.ModelFamilyName, 'Bike') as modelFamily,
+            ISNULL(D.UpdatedBy, 'Operator') as operator,
+            CONVERT(VARCHAR(5), D.Timestamp, 108) as [time],
+            CONVERT(VARCHAR(10), D.Timestamp, 120) as [date]
+          FROM Prod_Defect_Log D
+          LEFT JOIN Prod_Engine_WIP W ON D.EngineNo = W.EngineNo
+          LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
+          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+          LEFT JOIN Config_ModelFamily F ON M.ModelFamilyID = F.ModelFamilyID
+          LEFT JOIN Config_Line L ON W.LineID = L.LineID
+          WHERE (@StartDate IS NULL OR CAST(D.Timestamp AS DATE) >= @StartDate)
+            AND (@EndDate IS NULL OR CAST(D.Timestamp AS DATE) <= @EndDate)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(W.LineID AS VARCHAR) = @Line)
+            AND (@Model IS NULL OR M.ModelName = @Model)
+            AND (@ModelFamily IS NULL OR F.ModelFamilyName = @ModelFamily)
+            AND (@SKU IS NULL OR S.SKUName = @SKU)
+          ORDER BY D.Timestamp DESC
+        `),
+        getReq().query(`
           SELECT 
             CASE 
               WHEN D.Remark LIKE '%Torque%' OR D.Remark LIKE '%Bolt%' THEN 'Torque & Fastening'
@@ -1147,7 +1412,17 @@ app.get('/api/quality/defect', async (req, res) => {
             END as name,
             COUNT(D.UID) as [value]
           FROM Prod_Defect_Log D
-          ${whereClause}
+          LEFT JOIN Prod_Engine_WIP W ON D.EngineNo = W.EngineNo
+          LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
+          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+          LEFT JOIN Config_ModelFamily F ON M.ModelFamilyID = F.ModelFamilyID
+          LEFT JOIN Config_Line L ON W.LineID = L.LineID
+          WHERE (@StartDate IS NULL OR CAST(D.Timestamp AS DATE) >= @StartDate)
+            AND (@EndDate IS NULL OR CAST(D.Timestamp AS DATE) <= @EndDate)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(W.LineID AS VARCHAR) = @Line)
+            AND (@Model IS NULL OR M.ModelName = @Model)
+            AND (@ModelFamily IS NULL OR F.ModelFamilyName = @ModelFamily)
+            AND (@SKU IS NULL OR S.SKUName = @SKU)
           GROUP BY 
             CASE 
               WHEN D.Remark LIKE '%Torque%' OR D.Remark LIKE '%Bolt%' THEN 'Torque & Fastening'
@@ -1158,257 +1433,207 @@ app.get('/api/quality/defect', async (req, res) => {
             END
           ORDER BY [value] DESC
         `),
-        pool.request().query(`
+        getReq().query(`
           SELECT TOP 6
             D.Remark as name,
             COUNT(D.UID) as [value]
           FROM Prod_Defect_Log D
-          ${whereClause}
+          LEFT JOIN Prod_Engine_WIP W ON D.EngineNo = W.EngineNo
+          LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
+          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+          LEFT JOIN Config_ModelFamily F ON M.ModelFamilyID = F.ModelFamilyID
+          LEFT JOIN Config_Line L ON W.LineID = L.LineID
+          WHERE (@StartDate IS NULL OR CAST(D.Timestamp AS DATE) >= @StartDate)
+            AND (@EndDate IS NULL OR CAST(D.Timestamp AS DATE) <= @EndDate)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(W.LineID AS VARCHAR) = @Line)
+            AND (@Model IS NULL OR M.ModelName = @Model)
+            AND (@ModelFamily IS NULL OR F.ModelFamilyName = @ModelFamily)
+            AND (@SKU IS NULL OR S.SKUName = @SKU)
           GROUP BY D.Remark
           ORDER BY [value] DESC, D.Remark ASC
-        `),
-        pool.request().query(`
-          SELECT 
-            D.EngineNo as engineNo,
-            ISNULL(D.Remark, 'Defect') as defect,
-            CASE 
-              WHEN D.UID % 3 = 0 THEN 'Demo (Block Assembly)'
-              WHEN D.UID % 3 = 1 THEN 'Line2 (Head Tightening)'
-              ELSE 'Station2 (Cold Inspection)'
-            END as station,
-            CASE WHEN D.UID % 2 = 0 THEN 'Line 1' ELSE 'Line 2' END as line,
-            'Pulsar 150' as model,
-            'UG5' as sku,
-            ISNULL(D.UpdatedBy, 'Rahul Sharma') as operator,
-            CONVERT(VARCHAR(5), D.Timestamp, 108) as [time]
-          FROM Prod_Defect_Log D
-          ${whereClause}
-          ORDER BY D.Timestamp DESC
         `)
       ]);
 
-      const norm = (str) => (str || '').toString().toLowerCase().replace(/[\s_-]+/g, '');
-      const isL1 = norm(line) === 'line1' || norm(line) === '1';
-      const isL2 = norm(line) === 'line2' || norm(line) === '2';
+      const totalProd = (kpiProdRes.status === 'fulfilled' && kpiProdRes.value?.recordset?.[0]?.totalProd) || 0;
+      const table = (defectRes.status === 'fulfilled' && defectRes.value?.recordset) || [];
+      const distribution = (distRes.status === 'fulfilled' && distRes.value?.recordset) || [];
+      const reasons = (reasonsRes.status === 'fulfilled' && reasonsRes.value?.recordset) || [];
 
-      const line1Prod = Math.max(1, Math.round(1594 * scale));
-      const line2Prod = Math.max(1, Math.round(1594 * scale));
-      const totalProd = isL1 ? line1Prod : isL2 ? line2Prod : (line1Prod + line2Prod);
-      
-      const filteredTable = tableRes.recordset.filter(d => 
-        (!line || line === 'All' || norm(d.line) === norm(line)) &&
-        (!station || station === 'All' || d.station.toLowerCase().includes(station.toLowerCase()) || station.toLowerCase().includes(d.station.toLowerCase()))
-      );
-
-      const line1DefectsRaw = tableRes.recordset.filter(d => norm(d.line) === 'line1').length || 4;
-      const line2DefectsRaw = tableRes.recordset.filter(d => norm(d.line) === 'line2').length || 6;
-
-      const line1Scaled = Math.max(1, Math.round(line1DefectsRaw * scale));
-      const line2Scaled = Math.max(1, Math.round(line2DefectsRaw * scale));
-
-      let totalDefects;
-      if (isL1) {
-        totalDefects = line1Scaled;
-      } else if (isL2) {
-        totalDefects = line2Scaled;
-      } else if (station && station !== 'All') {
-        totalDefects = Math.max(1, Math.round((filteredTable.length || 2) * scale));
-      } else {
-        // EXACT mathematical sum: Line 1 + Line 2 = Total
-        totalDefects = line1Scaled + line2Scaled;
-      }
-
-      const rft = totalProd > 0 ? Number(((1 - (totalDefects / totalProd)) * 100).toFixed(1)) : 100;
-
-      const dist = distRes.recordset.length > 0 ? distRes.recordset.map(d => ({
-        name: d.name,
-        value: Math.max(1, Math.round(d.value * scale))
-      })) : [
-        { name: 'Engine Fitment', value: Math.max(1, Math.round(4 * scale)) },
-        { name: 'Leakage & Sealing', value: Math.max(1, Math.round(2 * scale)) },
-        { name: 'Torque & Fastening', value: Math.max(1, Math.round(2 * scale)) }
-      ];
-
-      const reasons = reasonsRes.recordset.length > 0 ? reasonsRes.recordset.map(r => ({
-        name: r.name,
-        value: Math.max(1, Math.round(r.value * scale))
-      })) : [
-        { name: 'Torque Fail on Head Bolt #3', value: Math.max(1, Math.round(2 * scale)) },
-        { name: 'Casing Scratch on Clutch Cover', value: Math.max(1, Math.round(2 * scale)) }
-      ];
+      const totalDefects = table.length;
+      const effectiveProd = Math.max(totalProd, totalDefects);
+      const rft = effectiveProd > 0 ? Number(((1 - (totalDefects / effectiveProd)) * 100).toFixed(1)) : 100;
 
       return res.json({
         kpis: {
-          totalProduction: totalProd,
-          totalDefects: totalDefects,
-          rft: rft
+          totalProduction: effectiveProd,
+          totalDefects,
+          rft
         },
-        distribution: dist,
-        reasons: reasons,
-        table: filteredTable.length > 0 ? filteredTable : tableRes.recordset
+        distribution,
+        reasons,
+        table
       });
     }
   } catch (err) {
-    console.warn('Quality Defect DB query error:', err.message);
+    console.error('Quality Defect error:', err.message);
   }
 
-  const baseProd = (station && station !== 'All') || (line && line !== 'All') ? 1420 : 3188;
-  const totalProd = Math.max(1, Math.round(baseProd * scale));
-  const totalDefects = (station && station !== 'All') ? Math.max(1, Math.round(4 * scale)) : Math.max(1, Math.round(10 * scale));
-  const rft = Number(((1 - (totalDefects / totalProd)) * 100).toFixed(1));
-
   res.json({
-    kpis: { totalProduction: totalProd, totalDefects: totalDefects, rft: rft },
-    distribution: [
-      { name: 'Engine Fitment', value: Math.max(1, Math.round(4 * scale)) },
-      { name: 'Leakage & Sealing', value: Math.max(1, Math.round(2 * scale)) },
-      { name: 'Torque & Fastening', value: Math.max(1, Math.round(2 * scale)) },
-      { name: 'Cosmetic & Surface', value: Math.max(1, Math.round(1 * scale)) }
-    ],
-    reasons: [
-      { name: 'Torque Fail on Head Bolt #3', value: 2 },
-      { name: 'Casing Scratch on Clutch Cover', value: 2 },
-      { name: 'Leakage on Water Pump Seal', value: 2 },
-      { name: 'Valve Clearance Out of Spec', value: 1 },
-      { name: 'Oil Sump Gasket Misaligned', value: 1 },
-      { name: 'Camshaft Timing Out by 1 Tooth', value: 1 }
-    ],
-    table: [
-      { engineNo: 'ENG-3018', defect: 'Torque Fail on Head Bolt #3', station: 'Line2 (Head Tightening)', operator: 'Rahul Sharma', time: '08:35' }
-    ]
+    kpis: { totalProduction: 0, totalDefects: 0, rft: 0 },
+    distribution: [],
+    reasons: [],
+    table: []
   });
 });
 
 app.get('/api/quality/pqca', async (req, res) => {
+  const { period, shift, startDate, endDate, line, modelFamily, model } = req.query;
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Model: { type: sql.VarChar(50), value: (model && model !== 'All') ? model : null },
+        ModelFamily: { type: sql.VarChar(50), value: (modelFamily && modelFamily !== 'All') ? modelFamily : null }
+      });
+
+      const result = await request.query(`
         SELECT 
           Q.UID as id,
           ISNULL(A.AuditListName, 'Engine Quality Audit') as checkpoint,
           'Torque & Assembly' as category,
-          '45 Nm' as value,
+          '45 Nm' as [value],
           '45 Nm' as expected,
-          CASE WHEN Q.Status = 1 THEN 'OK' ELSE 'NC' END as status
+          CASE WHEN Q.Status = 1 THEN 'OK' ELSE 'NC' END as [status],
+          ISNULL(L.LineName, 'Line ' + CAST(Q.LineID AS VARCHAR)) as line,
+          ISNULL(M.ModelName, 'Pulsar 150') as model,
+          ISNULL(F.ModelFamilyName, 'Bike') as modelFamily,
+          'Shift 1' as shift,
+          CONVERT(VARCHAR(10), Q.StartDateTime, 120) as [date]
         FROM QA_AuditMonitoring Q
         LEFT JOIN Config_AuditList A ON Q.AuditListID = A.AuditListID
+        LEFT JOIN Config_Line L ON Q.LineID = L.LineID
+        LEFT JOIN Config_Model M ON A.ModelID = M.ModelID
+        LEFT JOIN Config_ModelFamily F ON A.ModelFamilyID = F.ModelFamilyID
+        WHERE (@StartDate IS NULL OR CAST(Q.StartDateTime AS DATE) >= @StartDate)
+          AND (@EndDate IS NULL OR CAST(Q.StartDateTime AS DATE) <= @EndDate)
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(Q.LineID AS VARCHAR) = @Line)
+          AND (@Model IS NULL OR M.ModelName = @Model)
+          AND (@ModelFamily IS NULL OR F.ModelFamilyName = @ModelFamily)
+        ORDER BY Q.StartDateTime DESC
       `);
 
-      if (result.recordset.length > 0) {
-        return res.json({
-          kpis: { total: 100, ok: 96, nc: 4, singleNc: 3, doubleNc: 1 },
-          compliance: [{ name: 'Compliant', value: 96 }, { name: 'Non-Compliant', value: 4 }],
-          categoryNc: [{ name: 'Torque', value: 2 }, { name: 'Fitment', value: 2 }],
-          trend: [{ date: 'Shift 1', nc: 2 }, { date: 'Shift 2', nc: 2 }],
-          table: result.recordset
-        });
-      }
+      const table = result.recordset || [];
+      const total = table.length;
+      const ok = table.filter(r => r.status === 'OK').length;
+      const nc = total - ok;
+      const singleNc = nc;
+      const doubleNc = 0;
+
+      return res.json({
+        kpis: { total, ok, nc, singleNc, doubleNc, totalCheckpoints: total },
+        compliance: [
+          { name: 'Compliant', value: ok },
+          { name: 'Non-Compliant', value: nc }
+        ].filter(d => d.value > 0),
+        categoryNc: nc > 0 ? [{ name: 'Torque & Assembly', value: nc }] : [],
+        trend: [{ date: 'Shift 1', nc }],
+        table
+      });
     }
   } catch (err) {
-    console.warn('PQCA DB fallback:', err.message);
+    console.error('PQCA DB error:', err.message);
   }
 
   res.json({
-    kpis: { total: 100, ok: 96, nc: 4, singleNc: 3, doubleNc: 1 },
-    compliance: [{ name: 'Compliant', value: 96 }, { name: 'Non-Compliant', value: 4 }],
-    categoryNc: [{ name: 'Torque', value: 2 }],
-    trend: [{ date: 'Shift 1', nc: 2 }],
-    table: [{ id: 1, checkpoint: 'Bolt Torque', category: 'Torque', value: '45 Nm', expected: '45 Nm', status: 'OK' }]
+    kpis: { total: 0, ok: 0, nc: 0, singleNc: 0, doubleNc: 0, totalCheckpoints: 0 },
+    compliance: [],
+    categoryNc: [],
+    trend: [],
+    table: []
   });
 });
 
 app.get('/api/quality/checklist', async (req, res) => {
-  const { type, period, shift, line, model, sku } = req.query;
+  const { type, period, shift, startDate, endDate, line, model, sku } = req.query;
+  const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Model: { type: sql.VarChar(50), value: (model && model !== 'All') ? model : null },
+        SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
+      });
+
+      const result = await request.query(`
         SELECT 
           Q.UID as id,
           ISNULL(A.AuditListName, 'Checklist Audit') as name,
           'Checkpoint #' + CAST(Q.UID as VARCHAR) as cpName,
-          CONVERT(VARCHAR(19), Q.Timestamp, 120) as date,
-          CASE WHEN Q.UID % 2 = 0 THEN 'Shift 1' ELSE 'Shift 2' END as shift,
-          CASE WHEN Q.UID % 2 = 0 THEN 'Line 1' ELSE 'Line2' END as line,
+          CONVERT(VARCHAR(19), Q.StartDateTime, 120) as [date],
+          'Shift 1' as shift,
+          ISNULL(L.LineName, 'Line ' + CAST(Q.LineID AS VARCHAR)) as line,
           'Assembly' as stage,
-          'Pulsar 150' as model,
-          'SKU1' as sku,
-          'Rahul Sharma' as inspector,
+          ISNULL(M.ModelName, 'Pulsar 150') as model,
+          ISNULL(S.SKUName, 'SKU1') as sku,
+          'Inspector' as inspector,
           'Torque & Tightening' as category,
           '45 Nm' as stdValue,
           '45.2 Nm' as actValue,
           CASE WHEN Q.Status = 1 THEN 'PASS' ELSE 'FAIL' END as result,
-          CASE WHEN Q.Status = 1 THEN 'OK' ELSE 'NOK' END as status,
+          CASE WHEN Q.Status = 1 THEN 'OK' ELSE 'NOK' END as [status],
           10 as total,
           CASE WHEN Q.Status = 1 THEN 10 ELSE 9 END as passed,
           CASE WHEN Q.Status = 1 THEN 0 ELSE 1 END as failed,
           'Regular inspection' as remarks
         FROM QA_AuditMonitoring Q
         LEFT JOIN Config_AuditList A ON Q.AuditListID = A.AuditListID
+        LEFT JOIN Config_Line L ON Q.LineID = L.LineID
+        LEFT JOIN Config_Model M ON A.ModelID = M.ModelID
+        LEFT JOIN Config_SKU S ON A.SKUID = S.SKUID
+        WHERE (@StartDate IS NULL OR CAST(Q.StartDateTime AS DATE) >= @StartDate)
+          AND (@EndDate IS NULL OR CAST(Q.StartDateTime AS DATE) <= @EndDate)
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(Q.LineID AS VARCHAR) = @Line)
+          AND (@Model IS NULL OR M.ModelName = @Model)
+          AND (@SKU IS NULL OR S.SKUName = @SKU)
+        ORDER BY Q.StartDateTime DESC
       `);
-      if (result.recordset.length > 0) {
-        let table = result.recordset;
-        if (line && line !== 'All') table = table.filter(r => matchFilter(r.line, line));
-        if (model && model !== 'All') table = table.filter(r => matchFilter(r.model, model));
-        if (shift && shift !== 'All') table = table.filter(r => matchFilter(r.shift, shift));
-        const total = table.length;
-        const ok = table.filter(r => r.status === 'OK').length;
-        const passed = table.filter(r => r.result === 'PASS').length;
-        return res.json({
-          kpis: {
-            totalChecklists: total,
-            okChecklists: ok,
-            nokChecklists: total - ok,
-            compliance: total > 0 ? Number(((ok / total) * 100).toFixed(1)) : 100,
-            totalCheckpoints: total * 10,
-            passed: passed * 10,
-            failed: (total - passed) * 10,
-            passRate: total > 0 ? Number(((passed / total) * 100).toFixed(1)) : 100,
-          },
-          table
-        });
-      }
+
+      const table = result.recordset || [];
+      const total = table.length;
+      const ok = table.filter(r => r.status === 'OK').length;
+      const passed = table.filter(r => r.result === 'PASS').length;
+
+      return res.json({
+        kpis: {
+          totalChecklists: total,
+          okChecklists: ok,
+          nokChecklists: total - ok,
+          compliance: total > 0 ? Number(((ok / total) * 100).toFixed(1)) : 100,
+          totalCheckpoints: total * 10,
+          passed: passed * 10,
+          failed: (total - passed) * 10,
+          passRate: total > 0 ? Number(((passed / total) * 100).toFixed(1)) : 100
+        },
+        table
+      });
     }
   } catch (err) {
-    console.warn('Checklist DB fallback:', err.message);
+    console.error('Checklist DB error:', err.message);
   }
 
-  // Fallback checklist/checkpoint dataset
-  const sampleTable = [
-    { id: 'CHK-001', name: 'Incoming Fastener Inspection', cpName: 'Bolt Thread Integrity', date: '2026-08-31 08:30', shift: 'Shift 1', line: 'Line 1', stage: 'Incoming', model: 'Pulsar 150', sku: 'SKU1', inspector: 'Rahul Sharma', category: 'Visual', stdValue: 'M8x1.25', actValue: 'M8x1.25', result: 'PASS', status: 'OK', total: 12, passed: 12, failed: 0, remarks: 'Verified OK' },
-    { id: 'CHK-002', name: 'Torque Audit Checklist', cpName: 'Cylinder Head Tightening', date: '2026-08-31 09:15', shift: 'Shift 1', line: 'Line 2', stage: 'Tightening', model: 'Dominar 400', sku: 'SKU2', inspector: 'Priya Singh', category: 'Torque', stdValue: '45 Nm', actValue: '44.8 Nm', result: 'PASS', status: 'OK', total: 15, passed: 15, failed: 0, remarks: 'Calibrated tool' },
-    { id: 'CHK-003', name: 'Surface & Coating Inspection', cpName: 'Casing Paint Finish', date: '2026-08-31 10:00', shift: 'Shift 1', line: 'Line 1', stage: 'Surface Inspection', model: 'Pulsar 220', sku: 'SKU1', inspector: 'Amit Kumar', category: 'Visual', stdValue: 'No Scratch', actValue: 'Minor Scratch', result: 'FAIL', status: 'NOK', total: 10, passed: 9, failed: 1, remarks: 'Polished rework' },
-    { id: 'CHK-004', name: 'Clearance & Gasket Check', cpName: 'Valve Clearance Gap', date: '2026-08-31 11:30', shift: 'Shift 1', line: 'Line 2', stage: 'Sub-Assembly', model: 'Avenger', sku: 'SKU2', inspector: 'Neha Verma', category: 'Measurement', stdValue: '0.08 mm', actValue: '0.08 mm', result: 'PASS', status: 'OK', total: 8, passed: 8, failed: 0, remarks: 'Within spec' },
-    { id: 'CHK-005', name: 'Electrical Harness Audit', cpName: 'Connector Lock Engagement', date: '2026-08-31 14:10', shift: 'Shift 2', line: 'Line 1', stage: 'Wiring', model: 'Pulsar 150', sku: 'SKU1', inspector: 'Vikram Patel', category: 'Functional', stdValue: 'Locked', actValue: 'Locked', result: 'PASS', status: 'OK', total: 14, passed: 14, failed: 0, remarks: 'Audited' },
-    { id: 'CHK-006', name: 'Oil & Fluid Level Inspection', cpName: 'Engine Oil Fill Level', date: '2026-08-31 15:45', shift: 'Shift 2', line: 'Line 2', stage: 'Fluid Fill', model: 'Dominar 400', sku: 'SKU2', inspector: 'Rahul Sharma', category: 'Measurement', stdValue: '1.4 L', actValue: '1.4 L', result: 'PASS', status: 'OK', total: 6, passed: 6, failed: 0, remarks: 'Dipstick check' },
-    { id: 'CHK-007', name: 'Cold Test Vibration Audit', cpName: 'Peak Vibration Amplitude', date: '2026-08-31 16:30', shift: 'Shift 2', line: 'Line 1', stage: 'Testing', model: 'Pulsar 220', sku: 'SKU1', inspector: 'Amit Kumar', category: 'Functional', stdValue: '< 2.5 mm/s', actValue: '2.8 mm/s', result: 'FAIL', status: 'NOK', total: 10, passed: 8, failed: 2, remarks: 'Re-balanced rotor' },
-    { id: 'CHK-008', name: 'Final Decal & Badge Audit', cpName: 'Tank Emblem Alignment', date: '2026-08-31 18:00', shift: 'Shift 2', line: 'Line 2', stage: 'Final Dressing', model: 'Avenger', sku: 'SKU2', inspector: 'Priya Singh', category: 'Visual', stdValue: 'Centered ±1mm', actValue: 'Centered', result: 'PASS', status: 'OK', total: 8, passed: 8, failed: 0, remarks: 'All tags verified' }
-  ];
-
-  let filtered = sampleTable;
-  if (line && line !== 'All') filtered = filtered.filter(r => matchFilter(r.line, line));
-  if (model && model !== 'All') filtered = filtered.filter(r => matchFilter(r.model, model));
-  if (sku && sku !== 'All') filtered = filtered.filter(r => matchFilter(r.sku, sku));
-  if (shift && shift !== 'All') filtered = filtered.filter(r => matchFilter(r.shift, shift));
-
-  const total = filtered.length;
-  const ok = filtered.filter(r => r.status === 'OK').length;
-  const passed = filtered.filter(r => r.result === 'PASS').length;
-
   res.json({
-    kpis: {
-      totalChecklists: total,
-      okChecklists: ok,
-      nokChecklists: total - ok,
-      compliance: total > 0 ? Number(((ok / total) * 100).toFixed(1)) : 100,
-      totalCheckpoints: total * 10,
-      passed: passed * 10,
-      failed: (total - passed) * 10,
-      passRate: total > 0 ? Number(((passed / total) * 100).toFixed(1)) : 100,
-    },
-    table: filtered
+    kpis: { totalChecklists: 0, okChecklists: 0, nokChecklists: 0, compliance: 0, totalCheckpoints: 0, passed: 0, failed: 0, passRate: 0 },
+    table: []
   });
 });
 
@@ -1416,59 +1641,82 @@ app.get('/api/quality/checklist', async (req, res) => {
 // 6. MAINTENANCE MODULE ENDPOINTS
 // ==========================================
 app.get('/api/maintenance/dashboard', async (req, res) => {
-  const { period, shift, line, station } = req.query;
-  const scale = getScale(period);
-  const matchFilter = (item, filter) => (item || '').toString().toLowerCase().includes((filter || '').toString().toLowerCase());
+  const { period, shift, startDate, endDate, line, station, machine } = req.query;
+  const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
     const pool = await poolPromise;
     if (pool) {
-      const [bdRes, lossRes, machinesRes] = await Promise.all([
-        pool.request().query(`
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Station: { type: sql.VarChar(50), value: (station && station !== 'All') ? station : null }
+      });
+
+      const [bdRes, lossRes, machinesRes] = await Promise.allSettled([
+        request.query(`
           SELECT 
-            COUNT(BreakDownID) as totalBreakdowns,
-            ISNULL(SUM(TotalBDTime), 0) as totalDowntime,
-            ISNULL(AVG(TotalBDTime), 0) as avgMTTR
-          FROM Maint_BreakDown_Log
+            COUNT(B.BreakDownID) as totalBreakdowns,
+            ISNULL(SUM(B.TotalBDTime), 0) as totalDowntime,
+            ISNULL(AVG(B.TotalBDTime), 0) as avgMTTR
+          FROM Maint_BreakDown_Log B
+          LEFT JOIN Config_Station S ON B.StationID = S.StationID
+          LEFT JOIN Config_Line L ON S.SubAsslyLineID = L.LineID
+          WHERE (@StartDate IS NULL OR B.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR B.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR B.ProdShift = @Shift OR B.ProdShift = 'Shift ' + @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(S.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(B.StationID AS VARCHAR) = @Station)
         `),
-        pool.request().query(`
+        request.query(`
           SELECT 
-            ISNULL(BDReason, 'Preventive Maintenance') as reason,
-            SUM(TotalBDTime) as duration,
-            COUNT(BreakDownID) as [count]
-          FROM Maint_BreakDown_Log
-          GROUP BY BDReason
+            ISNULL(B.BDReason, ISNULL(LC.LossName, 'Maintenance')) as reason,
+            ISNULL(SUM(B.TotalBDTime), 0) as duration,
+            COUNT(B.BreakDownID) as [count]
+          FROM Maint_BreakDown_Log B
+          LEFT JOIN Config_Station S ON B.StationID = S.StationID
+          LEFT JOIN Config_Line L ON S.SubAsslyLineID = L.LineID
+          LEFT JOIN Config_LossCategory LC ON B.LossID = LC.LossID
+          WHERE (@StartDate IS NULL OR B.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR B.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR B.ProdShift = @Shift OR B.ProdShift = 'Shift ' + @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(S.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(B.StationID AS VARCHAR) = @Station)
+          GROUP BY B.BDReason, LC.LossName
         `),
-        pool.request().query(`
+        request.query(`
           SELECT 
-            StationID,
-            StationName,
-            CASE 
-              WHEN StationID = 1 THEN 'Demo Nutrunner Spindle'
-              WHEN StationID = 2 THEN 'Line2 Pallet Indexer'
-              ELSE 'Station2 Cold Test Bench'
-            END as machine,
-            CASE WHEN StationID = 2 THEN 'Line 2' ELSE 'Line 1' END as line,
-            StationName as station
-          FROM Config_Station
+            S.StationID,
+            S.StationName,
+            S.StationName + ' Machine' as machine,
+            ISNULL(L.LineName, 'Line ' + CAST(S.SubAsslyLineID AS VARCHAR)) as line,
+            S.StationName as station
+          FROM Config_Station S
+          LEFT JOIN Config_Line L ON S.SubAsslyLineID = L.LineID
+          WHERE (@Line IS NULL OR L.LineName = @Line OR CAST(S.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(S.StationID AS VARCHAR) = @Station)
         `)
       ]);
 
-      const bdRow = bdRes.recordset[0] || {};
-      const totalBreakdowns = Math.max(1, Math.round((bdRow.totalBreakdowns || 8) * scale));
-      const totalDowntime = Math.round((bdRow.totalDowntime || 176) * scale);
-      const avgMTTR = Math.round(bdRow.avgMTTR || 22);
-      const avgMTBF = Math.round((480 - totalDowntime / 60) / totalBreakdowns * 10) / 10;
-      const availabilityPct = Math.min(99.2, Math.max(88.0, 100 - (totalDowntime / (480 * 60)) * 100)).toFixed(1);
+      const bdRow = (bdRes.status === 'fulfilled' && bdRes.value?.recordset?.[0]) || {};
+      const totalBreakdowns = bdRow.totalBreakdowns || 0;
+      const totalDowntime = bdRow.totalDowntime || 0;
+      const avgMTTR = Math.round(bdRow.avgMTTR || 0);
+      const avgMTBF = totalBreakdowns > 0 ? Number(((480 - totalDowntime / 60) / totalBreakdowns).toFixed(1)) : 480;
+      const availabilityPct = Math.max(0, Math.min(100, 100 - (totalDowntime / 480) * 100)).toFixed(1);
 
-      const machines = machinesRes.recordset.map((m, idx) => ({
+      const machinesList = (machinesRes.status === 'fulfilled' && machinesRes.value?.recordset) || [];
+      const machines = machinesList.map((m, idx) => ({
         id: m.StationID,
         machine: m.machine,
         line: m.line,
         station: m.station,
-        status: idx === 1 ? 'Breakdown' : idx === 2 ? 'Maintenance' : 'Running',
+        status: totalBreakdowns > 0 && idx === 0 ? 'Breakdown' : 'Running',
         lastBreakdown: '08:35',
-        downtimeToday: Math.round(25 * scale),
+        downtimeToday: totalBreakdowns > 0 && idx === 0 ? totalDowntime : 0,
         mttr: avgMTTR,
         mtbf: avgMTBF,
         availability: Number(availabilityPct)
@@ -1479,186 +1727,231 @@ app.get('/api/maintenance/dashboard', async (req, res) => {
       const maintenanceCount = machines.filter(m => m.status === 'Maintenance').length;
       const idleCount = machines.filter(m => m.status === 'Idle').length;
 
-      const breakdownReasons = lossRes.recordset.length > 0 ? lossRes.recordset.map(r => ({
-        reason: r.reason,
-        duration: Math.round(r.duration * scale) || 15,
-        count: Math.max(1, Math.round(r.count * scale))
-      })) : [
-        { reason: 'Preventive Maintenance', duration: Math.round(45 * scale) || 20, count: 3 },
-        { reason: 'Conveyor Jam', duration: Math.round(35 * scale) || 15, count: 2 },
-        { reason: 'Tool Wear', duration: Math.round(25 * scale) || 10, count: 2 },
-        { reason: 'Sensor Drift', duration: Math.round(18 * scale) || 8, count: 1 }
-      ];
+      const breakdownReasons = (lossRes.status === 'fulfilled' && lossRes.value?.recordset) || [];
 
       return res.json({
         kpis: {
-          runningCount: runningCount || 4,
-          breakdownCount: breakdownCount || 1,
-          maintenanceCount: maintenanceCount || 1,
-          idleCount: idleCount || 0,
-          totalDowntime: totalDowntime || 35,
-          totalBreakdowns: totalBreakdowns || 2,
-          avgMTTR: avgMTTR || 18,
-          avgMTBF: avgMTBF || 45.5,
+          runningCount,
+          breakdownCount,
+          maintenanceCount,
+          idleCount,
+          totalDowntime,
+          totalBreakdowns,
+          avgMTTR,
+          avgMTBF,
           machineAvailability: `${availabilityPct}%`
         },
         statusData: [
-          { name: 'Running', value: runningCount || 4 },
-          { name: 'Breakdown', value: breakdownCount || 1 },
-          { name: 'Maintenance', value: maintenanceCount || 1 },
-          { name: 'Idle', value: idleCount || 0 }
+          { name: 'Running', value: runningCount },
+          { name: 'Breakdown', value: breakdownCount },
+          { name: 'Maintenance', value: maintenanceCount },
+          { name: 'Idle', value: idleCount }
         ].filter(d => d.value > 0),
         breakdownReasons,
         table: machines
       });
     }
   } catch (err) {
-    console.warn('Maintenance Dashboard DB query error:', err.message);
+    console.error('Maintenance Dashboard DB error:', err.message);
   }
 
   res.json({
     kpis: {
-      runningCount: 4,
-      breakdownCount: 1,
-      maintenanceCount: 1,
+      runningCount: 0,
+      breakdownCount: 0,
+      maintenanceCount: 0,
       idleCount: 0,
-      totalDowntime: Math.round(45 * scale) || 20,
-      totalBreakdowns: Math.max(1, Math.round(3 * scale)),
-      avgMTTR: 18,
-      avgMTBF: 42.5,
-      machineAvailability: '96.8%'
+      totalDowntime: 0,
+      totalBreakdowns: 0,
+      avgMTTR: 0,
+      avgMTBF: 0,
+      machineAvailability: '0%'
     },
-    statusData: [
-      { name: 'Running', value: 4 },
-      { name: 'Breakdown', value: 1 },
-      { name: 'Maintenance', value: 1 }
-    ],
-    breakdownReasons: [
-      { reason: 'Preventive Maintenance', duration: Math.round(45 * scale) || 20, count: 3 },
-      { reason: 'Conveyor Jam', duration: Math.round(35 * scale) || 15, count: 2 },
-      { reason: 'Tool Wear', duration: Math.round(25 * scale) || 10, count: 2 }
-    ],
-    table: [
-      { id: 1, machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', status: 'Running', lastBreakdown: '08:15', downtimeToday: 18, mttr: 18, mtbf: 45, availability: 97.2 },
-      { id: 2, machine: 'Line2 Pallet Indexer', line: 'Line 2', station: 'Line2 (Head Tightening)', status: 'Breakdown', lastBreakdown: '09:10', downtimeToday: 25, mttr: 25, mtbf: 38, availability: 94.8 },
-      { id: 3, machine: 'Station2 Cold Test Bench', line: 'Line 1', station: 'Station2 (Cold Inspection)', status: 'Running', lastBreakdown: '10:00', downtimeToday: 0, mttr: 0, mtbf: 60, availability: 99.5 }
-    ]
+    statusData: [],
+    breakdownReasons: [],
+    table: []
   });
 });
 
 app.get('/api/maintenance/breakdown', async (req, res) => {
+  const { period, shift, startDate, endDate, line, station, machine } = req.query;
+  const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+
   try {
     const pool = await poolPromise;
     if (pool) {
-      const [kpiRes, tableRes] = await Promise.all([
-        pool.request().query(`
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Station: { type: sql.VarChar(50), value: (station && station !== 'All') ? station : null }
+      });
+
+      const [kpiRes, tableRes] = await Promise.allSettled([
+        request.query(`
           SELECT 
-            COUNT(BreakDownID) as totalBreakdowns,
-            ISNULL(AVG(TotalBDTime), 22) as avgMins,
-            ISNULL(MAX(TotalBDTime), 45) as maxMins,
-            ISNULL(SUM(TotalBDTime) / 60.0, 2.5) as totalDowntimeHours
-          FROM Maint_BreakDown_Log
+            COUNT(B.BreakDownID) as totalBreakdowns,
+            ISNULL(AVG(B.TotalBDTime), 0) as avgMins,
+            ISNULL(MAX(B.TotalBDTime), 0) as maxMins,
+            ISNULL(SUM(B.TotalBDTime) / 60.0, 0) as totalDowntimeHours
+          FROM Maint_BreakDown_Log B
+          LEFT JOIN Config_Station S ON B.StationID = S.StationID
+          LEFT JOIN Config_Line L ON S.SubAsslyLineID = L.LineID
+          WHERE (@StartDate IS NULL OR B.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR B.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR B.ProdShift = @Shift OR B.ProdShift = 'Shift ' + @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(S.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(B.StationID AS VARCHAR) = @Station)
         `),
-        pool.request().query(`
+        request.query(`
           SELECT 
             B.BreakDownID as id,
-            CASE 
-              WHEN B.StationID = 1 THEN 'Demo Nutrunner Spindle'
-              WHEN B.StationID = 2 THEN 'Line2 Pallet Indexer'
-              ELSE 'Station2 Cold Test Bench'
-            END as machine,
-            CASE WHEN B.StationID = 2 THEN 'Line 2' ELSE 'Line 1' END as line,
-            CASE 
-              WHEN B.StationID = 1 THEN 'Demo (Block Assly)'
-              WHEN B.StationID = 2 THEN 'Line2 (Head Tightening)'
-              ELSE 'Station2 (Cold Inspection)'
-            END as station,
-            CONVERT(VARCHAR(5), B.BDStartTime, 108) as start,
+            ISNULL(S.StationName, 'Demo') + ' Machine' as machine,
+            ISNULL(L.LineName, 'Line 1') as line,
+            ISNULL(S.StationName, 'Demo') as station,
+            CONVERT(VARCHAR(5), B.BDStartTime, 108) as [start],
             CONVERT(VARCHAR(5), B.BDEndTime, 108) as [end],
-            B.TotalBDTime as duration,
-            B.BDReason as reason,
-            ISNULL(U.UserName, 'Amit Kumar') as tech,
-            'Resolved' as status
+            ISNULL(B.TotalBDTime, 0) as duration,
+            ISNULL(B.BDReason, 'Breakdown') as reason,
+            ISNULL(U.UserName, 'Technician') as tech,
+            CASE WHEN B.BDStatus = 1 THEN 'Resolved' ELSE 'In-Progress' END as [status]
           FROM Maint_BreakDown_Log B
+          LEFT JOIN Config_Station S ON B.StationID = S.StationID
+          LEFT JOIN Config_Line L ON S.SubAsslyLineID = L.LineID
           LEFT JOIN Config_User U ON B.AssignedUserID = U.UserID
+          WHERE (@StartDate IS NULL OR B.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR B.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR B.ProdShift = @Shift OR B.ProdShift = 'Shift ' + @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(S.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(B.StationID AS VARCHAR) = @Station)
           ORDER BY B.BDStartTime DESC
         `)
       ]);
 
-      const row = kpiRes.recordset[0] || {};
+      const row = (kpiRes.status === 'fulfilled' && kpiRes.value?.recordset?.[0]) || {};
+      const table = (tableRes.status === 'fulfilled' && tableRes.value?.recordset) || [];
+
       return res.json({
         kpis: {
-          totalBreakdowns: row.totalBreakdowns || tableRes.recordset.length,
-          avgMins: Math.round(row.avgMins || 22),
-          maxMins: Math.round(row.maxMins || 45),
-          totalDowntimeHours: Number(row.totalDowntimeHours || 2.5).toFixed(1)
+          totalBreakdowns: row.totalBreakdowns || table.length,
+          avgMins: Math.round(row.avgMins || 0),
+          maxMins: Math.round(row.maxMins || 0),
+          totalDowntimeHours: Number(row.totalDowntimeHours || 0).toFixed(1)
         },
-        table: tableRes.recordset
+        table
       });
     }
   } catch (err) {
-    console.warn('Maintenance Breakdown DB fallback:', err.message);
+    console.error('Breakdown DB error:', err.message);
   }
 
   res.json({
-    kpis: { totalBreakdowns: 8, avgMins: 22, maxMins: 45, totalDowntimeHours: '2.9' },
-    table: [
-      { id: 1, machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', start: '08:15', end: '08:33', duration: 18, reason: 'Nutrunner Spindle #2 Stall', tech: 'Amit Kumar', status: 'Resolved' },
-      { id: 2, machine: 'Line2 Pallet Indexer', line: 'Line 2', station: 'Line2 (Head Tightening)', start: '09:10', end: '09:35', duration: 25, reason: 'Conveyor Pallet Stop Cylinder Jam', tech: 'Rahul Sharma', status: 'Resolved' }
-    ]
+    kpis: { totalBreakdowns: 0, avgMins: 0, maxMins: 0, totalDowntimeHours: '0.0' },
+    table: []
   });
 });
 
 app.get('/api/maintenance/downtime', async (req, res) => {
+  const { period, shift, startDate, endDate, line, station } = req.query;
+  const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
-        SELECT 
-          ISNULL(SUM(TotalDT) / 60.0, 0) as totalDowntimeHrs,
-          ISNULL(AVG(TotalDT), 0) as avgDowntimeMins,
-          COUNT(DowntimeID) as totalBreakdowns,
-          'Conveyor 1' as mostAffected
-        FROM Perf_Downtime
-      `);
-      if (result.recordset.length > 0) {
-        const r = result.recordset[0];
-        return res.json({
-          kpis: {
-            totalDowntimeHrs: Number(r.totalDowntimeHrs).toFixed(1),
-            avgDowntimeMins: Math.round(r.avgDowntimeMins),
-            totalBreakdowns: r.totalBreakdowns,
-            mostAffected: r.mostAffected
-          }
-        });
-      }
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Station: { type: sql.VarChar(50), value: (station && station !== 'All') ? station : null }
+      });
+
+      const [kpiRes, tableRes] = await Promise.allSettled([
+        request.query(`
+          SELECT 
+            ISNULL(SUM(D.TotalDT) / 60.0, 0) as totalDowntimeHrs,
+            ISNULL(AVG(D.TotalDT), 0) as avgDowntimeMins,
+            COUNT(D.DowntimeID) as totalBreakdowns
+          FROM Perf_Downtime D
+          LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
+          LEFT JOIN Config_Station S ON D.StationID = S.StationID
+          WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
+        `),
+        request.query(`
+          SELECT 
+            CONVERT(VARCHAR(10), D.ProdDate, 120) as [date],
+            'Shift ' + ISNULL(D.ProdShift, '1') as shift,
+            ISNULL(L.LineName, 'Line ' + CAST(D.SubAsslyLineID AS VARCHAR)) as line,
+            ISNULL(S.StationName, 'Demo') as station,
+            ISNULL(S.StationName, 'Demo') + ' Machine' as machine,
+            ISNULL(D.TotalDT, 0) as downtime,
+            1 as [count]
+          FROM Perf_Downtime D
+          LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
+          LEFT JOIN Config_Station S ON D.StationID = S.StationID
+          WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
+          ORDER BY D.StartTime DESC
+        `)
+      ]);
+
+      const r = (kpiRes.status === 'fulfilled' && kpiRes.value?.recordset?.[0]) || {};
+      const table = (tableRes.status === 'fulfilled' && tableRes.value?.recordset) || [];
+      const mostAffected = table.length > 0 ? table.reduce((prev, curr) => (Number(curr.downtime) > Number(prev.downtime) ? curr : prev)).machine : 'None';
+
+      return res.json({
+        kpis: {
+          totalDowntimeHrs: Number(r.totalDowntimeHrs || 0).toFixed(1),
+          avgDowntimeMins: Math.round(r.avgDowntimeMins || 0),
+          totalBreakdowns: r.totalBreakdowns || table.length,
+          mostAffected
+        },
+        table,
+        trend: []
+      });
     }
   } catch (err) {
-    console.warn('Maintenance Downtime DB fallback:', err.message);
+    console.error('Maintenance Downtime DB error:', err.message);
   }
 
   res.json({
-    kpis: { totalDowntimeHrs: '48.5', avgDowntimeMins: 32, totalBreakdowns: 91, mostAffected: 'Conveyor 1' }
+    kpis: { totalDowntimeHrs: '0.0', avgDowntimeMins: 0, totalBreakdowns: 0, mostAffected: 'None' },
+    table: [],
+    trend: []
   });
 });
 
 app.get('/api/maintenance/mttr-mtbf', async (req, res) => {
+  const { period, shift, startDate, endDate, line, station, machine } = req.query;
+  const dbShift = normalizeShift(shift);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Station: { type: sql.VarChar(50), value: (station && station !== 'All') ? station : null }
+      });
+
+      const result = await request.query(`
         SELECT 
-          CASE 
-            WHEN B.StationID = 1 THEN 'Demo Nutrunner Spindle'
-            WHEN B.StationID = 2 THEN 'Line2 Pallet Indexer'
-            ELSE 'Station2 Cold Test Bench'
-          END as machine,
-          CASE WHEN B.StationID = 2 THEN 'Line 2' ELSE 'Line 1' END as line,
-          CASE 
-            WHEN B.StationID = 1 THEN 'Demo'
-            WHEN B.StationID = 2 THEN 'Line2'
-            ELSE 'Station2'
-          END as station,
+          ISNULL(S.StationName, 'Station ' + CAST(B.StationID AS VARCHAR)) + ' Machine' as machine,
+          ISNULL(L.LineName, 'Line ' + CAST(S.SubAsslyLineID AS VARCHAR)) as line,
+          ISNULL(S.StationName, 'Demo') as station,
           ISNULL(AVG(B.TotalBDTime), 0) as mttr,
           CASE 
             WHEN COUNT(B.BreakDownID) > 0 THEN ROUND(120.0 / COUNT(B.BreakDownID), 1)
@@ -1668,10 +1961,17 @@ app.get('/api/maintenance/mttr-mtbf', async (req, res) => {
             WHEN SUM(B.TotalBDTime) > 0 THEN ROUND(100.0 - (SUM(B.TotalBDTime) / 480.0 * 100.0), 1)
             ELSE 100.0
           END as availability,
-          COUNT(B.BreakDownID) as count,
+          COUNT(B.BreakDownID) as [count],
           ISNULL(SUM(B.TotalBDTime), 0) as totalTime
         FROM Maint_BreakDown_Log B
-        GROUP BY B.StationID
+        LEFT JOIN Config_Station S ON B.StationID = S.StationID
+        LEFT JOIN Config_Line L ON S.SubAsslyLineID = L.LineID
+        WHERE (@StartDate IS NULL OR B.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR B.ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR B.ProdShift = @Shift OR B.ProdShift = 'Shift ' + @Shift)
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(S.SubAsslyLineID AS VARCHAR) = @Line)
+          AND (@Station IS NULL OR S.StationName = @Station OR CAST(B.StationID AS VARCHAR) = @Station)
+        GROUP BY B.StationID, S.StationName, S.SubAsslyLineID, L.LineName
       `);
 
       const table = result.recordset || [];
@@ -1686,7 +1986,7 @@ app.get('/api/maintenance/mttr-mtbf', async (req, res) => {
       });
     }
   } catch (err) {
-    console.warn('MTTR/MTBF DB query failed:', err.message);
+    console.error('MTTR/MTBF DB error:', err.message);
   }
 
   res.json({
@@ -1696,82 +1996,130 @@ app.get('/api/maintenance/mttr-mtbf', async (req, res) => {
 });
 
 app.get('/api/maintenance/pm-dashboard', async (req, res) => {
-  const { period, shift, line, machine } = req.query;
-  const scale = getScale(period);
+  const { line, machine } = req.query;
 
-  const defaultTasks = [
-    { id: 'PM-101', machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', task: 'Spindle Lubrication & Calibration', frequency: 'Weekly', scheduledDate: '2026-08-31', completedDate: '2026-08-31', status: 'Completed', technician: 'Amit Kumar' },
-    { id: 'PM-102', machine: 'Line2 Pallet Indexer', line: 'Line 2', station: 'Line2 (Head Tightening)', task: 'Pneumatic Cylinder Seal Check', frequency: 'Monthly', scheduledDate: '2026-08-31', completedDate: '-', status: 'Pending', technician: 'Rahul Sharma' },
-    { id: 'PM-103', machine: 'Station2 Cold Test Bench', line: 'Line 1', station: 'Station2 (Cold Inspection)', task: 'Sensor Alignment & Wiring Inspection', frequency: 'Daily', scheduledDate: '2026-08-31', completedDate: '2026-08-31', status: 'Completed', technician: 'Priya Singh' },
-    { id: 'PM-104', machine: 'Conveyor Drive Unit 1', line: 'Line 1', station: 'Demo (Block Assly)', task: 'Motor Belt Tension Adjustment', frequency: 'Bi-Weekly', scheduledDate: '2026-08-30', completedDate: '-', status: 'Overdue', technician: 'Amit Kumar' },
-    { id: 'PM-105', machine: 'Robotic Tightening Cell', line: 'Line 2', station: 'Line2 (Head Tightening)', task: 'End-Effector Torque Verification', frequency: 'Weekly', scheduledDate: '2026-08-31', completedDate: '2026-08-31', status: 'Completed', technician: 'Vikram Patel' },
-    { id: 'PM-106', machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', task: 'Electrical Contact Cleaning', frequency: 'Monthly', scheduledDate: '2026-08-31', completedDate: '2026-08-31', status: 'Completed', technician: 'Amit Kumar' }
-  ];
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const request = createSqlRequest(pool, {
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null }
+      });
 
-  let filtered = defaultTasks;
-  if (line && line !== 'All') filtered = filtered.filter(t => t.line === line);
-  if (machine && machine !== 'All') filtered = filtered.filter(t => t.machine === machine);
+      const result = await request.query(`
+        SELECT 
+          'PM-' + CAST(S.UID AS VARCHAR) as id,
+          ISNULL(C.CheckListName, 'PM Schedule') as task,
+          ISNULL(L.LineName, 'Line ' + CAST(S.LineId AS VARCHAR)) as line,
+          'Demo Station' as station,
+          'Demo Machine' as machine,
+          'Weekly' as frequency,
+          CONVERT(VARCHAR(10), S.StartDate, 120) as scheduledDate,
+          '-' as completedDate,
+          'Pending' as [status],
+          'Technician' as technician
+        FROM Config_PMSchedule S
+        LEFT JOIN Config_PMCheckList C ON S.CheckListId = C.CheckListId
+        LEFT JOIN Config_Line L ON S.LineId = L.LineID
+        WHERE (@Line IS NULL OR L.LineName = @Line OR CAST(S.LineId AS VARCHAR) = @Line)
+      `);
 
-  const total = filtered.length;
-  const completed = filtered.filter(t => t.status === 'Completed').length;
-  const pending = filtered.filter(t => t.status === 'Pending').length;
-  const overdue = filtered.filter(t => t.status === 'Overdue').length;
-  const compliance = total > 0 ? ((completed / total) * 100).toFixed(1) : '100.0';
+      const table = result.recordset || [];
+      const total = table.length;
+      const completed = table.filter(t => t.status === 'Completed').length;
+      const pending = table.filter(t => t.status === 'Pending').length;
+      const overdue = table.filter(t => t.status === 'Overdue').length;
+      const compliance = total > 0 ? ((completed / total) * 100).toFixed(1) : '0.0';
+
+      return res.json({
+        kpis: {
+          totalTasks: total,
+          completedTasks: completed,
+          pendingTasks: pending,
+          overdueTasks: overdue,
+          compliance: `${compliance}%`
+        },
+        statusData: [
+          { name: 'Completed', value: completed },
+          { name: 'Pending', value: pending },
+          { name: 'Overdue', value: overdue }
+        ].filter(d => d.value > 0),
+        table
+      });
+    }
+  } catch (err) {
+    console.error('PM Dashboard DB error:', err.message);
+  }
 
   res.json({
-    kpis: {
-      totalTasks: total,
-      completedTasks: completed,
-      pendingTasks: pending,
-      overdueTasks: overdue,
-      compliance: `${compliance}%`
-    },
-    statusData: [
-      { name: 'Completed', value: completed },
-      { name: 'Pending', value: pending },
-      { name: 'Overdue', value: overdue }
-    ].filter(d => d.value > 0),
-    table: filtered
+    kpis: { totalTasks: 0, completedTasks: 0, pendingTasks: 0, overdueTasks: 0, compliance: '0.0%' },
+    statusData: [],
+    table: []
   });
 });
 
 app.get('/api/maintenance/pm-report', async (req, res) => {
-  const { period, shift, line, machine } = req.query;
-  const defaultLogs = [
-    { id: 'PMR-201', pmId: 'PM-101', machine: 'Demo Nutrunner Spindle', line: 'Line 1', task: 'Spindle Lubrication & Calibration', date: '2026-08-31', shift: 'Shift 1', status: 'Completed', duration: 35, technician: 'Amit Kumar', result: 'Pass', notes: 'Lubricant replenished, calibration checked OK' },
-    { id: 'PMR-202', pmId: 'PM-102', machine: 'Line2 Pallet Indexer', line: 'Line 2', task: 'Pneumatic Cylinder Seal Check', date: '2026-08-31', shift: 'Shift 1', status: 'Pending', duration: 0, technician: 'Rahul Sharma', result: 'Pending', notes: 'Scheduled for end of shift' },
-    { id: 'PMR-203', pmId: 'PM-103', machine: 'Station2 Cold Test Bench', line: 'Line 1', task: 'Sensor Alignment & Wiring Inspection', date: '2026-08-31', shift: 'Shift 1', status: 'Completed', duration: 20, technician: 'Priya Singh', result: 'Pass', notes: 'Sensors cleaned and realigned' },
-    { id: 'PMR-204', pmId: 'PM-104', machine: 'Conveyor Drive Unit 1', line: 'Line 1', task: 'Motor Belt Tension Adjustment', date: '2026-08-30', shift: 'Shift 2', status: 'Overdue', duration: 0, technician: 'Amit Kumar', result: 'Overdue', notes: 'Requires spare belt' },
-    { id: 'PMR-205', pmId: 'PM-105', machine: 'Robotic Tightening Cell', line: 'Line 2', task: 'End-Effector Torque Verification', date: '2026-08-31', shift: 'Shift 2', status: 'Completed', duration: 45, technician: 'Vikram Patel', result: 'Pass', notes: 'Torque values within 0.5% tolerance' },
-    { id: 'PMR-206', pmId: 'PM-106', machine: 'Demo Nutrunner Spindle', line: 'Line 1', task: 'Electrical Contact Cleaning', date: '2026-08-31', shift: 'Shift 1', status: 'Completed', duration: 25, technician: 'Amit Kumar', result: 'Pass', notes: 'Contacts cleaned with solvent spray' }
-  ];
+  const { line, machine } = req.query;
 
-  let filtered = defaultLogs;
-  if (line && line !== 'All') filtered = filtered.filter(t => t.line === line);
-  if (machine && machine !== 'All') filtered = filtered.filter(t => t.machine === machine);
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const request = createSqlRequest(pool, {
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null }
+      });
 
-  const total = filtered.length;
-  const completed = filtered.filter(t => t.status === 'Completed').length;
-  const compliance = total > 0 ? ((completed / total) * 100).toFixed(1) : '100.0';
-  const totalMins = filtered.reduce((acc, d) => acc + (d.duration || 0), 0);
-  const avgMins = completed > 0 ? Math.round(totalMins / completed) : 0;
+      const result = await request.query(`
+        SELECT 
+          'PMR-' + CAST(S.UID AS VARCHAR) as id,
+          'PM-' + CAST(S.UID AS VARCHAR) as pmId,
+          'Demo Machine' as machine,
+          ISNULL(L.LineName, 'Line ' + CAST(S.LineId AS VARCHAR)) as line,
+          ISNULL(C.CheckListName, 'PM Maintenance') as task,
+          CONVERT(VARCHAR(10), S.StartDate, 120) as [date],
+          'Shift 1' as shift,
+          'Pending' as [status],
+          ISNULL(S.EstimatedDuration, 0) as duration,
+          'Technician' as technician,
+          'Pending' as result,
+          'Scheduled maintenance' as notes
+        FROM Config_PMSchedule S
+        LEFT JOIN Config_PMCheckList C ON S.CheckListId = C.CheckListId
+        LEFT JOIN Config_Line L ON S.LineId = L.LineID
+        WHERE (@Line IS NULL OR L.LineName = @Line OR CAST(S.LineId AS VARCHAR) = @Line)
+      `);
+
+      const table = result.recordset || [];
+      const total = table.length;
+      const completed = table.filter(t => t.status === 'Completed').length;
+      const compliance = total > 0 ? ((completed / total) * 100).toFixed(1) : '0.0';
+      const totalMins = table.reduce((acc, d) => acc + (d.duration || 0), 0);
+      const avgMins = completed > 0 ? Math.round(totalMins / completed) : 0;
+
+      return res.json({
+        kpis: {
+          totalPlanned: total,
+          totalCompleted: completed,
+          compliance: `${compliance}%`,
+          avgDurationMins: avgMins
+        },
+        table
+      });
+    }
+  } catch (err) {
+    console.error('PM Report DB error:', err.message);
+  }
 
   res.json({
-    kpis: {
-      totalPlanned: total,
-      totalCompleted: completed,
-      compliance: `${compliance}%`,
-      avgDurationMins: avgMins
-    },
-    table: filtered
+    kpis: { totalPlanned: 0, totalCompleted: 0, compliance: '0.0%', avgDurationMins: 0 },
+    table: []
   });
 });
 
 // ==========================================
 // 7. MATERIAL & KITTING MODULE ENDPOINTS
 // ==========================================
-app.get('/api/material/stock', async (req, res) => {
-  const { matType, location } = req.query;
+app.get('/api/material/dashboard', async (req, res) => {
+  const { line, model, sku } = req.query;
+
   try {
     const pool = await poolPromise;
     if (pool) {
@@ -1779,105 +2127,177 @@ app.get('/api/material/stock', async (req, res) => {
         SELECT 
           PartID as id,
           PartName as material,
-          CASE 
-            WHEN PartID IN ('BAJ-ENG-101', 'BAJ-ENG-102', 'BAJ-ENG-108') THEN 'Raw'
-            WHEN PartID IN ('BAJ-ENG-103', 'BAJ-ENG-104', 'BAJ-ENG-105') THEN 'WIP'
-            ELSE 'Finished'
-          END as matType,
-          CASE 
-            WHEN PartID LIKE '%101' OR PartID LIKE '%104' THEN 'Main Store'
-            WHEN PartID LIKE '%102' OR PartID LIKE '%105' THEN 'Line 1'
-            ELSE 'Line 2'
-          END as location,
-          CASE 
-            WHEN PartID = 'BAJ-ENG-102' THEN 18
-            WHEN PartID = 'BAJ-ENG-105' THEN 12
-            WHEN PartID = 'BAJ-ENG-108' THEN 450
-            ELSE 120
-          END as available,
-          CASE WHEN PartID = 'BAJ-ENG-108' THEN 100 ELSE 25 END as minLevel,
-          CASE WHEN PartID = 'BAJ-ENG-108' THEN 300 ELSE 150 END as maxLevel,
-          CASE 
-            WHEN PartID IN ('BAJ-ENG-102', 'BAJ-ENG-105') THEN 'Critical'
-            WHEN PartID = 'BAJ-ENG-108' THEN 'Excess'
-            ELSE 'Safe'
-          END as status
+          'Line 1' as line,
+          'Pulsar 150' as model,
+          'UG6' as sku,
+          'Main Store' as [location],
+          'Safe' as [status],
+          100 as currentStock,
+          25 as minLevel,
+          150 as maxLevel,
+          'Engine Parts' as category
         FROM SAP_PartMaster
       `);
 
-      if (result.recordset.length > 0) {
-        let table = result.recordset;
-        if (matType && matType !== 'All') table = table.filter(d => d.matType === matType);
-        if (location && location !== 'All') table = table.filter(d => d.location === location);
-        return res.json({ table });
-      }
+      const table = result.recordset || [];
+      const criticalCount = table.filter(d => d.status === 'Critical').length;
+      const safeCount = table.filter(d => d.status === 'Safe').length;
+      const totalStock = table.reduce((acc, d) => acc + (d.currentStock || 0), 0);
+
+      return res.json({
+        kpis: {
+          totalInventory: totalStock,
+          inventoryValue: totalStock > 0 ? '₹4.8 Cr' : '₹0',
+          criticalShortages: criticalCount,
+          stockoutRisk: criticalCount,
+          kitFulfillment: table.length > 0 ? `${Math.round((safeCount / table.length) * 100)}%` : '0%'
+        },
+        stockLevels: table.map(d => ({ material: d.material, current: d.currentStock, min: d.minLevel })),
+        shortages: [],
+        table
+      });
     }
   } catch (err) {
-    console.warn('Material Stock DB fallback:', err.message);
+    console.error('Material Dashboard DB error:', err.message);
   }
 
-  let table = [
-    { id: 'BAJ-ENG-101', material: 'Cylinder Block 150cc', matType: 'Raw', location: 'Main Store', available: 120, minLevel: 25, maxLevel: 150, status: 'Safe' },
-    { id: 'BAJ-ENG-102', material: 'Piston Assembly 57mm', matType: 'Raw', location: 'Line 1', available: 18, minLevel: 25, maxLevel: 150, status: 'Critical' },
-    { id: 'BAJ-ENG-103', material: 'Cylinder Head DOHC', matType: 'WIP', location: 'Line 2', available: 85, minLevel: 25, maxLevel: 150, status: 'Safe' },
-    { id: 'BAJ-ENG-104', material: 'Crankshaft & Connecting Rod', matType: 'WIP', location: 'Main Store', available: 64, minLevel: 25, maxLevel: 150, status: 'Safe' },
-    { id: 'BAJ-ENG-105', material: 'Camshaft Timing Gear Set', matType: 'WIP', location: 'Line 1', available: 12, minLevel: 25, maxLevel: 150, status: 'Critical' },
-    { id: 'BAJ-ENG-108', material: 'Spark Plug Twin-Spark', matType: 'Finished', location: 'Main Store', available: 450, minLevel: 100, maxLevel: 300, status: 'Excess' }
-  ];
-  if (matType && matType !== 'All') table = table.filter(d => d.matType === matType);
-  if (location && location !== 'All') table = table.filter(d => d.location === location);
-
-  res.json({ table });
+  res.json({
+    kpis: { totalInventory: 0, inventoryValue: '₹0', criticalShortages: 0, stockoutRisk: 0, kitFulfillment: '0%' },
+    stockLevels: [],
+    shortages: [],
+    table: []
+  });
 });
 
-app.get('/api/material/kitting', async (req, res) => {
-  const { line, model, sku } = req.query;
+app.get('/api/material/stock', async (req, res) => {
+  const { matType, location } = req.query;
+
   try {
     const pool = await poolPromise;
     if (pool) {
-      const [kpiRes, tableRes] = await Promise.all([
-        pool.request().query(`
+      const result = await pool.request().query(`
+        SELECT 
+          PartID as id,
+          PartName as material,
+          'Raw' as matType,
+          'Main Store' as [location],
+          100 as available,
+          25 as minLevel,
+          150 as maxLevel,
+          'Safe' as [status]
+        FROM SAP_PartMaster
+      `);
+
+      let table = result.recordset || [];
+      if (matType && matType !== 'All') table = table.filter(d => d.matType.toLowerCase() === matType.toLowerCase());
+      if (location && location !== 'All') table = table.filter(d => d.location.toLowerCase() === location.toLowerCase());
+
+      return res.json({ table });
+    }
+  } catch (err) {
+    console.error('Material Stock DB error:', err.message);
+  }
+
+  res.json({ table: [] });
+});
+
+app.get('/api/material/request', async (req, res) => {
+  const { line, station } = req.query;
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const result = await pool.request().query(`
+        SELECT 
+          PartID as reqId,
+          PartName as material,
+          'Line 1' as line,
+          'Demo' as station,
+          50 as requestedQty,
+          50 as issuedQty,
+          'Fulfilled' as [status],
+          CONVERT(VARCHAR(5), GETDATE(), 108) as reqTime,
+          CONVERT(VARCHAR(5), DATEADD(minute, 10, GETDATE()), 108) as fullTime
+        FROM SAP_PartMaster
+      `);
+
+      const table = result.recordset || [];
+      const fulfilled = table.filter(t => t.status === 'Fulfilled' || t.status === 'Approved').length;
+      const pending = table.filter(t => t.status === 'Pending').length;
+
+      return res.json({
+        kpis: {
+          totalRequests: table.length,
+          fulfilled,
+          pending,
+          fulfillmentRate: table.length > 0 ? `${Math.round((fulfilled / table.length) * 100)}%` : '0.0%'
+        },
+        table
+      });
+    }
+  } catch (err) {
+    console.error('Material Request DB error:', err.message);
+  }
+
+  res.json({
+    kpis: { totalRequests: 0, fulfilled: 0, pending: 0, fulfillmentRate: '0.0%' },
+    table: []
+  });
+});
+
+app.get('/api/material/kitting', async (req, res) => {
+  const { period, shift, startDate, endDate, line, model, sku } = req.query;
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const request = createSqlRequest(pool, {
+        StartDate: { type: sql.Date, value: effectiveStartDate },
+        EndDate: { type: sql.Date, value: effectiveEndDate },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Model: { type: sql.VarChar(50), value: (model && model !== 'All') ? model : null },
+        SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
+      });
+
+      const [kpiRes, tableRes] = await Promise.allSettled([
+        request.query(`
           SELECT 
             ISNULL(SUM(PlanQty), 0) as planned,
             ISNULL(SUM(KitAssembly_Qty), 0) as prepared,
             ISNULL(SUM(PlanQty) - SUM(KitAssembly_Qty), 0) as pending
           FROM Prod_EnginePlanExecution
-          WHERE ProdDate = CAST(GETDATE() AS DATE)
+          WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR ProdDate <= @EndDate)
         `),
-        pool.request().query(`
+        request.query(`
           SELECT TOP 60
-            CONCAT('KIT-', W.EngineNo) as kitId,
-            CASE 
-              WHEN W.LineID = 2 OR RIGHT(W.EngineNo, 1) IN ('1','3','5','7','9') THEN 'Line 2'
-              ELSE 'Line 1'
-            END as line,
-            CASE 
-              WHEN RIGHT(W.EngineNo, 1) IN ('0','1','2','3') THEN 'Pulsar 150'
-              WHEN RIGHT(W.EngineNo, 1) IN ('4','5','6') THEN 'Dominar 400'
-              ELSE 'Avenger 220'
-            END as model,
-            CASE 
-              WHEN RIGHT(W.EngineNo, 1) IN ('0','1','2','3') THEN 'UG5'
-              WHEN RIGHT(W.EngineNo, 1) IN ('4','5','6') THEN 'D400'
-              ELSE 'BS6'
-            END as sku,
-            CASE WHEN D.EngineNo IS NOT NULL AND RIGHT(W.EngineNo, 1) = '7' THEN 'Rejected' ELSE 'Prepared' END as status,
+            'KIT-' + W.EngineNo as kitId,
+            ISNULL(L.LineName, 'Line ' + CAST(W.LineID AS VARCHAR)) as line,
+            ISNULL(M.ModelName, 'Pulsar 150') as model,
+            ISNULL(S.SKUName, 'UG5') as sku,
+            CASE WHEN D.EngineNo IS NOT NULL THEN 'Rejected' ELSE 'Prepared' END as [status],
             CONVERT(VARCHAR(5), W.StartTime, 108) as preparedAt,
-            CASE WHEN D.EngineNo IS NOT NULL AND RIGHT(W.EngineNo, 1) = '7' THEN '92%' ELSE '100%' END as accuracy,
+            CASE WHEN D.EngineNo IS NOT NULL THEN '92%' ELSE '100%' END as accuracy,
             ISNULL(D.Remark, '-') as defect,
-            'Rahul Sharma' as operator,
-            CONVERT(VARCHAR(5), W.StartTime, 108) as time
+            'Operator' as operator,
+            CONVERT(VARCHAR(5), W.StartTime, 108) as [time]
           FROM Prod_Engine_WIP W
           LEFT JOIN Prod_Defect_Log D ON W.EngineNo = D.EngineNo
+          LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
+          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+          LEFT JOIN Config_Line L ON W.LineID = L.LineID
+          WHERE (@StartDate IS NULL OR CAST(W.StartTime AS DATE) >= @StartDate)
+            AND (@EndDate IS NULL OR CAST(W.StartTime AS DATE) <= @EndDate)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(W.LineID AS VARCHAR) = @Line)
+            AND (@Model IS NULL OR M.ModelName = @Model)
+            AND (@SKU IS NULL OR S.SKUName = @SKU)
           ORDER BY W.StartTime DESC
         `)
       ]);
 
-      const kpiRow = kpiRes.recordset[0] || { planned: 0, prepared: 0, pending: 0 };
-      let table = tableRes.recordset || [];
-      if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
-      if (model && model !== 'All') table = table.filter(t => matchFilter(t.model, model));
-      if (sku && sku !== 'All') table = table.filter(t => matchFilter(t.sku, sku));
+      const kpiRow = (kpiRes.status === 'fulfilled' && kpiRes.value?.recordset?.[0]) || { planned: 0, prepared: 0, pending: 0 };
+      const table = (tableRes.status === 'fulfilled' && tableRes.value?.recordset) || [];
 
       const preparedCount = table.filter(t => t.status === 'Prepared').length;
       const rejectedCount = table.filter(t => t.status === 'Rejected').length;
@@ -1886,7 +2306,7 @@ app.get('/api/material/kitting', async (req, res) => {
       const barData = [
         { model: 'Pulsar 150', prepared: table.filter(t => t.model === 'Pulsar 150' && t.status === 'Prepared').length },
         { model: 'Dominar 400', prepared: table.filter(t => t.model === 'Dominar 400' && t.status === 'Prepared').length },
-        { model: 'Avenger 220', prepared: table.filter(t => t.model === 'Avenger 220' && t.status === 'Prepared').length },
+        { model: 'Avenger 220', prepared: table.filter(t => t.model === 'Avenger 220' && t.status === 'Prepared').length }
       ].filter(d => d.prepared > 0);
 
       return res.json({
@@ -1903,69 +2323,51 @@ app.get('/api/material/kitting', async (req, res) => {
       });
     }
   } catch (err) {
-    console.warn('Kitting DB query failed:', err.message);
+    console.error('Kitting DB error:', err.message);
   }
 
-  let table = [
-    { kitId: 'KIT-P150-01', line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', status: 'Prepared', preparedAt: '08:15', accuracy: '100%', defect: '-', operator: 'Rahul Sharma', time: '08:15' },
-    { kitId: 'KIT-P150-02', line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', status: 'Prepared', preparedAt: '08:45', accuracy: '100%', defect: '-', operator: 'Priya Singh', time: '08:45' },
-    { kitId: 'KIT-D400-01', line: 'Line 2', model: 'Dominar 400', sku: 'D400', status: 'Prepared', preparedAt: '09:10', accuracy: '100%', defect: '-', operator: 'Amit Kumar', time: '09:10' },
-    { kitId: 'KIT-D400-02', line: 'Line 2', model: 'Dominar 400', sku: 'D400', status: 'Rejected', preparedAt: '09:35', accuracy: '92%', defect: 'Missing Gasket', operator: 'Rahul Sharma', time: '09:35' },
-    { kitId: 'KIT-A220-01', line: 'Line 1', model: 'Avenger 220', sku: 'BS6', status: 'Prepared', preparedAt: '10:00', accuracy: '100%', defect: '-', operator: 'Priya Singh', time: '10:00' },
-    { kitId: 'KIT-A220-02', line: 'Line 1', model: 'Avenger 220', sku: 'BS6', status: 'Rejected', preparedAt: '10:20', accuracy: '90%', defect: 'Wrong Bolt Grade', operator: 'Amit Kumar', time: '10:20' }
-  ];
-
-  if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
-  if (model && model !== 'All') table = table.filter(t => matchFilter(t.model, model));
-  if (sku && sku !== 'All') table = table.filter(t => matchFilter(t.sku, sku));
-
-  const preparedCount = table.filter(t => t.status === 'Prepared').length;
-  const rejectedCount = table.filter(t => t.status === 'Rejected').length;
-
   res.json({
-    kpis: { planned: table.length, prepared: preparedCount, pending: 0, accuracy: table.length > 0 ? `${((preparedCount / table.length) * 100).toFixed(1)}%` : '0.0%', rejected: rejectedCount, status: table.length > 0 ? 'On Track' : 'No Data' },
-    barData: [
-      { model: 'Pulsar 150', prepared: table.filter(t => t.model === 'Pulsar 150' && t.status === 'Prepared').length },
-      { model: 'Dominar 400', prepared: table.filter(t => t.model === 'Dominar 400' && t.status === 'Prepared').length },
-      { model: 'Avenger 220', prepared: table.filter(t => t.model === 'Avenger 220' && t.status === 'Prepared').length },
-    ].filter(d => d.prepared > 0),
-    table
+    kpis: { planned: 0, prepared: 0, pending: 0, accuracy: '0.0%', rejected: 0, status: 'No Data' },
+    barData: [],
+    table: []
   });
 });
 
 app.get('/api/material/engine-stock', async (req, res) => {
   const { modelFamily, model, sku } = req.query;
+
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
+      const request = createSqlRequest(pool, {
+        ModelFamily: { type: sql.VarChar(50), value: (modelFamily && modelFamily !== 'All') ? modelFamily : null },
+        Model: { type: sql.VarChar(50), value: (model && model !== 'All') ? model : null },
+        SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
+      });
+
+      const result = await request.query(`
         SELECT 
-          CASE 
-            WHEN EngineNo LIKE 'P%' THEN 'Pulsar'
-            WHEN EngineNo LIKE 'D%' THEN 'Dominar'
-            ELSE 'Avenger'
-          END as modelFamily,
-          CASE 
-            WHEN EngineNo LIKE 'P%' THEN 'Pulsar 150'
-            WHEN EngineNo LIKE 'D%' THEN 'Dominar 400'
-            ELSE 'Avenger 220'
-          END as model,
-          'UG6' as sku,
-          EngineNo as engineNo,
-          CONVERT(VARCHAR(19), StartTime, 120) as dateTime
-        FROM Prod_Engine_WIP
+          ISNULL(F.ModelFamilyName, 'Bike') as modelFamily,
+          ISNULL(M.ModelName, 'Pulsar 150') as model,
+          ISNULL(S.SKUName, 'SKU1') as sku,
+          W.EngineNo as engineNo,
+          CONVERT(VARCHAR(19), W.StartTime, 120) as dateTime
+        FROM Prod_Engine_WIP W
+        LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
+        LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+        LEFT JOIN Config_ModelFamily F ON M.ModelFamilyID = F.ModelFamilyID
+        WHERE (@ModelFamily IS NULL OR F.ModelFamilyName = @ModelFamily)
+          AND (@Model IS NULL OR M.ModelName = @Model)
+          AND (@SKU IS NULL OR S.SKUName = @SKU)
+        ORDER BY W.StartTime DESC
       `);
 
-      let table = result.recordset || [];
-      if (modelFamily && modelFamily !== 'All') table = table.filter(d => d.modelFamily === modelFamily);
-      if (model && model !== 'All') table = table.filter(d => d.model === model);
-      if (sku && sku !== 'All') table = table.filter(d => d.sku === sku);
-
-      const pie = [
-        { family: 'Pulsar', name: 'Pulsar 150', value: table.filter(d => d.modelFamily === 'Pulsar').length },
-        { family: 'Dominar', name: 'Dominar 400', value: table.filter(d => d.modelFamily === 'Dominar').length },
-        { family: 'Avenger', name: 'Avenger 220', value: table.filter(d => d.modelFamily === 'Avenger').length },
-      ].filter(d => d.value > 0);
+      const table = result.recordset || [];
+      const pieMap = {};
+      table.forEach(d => {
+        pieMap[d.model] = (pieMap[d.model] || 0) + 1;
+      });
+      const pie = Object.entries(pieMap).map(([name, value]) => ({ name, value }));
 
       return res.json({
         kpis: {
@@ -1977,292 +2379,89 @@ app.get('/api/material/engine-stock', async (req, res) => {
       });
     }
   } catch (err) {
-    console.warn('Engine Stock DB query failed:', err.message);
+    console.error('Engine Stock DB error:', err.message);
   }
 
-  let table = [
-    { modelFamily: 'Pulsar', model: 'Pulsar 150', sku: 'UG6', engineNo: 'P-150-100234', dateTime: '2026-08-31 08:30:00' },
-    { modelFamily: 'Pulsar', model: 'Pulsar 150', sku: 'UG6', engineNo: 'P-150-100235', dateTime: '2026-08-31 09:15:00' },
-    { modelFamily: 'Dominar', model: 'Dominar 400', sku: 'UG6', engineNo: 'D-400-500120', dateTime: '2026-08-31 09:45:00' },
-    { modelFamily: 'Dominar', model: 'Dominar 400', sku: 'UG6', engineNo: 'D-400-500121', dateTime: '2026-08-31 10:20:00' },
-    { modelFamily: 'Avenger', model: 'Avenger 220', sku: 'SKU1', engineNo: 'A-220-300450', dateTime: '2026-08-31 11:00:00' },
-  ];
-
-  if (modelFamily && modelFamily !== 'All') table = table.filter(d => d.modelFamily === modelFamily);
-  if (model && model !== 'All') table = table.filter(d => d.model === model);
-  if (sku && sku !== 'All') table = table.filter(d => d.sku === sku);
-
-  const pie = [
-    { family: 'Pulsar', name: 'Pulsar 150', value: table.filter(d => d.modelFamily === 'Pulsar').length },
-    { family: 'Dominar', name: 'Dominar 400', value: table.filter(d => d.modelFamily === 'Dominar').length },
-    { family: 'Avenger', name: 'Avenger 220', value: table.filter(d => d.modelFamily === 'Avenger').length },
-  ].filter(d => d.value > 0);
-
   res.json({
-    kpis: { totalEngines: table.length, modelsCount: pie.length },
-    pie,
-    table
-  });
-});
-
-app.get('/api/material/dashboard', async (req, res) => {
-  const { line, model, sku } = req.query;
-  try {
-    const pool = await poolPromise;
-    if (pool) {
-      const result = await pool.request().query(`
-        SELECT 
-          PartID as id,
-          PartName as material,
-          CASE 
-            WHEN PartID LIKE '%102' OR PartID LIKE '%105' THEN 'Line 1'
-            ELSE 'Line 2'
-          END as line,
-          CASE 
-            WHEN PartID LIKE '%101' OR PartID LIKE '%102' OR PartID LIKE '%108' THEN 'Pulsar 150'
-            WHEN PartID LIKE '%103' OR PartID LIKE '%105' THEN 'Dominar 400'
-            ELSE 'Avenger 220'
-          END as model,
-          'UG6' as sku,
-          CASE 
-            WHEN PartID LIKE '%101' OR PartID LIKE '%104' THEN 'Main Store'
-            WHEN PartID LIKE '%102' OR PartID LIKE '%105' THEN 'Line 1'
-            ELSE 'Line 2'
-          END as location,
-          CASE 
-            WHEN PartID IN ('BAJ-ENG-102', 'BAJ-ENG-105') THEN 'Critical'
-            WHEN PartID = 'BAJ-ENG-108' THEN 'Excess'
-            ELSE 'Safe'
-          END as status,
-          CASE 
-            WHEN PartID = 'BAJ-ENG-102' THEN 18
-            WHEN PartID = 'BAJ-ENG-105' THEN 12
-            WHEN PartID = 'BAJ-ENG-108' THEN 450
-            ELSE 120
-          END as currentStock,
-          CASE WHEN PartID = 'BAJ-ENG-108' THEN 100 ELSE 25 END as minLevel,
-          CASE WHEN PartID = 'BAJ-ENG-108' THEN 300 ELSE 150 END as maxLevel,
-          CASE
-            WHEN PartID IN ('BAJ-ENG-101', 'BAJ-ENG-103') THEN 'Engine Parts'
-            WHEN PartID = 'BAJ-ENG-102' THEN 'Pistons'
-            WHEN PartID = 'BAJ-ENG-104' THEN 'Transmission'
-            WHEN PartID = 'BAJ-ENG-105' THEN 'Gears'
-            ELSE 'Electrical'
-          END as category
-        FROM SAP_PartMaster
-      `);
-
-      let table = result.recordset || [];
-      if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
-      if (model && model !== 'All') table = table.filter(t => matchFilter(t.model, model));
-      if (sku && sku !== 'All') table = table.filter(t => matchFilter(t.sku, sku));
-
-      const criticalCount = table.filter(d => d.status === 'Critical').length;
-      const safeCount = table.filter(d => d.status === 'Safe').length;
-
-      return res.json({
-        kpis: {
-          totalInventory: table.reduce((acc, d) => acc + (d.currentStock || 0), 0),
-          inventoryValue: '₹4.8 Cr',
-          criticalShortages: criticalCount,
-          stockoutRisk: criticalCount,
-          kitFulfillment: table.length > 0 ? `${Math.round((safeCount / table.length) * 100)}%` : '100%'
-        },
-        stockLevels: table.map(d => ({ material: d.material, current: d.currentStock, min: d.minLevel })),
-        shortages: [
-          { category: 'Pistons', count: table.filter(d => d.category === 'Pistons' && d.status === 'Critical').length },
-          { category: 'Gears', count: table.filter(d => d.category === 'Gears' && d.status === 'Critical').length }
-        ].filter(d => d.count > 0),
-        table
-      });
-    }
-  } catch (err) {
-    console.warn('Material Dashboard DB query failed:', err.message);
-  }
-
-  let table = [
-    { id: 'BAJ-ENG-101', material: 'Cylinder Block 150cc', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', location: 'Main Store', currentStock: 120, minLevel: 25, maxLevel: 150, status: 'Safe', category: 'Engine Parts' },
-    { id: 'BAJ-ENG-102', material: 'Piston Assembly 57mm', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', location: 'Line 1', currentStock: 18, minLevel: 25, maxLevel: 150, status: 'Critical', category: 'Pistons' },
-    { id: 'BAJ-ENG-103', material: 'Cylinder Head DOHC', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', location: 'Line 2', currentStock: 85, minLevel: 25, maxLevel: 150, status: 'Safe', category: 'Engine Parts' },
-    { id: 'BAJ-ENG-104', material: 'Crankshaft & Connecting Rod', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', location: 'Main Store', currentStock: 64, minLevel: 25, maxLevel: 150, status: 'Safe', category: 'Transmission' },
-    { id: 'BAJ-ENG-105', material: 'Camshaft Timing Gear Set', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', location: 'Line 1', currentStock: 12, minLevel: 25, maxLevel: 150, status: 'Critical', category: 'Gears' },
-    { id: 'BAJ-ENG-108', material: 'Spark Plug Twin-Spark', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', location: 'Main Store', currentStock: 450, minLevel: 100, maxLevel: 300, status: 'Excess', category: 'Electrical' }
-  ];
-
-  if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
-  if (model && model !== 'All') table = table.filter(t => matchFilter(t.model, model));
-  if (sku && sku !== 'All') table = table.filter(t => matchFilter(t.sku, sku));
-
-  const criticalCount = table.filter(d => d.status === 'Critical').length;
-  const safeCount = table.filter(d => d.status === 'Safe').length;
-
-  res.json({
-    kpis: {
-      totalInventory: table.reduce((acc, d) => acc + (d.currentStock || 0), 0),
-      inventoryValue: '₹4.8 Cr',
-      criticalShortages: criticalCount,
-      stockoutRisk: criticalCount,
-      kitFulfillment: table.length > 0 ? `${Math.round((safeCount / table.length) * 100)}%` : '0%'
-    },
-    stockLevels: table.map(d => ({ material: d.material, current: d.currentStock, min: d.minLevel })),
-    shortages: [
-      { category: 'Pistons', count: table.filter(d => d.category === 'Pistons' && d.status === 'Critical').length },
-      { category: 'Gears', count: table.filter(d => d.category === 'Gears' && d.status === 'Critical').length }
-    ].filter(d => d.count > 0),
-    table
-  });
-});
-
-app.get('/api/material/request', async (req, res) => {
-  const { line, station } = req.query;
-  try {
-    const pool = await poolPromise;
-    if (pool) {
-      const result = await pool.request().query(`
-        SELECT 
-          PartID as reqId,
-          PartName as material,
-          CASE WHEN PartID LIKE '%102' OR PartID LIKE '%105' THEN 'Line 1' ELSE 'Line 2' END as line,
-          CASE WHEN PartID LIKE '%101' OR PartID LIKE '%102' THEN 'Demo' WHEN PartID LIKE '%103' THEN 'Line2' ELSE 'Station2' END as station,
-          50 as requestedQty,
-          50 as issuedQty,
-          CASE WHEN PartID LIKE '%105' THEN 'Pending' ELSE 'Fulfilled' END as status,
-          CONVERT(VARCHAR(5), GETDATE(), 108) as reqTime,
-          CONVERT(VARCHAR(5), DATEADD(minute, 10, GETDATE()), 108) as fullTime
-        FROM SAP_PartMaster
-      `);
-
-      let table = result.recordset || [];
-      if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
-      if (station && station !== 'All') table = table.filter(t => matchFilter(t.station, station));
-
-      return res.json({
-        kpis: {
-          totalRequests: table.length,
-          fulfilled: table.filter(t => t.status === 'Fulfilled' || t.status === 'Approved').length,
-          pending: table.filter(t => t.status === 'Pending').length,
-          fulfillmentRate: table.length > 0 ? `${Math.round((table.filter(t => t.status === 'Fulfilled' || t.status === 'Approved').length / table.length) * 100)}%` : '0.0%'
-        },
-        table
-      });
-    }
-  } catch (err) {
-    console.warn('Material Request DB query failed:', err.message);
-  }
-
-  let table = [
-    { reqId: 'REQ-1001', material: 'Cylinder Block 150cc', line: 'Line 1', station: 'Demo', requestedQty: 50, issuedQty: 50, status: 'Fulfilled', reqTime: '08:15', fullTime: '08:25' },
-    { reqId: 'REQ-1002', material: 'Piston Assembly 57mm', line: 'Line 1', station: 'Line2', requestedQty: 30, issuedQty: 30, status: 'Fulfilled', reqTime: '09:00', fullTime: '09:12' },
-    { reqId: 'REQ-1003', material: 'Cylinder Head DOHC', line: 'Line 2', station: 'Station2', requestedQty: 25, issuedQty: 25, status: 'Fulfilled', reqTime: '09:30', fullTime: '09:40' },
-    { reqId: 'REQ-1004', material: 'Camshaft Timing Gear Set', line: 'Line 1', station: 'Demo', requestedQty: 15, issuedQty: 0, status: 'Pending', reqTime: '10:10', fullTime: '-' },
-    { reqId: 'REQ-1005', material: 'Spark Plug Twin-Spark', line: 'Line 2', station: 'Line2', requestedQty: 100, issuedQty: 100, status: 'Fulfilled', reqTime: '10:45', fullTime: '10:55' },
-  ];
-
-  if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
-  if (station && station !== 'All') table = table.filter(t => matchFilter(t.station, station));
-
-  res.json({
-    kpis: {
-      totalRequests: table.length,
-      fulfilled: table.filter(t => t.status === 'Fulfilled').length,
-      pending: table.filter(t => t.status === 'Pending').length,
-      fulfillmentRate: table.length > 0 ? `${Math.round((table.filter(t => t.status === 'Fulfilled').length / table.length) * 100)}%` : '0.0%'
-    },
-    table
+    kpis: { totalEngines: 0, modelsCount: 0 },
+    pie: [],
+    table: []
   });
 });
 
 app.get('/api/material/consumption', async (req, res) => {
   const { line, model, sku } = req.query;
+
   try {
     const pool = await poolPromise;
     if (pool) {
       const result = await pool.request().query(`
         SELECT 
           PartName as material,
-          CASE WHEN PartID LIKE '%102' OR PartID LIKE '%105' THEN 'Line 1' ELSE 'Line 2' END as line,
-          CASE 
-            WHEN PartID LIKE '%101' OR PartID LIKE '%102' OR PartID LIKE '%108' THEN 'Pulsar 150'
-            WHEN PartID LIKE '%103' OR PartID LIKE '%105' THEN 'Dominar 400'
-            ELSE 'Avenger 220'
-          END as model,
+          'Line 1' as line,
+          'Pulsar 150' as model,
           'UG6' as sku,
-          125 as consumed,
-          120 as expected,
-          5 as variance,
-          4.2 as variancePct
+          100 as consumed,
+          100 as expected,
+          0 as variance,
+          0.0 as variancePct
         FROM SAP_PartMaster
       `);
 
-      let table = result.recordset || [];
-      if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
-      if (model && model !== 'All') table = table.filter(t => matchFilter(t.model, model));
-      if (sku && sku !== 'All') table = table.filter(t => matchFilter(t.sku, sku));
-
-      const totalVariancePct = table.length > 0 
-        ? (table.reduce((acc, d) => acc + (d.variancePct || 0), 0) / table.length).toFixed(1)
-        : '0.0';
-
+      const table = result.recordset || [];
       return res.json({
         kpis: {
           totalMaterials: table.length,
-          variancePct: totalVariancePct,
-          overConsumed: table.filter(d => d.variance > 0).length,
-          underConsumed: table.filter(d => d.variance < 0).length
+          variancePct: '0.0',
+          overConsumed: 0,
+          underConsumed: 0
         },
         table
       });
     }
   } catch (err) {
-    console.warn('Material Consumption DB query failed:', err.message);
+    console.error('Material Consumption DB error:', err.message);
   }
 
-  let table = [
-    { material: 'Cylinder Block 150cc', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', consumed: 125, expected: 120, variance: 5, variancePct: 4.2 },
-    { material: 'Piston Assembly 57mm', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', consumed: 122, expected: 120, variance: 2, variancePct: 1.7 },
-    { material: 'Cylinder Head DOHC', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', consumed: 80, expected: 85, variance: -5, variancePct: -5.9 },
-    { material: 'Crankshaft & Connecting Rod', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', consumed: 65, expected: 65, variance: 0, variancePct: 0.0 },
-    { material: 'Camshaft Timing Gear Set', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', consumed: 88, expected: 85, variance: 3, variancePct: 3.5 },
-    { material: 'Spark Plug Twin-Spark', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', consumed: 240, expected: 240, variance: 0, variancePct: 0.0 }
-  ];
-
-  if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
-  if (model && model !== 'All') table = table.filter(t => matchFilter(t.model, model));
-  if (sku && sku !== 'All') table = table.filter(t => matchFilter(t.sku, sku));
-
-  const totalVariancePct = table.length > 0 
-    ? (table.reduce((acc, d) => acc + (d.variancePct || 0), 0) / table.length).toFixed(1)
-    : '0.0';
-
   res.json({
-    kpis: {
-      totalMaterials: table.length,
-      variancePct: totalVariancePct,
-      overConsumed: table.filter(d => d.variance > 0).length,
-      underConsumed: table.filter(d => d.variance < 0).length
-    },
-    table
+    kpis: { totalMaterials: 0, variancePct: '0.0', overConsumed: 0, underConsumed: 0 },
+    table: []
   });
 });
 
+// ==========================================
+// 8. WORKFORCE MODULE ENDPOINTS
+// ==========================================
 app.get('/api/workforce/dashboard', async (req, res) => {
+  const { line, station } = req.query;
+
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
+      const request = createSqlRequest(pool, {
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Station: { type: sql.VarChar(50), value: (station && station !== 'All') ? station : null }
+      });
+
+      const result = await request.query(`
         SELECT 
-          UserID as id,
-          UserName as operator,
-          CASE WHEN CAST(UserID AS INT) % 2 = 0 THEN 'Line 2' ELSE 'Line 1' END as line,
-          CASE 
-            WHEN UserID = 1 THEN 'Demo'
-            WHEN UserID = 2 THEN 'Line2'
-            ELSE 'Station2'
-          END as station,
+          U.UserID as id,
+          U.UserName as operator,
+          ISNULL(L.LineName, 'Line 1') as line,
+          ISNULL(S.StationName, 'Demo') as station,
           'Shift 1' as shift,
-          'Expert' as skillLevel,
-          'Present' as status
-        FROM Config_User
+          ISNULL(SL.SkillLevelName, 'Intermediate') as skillLevel,
+          'Present' as [status]
+        FROM Config_User U
+        LEFT JOIN Config_OperatorSkillMapping OSM ON U.UserID = OSM.UserID
+        LEFT JOIN Config_SkillLevel SL ON OSM.SkillLevelID = SL.SkillLevelID
+        LEFT JOIN Prod_ShiftOperatorAssignment A ON U.UserID = A.UserID
+        LEFT JOIN Config_Line L ON A.LineID = L.LineID
+        LEFT JOIN Config_Station S ON A.StationID = S.StationID
+        WHERE U.UserName NOT IN ('admin', 'coolsuper')
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(A.LineID AS VARCHAR) = @Line)
+          AND (@Station IS NULL OR S.StationName = @Station OR CAST(A.StationID AS VARCHAR) = @Station)
+        ORDER BY U.UserID ASC
       `);
 
       const table = result.recordset || [];
@@ -2272,98 +2471,175 @@ app.get('/api/workforce/dashboard', async (req, res) => {
           present: table.length,
           absent: 0,
           attendancePct: table.length > 0 ? 100 : 0,
-          avgSkillLevel: '3.8/5.0'
+          avgSkillLevel: table.length > 0 ? '3.8/5.0' : '0/5'
         },
         table
       });
     }
   } catch (err) {
-    console.warn('Workforce Dashboard DB query failed:', err.message);
+    console.error('Workforce Dashboard DB error:', err.message);
   }
 
   res.json({
-    kpis: { totalWorkforce: 4, present: 4, absent: 0, attendancePct: 100, avgSkillLevel: '4.0/5' },
-    table: [
-      { id: '1', operator: 'Rahul Sharma', line: 'Line 1', station: 'Demo', shift: 'Shift 1', skillLevel: 'Expert', status: 'Present' },
-      { id: '2', operator: 'Priya Singh', line: 'Line 2', station: 'Line2', shift: 'Shift 1', skillLevel: 'Intermediate', status: 'Present' },
-      { id: '3', operator: 'Amit Kumar', line: 'Line 1', station: 'Station2', shift: 'Shift 1', skillLevel: 'Expert', status: 'Present' },
-      { id: '4', operator: 'Neha Verma', line: 'Line 2', station: 'Demo', shift: 'Shift 2', skillLevel: 'Beginner', status: 'Present' }
-    ]
+    kpis: { totalWorkforce: 0, present: 0, absent: 0, attendancePct: 0, avgSkillLevel: '0/5' },
+    table: []
   });
 });
 
-// ==========================================
-// 8. WORKFORCE MODULE ENDPOINTS
-// ==========================================
 app.get('/api/workforce/attendance', async (req, res) => {
+  const { period, shift, line } = req.query;
+  const dbShift = normalizeShift(shift);
+
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
+      const request = createSqlRequest(pool, {
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null }
+      });
+
+      const result = await request.query(`
         SELECT 
           U.UserID as id,
           U.UserName as operator,
-          CASE WHEN CAST(U.UserID AS INT) % 2 = 0 THEN 'Line 2' ELSE 'Line 1' END as line,
+          ISNULL(L.LineName, 'Line 1') as line,
           'Shift 1' as shift,
           '06:00' as inTime,
           '14:00' as outTime,
-          'Present' as status,
+          'Present' as [status],
           8.0 as hoursWorked
         FROM Config_User U
+        LEFT JOIN Prod_ShiftOperatorAssignment A ON U.UserID = A.UserID
+        LEFT JOIN Config_Line L ON A.LineID = L.LineID
         WHERE U.UserName NOT IN ('admin', 'coolsuper')
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(A.LineID AS VARCHAR) = @Line)
         ORDER BY U.UserID ASC
       `);
-      if (result.recordset.length > 0) {
-        const rows = result.recordset;
-        return res.json({
-          kpiData: { scheduled: rows.length + 1, present: rows.length, absent: 1, attendancePct: 94.6 },
-          table: rows
-        });
-      }
+
+      const rows = result.recordset || [];
+      const scheduled = rows.length;
+      const present = rows.filter(r => r.status === 'Present' || r.status === 'Late').length;
+      const absent = rows.filter(r => r.status === 'Absent').length;
+      const attendancePct = scheduled > 0 ? Number(((present / scheduled) * 100).toFixed(1)) : 0;
+
+      return res.json({
+        kpiData: {
+          scheduled,
+          present,
+          absent,
+          attendancePct
+        },
+        table: rows
+      });
     }
   } catch (err) {
-    console.warn('Workforce attendance DB fallback:', err.message);
+    console.error('Workforce attendance DB error:', err.message);
   }
 
   res.json({
-    kpiData: { scheduled: 8, present: 7, absent: 1, attendancePct: 94.6 },
-    table: [
-      { id: '3', operator: 'Rahul Sharma', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
-      { id: '4', operator: 'Priya Singh', line: 'Line 2', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
-      { id: '5', operator: 'Amit Kumar', line: 'Line 1', shift: 'Shift 2', inTime: '14:00', outTime: '22:00', status: 'Present', hoursWorked: 8 },
-      { id: '6', operator: 'Neha Verma', line: 'Line 2', shift: 'Shift 2', inTime: '14:15', outTime: '22:00', status: 'Late', hoursWorked: 7.75 },
-      { id: '7', operator: 'Vikram Patel', line: 'Line 1', shift: 'Shift 1', inTime: '06:00', outTime: '14:00', status: 'Present', hoursWorked: 8 },
-      { id: '8', operator: 'Sneha Gupta', line: 'Line 2', shift: 'Shift 3', inTime: '22:00', outTime: '06:00', status: 'Absent', hoursWorked: 0 }
-    ]
+    kpiData: { scheduled: 0, present: 0, absent: 0, attendancePct: 0 },
+    table: []
   });
 });
 
 app.get('/api/workforce/skill-matrix', async (req, res) => {
+  const { period, shift, line, station } = req.query;
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const request = createSqlRequest(pool, {
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Station: { type: sql.VarChar(50), value: (station && station !== 'All') ? station : null }
+      });
+
+      const result = await request.query(`
+        SELECT 
+          U.UserName as [name],
+          U.UserName as operator,
+          ISNULL(L.LineName, 'Line 1') as line,
+          ISNULL(S.StationName, 'Demo') as station,
+          ISNULL(SL.SkillLevelName, 'Intermediate') as skillLevel,
+          'Yes' as certified,
+          '2026-08-31' as lastAssessed
+        FROM Config_User U
+        LEFT JOIN Config_OperatorSkillMapping OSM ON U.UserID = OSM.UserID
+        LEFT JOIN Config_SkillLevel SL ON OSM.SkillLevelID = SL.SkillLevelID
+        LEFT JOIN Config_Skill SK ON OSM.SkillID = SK.SkillID
+        LEFT JOIN Prod_ShiftOperatorAssignment A ON U.UserID = A.UserID
+        LEFT JOIN Config_Line L ON A.LineID = L.LineID
+        LEFT JOIN Config_Station S ON A.StationID = S.StationID
+        WHERE U.UserName NOT IN ('admin', 'coolsuper')
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(A.LineID AS VARCHAR) = @Line)
+          AND (@Station IS NULL OR S.StationName = @Station OR CAST(A.StationID AS VARCHAR) = @Station)
+        ORDER BY U.UserID ASC
+      `);
+
+      const table = result.recordset || [];
+      const beginner = table.filter(r => r.skillLevel?.toLowerCase().includes('beg') || r.skillLevel === 'Beginner').length;
+      const intermediate = table.filter(r => r.skillLevel === 'Intermediate').length;
+      const expert = table.filter(r => r.skillLevel === 'Expert').length;
+
+      return res.json({
+        kpis: {
+          beginner,
+          intermediate,
+          expert,
+          total: table.length
+        },
+        table
+      });
+    }
+  } catch (err) {
+    console.error('Skill matrix DB error:', err.message);
+  }
+
   res.json({
-    kpis: { beginner: 2, intermediate: 2, expert: 2 },
-    table: [
-      { name: 'Rahul Sharma', operator: 'Rahul Sharma', line: 'Line 1', station: 'Demo', skillLevel: 'Expert', certified: 'Yes', lastAssessed: '2026-02-15' },
-      { name: 'Priya Singh', operator: 'Priya Singh', line: 'Line 2', station: 'Line2', skillLevel: 'Intermediate', certified: 'Yes', lastAssessed: '2026-02-10' },
-      { name: 'Amit Kumar', operator: 'Amit Kumar', line: 'Line 1', station: 'Station2', skillLevel: 'Beginner', certified: 'No', lastAssessed: '2026-01-20' },
-      { name: 'Neha Verma', operator: 'Neha Verma', line: 'Line 2', station: 'Demo', skillLevel: 'Intermediate', certified: 'Yes', lastAssessed: '2026-02-01' },
-      { name: 'Vikram Patel', operator: 'Vikram Patel', line: 'Line 1', station: 'Line2', skillLevel: 'Expert', certified: 'Yes', lastAssessed: '2026-02-18' },
-      { name: 'Sneha Gupta', operator: 'Sneha Gupta', line: 'Line 2', station: 'Station2', skillLevel: 'Beginner', certified: 'No', lastAssessed: '2026-01-15' }
-    ]
+    kpis: { beginner: 0, intermediate: 0, expert: 0, total: 0 },
+    table: []
   });
 });
 
 app.get('/api/workforce/allocation', async (req, res) => {
-  res.json({
-    table: [
-      { station: 'Demo', line: 'Line 1', shift: 'Shift 1', assignedOperator: 'Rahul Sharma', plannedCount: 2, actualCount: 2, gap: 0 },
-      { station: 'Line2', line: 'Line 2', shift: 'Shift 1', assignedOperator: 'Priya Singh', plannedCount: 2, actualCount: 1, gap: -1 },
-      { station: 'Station2', line: 'Line 1', shift: 'Shift 1', assignedOperator: 'Amit Kumar, Vikram Patel', plannedCount: 2, actualCount: 2, gap: 0 },
-      { station: 'Demo', line: 'Line 1', shift: 'Shift 2', assignedOperator: 'Neha Verma', plannedCount: 2, actualCount: 2, gap: 0 },
-      { station: 'Line2', line: 'Line 2', shift: 'Shift 2', assignedOperator: 'Sneha Gupta', plannedCount: 1, actualCount: 2, gap: 1 }
-    ]
-  });
+  const { period, shift, line } = req.query;
+  const dbShift = normalizeShift(shift);
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const request = createSqlRequest(pool, {
+        Shift: { type: sql.VarChar(20), value: dbShift },
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null }
+      });
+
+      const result = await request.query(`
+        SELECT 
+          ISNULL(S.StationName, 'Demo') as station,
+          ISNULL(L.LineName, 'Line 1') as line,
+          'Shift ' + ISNULL(A.ProdShift, '1') as shift,
+          ISNULL(U.UserName, 'Unassigned') as assignedOperator,
+          1 as plannedCount,
+          1 as actualCount,
+          0 as gap
+        FROM Prod_ShiftOperatorAssignment A
+        LEFT JOIN Config_Line L ON A.LineID = L.LineID
+        LEFT JOIN Config_Station S ON A.StationID = S.StationID
+        LEFT JOIN Config_User U ON A.UserID = U.UserID
+        WHERE (@Line IS NULL OR L.LineName = @Line OR CAST(A.LineID AS VARCHAR) = @Line)
+      `);
+
+      return res.json({ table: result.recordset || [] });
+    }
+  } catch (err) {
+    console.error('Workforce allocation DB error:', err.message);
+  }
+
+  res.json({ table: [] });
 });
 
+// ==========================================
+// START SERVER
+// ==========================================
 app.listen(port, () => {
   console.log(`Bajaj PPMS Server running live on port ${port}`);
 });

@@ -6,7 +6,7 @@ import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 
 export default function EngineReworkReport() {
-  const [searchUID, setSearchUID] = useState('ENG-1000001');
+  const [searchUID, setSearchUID] = useState('');
   const [dbData, setDbData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
