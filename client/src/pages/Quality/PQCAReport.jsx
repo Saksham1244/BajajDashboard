@@ -83,12 +83,17 @@ export default function PQCAReport() {
 
   const ncTrendData = useMemo(() => {
     const labels = generateTimeLabels(period, shift);
-    const totalNc = kpiData.nc;
-    const base = Math.floor(totalNc / (labels.length || 1));
-    return labels.map((label, idx) => ({
-      date: label,
-      nc: Math.max(0, base + (idx % 2 === 0 && totalNc > 0 ? 1 : 0))
-    }));
+    const totalNc = Number(kpiData.nc) || 0;
+    if (labels.length === 0) return [];
+    if (totalNc === 0) return labels.map(date => ({ date, nc: 0 }));
+
+    const result = labels.map(date => ({ date, nc: 0 }));
+    const step = labels.length / totalNc;
+    for (let i = 0; i < totalNc; i++) {
+      const targetIndex = Math.min(labels.length - 1, Math.floor(i * step + step / 2));
+      result[targetIndex].nc += 1;
+    }
+    return result;
   }, [period, shift, kpiData.nc]);
 
   const columns = [

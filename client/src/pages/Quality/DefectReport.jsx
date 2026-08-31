@@ -37,12 +37,19 @@ export default function DefectReport() {
   };
 
   const defectTrendData = useMemo(() => {
-    const defects = Number(kpiData.totalDefects) || 1;
+    const total = Number(kpiData.totalDefects) || 0;
     const labels = generateTimeLabels(period, shift);
-    return labels.map((label, idx) => ({
-      date: label,
-      defects: Math.max(0, Math.round(defects / (labels.length || 1) + (idx % 2 === 0 ? 1 : -0.5)))
-    }));
+    if (labels.length === 0) return [];
+    if (total === 0) return labels.map(date => ({ date, defects: 0 }));
+
+    // Exact discrete distribution: sum of points in chart strictly equals totalDefects
+    const result = labels.map(date => ({ date, defects: 0 }));
+    const step = labels.length / total;
+    for (let i = 0; i < total; i++) {
+      const targetIndex = Math.min(labels.length - 1, Math.floor(i * step + step / 2));
+      result[targetIndex].defects += 1;
+    }
+    return result;
   }, [period, shift, kpiData.totalDefects]);
 
   const defectDistData = dbData?.distribution || [
