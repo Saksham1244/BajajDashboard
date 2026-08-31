@@ -1,4 +1,4 @@
-﻿const { poolPromise } = require('./server/db');
+const { poolPromise } = require('./db');
 
 console.log(`\n========================================================================`);
 console.log(`  BAJAJ PPMS: COMPREHENSIVE MULTI-MODULE DATABASE SEEDING ENGINE`);

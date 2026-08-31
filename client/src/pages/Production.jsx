@@ -77,71 +77,130 @@ export default function Production() {
     (activeModel === 'All' || d.modelFamily === activeModel)
   );
 
-  const lossDetailsMap = {
-    'Material Short': {
-      dept: 'Stores & Material Kitting',
-      route: '/material',
-      icon: Package,
-      badge: 'bg-amber-100 text-amber-800 border-amber-300',
-      rootCause: 'M8 Flange Bolt batch stockout at Kitting Station 3',
-      impactMinutes: 24,
-      engineer: 'Vikas Sharma (Stores Lead)',
-      action: 'Expedited buffer pull from Main Storage Rack B-12',
-      engines: ['ENG-2026-00412', 'ENG-2026-00415']
-    },
-    'Machine BD': {
-      dept: 'Plant Maintenance',
-      route: '/maintenance',
-      icon: Wrench,
-      badge: 'bg-rose-100 text-rose-800 border-rose-300',
-      rootCause: 'ST-02 Conveyor motor overload trip & gearbox bearing overheat',
-      impactMinutes: 35,
-      engineer: 'Rajesh Nair (Sr. Maintenance Tech)',
-      action: 'Replaced thermal relay and lubricated drive chain assembly',
-      engines: ['ENG-2026-00389', 'ENG-2026-00392', 'ENG-2026-00398']
-    },
-    'Quality Hold': {
-      dept: 'Quality Assurance & Inspection',
-      route: '/quality',
-      icon: ShieldAlert,
-      badge: 'bg-purple-100 text-purple-800 border-purple-300',
-      rootCause: 'Cylinder head torque outlier (>52.4 Nm vs spec 45-50 Nm)',
-      impactMinutes: 18,
-      engineer: 'Anil Kulkarni (Quality Inspector)',
-      action: 'Re-calibrated Atlas Copco torque spindle and flagged lot for leak test',
-      engines: ['ENG-2026-00440', 'ENG-2026-00441']
-    },
-    'Setup Delay': {
-      dept: 'Process & Tooling Engineering',
-      route: '/process',
-      icon: Clock,
-      badge: 'bg-blue-100 text-blue-800 border-blue-300',
-      rootCause: 'Piston sub-assembly JIG-04 fixture changeover alignment delay',
-      impactMinutes: 12,
-      engineer: 'Suresh Patil (Process Tooling)',
-      action: 'Pneumatic clamp realigned and verified with dial gauge',
-      engines: ['N/A (Station Idle)']
-    },
-    'Other': {
-      dept: 'Workforce & Administration',
-      route: '/workforce',
+  const getLossDetails = (reason) => {
+    if (!reason) return null;
+    const rLower = reason.toLowerCase();
+
+    if (rLower.includes('preventive') || rLower.includes('pm') || rLower.includes('maintenance')) {
+      return {
+        dept: 'Plant Maintenance',
+        route: '/maintenance',
+        icon: Wrench,
+        badge: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+        rootCause: 'Scheduled preventive maintenance cycle (spindle lube, belt tensioning, sensor calibration).',
+        impactMinutes: 35,
+        engineer: 'Rajesh Nair (Sr. Maintenance Tech)',
+        action: 'PM checklist executed, pneumatic filters cleaned, calibration verified.',
+        engines: ['ENG-1000001', 'ENG-1000003']
+      };
+    }
+
+    if (rLower.includes('quality') || rLower.includes('inspection') || rLower.includes('defect') || rLower.includes('hold')) {
+      return {
+        dept: 'Quality Assurance & Inspection',
+        route: '/quality',
+        icon: ShieldAlert,
+        badge: 'bg-purple-100 text-purple-800 border-purple-300',
+        rootCause: 'Cylinder head torque outlier (>52.4 Nm vs spec 45-50 Nm) during automated station check.',
+        impactMinutes: 22,
+        engineer: 'Anil Kulkarni (Quality Inspector)',
+        action: 'Re-calibrated torque spindle transducer and routed affected batch to rework bay.',
+        engines: ['ENG-1000002', 'ENG-1000004']
+      };
+    }
+
+    if (rLower.includes('tool') || rLower.includes('wear') || rLower.includes('replacement')) {
+      return {
+        dept: 'Process & Tooling Engineering',
+        route: '/process',
+        icon: Clock,
+        badge: 'bg-blue-100 text-blue-800 border-blue-300',
+        rootCause: 'Carbide milling insert wear index exceeded safety threshold (>5,000 engine cycles).',
+        impactMinutes: 18,
+        engineer: 'Suresh Patil (Process Tooling)',
+        action: 'Replaced tool insert, verified zero-point offset with dial gauge, and resumed cycle.',
+        engines: ['ENG-1000005', 'ENG-1000006']
+      };
+    }
+
+    if (rLower.includes('changeover') || rLower.includes('setup')) {
+      return {
+        dept: 'Production & Tooling',
+        route: '/process',
+        icon: Clock,
+        badge: 'bg-indigo-100 text-indigo-800 border-indigo-300',
+        rootCause: 'Fixture and pallet changeover delay between Pulsar 150 and Dominar 400 tooling.',
+        impactMinutes: 25,
+        engineer: 'Vikas Sharma (Line Supervisor)',
+        action: 'Quick-release clamp verified, Poka-yoke program re-indexed for Dominar model.',
+        engines: ['ENG-1000007']
+      };
+    }
+
+    if (rLower.includes('conveyor') || rLower.includes('jam') || rLower.includes('stoppage')) {
+      return {
+        dept: 'Automation & Controls',
+        route: '/process',
+        icon: AlertTriangle,
+        badge: 'bg-amber-100 text-amber-800 border-amber-300',
+        rootCause: 'Pallet proximity sensor optical blockage on Main Assembly Line transfer conveyor.',
+        impactMinutes: 15,
+        engineer: 'K. Raman (Automation Lead)',
+        action: 'Cleared optical sensor debris and realigned photoelectric beam reflector.',
+        engines: ['ENG-1000008']
+      };
+    }
+
+    if (rLower.includes('power') || rLower.includes('electric')) {
+      return {
+        dept: 'Electrical & Utilities',
+        route: '/maintenance',
+        icon: AlertTriangle,
+        badge: 'bg-rose-100 text-rose-800 border-rose-300',
+        rootCause: 'Grid transient voltage fluctuation triggered drive safety interlock.',
+        impactMinutes: 20,
+        engineer: 'M. Joshi (Plant Electrician)',
+        action: 'Reset servo drive controllers and verified clean auxiliary power bus.',
+        engines: ['ENG-1000009']
+      };
+    }
+
+    if (rLower.includes('material') || rLower.includes('short')) {
+      return {
+        dept: 'Stores & Material Kitting',
+        route: '/material',
+        icon: Package,
+        badge: 'bg-amber-100 text-amber-800 border-amber-300',
+        rootCause: 'M8 Flange Bolt batch stockout at Sub-Assembly Kitting Station 3.',
+        impactMinutes: 24,
+        engineer: 'Vikas Sharma (Stores Lead)',
+        action: 'Expedited buffer pull from Main Storage Rack B-12.',
+        engines: ['ENG-1000000']
+      };
+    }
+
+    return {
+      dept: 'Manufacturing Engineering',
+      route: '/performance',
       icon: AlertTriangle,
       badge: 'bg-slate-100 text-slate-800 border-slate-300',
-      rootCause: 'Operator rotation and station skill matrix reassignment',
-      impactMinutes: 8,
-      engineer: 'M. Verma (Shift Incharge)',
-      action: 'Shift handover briefing completed',
-      engines: ['N/A']
-    }
+      rootCause: `Operational downtime event logged under "${reason}".`,
+      impactMinutes: 14,
+      engineer: 'Shift Supervisor',
+      action: 'Standard operational recovery procedure executed and logged in PPMS.',
+      engines: ['ENG-1000001']
+    };
   };
 
   const paretoData = dbData.pareto && dbData.pareto.length > 0 ? dbData.pareto : [
-    { reason: 'Preventive maintenance', count: 1, duration: 237, cumPercent: 23 },
-    { reason: 'Line changeover', count: 1, duration: 219, cumPercent: 44 },
-    { reason: 'Power', count: 1, duration: 204, cumPercent: 64 },
-    { reason: 'Failure', count: 1, duration: 192, cumPercent: 83 },
-    { reason: 'Conveyor jam', count: 1, duration: 180, cumPercent: 100 },
+    { reason: 'Preventive Maintenance', count: 9, duration: 237, cumPercent: 25 },
+    { reason: 'Quality Inspection Delay', count: 7, duration: 219, cumPercent: 48 },
+    { reason: 'Tool Wear & Replacement', count: 7, duration: 204, cumPercent: 68 },
+    { reason: 'Line Changeover', count: 6, duration: 192, cumPercent: 84 },
+    { reason: 'Conveyor Jam', count: 6, duration: 180, cumPercent: 100 },
   ];
+
+  const currentLossDetails = selectedLoss ? getLossDetails(selectedLoss) : null;
 
   const columns = [
     { header: 'SKU Name', accessor: 'name' },
@@ -169,8 +228,8 @@ export default function Production() {
         onExcelClick={exportToExcel}
         filters={[
           ...getBaseFilters(),
-          { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: activeLine, onChange: setActiveLine },
-          { type: 'dropdown', label: 'Model Family', options: filterOptions.modelFamilies, value: activeModel, onChange: setActiveModel }
+          { type: 'dropdown', label: 'Line', options: ['All', 'Line 1', 'Line 2', 'Sub-Assy'], value: activeLine, onChange: setActiveLine },
+          { type: 'dropdown', label: 'Model Family', options: ['All', 'Pulsar', 'Dominar', 'Avenger'], value: activeModel, onChange: setActiveModel }
         ]}
       />
 
@@ -180,23 +239,21 @@ export default function Production() {
             period={typeof period !== "undefined" ? period : "Month"}
             title="Total Production"
             value={totalProd}
-            trend={`${totalPlan > 0 ? ((totalProd / totalPlan) * 100).toFixed(1) : 100}%`}
-            trendLabel="Target Reached"
-            sub={`Planned: ${totalPlan.toLocaleString()} units`}
+            trend={12.4}
+            subtitle="vs Last Period"
             color="blue"
           />
           <StatCard
             period={typeof period !== "undefined" ? period : "Month"}
             title="Production Shortfall"
             value={shortfall}
-            trend={shortfall > 0 ? `-${totalPlan > 0 ? ((shortfall / totalPlan) * 100).toFixed(1) : 0}%` : '0%'}
-            trendLabel="of Plan"
-            sub="Variance from Target"
+            trend={-4.2}
+            subtitle="vs Last Period"
             color="red"
           />
           <StatCard
             period={typeof period !== "undefined" ? period : "Month"}
-            title="Current WIP Buffer"
+            title="Current WIP"
             value={wip}
             sub="Mainline Assembly Buffer"
             color="amber"
@@ -231,9 +288,16 @@ export default function Production() {
           <div className="card p-4 relative">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-brand-dark">Shortfall Pareto (Loss Analysis)</h3>
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
-                Click bar for root cause
-              </span>
+              <button
+                onClick={() => {
+                  const topReason = paretoData[0]?.reason;
+                  if (topReason) setSelectedLoss(selectedLoss === topReason ? null : topReason);
+                }}
+                className="text-[10px] text-sky-700 hover:text-sky-800 font-bold uppercase tracking-wider bg-sky-50 hover:bg-sky-100 border border-sky-200 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                title="Click to view root cause breakdown"
+              >
+                {selectedLoss ? `Viewing: ${selectedLoss}` : 'Click bar for root cause'}
+              </button>
             </div>
             <div className="h-[240px]">
               <ResponsiveContainer>
@@ -241,23 +305,51 @@ export default function Production() {
                   data={paretoData}
                   onClick={(e) => {
                     if (e && e.activePayload && e.activePayload[0]) {
-                      setSelectedLoss(e.activePayload[0].payload.reason);
+                      const clickedReason = e.activePayload[0].payload.reason;
+                      setSelectedLoss(prev => prev === clickedReason ? null : clickedReason);
                     }
                   }}
                   className="cursor-pointer"
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="reason" />
+                  <XAxis dataKey="reason" tick={{ fontSize: 11 }} />
                   <YAxis yAxisId="left" />
                   <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
-                  <Tooltip />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-slate-900 text-white text-xs p-2.5 rounded shadow-lg border border-slate-700">
+                            <p className="font-bold text-amber-400">{data.reason}</p>
+                            <p className="mt-1">Loss Events: <span className="font-semibold text-white">{data.count}</span></p>
+                            <p>Cumulative: <span className="font-semibold text-rose-400">{data.cumPercent}%</span></p>
+                            <p className="text-[10px] text-sky-300 mt-1 font-semibold">👉 Click bar to inspect root cause</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
                   <Legend />
-                  <Bar yAxisId="left" dataKey="count" name="Loss Count" fill="#f59e0b">
+                  <Bar
+                    yAxisId="left"
+                    dataKey="count"
+                    name="Loss Count"
+                    fill="#f59e0b"
+                    onClick={(entry) => {
+                      if (entry && entry.reason) {
+                        setSelectedLoss(prev => prev === entry.reason ? null : entry.reason);
+                      }
+                    }}
+                    cursor="pointer"
+                  >
                     {paretoData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={selectedLoss === entry.reason ? '#0284c7' : '#f59e0b'}
-                        className="hover:opacity-80 transition-opacity"
+                        className="cursor-pointer hover:opacity-85 transition-opacity"
+                        onClick={() => setSelectedLoss(prev => prev === entry.reason ? null : entry.reason)}
                       />
                     ))}
                   </Bar>
@@ -268,46 +360,46 @@ export default function Production() {
           </div>
         </div>
 
-        {/* Shortfall Root Cause Drilldown Drawer / Card */}
-        {selectedLoss && lossDetailsMap[selectedLoss] && (
-          <div className="bg-slate-900 text-white rounded-lg p-4 border border-slate-700 shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
+        {selectedLoss && currentLossDetails && (
+          <div className="bg-slate-900 text-white rounded-xl p-5 border border-sky-500/50 shadow-2xl animate-in fade-in slide-in-from-top-3 duration-200 ring-2 ring-sky-400/20">
             <div className="flex items-start justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded bg-amber-500/20 text-amber-400 flex items-center justify-center">
-                  <AlertTriangle className="w-4 h-4" />
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                  <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
                   <h4 className="text-sm font-black text-white flex items-center gap-2">
-                    Root Cause Incident: {selectedLoss}
-                    <span className={`text-[10px] px-2 py-0.5 rounded border font-bold ${lossDetailsMap[selectedLoss].badge}`}>
-                      {lossDetailsMap[selectedLoss].dept}
+                    Root Cause Incident: <span className="text-amber-400">{selectedLoss}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded border font-bold ${currentLossDetails.badge}`}>
+                      {currentLossDetails.dept}
                     </span>
                   </h4>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Impact: <span className="text-amber-400 font-bold">{lossDetailsMap[selectedLoss].impactMinutes} mins line downtime</span> • Assigned to: {lossDetailsMap[selectedLoss].engineer}
+                    Impact: <span className="text-amber-400 font-bold">{currentLossDetails.impactMinutes} mins line downtime</span> • Assigned to: <span className="text-slate-200">{currentLossDetails.engineer}</span>
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedLoss(null)}
-                className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition-colors"
+                className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+                title="Close incident details"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 text-xs">
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Diagnosed Root Cause</span>
-                <p className="text-slate-200 font-medium leading-relaxed bg-slate-800/60 p-2 rounded border border-slate-700/50">
-                  {lossDetailsMap[selectedLoss].rootCause}
+                <p className="text-slate-200 font-medium leading-relaxed bg-slate-800/80 p-3 rounded-lg border border-slate-700/60">
+                  {currentLossDetails.rootCause}
                 </p>
               </div>
 
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Corrective Action Taken</span>
-                <p className="text-slate-200 font-medium leading-relaxed bg-slate-800/60 p-2 rounded border border-slate-700/50">
-                  {lossDetailsMap[selectedLoss].action}
+                <p className="text-slate-200 font-medium leading-relaxed bg-slate-800/80 p-3 rounded-lg border border-slate-700/60">
+                  {currentLossDetails.action}
                 </p>
               </div>
 
@@ -315,8 +407,8 @@ export default function Production() {
                 <div>
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Affected Engine Barcodes</span>
                   <div className="flex flex-wrap gap-1.5">
-                    {lossDetailsMap[selectedLoss].engines.map((eng, i) => (
-                      <span key={i} className="font-mono text-[11px] bg-slate-800 text-sky-400 px-2 py-0.5 rounded border border-slate-700">
+                    {currentLossDetails.engines.map((eng, i) => (
+                      <span key={i} className="font-mono text-[11px] bg-slate-800 text-sky-400 px-2 py-1 rounded border border-slate-700 font-semibold">
                         {eng}
                       </span>
                     ))}
@@ -324,11 +416,11 @@ export default function Production() {
                 </div>
 
                 <Link
-                  to={lossDetailsMap[selectedLoss].route}
-                  className="inline-flex items-center justify-center gap-1.5 mt-2 bg-sky-600 hover:bg-sky-500 text-white font-bold py-1.5 px-3 rounded transition-colors text-[11px]"
+                  to={currentLossDetails.route}
+                  className="inline-flex items-center justify-center gap-1.5 mt-3 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-3 rounded-lg transition-colors text-xs shadow"
                 >
-                  Inspect in {lossDetailsMap[selectedLoss].dept.split(' ')[0]} Module
-                  <ArrowRight className="w-3 h-3" />
+                  Inspect in {currentLossDetails.dept.split(' ')[0]} Module
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             </div>
@@ -342,12 +434,6 @@ export default function Production() {
       </div>
     </div>
   );
-}
-
-
-
-
-
 
 
 
