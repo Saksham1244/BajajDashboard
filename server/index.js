@@ -885,21 +885,35 @@ app.get('/api/trace/genealogy', async (req, res) => {
       `);
 
       if (result.recordset.length > 0) {
-        return res.json({ table: result.recordset });
+        return res.json({ found: true, table: result.recordset });
+      } else {
+        return res.json({ found: false, table: [] });
       }
     }
   } catch (err) {
     console.warn('Genealogy DB fallback:', err.message);
   }
 
+  // Fallback only if searchEngine matches mock known UIDs
+  const mockUids = ['ENG-2026-00123', 'ENG-3018', 'ENG-3019'];
+  const isMatch = mockUids.some(u => u.toLowerCase().includes(searchEngine.toLowerCase()));
+
+  if (isMatch) {
+    return res.json({
+      found: true,
+      table: [
+        { id: 1, engineNo: 'ENG-2026-00123', station: 'ST-01', operation: 'Block Assembly', startTime: '10:00:00', endTime: '10:05:00', duration: '5m', operator: 'OP-001', result: 'OK', remarks: '-' },
+        { id: 2, engineNo: 'ENG-2026-00123', station: 'ST-02', operation: 'Piston Assembly', startTime: '10:06:00', endTime: '10:12:00', duration: '6m', operator: 'OP-002', result: 'OK', remarks: '-' },
+        { id: 3, engineNo: 'ENG-2026-00123', station: 'ST-03', operation: 'Head Assembly', startTime: '10:13:00', endTime: '10:19:00', duration: '6m', operator: 'OP-003', result: 'NOK', remarks: 'Torque issue' },
+        { id: 4, engineNo: 'ENG-2026-00123', station: 'RW-01', operation: 'Rework', startTime: '10:20:00', endTime: '10:35:00', duration: '15m', operator: 'OP-RW', result: 'OK', remarks: 'Retorqued' },
+        { id: 5, engineNo: 'ENG-2026-00123', station: 'ST-03', operation: 'Head Assembly', startTime: '10:36:00', endTime: '10:40:00', duration: '4m', operator: 'OP-003', result: 'OK', remarks: '-' }
+      ]
+    });
+  }
+
   res.json({
-    table: [
-      { id: 1, station: 'ST-01', operation: 'Block Assembly', startTime: '10:00:00', endTime: '10:05:00', duration: '5m', operator: 'OP-001', result: 'OK', remarks: '-' },
-      { id: 2, station: 'ST-02', operation: 'Piston Assembly', startTime: '10:06:00', endTime: '10:12:00', duration: '6m', operator: 'OP-002', result: 'OK', remarks: '-' },
-      { id: 3, station: 'ST-03', operation: 'Head Assembly', startTime: '10:13:00', endTime: '10:19:00', duration: '6m', operator: 'OP-003', result: 'NOK', remarks: 'Torque issue' },
-      { id: 4, station: 'RW-01', operation: 'Rework', startTime: '10:20:00', endTime: '10:35:00', duration: '15m', operator: 'OP-RW', result: 'OK', remarks: 'Retorqued' },
-      { id: 5, station: 'ST-03', operation: 'Head Assembly', startTime: '10:36:00', endTime: '10:40:00', duration: '4m', operator: 'OP-003', result: 'OK', remarks: '-' }
-    ]
+    found: false,
+    table: []
   });
 });
 
@@ -1051,8 +1065,15 @@ app.get('/api/trace/engine-rework', async (req, res) => {
 
       if (result.recordset.length > 0) {
         return res.json({
-          kpis: { totalDefects: result.recordset.length, reworkCount: result.recordset.length, finalStatus: 'OK', totalReworkTime: '20m' },
+          found: true,
+          kpis: { totalDefects: result.recordset.length, reworkCount: result.recordset.length, finalStatus: 'OK', totalReworkTime: `${result.recordset.length * 20}m` },
           table: result.recordset
+        });
+      } else {
+        return res.json({
+          found: false,
+          kpis: { totalDefects: 0, reworkCount: 0, finalStatus: 'N/A', totalReworkTime: '0m' },
+          table: []
         });
       }
     }
@@ -1060,11 +1081,24 @@ app.get('/api/trace/engine-rework', async (req, res) => {
     console.warn('Engine Rework DB fallback:', err.message);
   }
 
+  // Fallback only if searchEngine matches mock known UIDs
+  const mockUids = ['ENG-3018', 'ENG-3019', 'ENG-2026-00123'];
+  const isMatch = mockUids.some(u => u.toLowerCase().includes(searchEngine.toLowerCase()));
+
+  if (isMatch) {
+    return res.json({
+      found: true,
+      kpis: { totalDefects: 1, reworkCount: 1, finalStatus: 'OK', totalReworkTime: '20m' },
+      table: [
+        { id: 1, engineNo: 'ENG-3018', model: 'Pulsar 150', station: 'Line2 (Head Tightening)', reason: 'Torque Fail on Head Bolt #3', detectedTime: '2026-08-29 08:35', reworkStart: '08:50', reworkEnd: '09:10', status: 'Completed', operator: 'Rahul Sharma' }
+      ]
+    });
+  }
+
   res.json({
-    kpis: { totalDefects: 1, reworkCount: 1, finalStatus: 'OK', totalReworkTime: '20m' },
-    table: [
-      { id: 1, engineNo: searchEngine, model: 'Pulsar 150', station: 'Line2 (Head Tightening)', reason: 'Torque Fail on Head Bolt #3', detectedTime: '2026-08-29 08:35', reworkStart: '08:50', reworkEnd: '09:10', status: 'Completed', operator: 'Rahul Sharma' }
-    ]
+    found: false,
+    kpis: { totalDefects: 0, reworkCount: 0, finalStatus: 'N/A', totalReworkTime: '0m' },
+    table: []
   });
 });
 

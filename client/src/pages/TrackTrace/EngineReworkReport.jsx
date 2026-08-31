@@ -1,27 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu } from 'lucide-react';
+import { Cpu, AlertCircle, SearchX } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 
 export default function EngineReworkReport() {
-  const [searchUID, setSearchUID] = useState('ENG-3018');
-
+  const [searchUID, setSearchUID] = useState('ENG-1000001');
   const [dbData, setDbData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (searchUID) {
-      fetch(`/api/trace/engine-rework?uid=${searchUID}`)
+    if (searchUID.trim()) {
+      setIsLoading(true);
+      fetch(`/api/trace/engine-rework?uid=${encodeURIComponent(searchUID.trim())}`)
         .then(res => res.json())
-        .then(data => setDbData(data))
-        .catch(err => console.error(err));
+        .then(data => {
+          setDbData(data);
+          setIsLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setIsLoading(false);
+        });
+    } else {
+      setDbData(null);
     }
   }, [searchUID]);
 
-  const tableData = dbData?.table || [
-    { id: 1, engineNo: 'ENG-3018', model: 'Pulsar 150', station: 'Line2 (Head Tightening)', reason: 'Torque Fail on Head Bolt #3', detectedTime: '2026-08-29 08:35', reworkStart: '08:50', reworkEnd: '09:10', status: 'Completed', operator: 'Rahul Sharma' }
-  ];
+  const tableData = dbData?.table || [];
+  const hasRecords = tableData.length > 0;
 
   const columns = [
     { header: 'Engine No', accessor: 'engineNo' },
@@ -38,8 +46,9 @@ export default function EngineReworkReport() {
   ];
 
   const exportToExcel = () => {
+    if (!hasRecords) return;
     exportToXLSX('EngineReworkReport.xlsx', [
-      { name: 'Engine Summary', rows: [['Engine UID', 'Total Defects', 'Rework Count', 'Final Status', 'Total Rework Time'], [searchUID, tableData.length, tableData.length, 'OK', '20m']] },
+      { name: 'Engine Summary', rows: [['Engine UID', 'Total Defects', 'Rework Count', 'Final Status', 'Total Rework Time'], [searchUID, tableData.length, tableData.length, 'OK', `${tableData.length * 20}m`]] },
       { name: 'Rework Details', rows: [['Engine No', 'Model', 'Station', 'Reason', 'Detected Time', 'Start Time', 'End Time', 'Status', 'Operator'], ...tableData.map(r => [r.engineNo, r.model, r.station, r.reason, r.detectedTime, r.reworkStart, r.reworkEnd, r.status, r.operator])] }
     ]);
   };
@@ -51,21 +60,31 @@ export default function EngineReworkReport() {
         icon={Cpu}
         onExcelClick={exportToExcel}
         filters={[
-          { type: 'search', label: 'Engine UID', value: searchUID, onChange: setSearchUID, placeholder: 'Enter Engine UID...' }
+          { type: 'search', label: 'Engine UID', value: searchUID, onChange: setSearchUID, placeholder: 'Enter Engine UID (e.g. ENG-3018)...' }
         ]}
       />
       <div className="flex-1 flex flex-col gap-3">
-        {!searchUID ? (
-          <div className="flex-1 flex items-center justify-center bg-white rounded-lg shadow border border-slate-200">
-            <p className="text-slate-500 font-medium">Enter Engine UID to view rework summary</p>
+        {!searchUID.trim() ? (
+          <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+            <Cpu className="w-12 h-12 text-slate-300 mb-3" />
+            <h3 className="text-base font-bold text-slate-700">Enter Engine UID</h3>
+            <p className="text-sm text-slate-500 mt-1 max-w-md">Enter a valid serial number or Engine UID to view rework history and quality actions.</p>
+          </div>
+        ) : !hasRecords ? (
+          <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+            <SearchX className="w-12 h-12 text-rose-400 mb-3" />
+            <h3 className="text-base font-bold text-slate-800">No Data Available</h3>
+            <p className="text-sm text-slate-500 mt-1 max-w-md">
+              No rework records or defect history found for the given serial number <span className="font-semibold text-brand-dark">"{searchUID}"</span>.
+            </p>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <StatCard title="Total Defects" value={tableData.length} sub="Logged Inspection Issues" color="red" />
               <StatCard title="Rework Count" value={tableData.length} sub="Repair Cycles Completed" color="orange" />
-              <StatCard title="Final Status" value="OK" sub="Passed Quality Gate" color="green" />
-              <StatCard title="Total Rework Time" value="20m" sub="Cumulative Duration" color="blue" />
+              <StatCard title="Final Status" value={dbData?.kpis?.finalStatus || "OK"} sub="Passed Quality Gate" color="green" />
+              <StatCard title="Total Rework Time" value={dbData?.kpis?.totalReworkTime || `${tableData.length * 20}m`} sub="Cumulative Duration" color="blue" />
             </div>
             <div className="card p-4 flex-1">
               <h3 className="text-sm font-bold text-brand-dark mb-3">Rework Details</h3>
