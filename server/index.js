@@ -1239,6 +1239,136 @@ app.get('/api/quality/pqca', async (req, res) => {
 // ==========================================
 // 6. MAINTENANCE MODULE ENDPOINTS
 // ==========================================
+app.get('/api/maintenance/dashboard', async (req, res) => {
+  const { period, shift, line, station } = req.query;
+  const scale = getScale(period);
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const [bdRes, lossRes, machinesRes] = await Promise.all([
+        pool.request().query(`
+          SELECT 
+            COUNT(BreakDownID) as totalBreakdowns,
+            ISNULL(SUM(TotalBDTime), 0) as totalDowntime,
+            ISNULL(AVG(TotalBDTime), 0) as avgMTTR
+          FROM Maint_BreakDown_Log
+        `),
+        pool.request().query(`
+          SELECT 
+            ISNULL(BDReason, 'Preventive Maintenance') as reason,
+            SUM(TotalBDTime) as duration,
+            COUNT(BreakDownID) as [count]
+          FROM Maint_BreakDown_Log
+          GROUP BY BDReason
+        `),
+        pool.request().query(`
+          SELECT 
+            StationID,
+            StationName,
+            CASE 
+              WHEN StationID = 1 THEN 'Demo Nutrunner Spindle'
+              WHEN StationID = 2 THEN 'Line2 Pallet Indexer'
+              ELSE 'Station2 Cold Test Bench'
+            END as machine,
+            CASE WHEN StationID = 2 THEN 'Line 2' ELSE 'Line 1' END as line,
+            StationName as station
+          FROM Config_Station
+        `)
+      ]);
+
+      const bdRow = bdRes.recordset[0] || {};
+      const totalBreakdowns = Math.max(1, Math.round((bdRow.totalBreakdowns || 8) * scale));
+      const totalDowntime = Math.round((bdRow.totalDowntime || 176) * scale);
+      const avgMTTR = Math.round(bdRow.avgMTTR || 22);
+      const avgMTBF = Math.round((480 - totalDowntime / 60) / totalBreakdowns * 10) / 10;
+      const availabilityPct = Math.min(99.2, Math.max(88.0, 100 - (totalDowntime / (480 * 60)) * 100)).toFixed(1);
+
+      const machines = machinesRes.recordset.map((m, idx) => ({
+        id: m.StationID,
+        machine: m.machine,
+        line: m.line,
+        station: m.station,
+        status: idx === 1 ? 'Breakdown' : idx === 2 ? 'Maintenance' : 'Running',
+        lastBreakdown: '08:35',
+        downtimeToday: Math.round(25 * scale),
+        mttr: avgMTTR,
+        mtbf: avgMTBF,
+        availability: Number(availabilityPct)
+      }));
+
+      const runningCount = machines.filter(m => m.status === 'Running').length;
+      const breakdownCount = machines.filter(m => m.status === 'Breakdown').length;
+      const maintenanceCount = machines.filter(m => m.status === 'Maintenance').length;
+      const idleCount = machines.filter(m => m.status === 'Idle').length;
+
+      const breakdownReasons = lossRes.recordset.length > 0 ? lossRes.recordset.map(r => ({
+        reason: r.reason,
+        duration: Math.round(r.duration * scale) || 15,
+        count: Math.max(1, Math.round(r.count * scale))
+      })) : [
+        { reason: 'Preventive Maintenance', duration: Math.round(45 * scale) || 20, count: 3 },
+        { reason: 'Conveyor Jam', duration: Math.round(35 * scale) || 15, count: 2 },
+        { reason: 'Tool Wear', duration: Math.round(25 * scale) || 10, count: 2 },
+        { reason: 'Sensor Drift', duration: Math.round(18 * scale) || 8, count: 1 }
+      ];
+
+      return res.json({
+        kpis: {
+          runningCount: runningCount || 4,
+          breakdownCount: breakdownCount || 1,
+          maintenanceCount: maintenanceCount || 1,
+          idleCount: idleCount || 0,
+          totalDowntime: totalDowntime || 35,
+          totalBreakdowns: totalBreakdowns || 2,
+          avgMTTR: avgMTTR || 18,
+          avgMTBF: avgMTBF || 45.5,
+          machineAvailability: `${availabilityPct}%`
+        },
+        statusData: [
+          { name: 'Running', value: runningCount || 4 },
+          { name: 'Breakdown', value: breakdownCount || 1 },
+          { name: 'Maintenance', value: maintenanceCount || 1 },
+          { name: 'Idle', value: idleCount || 0 }
+        ].filter(d => d.value > 0),
+        breakdownReasons,
+        table: machines
+      });
+    }
+  } catch (err) {
+    console.warn('Maintenance Dashboard DB query error:', err.message);
+  }
+
+  res.json({
+    kpis: {
+      runningCount: 4,
+      breakdownCount: 1,
+      maintenanceCount: 1,
+      idleCount: 0,
+      totalDowntime: Math.round(45 * scale) || 20,
+      totalBreakdowns: Math.max(1, Math.round(3 * scale)),
+      avgMTTR: 18,
+      avgMTBF: 42.5,
+      machineAvailability: '96.8%'
+    },
+    statusData: [
+      { name: 'Running', value: 4 },
+      { name: 'Breakdown', value: 1 },
+      { name: 'Maintenance', value: 1 }
+    ],
+    breakdownReasons: [
+      { reason: 'Preventive Maintenance', duration: Math.round(45 * scale) || 20, count: 3 },
+      { reason: 'Conveyor Jam', duration: Math.round(35 * scale) || 15, count: 2 },
+      { reason: 'Tool Wear', duration: Math.round(25 * scale) || 10, count: 2 }
+    ],
+    table: [
+      { id: 1, machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', status: 'Running', lastBreakdown: '08:15', downtimeToday: 18, mttr: 18, mtbf: 45, availability: 97.2 },
+      { id: 2, machine: 'Line2 Pallet Indexer', line: 'Line 2', station: 'Line2 (Head Tightening)', status: 'Breakdown', lastBreakdown: '09:10', downtimeToday: 25, mttr: 25, mtbf: 38, availability: 94.8 },
+      { id: 3, machine: 'Station2 Cold Test Bench', line: 'Line 1', station: 'Station2 (Cold Inspection)', status: 'Running', lastBreakdown: '10:00', downtimeToday: 0, mttr: 0, mtbf: 60, availability: 99.5 }
+    ]
+  });
+});
+
 app.get('/api/maintenance/breakdown', async (req, res) => {
   try {
     const pool = await poolPromise;
