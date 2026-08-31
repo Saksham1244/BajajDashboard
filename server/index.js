@@ -318,7 +318,7 @@ app.get(['/api/dashboard/production', '/api/production/overview', '/api/producti
         `),
         getReq().query(`
           SELECT TOP 5
-            ISNULL(LC.LossName, ISNULL(D.Reason, 'Other')) as reason,
+            ISNULL(NULLIF(LTRIM(RTRIM(D.Reason)), ''), ISNULL(LC.LossName, 'Other Loss')) as reason,
             ISNULL(SUM(D.TotalDT), 0) as duration,
             COUNT(D.DowntimeID) as [count]
           FROM Perf_Downtime D
@@ -328,7 +328,7 @@ app.get(['/api/dashboard/production', '/api/production/overview', '/api/producti
             AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
             AND (@Shift IS NULL OR D.ProdShift = @Shift)
             AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
-          GROUP BY LC.LossName, D.Reason
+          GROUP BY ISNULL(NULLIF(LTRIM(RTRIM(D.Reason)), ''), ISNULL(LC.LossName, 'Other Loss'))
           ORDER BY duration DESC
         `)
       ]);
@@ -1149,7 +1149,7 @@ app.get('/api/trace/wip', async (req, res) => {
             ELSE 'Idle'
           END as [status],
           CONVERT(VARCHAR(5), W.StartTime, 108) as entryTime,
-          CAST(ROUND(DATEDIFF(minute, W.StartTime, GETDATE()) / 60.0, 1) AS DECIMAL(4,1)) as duration,
+          CAST(ROUND(DATEDIFF(minute, W.StartTime, GETDATE()) / 60.0, 1) AS FLOAT) as duration,
           'Operator' as operator
         FROM Prod_Engine_WIP W
         LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
@@ -1504,7 +1504,7 @@ app.get('/api/quality/pqca', async (req, res) => {
       const result = await request.query(`
         SELECT 
           Q.UID as id,
-          ISNULL(A.AuditListName, 'Engine Quality Audit') as checkpoint,
+          ISNULL(A.AuditListName, 'Engine Quality Audit') as [checkpoint],
           'Torque & Assembly' as category,
           '45 Nm' as [value],
           '45 Nm' as expected,
