@@ -19,7 +19,8 @@ app.get('/api/health', (req, res) => {
 // ==========================================
 // HELPER FUNCTIONS
 // ==========================================
-const normalizeShift = (s) => {
+const normalizeShift = (s, period) => {
+  if (period && period !== 'Shift') return null;
   if (!s || s === 'All') return null;
   const str = String(s).trim();
   if (str === 'Shift 1' || str === '1') return 'A';
@@ -198,7 +199,7 @@ app.get('/api/metadata/filters', async (req, res) => {
 // ==========================================
 app.get(['/api/dashboard/production', '/api/production/overview', '/api/production/report'], async (req, res) => {
   const { period, shift, startDate, endDate, line, model, sku } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -394,7 +395,7 @@ app.get(['/api/dashboard/production', '/api/production/overview', '/api/producti
 
 app.get('/api/production/plan', async (req, res) => {
   const { period, shift, startDate, endDate, line, model, sku } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -461,7 +462,7 @@ app.get('/api/production/plan', async (req, res) => {
 
 app.get('/api/production/hourly', async (req, res) => {
   const { period, shift, startDate, endDate, line } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -524,7 +525,7 @@ app.get('/api/production/hourly', async (req, res) => {
 
 app.get('/api/production/straight-pass', async (req, res) => {
   const { period, shift, startDate, endDate, line } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -605,7 +606,7 @@ app.get('/api/production/straight-pass', async (req, res) => {
 // ==========================================
 app.get(['/api/dashboard/performance', '/api/performance/ole'], async (req, res) => {
   const { period, shift, startDate, endDate, line } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -714,7 +715,7 @@ app.get(['/api/dashboard/performance', '/api/performance/ole'], async (req, res)
 
 app.get('/api/performance/downtime', async (req, res) => {
   const { period, shift, startDate, endDate, line, station, modelFamily, model, sku } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -831,7 +832,7 @@ app.get('/api/performance/downtime', async (req, res) => {
 // ==========================================
 app.get('/api/process/pokayoke', async (req, res) => {
   const { period, shift, startDate, endDate, line, station } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -893,7 +894,7 @@ app.get('/api/process/pokayoke', async (req, res) => {
 
 app.get('/api/process/bypass', async (req, res) => {
   const { period, shift, startDate, endDate, line, station, device } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -1002,7 +1003,7 @@ app.get('/api/process/torque', async (req, res) => {
 
 app.get('/api/process/conveyor', async (req, res) => {
   const { period, shift, startDate, endDate, line, station } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -1147,7 +1148,7 @@ app.get('/api/trace/genealogy', async (req, res) => {
 
 app.get('/api/trace/wip', async (req, res) => {
   const { period, shift, startDate, endDate, line, wipStatus } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -1365,7 +1366,7 @@ app.get('/api/trace/engine-rework', async (req, res) => {
 // ==========================================
 app.get('/api/quality/defect', async (req, res) => {
   const { period, shift, startDate, endDate, line, station, modelFamily, model, sku } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -1584,7 +1585,7 @@ app.get('/api/quality/pqca', async (req, res) => {
 
 app.get('/api/quality/checklist', async (req, res) => {
   const { type, period, shift, startDate, endDate, line, model, sku } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -1666,7 +1667,7 @@ app.get('/api/quality/checklist', async (req, res) => {
 // ==========================================
 app.get('/api/maintenance/dashboard', async (req, res) => {
   const { period, shift, startDate, endDate, line, station, machine } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -1797,7 +1798,7 @@ app.get('/api/maintenance/dashboard', async (req, res) => {
 
 app.get('/api/maintenance/breakdown', async (req, res) => {
   const { period, shift, startDate, endDate, line, station, machine } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -1877,7 +1878,7 @@ app.get('/api/maintenance/breakdown', async (req, res) => {
 
 app.get('/api/maintenance/downtime', async (req, res) => {
   const { period, shift, startDate, endDate, line, station } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -1955,7 +1956,7 @@ app.get('/api/maintenance/downtime', async (req, res) => {
 
 app.get('/api/maintenance/mttr-mtbf', async (req, res) => {
   const { period, shift, startDate, endDate, line, station, machine } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
@@ -2510,7 +2511,7 @@ app.get('/api/workforce/dashboard', async (req, res) => {
 
 app.get('/api/workforce/attendance', async (req, res) => {
   const { period, shift, line } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
 
   try {
     const pool = await poolPromise;
@@ -2624,7 +2625,7 @@ app.get('/api/workforce/skill-matrix', async (req, res) => {
 
 app.get('/api/workforce/allocation', async (req, res) => {
   const { period, shift, line } = req.query;
-  const dbShift = normalizeShift(shift);
+  const dbShift = normalizeShift(shift, period);
 
   try {
     const pool = await poolPromise;

@@ -142,7 +142,12 @@ export default function MaintenanceDashboard() {
               <ResponsiveContainer>
                 <ComposedChart data={breakdownReasons}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="reason" tick={{fontSize: 10}} />
+                  <XAxis 
+                    dataKey="reason" 
+                    interval={0}
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(val) => (val && val.length > 16 ? `${val.substring(0, 14)}…` : val)}
+                  />
                   <YAxis yAxisId="left" />
                   <YAxis yAxisId="right" orientation="right" />
                   <Tooltip />

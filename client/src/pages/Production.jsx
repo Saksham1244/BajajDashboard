@@ -121,7 +121,12 @@ export default function Production() {
               <ResponsiveContainer>
                 <ComposedChart data={paretoData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="reason" tick={{ fontSize: 11 }} />
+                  <XAxis 
+                    dataKey="reason" 
+                    interval={0}
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(val) => (val && val.length > 16 ? `${val.substring(0, 14)}…` : val)}
+                  />
                   <YAxis yAxisId="left" />
                   <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
                   <Tooltip
