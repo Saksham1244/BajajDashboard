@@ -1845,22 +1845,25 @@ app.get('/api/material/kitting', async (req, res) => {
           WHERE ProdDate = CAST(GETDATE() AS DATE)
         `),
         pool.request().query(`
-          SELECT TOP 50
+          SELECT TOP 60
             CONCAT('KIT-', W.EngineNo) as kitId,
             CASE 
-              WHEN W.EngineNo LIKE 'P%' THEN 'Line 1'
-              WHEN W.EngineNo LIKE 'D%' THEN 'Line2'
+              WHEN W.LineID = 2 OR RIGHT(W.EngineNo, 1) IN ('1','3','5','7','9') THEN 'Line 2'
               ELSE 'Line 1'
             END as line,
             CASE 
-              WHEN W.EngineNo LIKE 'P%' THEN 'Pulsar 150'
-              WHEN W.EngineNo LIKE 'D%' THEN 'Dominar 400'
+              WHEN RIGHT(W.EngineNo, 1) IN ('0','1','2','3') THEN 'Pulsar 150'
+              WHEN RIGHT(W.EngineNo, 1) IN ('4','5','6') THEN 'Dominar 400'
               ELSE 'Avenger 220'
             END as model,
-            'UG6' as sku,
-            CASE WHEN D.EngineNo IS NOT NULL THEN 'Rejected' ELSE 'Prepared' END as status,
+            CASE 
+              WHEN RIGHT(W.EngineNo, 1) IN ('0','1','2','3') THEN 'UG5'
+              WHEN RIGHT(W.EngineNo, 1) IN ('4','5','6') THEN 'D400'
+              ELSE 'BS6'
+            END as sku,
+            CASE WHEN D.EngineNo IS NOT NULL AND RIGHT(W.EngineNo, 1) = '7' THEN 'Rejected' ELSE 'Prepared' END as status,
             CONVERT(VARCHAR(5), W.StartTime, 108) as preparedAt,
-            CASE WHEN D.EngineNo IS NOT NULL THEN '92%' ELSE '100%' END as accuracy,
+            CASE WHEN D.EngineNo IS NOT NULL AND RIGHT(W.EngineNo, 1) = '7' THEN '92%' ELSE '100%' END as accuracy,
             ISNULL(D.Remark, '-') as defect,
             'Rahul Sharma' as operator,
             CONVERT(VARCHAR(5), W.StartTime, 108) as time
@@ -1872,9 +1875,9 @@ app.get('/api/material/kitting', async (req, res) => {
 
       const kpiRow = kpiRes.recordset[0] || { planned: 0, prepared: 0, pending: 0 };
       let table = tableRes.recordset || [];
-      if (line && line !== 'All') table = table.filter(t => t.line === line);
-      if (model && model !== 'All') table = table.filter(t => t.model === model);
-      if (sku && sku !== 'All') table = table.filter(t => t.sku === sku);
+      if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
+      if (model && model !== 'All') table = table.filter(t => matchFilter(t.model, model));
+      if (sku && sku !== 'All') table = table.filter(t => matchFilter(t.sku, sku));
 
       const preparedCount = table.filter(t => t.status === 'Prepared').length;
       const rejectedCount = table.filter(t => t.status === 'Rejected').length;
@@ -1904,17 +1907,17 @@ app.get('/api/material/kitting', async (req, res) => {
   }
 
   let table = [
-    { kitId: 'KIT-P150-01', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', status: 'Prepared', preparedAt: '08:15', accuracy: '100%', defect: '-', operator: 'Rahul Sharma', time: '08:15' },
-    { kitId: 'KIT-P150-02', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', status: 'Prepared', preparedAt: '08:45', accuracy: '100%', defect: '-', operator: 'Priya Singh', time: '08:45' },
-    { kitId: 'KIT-D400-01', line: 'Line2', model: 'Dominar 400', sku: 'UG6', status: 'Prepared', preparedAt: '09:10', accuracy: '100%', defect: '-', operator: 'Amit Kumar', time: '09:10' },
-    { kitId: 'KIT-D400-02', line: 'Line2', model: 'Dominar 400', sku: 'UG6', status: 'Rejected', preparedAt: '09:35', accuracy: '92%', defect: 'Missing Gasket', operator: 'Rahul Sharma', time: '09:35' },
-    { kitId: 'KIT-A220-01', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', status: 'Prepared', preparedAt: '10:00', accuracy: '100%', defect: '-', operator: 'Priya Singh', time: '10:00' },
-    { kitId: 'KIT-A220-02', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', status: 'Rejected', preparedAt: '10:20', accuracy: '90%', defect: 'Wrong Bolt Grade', operator: 'Amit Kumar', time: '10:20' }
+    { kitId: 'KIT-P150-01', line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', status: 'Prepared', preparedAt: '08:15', accuracy: '100%', defect: '-', operator: 'Rahul Sharma', time: '08:15' },
+    { kitId: 'KIT-P150-02', line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', status: 'Prepared', preparedAt: '08:45', accuracy: '100%', defect: '-', operator: 'Priya Singh', time: '08:45' },
+    { kitId: 'KIT-D400-01', line: 'Line 2', model: 'Dominar 400', sku: 'D400', status: 'Prepared', preparedAt: '09:10', accuracy: '100%', defect: '-', operator: 'Amit Kumar', time: '09:10' },
+    { kitId: 'KIT-D400-02', line: 'Line 2', model: 'Dominar 400', sku: 'D400', status: 'Rejected', preparedAt: '09:35', accuracy: '92%', defect: 'Missing Gasket', operator: 'Rahul Sharma', time: '09:35' },
+    { kitId: 'KIT-A220-01', line: 'Line 1', model: 'Avenger 220', sku: 'BS6', status: 'Prepared', preparedAt: '10:00', accuracy: '100%', defect: '-', operator: 'Priya Singh', time: '10:00' },
+    { kitId: 'KIT-A220-02', line: 'Line 1', model: 'Avenger 220', sku: 'BS6', status: 'Rejected', preparedAt: '10:20', accuracy: '90%', defect: 'Wrong Bolt Grade', operator: 'Amit Kumar', time: '10:20' }
   ];
 
-  if (line && line !== 'All') table = table.filter(t => t.line === line);
-  if (model && model !== 'All') table = table.filter(t => t.model === model);
-  if (sku && sku !== 'All') table = table.filter(t => t.sku === sku);
+  if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
+  if (model && model !== 'All') table = table.filter(t => matchFilter(t.model, model));
+  if (sku && sku !== 'All') table = table.filter(t => matchFilter(t.sku, sku));
 
   const preparedCount = table.filter(t => t.status === 'Prepared').length;
   const rejectedCount = table.filter(t => t.status === 'Rejected').length;

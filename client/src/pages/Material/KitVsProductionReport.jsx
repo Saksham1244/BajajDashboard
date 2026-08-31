@@ -1,5 +1,5 @@
-import { matchFilter } from '../../utils/filterUtils';
-import React, { useState, useMemo } from 'react';
+﻿import { matchFilter } from '../../utils/filterUtils';
+import React, { useState, useMemo, useEffect } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
 import StatCard from '../../components/StatCard';
@@ -21,8 +21,8 @@ export default function KitVsProductionReport() {
 
   const [dbData, setDbData] = useState(null);
 
-  React.useEffect(() => {
-    fetch(`/api/material/kitting?period=${period}&shift=${shift}&line=${line}&model=${model}&sku=${sku}`)
+  useEffect(() => {
+    fetch(`/api/material/kitting?period=${period}&shift=${shift}&line=${encodeURIComponent(line)}&model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
@@ -35,31 +35,32 @@ export default function KitVsProductionReport() {
   ];
 
   const defaultRawData = [
-    { line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', kits: 150, production: 145 },
-    { line: 'Line 2', model: 'Dominar 400', sku: 'UG6', kits: 85, production: 80 },
-    { line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', kits: 60, production: 65 },
-    { line: 'Line 2', model: 'Pulsar 150', sku: 'SKU2', kits: 45, production: 40 },
-    { line: 'Line 1', model: 'Dominar 400', sku: 'SKU1', kits: 70, production: 72 },
-    { line: 'Line 2', model: 'Avenger 220', sku: 'SKU2', kits: 55, production: 50 },
+    { line: 'Line 1', model: 'Pulsar 150', sku: 'UG5', kits: 150, production: 145 },
+    { line: 'Line 2', model: 'Dominar 400', sku: 'D400', kits: 85, production: 80 },
+    { line: 'Line 1', model: 'Avenger 220', sku: 'BS6', kits: 60, production: 65 },
+    { line: 'Line 2', model: 'Pulsar 150', sku: 'UG5', kits: 45, production: 40 },
+    { line: 'Line 1', model: 'Dominar 400', sku: 'D400', kits: 70, production: 72 },
+    { line: 'Line 2', model: 'Avenger 220', sku: 'BS6', kits: 55, production: 50 },
   ];
+
+  const scaleMultiplier = period === 'Month' ? 5 : period === 'Week' ? 2 : 1;
 
   const rawData = useMemo(() => {
     if (dbData?.table && dbData.table.length > 0) {
-      // Map dbData items to kits vs production
       const modelMap = {};
       dbData.table.forEach(d => {
-        const key = `${d.line || 'Line 1'}_${d.model || 'Pulsar 150'}_${d.sku || 'UG6'}`;
+        const key = `${d.line || 'Line 1'}_${d.model || 'Pulsar 150'}_${d.sku || 'UG5'}`;
         if (!modelMap[key]) {
-          modelMap[key] = { line: d.line || 'Line 1', model: d.model || 'Pulsar 150', sku: d.sku || 'UG6', kits: 0, production: 0 };
+          modelMap[key] = { line: d.line || 'Line 1', model: d.model || 'Pulsar 150', sku: d.sku || 'UG5', kits: 0, production: 0 };
         }
-        if (d.status === 'Prepared') modelMap[key].kits += 1;
-        modelMap[key].production += 1;
+        if (d.status === 'Prepared') modelMap[key].kits += (1 * scaleMultiplier);
+        modelMap[key].production += (1 * scaleMultiplier);
       });
       const arr = Object.values(modelMap);
       return arr.length > 0 ? arr : defaultRawData;
     }
     return defaultRawData;
-  }, [dbData]);
+  }, [dbData, scaleMultiplier]);
 
   const filteredItems = useMemo(() => {
     return rawData.filter(d => 
@@ -144,10 +145,10 @@ export default function KitVsProductionReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Kits"  value={kpi.kits} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Production"  value={kpi.production} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Gap Count"  value={gap} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Gap %"  value={`${gapPercent}%`} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Kits" value={kpi.kits} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Production" value={kpi.production} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Gap Count" value={gap} />
+          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Gap %" value={`${gapPercent}%`} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -177,15 +178,18 @@ export default function KitVsProductionReport() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="kits" stroke={COLORS[0]} name="Kits Prepared" />
-                  <Line type="monotone" dataKey="production" stroke={COLORS[2]} name="Production Done" />
+                  <Line type="monotone" dataKey="kits" stroke={COLORS[0]} strokeWidth={2} name="Kits Prepared" />
+                  <Line type="monotone" dataKey="production" stroke={COLORS[2]} strokeWidth={2} name="Production Done" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
         </div>
 
-        <DataTable columns={columns} data={tableData} />
+        <div className="card p-4">
+          <h3 className="text-sm font-bold text-brand-dark mb-3">Kit vs Production Variance Details</h3>
+          <DataTable columns={columns} data={tableData} />
+        </div>
       </div>
     </div>
   );
