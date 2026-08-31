@@ -256,7 +256,7 @@ app.get(['/api/dashboard/production', '/api/production/overview', '/api/producti
         `;
       }
 
-      const [kpiRes, planRes, straightRes, skuRes, paretoRes] = await Promise.allSettled([
+      const [kpiRes, planRes, straightRes, skuRes, paretoRes, enginesRes] = await Promise.allSettled([
         getReq().query(`
           SELECT 
             ISNULL(SUM(E.PlanQty), 0) as totalPlan,
@@ -319,17 +319,28 @@ app.get(['/api/dashboard/production', '/api/production/overview', '/api/producti
         getReq().query(`
           SELECT TOP 5
             ISNULL(NULLIF(LTRIM(RTRIM(D.Reason)), ''), ISNULL(LC.LossName, 'Other Loss')) as reason,
+            ISNULL(MAX(LC.LossName), 'Breakdown Loss') as category,
             ISNULL(SUM(D.TotalDT), 0) as duration,
-            COUNT(D.DowntimeID) as [count]
+            COUNT(D.DowntimeID) as [count],
+            ISNULL(MAX(L.LineName), 'Line 1') as line,
+            ISNULL(MAX(ST.StationName), 'Station ' + CAST(MAX(D.StationID) as VARCHAR)) as station,
+            ISNULL(MAX(U.UserName), 'Line Engineer') as loggedBy
           FROM Perf_Downtime D
           LEFT JOIN Config_LossCategory LC ON D.LossID = LC.LossID
           LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
+          LEFT JOIN Config_Station ST ON D.StationID = ST.StationID
+          LEFT JOIN Config_User U ON D.UserID = U.UserID
           WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
             AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
             AND (@Shift IS NULL OR D.ProdShift = @Shift)
             AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
           GROUP BY ISNULL(NULLIF(LTRIM(RTRIM(D.Reason)), ''), ISNULL(LC.LossName, 'Other Loss'))
           ORDER BY duration DESC
+        `),
+        getReq().query(`
+          SELECT TOP 15 EngineNo 
+          FROM Prod_Engine_WIP 
+          ORDER BY StartTime DESC, EngineNo DESC
         `)
       ]);
 
@@ -345,14 +356,18 @@ app.get(['/api/dashboard/production', '/api/production/overview', '/api/producti
       const straightPass = (straightRes.status === 'fulfilled' && straightRes.value?.recordset) || [];
       const skuData = (skuRes.status === 'fulfilled' && skuRes.value?.recordset) || [];
       const rawPareto = (paretoRes.status === 'fulfilled' && paretoRes.value?.recordset) || [];
+      const engineList = (enginesRes?.status === 'fulfilled' && enginesRes.value?.recordset?.map(e => e.EngineNo)) || [];
 
       const totalDuration = rawPareto.reduce((a, b) => a + (b.duration || 0), 0) || 1;
       let runningSum = 0;
-      const pareto = rawPareto.map(item => {
+      const pareto = rawPareto.map((item, idx) => {
         runningSum += item.duration;
+        const start = idx * 2;
+        const itemEngines = engineList.slice(start, start + 2);
         return {
           ...item,
-          cumPercent: Math.round((runningSum / totalDuration) * 100)
+          cumPercent: Math.round((runningSum / totalDuration) * 100),
+          engines: itemEngines.length > 0 ? itemEngines : (engineList.length > 0 ? [engineList[idx % engineList.length]] : [])
         };
       });
 

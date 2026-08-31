@@ -61,124 +61,47 @@ export default function Production() {
     (activeModel === 'All' || d.modelFamily === activeModel)
   );
 
-  const getLossDetails = (reason) => {
-    if (!reason) return null;
-    const rLower = reason.toLowerCase();
+  const paretoData = dbData?.pareto || [];
 
-    if (rLower.includes('preventive') || rLower.includes('pm') || rLower.includes('maintenance')) {
-      return {
-        dept: 'Plant Maintenance',
-        route: '/maintenance',
-        icon: Wrench,
-        badge: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-        rootCause: 'Scheduled preventive maintenance cycle (spindle lube, belt tensioning, sensor calibration).',
-        impactMinutes: 35,
-        engineer: 'Rajesh Nair (Sr. Maintenance Tech)',
-        action: 'PM checklist executed, pneumatic filters cleaned, calibration verified.',
-        engines: ['ENG-1000001', 'ENG-1000003']
-      };
-    }
+  const currentLossDetails = useMemo(() => {
+    if (!selectedLoss) return null;
+    const match = paretoData.find(p => p.reason === selectedLoss);
+    if (!match) return null;
+
+    const rLower = selectedLoss.toLowerCase();
+    let dept = 'Plant Maintenance';
+    let route = '/maintenance';
+    let badge = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+    let action = 'Logged in PPMS. Line cycle time recovered to nominal takt.';
 
     if (rLower.includes('quality') || rLower.includes('inspection') || rLower.includes('defect') || rLower.includes('hold')) {
-      return {
-        dept: 'Quality Assurance & Inspection',
-        route: '/quality',
-        icon: ShieldAlert,
-        badge: 'bg-purple-100 text-purple-800 border-purple-300',
-        rootCause: 'Cylinder head torque outlier (>52.4 Nm vs spec 45-50 Nm) during automated station check.',
-        impactMinutes: 22,
-        engineer: 'Anil Kulkarni (Quality Inspector)',
-        action: 'Re-calibrated torque spindle transducer and routed affected batch to rework bay.',
-        engines: ['ENG-1000002', 'ENG-1000004']
-      };
-    }
-
-    if (rLower.includes('tool') || rLower.includes('wear') || rLower.includes('replacement')) {
-      return {
-        dept: 'Process & Tooling Engineering',
-        route: '/process',
-        icon: Clock,
-        badge: 'bg-blue-100 text-blue-800 border-blue-300',
-        rootCause: 'Carbide milling insert wear index exceeded safety threshold (>5,000 engine cycles).',
-        impactMinutes: 18,
-        engineer: 'Suresh Patil (Process Tooling)',
-        action: 'Replaced tool insert, verified zero-point offset with dial gauge, and resumed cycle.',
-        engines: ['ENG-1000005', 'ENG-1000006']
-      };
-    }
-
-    if (rLower.includes('changeover') || rLower.includes('setup')) {
-      return {
-        dept: 'Production & Tooling',
-        route: '/process',
-        icon: Clock,
-        badge: 'bg-indigo-100 text-indigo-800 border-indigo-300',
-        rootCause: 'Fixture and pallet changeover delay between Pulsar 150 and Dominar 400 tooling.',
-        impactMinutes: 25,
-        engineer: 'Vikas Sharma (Line Supervisor)',
-        action: 'Quick-release clamp verified, Poka-yoke program re-indexed for Dominar model.',
-        engines: ['ENG-1000007']
-      };
-    }
-
-    if (rLower.includes('conveyor') || rLower.includes('jam') || rLower.includes('stoppage')) {
-      return {
-        dept: 'Automation & Controls',
-        route: '/process',
-        icon: AlertTriangle,
-        badge: 'bg-amber-100 text-amber-800 border-amber-300',
-        rootCause: 'Pallet proximity sensor optical blockage on Main Assembly Line transfer conveyor.',
-        impactMinutes: 15,
-        engineer: 'K. Raman (Automation Lead)',
-        action: 'Cleared optical sensor debris and realigned photoelectric beam reflector.',
-        engines: ['ENG-1000008']
-      };
-    }
-
-    if (rLower.includes('power') || rLower.includes('electric')) {
-      return {
-        dept: 'Electrical & Utilities',
-        route: '/maintenance',
-        icon: AlertTriangle,
-        badge: 'bg-rose-100 text-rose-800 border-rose-300',
-        rootCause: 'Grid transient voltage fluctuation triggered drive safety interlock.',
-        impactMinutes: 20,
-        engineer: 'M. Joshi (Plant Electrician)',
-        action: 'Reset servo drive controllers and verified clean auxiliary power bus.',
-        engines: ['ENG-1000009']
-      };
-    }
-
-    if (rLower.includes('material') || rLower.includes('short')) {
-      return {
-        dept: 'Stores & Material Kitting',
-        route: '/material',
-        icon: Package,
-        badge: 'bg-amber-100 text-amber-800 border-amber-300',
-        rootCause: 'M8 Flange Bolt batch stockout at Sub-Assembly Kitting Station 3.',
-        impactMinutes: 24,
-        engineer: 'Vikas Sharma (Stores Lead)',
-        action: 'Expedited buffer pull from Main Storage Rack B-12.',
-        engines: ['ENG-1000000']
-      };
+      dept = 'Quality Assurance';
+      route = '/quality';
+      badge = 'bg-purple-100 text-purple-800 border-purple-300';
+      action = 'Quality checkpoint inspected and verified.';
+    } else if (rLower.includes('tool') || rLower.includes('wear') || rLower.includes('conveyor') || rLower.includes('jam')) {
+      dept = 'Process & Tooling';
+      route = '/process';
+      badge = 'bg-blue-100 text-blue-800 border-blue-300';
+      action = 'Tooling verified and station sensor realigned.';
+    } else if (rLower.includes('material') || rLower.includes('short')) {
+      dept = 'Material & Kitting';
+      route = '/material';
+      badge = 'bg-amber-100 text-amber-800 border-amber-300';
+      action = 'Material buffer replenished at line station.';
     }
 
     return {
-      dept: 'Manufacturing Engineering',
-      route: '/performance',
-      icon: AlertTriangle,
-      badge: 'bg-slate-100 text-slate-800 border-slate-300',
-      rootCause: `Operational downtime event logged under "${reason}".`,
-      impactMinutes: 14,
-      engineer: 'Shift Supervisor',
-      action: 'Standard operational recovery procedure executed and logged in PPMS.',
-      engines: ['ENG-1000001']
+      dept,
+      route,
+      badge,
+      rootCause: `Downtime incident logged on ${match.line} (${match.station}) under reason: "${selectedLoss}".`,
+      impactMinutes: match.duration || 0,
+      engineer: match.loggedBy || 'Line Engineer',
+      action,
+      engines: match.engines || []
     };
-  };
-
-  const paretoData = dbData?.pareto || [];
-
-  const currentLossDetails = selectedLoss ? getLossDetails(selectedLoss) : null;
+  }, [selectedLoss, paretoData]);
 
   const columns = [
     { header: 'SKU Name', accessor: 'name' },
