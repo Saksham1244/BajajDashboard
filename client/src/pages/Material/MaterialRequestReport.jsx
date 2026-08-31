@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useMemo } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
@@ -42,8 +43,8 @@ export default function MaterialRequestReport() {
   const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
 
   const tableData = rawTable.filter(d => 
-    (line === 'All' || !d.line || d.line === line) &&
-    (station === 'All' || !d.station || d.station === station)
+    matchFilter(d.line, line) &&
+    matchFilter(d.station, station)
   );
 
   const totalRequests = tableData.length;

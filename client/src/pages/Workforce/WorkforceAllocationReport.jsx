@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useMemo } from 'react';
 import { UserCheck } from 'lucide-react';
 import useReportFilters from '../../hooks/useReportFilters';
@@ -33,8 +34,8 @@ export default function WorkforceAllocationReport() {
   ];
 
   const tableData = allTableData.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (shift === 'All' || d.shift === shift)
+    matchFilter(d.line, line) &&
+    matchFilter(d.shift, shift)
   );
 
   const allocationData = tableData.map(d => ({

@@ -122,6 +122,18 @@ const getScale = (period) => {
   return 1; // Month
 };
 
+const normStr = (str) => (str === null || str === undefined ? '' : String(str).toLowerCase().replace(/[\s_\-\(\)\/]+/g, ''));
+
+const matchFilter = (itemVal, filterVal) => {
+  if (!filterVal || filterVal === 'All') return true;
+  if (itemVal === null || itemVal === undefined) return false;
+  const nItem = normStr(itemVal);
+  const nFilter = normStr(filterVal);
+  if (nItem === nFilter) return true;
+  if (nItem.includes(nFilter) || nFilter.includes(nItem)) return true;
+  return false;
+};
+
 // ==========================================
 // 0. LIVE METADATA FILTERS ENDPOINT
 // ==========================================
@@ -1338,9 +1350,9 @@ app.get('/api/quality/checklist', async (req, res) => {
       `);
       if (result.recordset.length > 0) {
         let table = result.recordset;
-        if (line && line !== 'All') table = table.filter(r => r.line === line);
-        if (model && model !== 'All') table = table.filter(r => r.model === model);
-        if (shift && shift !== 'All') table = table.filter(r => r.shift === shift);
+        if (line && line !== 'All') table = table.filter(r => matchFilter(r.line, line));
+        if (model && model !== 'All') table = table.filter(r => matchFilter(r.model, model));
+        if (shift && shift !== 'All') table = table.filter(r => matchFilter(r.shift, shift));
         const total = table.length;
         const ok = table.filter(r => r.status === 'OK').length;
         const passed = table.filter(r => r.result === 'PASS').length;
@@ -1366,20 +1378,20 @@ app.get('/api/quality/checklist', async (req, res) => {
   // Fallback checklist/checkpoint dataset
   const sampleTable = [
     { id: 'CHK-001', name: 'Incoming Fastener Inspection', cpName: 'Bolt Thread Integrity', date: '2026-08-31 08:30', shift: 'Shift 1', line: 'Line 1', stage: 'Incoming', model: 'Pulsar 150', sku: 'SKU1', inspector: 'Rahul Sharma', category: 'Visual', stdValue: 'M8x1.25', actValue: 'M8x1.25', result: 'PASS', status: 'OK', total: 12, passed: 12, failed: 0, remarks: 'Verified OK' },
-    { id: 'CHK-002', name: 'Torque Audit Checklist', cpName: 'Cylinder Head Tightening', date: '2026-08-31 09:15', shift: 'Shift 1', line: 'Line2', stage: 'Tightening', model: 'Dominar 400', sku: 'SKU2', inspector: 'Priya Singh', category: 'Torque', stdValue: '45 Nm', actValue: '44.8 Nm', result: 'PASS', status: 'OK', total: 15, passed: 15, failed: 0, remarks: 'Calibrated tool' },
+    { id: 'CHK-002', name: 'Torque Audit Checklist', cpName: 'Cylinder Head Tightening', date: '2026-08-31 09:15', shift: 'Shift 1', line: 'Line 2', stage: 'Tightening', model: 'Dominar 400', sku: 'SKU2', inspector: 'Priya Singh', category: 'Torque', stdValue: '45 Nm', actValue: '44.8 Nm', result: 'PASS', status: 'OK', total: 15, passed: 15, failed: 0, remarks: 'Calibrated tool' },
     { id: 'CHK-003', name: 'Surface & Coating Inspection', cpName: 'Casing Paint Finish', date: '2026-08-31 10:00', shift: 'Shift 1', line: 'Line 1', stage: 'Surface Inspection', model: 'Pulsar 220', sku: 'SKU1', inspector: 'Amit Kumar', category: 'Visual', stdValue: 'No Scratch', actValue: 'Minor Scratch', result: 'FAIL', status: 'NOK', total: 10, passed: 9, failed: 1, remarks: 'Polished rework' },
-    { id: 'CHK-004', name: 'Clearance & Gasket Check', cpName: 'Valve Clearance Gap', date: '2026-08-31 11:30', shift: 'Shift 1', line: 'Line2', stage: 'Sub-Assembly', model: 'Avenger', sku: 'SKU2', inspector: 'Neha Verma', category: 'Measurement', stdValue: '0.08 mm', actValue: '0.08 mm', result: 'PASS', status: 'OK', total: 8, passed: 8, failed: 0, remarks: 'Within spec' },
+    { id: 'CHK-004', name: 'Clearance & Gasket Check', cpName: 'Valve Clearance Gap', date: '2026-08-31 11:30', shift: 'Shift 1', line: 'Line 2', stage: 'Sub-Assembly', model: 'Avenger', sku: 'SKU2', inspector: 'Neha Verma', category: 'Measurement', stdValue: '0.08 mm', actValue: '0.08 mm', result: 'PASS', status: 'OK', total: 8, passed: 8, failed: 0, remarks: 'Within spec' },
     { id: 'CHK-005', name: 'Electrical Harness Audit', cpName: 'Connector Lock Engagement', date: '2026-08-31 14:10', shift: 'Shift 2', line: 'Line 1', stage: 'Wiring', model: 'Pulsar 150', sku: 'SKU1', inspector: 'Vikram Patel', category: 'Functional', stdValue: 'Locked', actValue: 'Locked', result: 'PASS', status: 'OK', total: 14, passed: 14, failed: 0, remarks: 'Audited' },
-    { id: 'CHK-006', name: 'Oil & Fluid Level Inspection', cpName: 'Engine Oil Fill Level', date: '2026-08-31 15:45', shift: 'Shift 2', line: 'Line2', stage: 'Fluid Fill', model: 'Dominar 400', sku: 'SKU2', inspector: 'Rahul Sharma', category: 'Measurement', stdValue: '1.4 L', actValue: '1.4 L', result: 'PASS', status: 'OK', total: 6, passed: 6, failed: 0, remarks: 'Dipstick check' },
+    { id: 'CHK-006', name: 'Oil & Fluid Level Inspection', cpName: 'Engine Oil Fill Level', date: '2026-08-31 15:45', shift: 'Shift 2', line: 'Line 2', stage: 'Fluid Fill', model: 'Dominar 400', sku: 'SKU2', inspector: 'Rahul Sharma', category: 'Measurement', stdValue: '1.4 L', actValue: '1.4 L', result: 'PASS', status: 'OK', total: 6, passed: 6, failed: 0, remarks: 'Dipstick check' },
     { id: 'CHK-007', name: 'Cold Test Vibration Audit', cpName: 'Peak Vibration Amplitude', date: '2026-08-31 16:30', shift: 'Shift 2', line: 'Line 1', stage: 'Testing', model: 'Pulsar 220', sku: 'SKU1', inspector: 'Amit Kumar', category: 'Functional', stdValue: '< 2.5 mm/s', actValue: '2.8 mm/s', result: 'FAIL', status: 'NOK', total: 10, passed: 8, failed: 2, remarks: 'Re-balanced rotor' },
-    { id: 'CHK-008', name: 'Final Decal & Badge Audit', cpName: 'Tank Emblem Alignment', date: '2026-08-31 18:00', shift: 'Shift 2', line: 'Line2', stage: 'Final Dressing', model: 'Avenger', sku: 'SKU2', inspector: 'Priya Singh', category: 'Visual', stdValue: 'Centered ±1mm', actValue: 'Centered', result: 'PASS', status: 'OK', total: 8, passed: 8, failed: 0, remarks: 'All tags verified' }
+    { id: 'CHK-008', name: 'Final Decal & Badge Audit', cpName: 'Tank Emblem Alignment', date: '2026-08-31 18:00', shift: 'Shift 2', line: 'Line 2', stage: 'Final Dressing', model: 'Avenger', sku: 'SKU2', inspector: 'Priya Singh', category: 'Visual', stdValue: 'Centered ±1mm', actValue: 'Centered', result: 'PASS', status: 'OK', total: 8, passed: 8, failed: 0, remarks: 'All tags verified' }
   ];
 
   let filtered = sampleTable;
-  if (line && line !== 'All') filtered = filtered.filter(r => r.line === line);
-  if (model && model !== 'All') filtered = filtered.filter(r => r.model === model);
-  if (sku && sku !== 'All') filtered = filtered.filter(r => r.sku === sku);
-  if (shift && shift !== 'All') filtered = filtered.filter(r => r.shift === shift);
+  if (line && line !== 'All') filtered = filtered.filter(r => matchFilter(r.line, line));
+  if (model && model !== 'All') filtered = filtered.filter(r => matchFilter(r.model, model));
+  if (sku && sku !== 'All') filtered = filtered.filter(r => matchFilter(r.sku, sku));
+  if (shift && shift !== 'All') filtered = filtered.filter(r => matchFilter(r.shift, shift));
 
   const total = filtered.length;
   const ok = filtered.filter(r => r.status === 'OK').length;
@@ -1406,6 +1418,7 @@ app.get('/api/quality/checklist', async (req, res) => {
 app.get('/api/maintenance/dashboard', async (req, res) => {
   const { period, shift, line, station } = req.query;
   const scale = getScale(period);
+  const matchFilter = (item, filter) => (item || '').toString().toLowerCase().includes((filter || '').toString().toLowerCase());
 
   try {
     const pool = await poolPromise;
@@ -2037,9 +2050,9 @@ app.get('/api/material/dashboard', async (req, res) => {
       `);
 
       let table = result.recordset || [];
-      if (line && line !== 'All') table = table.filter(t => t.line === line);
-      if (model && model !== 'All') table = table.filter(t => t.model === model);
-      if (sku && sku !== 'All') table = table.filter(t => t.sku === sku);
+      if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
+      if (model && model !== 'All') table = table.filter(t => matchFilter(t.model, model));
+      if (sku && sku !== 'All') table = table.filter(t => matchFilter(t.sku, sku));
 
       const criticalCount = table.filter(d => d.status === 'Critical').length;
       const safeCount = table.filter(d => d.status === 'Safe').length;
@@ -2073,9 +2086,9 @@ app.get('/api/material/dashboard', async (req, res) => {
     { id: 'BAJ-ENG-108', material: 'Spark Plug Twin-Spark', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', location: 'Main Store', currentStock: 450, minLevel: 100, maxLevel: 300, status: 'Excess', category: 'Electrical' }
   ];
 
-  if (line && line !== 'All') table = table.filter(t => t.line === line);
-  if (model && model !== 'All') table = table.filter(t => t.model === model);
-  if (sku && sku !== 'All') table = table.filter(t => t.sku === sku);
+  if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
+  if (model && model !== 'All') table = table.filter(t => matchFilter(t.model, model));
+  if (sku && sku !== 'All') table = table.filter(t => matchFilter(t.sku, sku));
 
   const criticalCount = table.filter(d => d.status === 'Critical').length;
   const safeCount = table.filter(d => d.status === 'Safe').length;
@@ -2117,8 +2130,8 @@ app.get('/api/material/request', async (req, res) => {
       `);
 
       let table = result.recordset || [];
-      if (line && line !== 'All') table = table.filter(t => t.line === line);
-      if (station && station !== 'All') table = table.filter(t => t.station === station);
+      if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
+      if (station && station !== 'All') table = table.filter(t => matchFilter(t.station, station));
 
       return res.json({
         kpis: {
@@ -2142,8 +2155,8 @@ app.get('/api/material/request', async (req, res) => {
     { reqId: 'REQ-1005', material: 'Spark Plug Twin-Spark', line: 'Line 2', station: 'Line2', requestedQty: 100, issuedQty: 100, status: 'Fulfilled', reqTime: '10:45', fullTime: '10:55' },
   ];
 
-  if (line && line !== 'All') table = table.filter(t => t.line === line);
-  if (station && station !== 'All') table = table.filter(t => t.station === station);
+  if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
+  if (station && station !== 'All') table = table.filter(t => matchFilter(t.station, station));
 
   res.json({
     kpis: {
@@ -2179,9 +2192,9 @@ app.get('/api/material/consumption', async (req, res) => {
       `);
 
       let table = result.recordset || [];
-      if (line && line !== 'All') table = table.filter(t => t.line === line);
-      if (model && model !== 'All') table = table.filter(t => t.model === model);
-      if (sku && sku !== 'All') table = table.filter(t => t.sku === sku);
+      if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
+      if (model && model !== 'All') table = table.filter(t => matchFilter(t.model, model));
+      if (sku && sku !== 'All') table = table.filter(t => matchFilter(t.sku, sku));
 
       const totalVariancePct = table.length > 0 
         ? (table.reduce((acc, d) => acc + (d.variancePct || 0), 0) / table.length).toFixed(1)
@@ -2210,9 +2223,9 @@ app.get('/api/material/consumption', async (req, res) => {
     { material: 'Spark Plug Twin-Spark', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', consumed: 240, expected: 240, variance: 0, variancePct: 0.0 }
   ];
 
-  if (line && line !== 'All') table = table.filter(t => t.line === line);
-  if (model && model !== 'All') table = table.filter(t => t.model === model);
-  if (sku && sku !== 'All') table = table.filter(t => t.sku === sku);
+  if (line && line !== 'All') table = table.filter(t => matchFilter(t.line, line));
+  if (model && model !== 'All') table = table.filter(t => matchFilter(t.model, model));
+  if (sku && sku !== 'All') table = table.filter(t => matchFilter(t.sku, sku));
 
   const totalVariancePct = table.length > 0 
     ? (table.reduce((acc, d) => acc + (d.variancePct || 0), 0) / table.length).toFixed(1)

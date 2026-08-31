@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useMemo, useEffect } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
@@ -44,9 +45,9 @@ export default function KittingDashboard() {
   const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
 
   const tableData = rawTable.filter(d => 
-    (line === 'All' || !d.line || d.line === line) &&
-    (model === 'All' || !d.model || d.model === model) &&
-    (sku === 'All' || !d.sku || d.sku === sku)
+    matchFilter(d.line, line) &&
+    matchFilter(d.model, model) &&
+    matchFilter(d.sku, sku)
   );
 
   const preparedCount = tableData.filter(d => d.status === 'Prepared').length;

@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useMemo, useEffect } from 'react';
 import { RotateCcw } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
@@ -36,10 +37,10 @@ export default function ReworkStatusReport() {
   ];
 
   const filteredData = rawData.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station || (d.station && d.station.includes(station))) &&
-    (model === 'All' || d.model === model) &&
-    (sku === 'All' || d.sku === sku) &&
+    matchFilter(d.line, line) &&
+    (station === 'All' || matchFilter(d.station, station) || (d.station && d.station.includes(station))) &&
+    matchFilter(d.model, model) &&
+    matchFilter(d.sku, sku) &&
     (status === 'All' || d.status === status)
   );
 

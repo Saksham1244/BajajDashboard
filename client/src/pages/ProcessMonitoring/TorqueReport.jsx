@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useEffect } from 'react';
 import { Settings2 } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
@@ -48,10 +49,10 @@ export default function TorqueReport() {
   ]);
 
   const filteredData = rawData.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station) &&
-    (model === 'All' || d.model === model) &&
-    (sku === 'All' || d.sku === sku) &&
+    matchFilter(d.line, line) &&
+    matchFilter(d.station, station) &&
+    matchFilter(d.model, model) &&
+    matchFilter(d.sku, sku) &&
     (device === 'All' || d.device === device)
   );
 

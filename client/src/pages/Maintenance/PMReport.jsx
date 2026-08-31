@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useEffect } from 'react';
 import { ClipboardCheck } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
@@ -35,7 +36,7 @@ export default function PMReport() {
   const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultLogs;
 
   const tableData = rawTable.filter(d => 
-    (line === 'All' || d.line === line) &&
+    matchFilter(d.line, line) &&
     (machine === 'All' || d.machine === machine)
   );
 

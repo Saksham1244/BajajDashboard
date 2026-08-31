@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React from 'react';
 import { Workflow } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
@@ -41,10 +42,10 @@ export default function ConveyorReport() {
   ];
 
   const tableData = rawTable.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station) &&
-    (model === 'All' || d.model === model) &&
-    (sku === 'All' || d.sku === sku)
+    matchFilter(d.line, line) &&
+    matchFilter(d.station, station) &&
+    matchFilter(d.model, model) &&
+    matchFilter(d.sku, sku)
   );
 
   const affectedStationsData = dbData?.stations || tableData.map(d => ({

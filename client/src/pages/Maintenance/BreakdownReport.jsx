@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
@@ -30,8 +31,8 @@ export default function BreakdownReport() {
   ];
 
   const tableData = allBreakdowns.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station) &&
+    matchFilter(d.line, line) &&
+    matchFilter(d.station, station) &&
     (machine === 'All' || d.machine === machine)
   );
 

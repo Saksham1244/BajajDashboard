@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useEffect } from 'react';
 import { Wrench } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
@@ -36,8 +37,8 @@ export default function MaintenanceDashboard() {
   const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultMachines;
 
   const tableData = rawTable.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station) &&
+    matchFilter(d.line, line) &&
+    matchFilter(d.station, station) &&
     (machine === 'All' || d.machine === machine)
   );
 

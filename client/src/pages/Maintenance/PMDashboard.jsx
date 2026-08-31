@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useEffect } from 'react';
 import { CalendarCheck } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
@@ -38,7 +39,7 @@ export default function PMDashboard() {
   const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTasks;
 
   const tableData = rawTable.filter(d => 
-    (line === 'All' || d.line === line) &&
+    matchFilter(d.line, line) &&
     (machine === 'All' || d.machine === machine)
   );
 

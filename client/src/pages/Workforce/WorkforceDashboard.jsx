@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useMemo } from 'react';
 import { Users } from 'lucide-react';
 import useReportFilters from '../../hooks/useReportFilters';
@@ -33,9 +34,9 @@ export default function WorkforceDashboard() {
   ];
 
   const rawTable = allTable.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station) &&
-    (shift === 'All' || d.shift === shift)
+    matchFilter(d.line, line) &&
+    matchFilter(d.station, station) &&
+    matchFilter(d.shift, shift)
   );
   const totalAssigned = rawTable.length;
   const totalPresent = rawTable.filter(d => d.status === 'Present').length;

@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useMemo } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
@@ -44,8 +45,8 @@ export default function EngineStockReport() {
 
   const tableData = rawTable.filter(d => 
     (modelFamily === 'All' || !d.modelFamily || d.modelFamily === modelFamily) &&
-    (model === 'All' || !d.model || d.model === model) &&
-    (sku === 'All' || !d.sku || d.sku === sku)
+    matchFilter(d.model, model) &&
+    matchFilter(d.sku, sku)
   );
 
   const pieData = useMemo(() => {

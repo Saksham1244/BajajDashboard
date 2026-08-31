@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Timer } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
@@ -36,8 +37,8 @@ export default function DowntimeSummaryReport() {
   const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
 
   const tableData = rawTable.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station)
+    matchFilter(d.line, line) &&
+    matchFilter(d.station, station)
   );
 
   const totalDowntimeMins = tableData.reduce((acc, d) => acc + (Number(d.downtime) || 0), 0);

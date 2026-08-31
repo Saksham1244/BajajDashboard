@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useMemo } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
@@ -45,9 +46,9 @@ export default function MaterialDashboard() {
   const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
 
   const tableData = rawTable.filter(d => 
-    (line === 'All' || !d.line || d.line === line) &&
-    (model === 'All' || !d.model || d.model === model) &&
-    (sku === 'All' || !d.sku || d.sku === sku)
+    matchFilter(d.line, line) &&
+    matchFilter(d.model, model) &&
+    matchFilter(d.sku, sku)
   );
 
   const criticalCount = tableData.filter(d => d.status === 'Critical').length;

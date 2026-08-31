@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useMemo } from 'react';
 import { GraduationCap } from 'lucide-react';
 import useReportFilters from '../../hooks/useReportFilters';
@@ -36,8 +37,8 @@ export default function SkillMatrixReport() {
   }));
 
   const tableData = allTableData.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station)
+    matchFilter(d.line, line) &&
+    matchFilter(d.station, station)
   );
 
   const totalOps = tableData.length;

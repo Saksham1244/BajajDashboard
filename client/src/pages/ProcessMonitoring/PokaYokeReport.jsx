@@ -1,3 +1,4 @@
+import { matchFilter } from '../../utils/filterUtils';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Shield } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
@@ -52,10 +53,10 @@ export default function PokaYokeReport() {
   ]);
 
   const bypassLogData = allBypassLogs.filter(d => 
-    (line === 'All' || d.line === line) &&
-    (station === 'All' || d.station === station) &&
-    (model === 'All' || d.model === model) &&
-    (sku === 'All' || d.sku === sku) &&
+    matchFilter(d.line, line) &&
+    matchFilter(d.station, station) &&
+    matchFilter(d.model, model) &&
+    matchFilter(d.sku, sku) &&
     (device === 'All' || d.device === device || (d.device && d.device.includes(device)) || (device && device.includes(d.device)))
   );
 
