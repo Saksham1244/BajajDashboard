@@ -1485,7 +1485,7 @@ app.get('/api/quality/defect', async (req, res) => {
 
       const totalDefects = table.length;
       const effectiveProd = Math.max(totalProd, totalDefects);
-      const rft = effectiveProd > 0 ? Number(((1 - (totalDefects / effectiveProd)) * 100).toFixed(1)) : 100;
+      const rft = effectiveProd > 0 ? Number(((1 - (totalDefects / effectiveProd)) * 100).toFixed(1)) : 0;
 
       return res.json({
         kpis: {
@@ -1642,11 +1642,11 @@ app.get('/api/quality/checklist', async (req, res) => {
           totalChecklists: total,
           okChecklists: ok,
           nokChecklists: total - ok,
-          compliance: total > 0 ? Number(((ok / total) * 100).toFixed(1)) : 100,
+          compliance: total > 0 ? Number(((ok / total) * 100).toFixed(1)) : 0,
           totalCheckpoints: total * 10,
           passed: passed * 10,
           failed: (total - passed) * 10,
-          passRate: total > 0 ? Number(((passed / total) * 100).toFixed(1)) : 100
+          passRate: total > 0 ? Number(((passed / total) * 100).toFixed(1)) : 0
         },
         table
       });
