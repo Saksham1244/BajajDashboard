@@ -916,11 +916,12 @@ app.get('/api/process/bypass', async (req, res) => {
           CONVERT(VARCHAR(5), D.EndTime, 108) as endTime,
           CONVERT(VARCHAR(16), D.StartTime, 120) as [date],
           CONVERT(VARCHAR(16), D.StartTime, 120) as [datetime],
-          ISNULL(L.LineName, 'Line ' + CAST(D.SubAsslyLineID AS VARCHAR)) as line,
+          ISNULL(L.LineName, 'Line 1') as line,
           ISNULL(S.StationName, 'Demo') as station,
           'PY-01 Torque Bypass' as device,
           'Shift ' + ISNULL(D.ProdShift, 'A') as shift,
-          'SKU1' as model,
+          ISNULL(M.ModelName, 'Pulsar 150') as model,
+          ISNULL(SK.SKUName, 'SKU-001') as sku,
           ISNULL(D.TotalDT, 0) as duration,
           ISNULL(U.UserName, 'Operator') as operator,
           ISNULL(D.Reason, 'Bypass Triggered') as reason,
@@ -930,6 +931,8 @@ app.get('/api/process/bypass', async (req, res) => {
         LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
         LEFT JOIN Config_Station S ON D.StationID = S.StationID
         LEFT JOIN Config_User U ON D.UserID = U.UserID
+        LEFT JOIN Config_SKU SK ON SK.SKUID = 1
+        LEFT JOIN Config_Model M ON SK.ModelID = M.ModelID
         WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
           AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
           AND (@Shift IS NULL OR D.ProdShift = @Shift)
@@ -938,7 +941,8 @@ app.get('/api/process/bypass', async (req, res) => {
         ORDER BY D.StartTime DESC
       `);
 
-      return res.json({ bypassLogs: result.recordset || [] });
+      const rows = result.recordset || [];
+      return res.json({ bypassLogs: rows, table: rows });
     }
   } catch (err) {
     console.error('Bypass DB error:', err.message);
