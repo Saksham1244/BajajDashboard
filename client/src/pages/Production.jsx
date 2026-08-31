@@ -284,7 +284,9 @@ export default function Production() {
                   onClick={(e) => {
                     if (e && e.activePayload && e.activePayload[0]) {
                       const clickedReason = e.activePayload[0].payload.reason;
-                      setSelectedLoss(prev => prev === clickedReason ? null : clickedReason);
+                      if (clickedReason) {
+                        setSelectedLoss(prev => prev === clickedReason ? null : clickedReason);
+                      }
                     }
                   }}
                   className="cursor-pointer"
@@ -294,11 +296,12 @@ export default function Production() {
                   <YAxis yAxisId="left" />
                   <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
                   <Tooltip
+                    wrapperStyle={{ pointerEvents: 'none' }}
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         const data = payload[0].payload;
                         return (
-                          <div className="bg-slate-900 text-white text-xs p-2.5 rounded shadow-lg border border-slate-700">
+                          <div className="bg-slate-900 text-white text-xs p-2.5 rounded shadow-lg border border-slate-700 pointer-events-none">
                             <p className="font-bold text-amber-400">{data.reason}</p>
                             <p className="mt-1">Loss Events: <span className="font-semibold text-white">{data.count}</span></p>
                             <p>Cumulative: <span className="font-semibold text-rose-400">{data.cumPercent}%</span></p>
@@ -315,19 +318,15 @@ export default function Production() {
                     dataKey="count"
                     name="Loss Count"
                     fill="#f59e0b"
-                    onClick={(entry) => {
-                      if (entry && entry.reason) {
-                        setSelectedLoss(prev => prev === entry.reason ? null : entry.reason);
-                      }
-                    }}
                     cursor="pointer"
                   >
                     {paretoData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={selectedLoss === entry.reason ? '#0284c7' : '#f59e0b'}
-                        className="cursor-pointer hover:opacity-85 transition-opacity"
-                        onClick={() => setSelectedLoss(prev => prev === entry.reason ? null : entry.reason)}
+                        stroke={selectedLoss === entry.reason ? '#0f172a' : 'transparent'}
+                        strokeWidth={selectedLoss === entry.reason ? 2 : 0}
+                        className="cursor-pointer transition-all hover:opacity-80"
                       />
                     ))}
                   </Bar>
