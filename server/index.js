@@ -1704,15 +1704,25 @@ app.get('/api/maintenance/dashboard', async (req, res) => {
         `),
         request.query(`
           SELECT 
-            S.StationID,
-            S.StationName,
-            S.StationName + ' Machine' as machine,
-            ISNULL(L.LineName, 'Line ' + CAST(S.SubAsslyLineID AS VARCHAR)) as line,
-            S.StationName as station
-          FROM Config_Station S
+            B.BreakDownID as id,
+            ISNULL(S.StationName, 'Station') + ' Machine' as machine,
+            ISNULL(L.LineName, 'Line 1') as line,
+            ISNULL(S.StationName, 'Demo') as station,
+            CASE WHEN B.BDStatus = 0 THEN 'Breakdown' WHEN B.BDStatus = 1 THEN 'Running' ELSE 'Idle' END as [status],
+            CONVERT(VARCHAR(5), B.BDStartTime, 108) as lastBreakdown,
+            ISNULL(B.TotalBDTime, 0) as downtimeToday,
+            ISNULL(B.TotalBDTime, 0) as mttr,
+            ISNULL(B.TotalBDTime, 0) as mtbf,
+            CASE WHEN ISNULL(B.TotalBDTime, 0) > 0 THEN CAST(ROUND(100.0 - (B.TotalBDTime / 480.0) * 100.0, 1) as FLOAT) ELSE 100.0 END as availability
+          FROM Maint_BreakDown_Log B
+          LEFT JOIN Config_Station S ON B.StationID = S.StationID
           LEFT JOIN Config_Line L ON S.SubAsslyLineID = L.LineID
-          WHERE (@Line IS NULL OR L.LineName = @Line OR CAST(S.SubAsslyLineID AS VARCHAR) = @Line)
-            AND (@Station IS NULL OR S.StationName = @Station OR CAST(S.StationID AS VARCHAR) = @Station)
+          WHERE (@StartDate IS NULL OR B.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR B.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR B.ProdShift = @Shift OR B.ProdShift = 'Shift ' + @Shift)
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(S.SubAsslyLineID AS VARCHAR) = @Line)
+            AND (@Station IS NULL OR S.StationName = @Station OR CAST(B.StationID AS VARCHAR) = @Station)
+          ORDER BY B.BDStartTime DESC
         `)
       ]);
 
@@ -1720,22 +1730,10 @@ app.get('/api/maintenance/dashboard', async (req, res) => {
       const totalBreakdowns = bdRow.totalBreakdowns || 0;
       const totalDowntime = bdRow.totalDowntime || 0;
       const avgMTTR = Math.round(bdRow.avgMTTR || 0);
-      const avgMTBF = totalBreakdowns > 0 ? Number(((480 - totalDowntime / 60) / totalBreakdowns).toFixed(1)) : 480;
-      const availabilityPct = Math.max(0, Math.min(100, 100 - (totalDowntime / 480) * 100)).toFixed(1);
+      const avgMTBF = totalBreakdowns > 0 ? Number(((480 - totalDowntime / 60) / totalBreakdowns).toFixed(1)) : 0;
+      const availabilityPct = totalBreakdowns > 0 ? Math.max(0, Math.min(100, 100 - (totalDowntime / 480) * 100)).toFixed(1) : '100.0';
 
-      const machinesList = (machinesRes.status === 'fulfilled' && machinesRes.value?.recordset) || [];
-      const machines = machinesList.map((m, idx) => ({
-        id: m.StationID,
-        machine: m.machine,
-        line: m.line,
-        station: m.station,
-        status: totalBreakdowns > 0 && idx === 0 ? 'Breakdown' : 'Running',
-        lastBreakdown: '08:35',
-        downtimeToday: totalBreakdowns > 0 && idx === 0 ? totalDowntime : 0,
-        mttr: avgMTTR,
-        mtbf: avgMTBF,
-        availability: Number(availabilityPct)
-      }));
+      const machines = (machinesRes.status === 'fulfilled' && machinesRes.value?.recordset) || [];
 
       const runningCount = machines.filter(m => m.status === 'Running').length;
       const breakdownCount = machines.filter(m => m.status === 'Breakdown').length;
