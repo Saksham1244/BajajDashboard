@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
@@ -6,7 +6,6 @@ import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import useReportFilters from '../../hooks/useReportFilters';
 import useFilterOptions from '../../hooks/useFilterOptions';
-import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function BreakdownReport() {
   const { period, shift, getBaseFilters } = useReportFilters();
@@ -17,17 +16,17 @@ export default function BreakdownReport() {
   const [machine, setMachine] = useState('All');
   const [dbData, setDbData] = useState(null);
 
-  React.useEffect(() => {
-    fetch(`/api/maintenance/breakdown?period=${period}`)
+  useEffect(() => {
+    fetch(`/api/maintenance/breakdown?period=${period}&shift=${shift}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}&machine=${encodeURIComponent(machine)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
-  }, [period]);
+  }, [period, shift, line, station, machine]);
 
   const allBreakdowns = dbData?.table || [
-    { machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', start: '08:15', end: '08:33', duration: 18, reason: 'Nutrunner Spindle #2 Stall', tech: 'Amit Kumar', status: 'Resolved' },
-    { machine: 'Line2 Pallet Indexer', line: 'Line 2', station: 'Line2 (Head Tightening)', start: '09:10', end: '09:35', duration: 25, reason: 'Conveyor Pallet Stop Cylinder Jam', tech: 'Rahul Sharma', status: 'Resolved' },
-    { machine: 'Station2 Cold Test Bench', line: 'Line 1', station: 'Station2 (Cold Inspection)', start: '10:40', end: '10:52', duration: 12, reason: 'Vision Camera Communication Timeout', tech: 'Priya Singh', status: 'Resolved' }
+    { id: 1, machine: 'Demo Nutrunner Spindle', line: 'Line 1', station: 'Demo (Block Assly)', start: '08:15', end: '08:33', duration: 18, reason: 'Nutrunner Spindle #2 Stall', tech: 'Amit Kumar', status: 'Resolved' },
+    { id: 2, machine: 'Line2 Pallet Indexer', line: 'Line 2', station: 'Line2 (Head Tightening)', start: '09:10', end: '09:35', duration: 25, reason: 'Conveyor Pallet Stop Cylinder Jam', tech: 'Rahul Sharma', status: 'Resolved' },
+    { id: 3, machine: 'Station2 Cold Test Bench', line: 'Line 1', station: 'Station2 (Cold Inspection)', start: '10:40', end: '10:52', duration: 12, reason: 'Vision Camera Communication Timeout', tech: 'Priya Singh', status: 'Resolved' }
   ];
 
   const tableData = allBreakdowns.filter(d => 
@@ -36,10 +35,13 @@ export default function BreakdownReport() {
     (machine === 'All' || d.machine === machine)
   );
 
-  const totalBreakdowns = dbData?.kpis?.totalBreakdowns || tableData.length;
-  const avgMins = dbData?.kpis?.avgMins || 22;
-  const maxMins = dbData?.kpis?.maxMins || 45;
-  const totalDowntimeHours = dbData?.kpis?.totalDowntimeHours || '2.5';
+  const totalBreakdowns = tableData.length;
+  const totalDuration = tableData.reduce((acc, d) => acc + (Number(d.duration) || 0), 0);
+  const avgMins = totalBreakdowns > 0 ? Math.round(totalDuration / totalBreakdowns) : 0;
+  const maxMins = totalBreakdowns > 0 ? Math.max(...tableData.map(d => Number(d.duration) || 0)) : 0;
+  const totalDowntimeHours = (totalDuration / 60).toFixed(1);
+
+  const machineOptions = ['All', ...Array.from(new Set(allBreakdowns.map(d => d.machine).filter(Boolean)))];
 
   const columns = [
     { header: 'Machine', accessor: 'machine' },
@@ -83,7 +85,7 @@ export default function BreakdownReport() {
           ...getBaseFilters(),
           { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
           { type: 'dropdown', label: 'Station', options: filterOptions.stations, value: station, onChange: setStation },
-          { type: 'dropdown', label: 'Machine', options: filterOptions.stations, value: machine, onChange: setMachine },
+          { type: 'dropdown', label: 'Machine', options: machineOptions, value: machine, onChange: setMachine },
         ]} 
       />
       

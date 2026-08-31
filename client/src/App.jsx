@@ -42,6 +42,8 @@ const MaintenanceDashboard   = lazy(() => import('./pages/Maintenance/Maintenanc
 const BreakdownReport        = lazy(() => import('./pages/Maintenance/BreakdownReport'))
 const DowntimeSummaryReport  = lazy(() => import('./pages/Maintenance/DowntimeSummaryReport'))
 const MTTRMTBFReport         = lazy(() => import('./pages/Maintenance/MTTRMTBFReport'))
+const PMDashboard            = lazy(() => import('./pages/Maintenance/PMDashboard'))
+const PMReport               = lazy(() => import('./pages/Maintenance/PMReport'))
 
 const MaterialDashboard      = lazy(() => import('./pages/Material/MaterialDashboard'))
 const MaterialRequestReport  = lazy(() => import('./pages/Material/MaterialRequestReport'))

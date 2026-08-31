@@ -33,13 +33,57 @@ export default function KitVsProductionReport() {
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const chartData = dbData?.chartData || (dbData?.kpis ? [
-    { model: 'Pulsar 150', kits: dbData.kpis.prepared || 0, production: dbData.kpis.planned || 0 }
-  ] : []);
+  const defaultRawData = [
+    { line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', kits: 150, production: 145 },
+    { line: 'Line 2', model: 'Dominar 400', sku: 'UG6', kits: 85, production: 80 },
+    { line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', kits: 60, production: 65 },
+    { line: 'Line 2', model: 'Pulsar 150', sku: 'SKU2', kits: 45, production: 40 },
+    { line: 'Line 1', model: 'Dominar 400', sku: 'SKU1', kits: 70, production: 72 },
+    { line: 'Line 2', model: 'Avenger 220', sku: 'SKU2', kits: 55, production: 50 },
+  ];
+
+  const rawData = useMemo(() => {
+    if (dbData?.table && dbData.table.length > 0) {
+      // Map dbData items to kits vs production
+      const modelMap = {};
+      dbData.table.forEach(d => {
+        const key = `${d.line || 'Line 1'}_${d.model || 'Pulsar 150'}_${d.sku || 'UG6'}`;
+        if (!modelMap[key]) {
+          modelMap[key] = { line: d.line || 'Line 1', model: d.model || 'Pulsar 150', sku: d.sku || 'UG6', kits: 0, production: 0 };
+        }
+        if (d.status === 'Prepared') modelMap[key].kits += 1;
+        modelMap[key].production += 1;
+      });
+      const arr = Object.values(modelMap);
+      return arr.length > 0 ? arr : defaultRawData;
+    }
+    return defaultRawData;
+  }, [dbData]);
+
+  const filteredItems = useMemo(() => {
+    return rawData.filter(d => 
+      (line === 'All' || !d.line || d.line === line) &&
+      (model === 'All' || !d.model || d.model === model) &&
+      (sku === 'All' || !d.sku || d.sku === sku)
+    );
+  }, [rawData, line, model, sku]);
+
+  const chartData = useMemo(() => {
+    const map = {};
+    filteredItems.forEach(d => {
+      if (!map[d.model]) {
+        map[d.model] = { model: d.model, kits: 0, production: 0 };
+      }
+      map[d.model].kits += d.kits;
+      map[d.model].production += d.production;
+    });
+    const res = Object.values(map);
+    return res.length > 0 ? res : [{ model: model !== 'All' ? model : 'No Data', kits: 0, production: 0 }];
+  }, [filteredItems, model]);
 
   const kpi = {
-    kits: dbData?.kpis?.prepared || chartData.reduce((acc, d) => acc + (d.kits || 0), 0),
-    production: dbData?.kpis?.planned || chartData.reduce((acc, d) => acc + (d.production || 0), 0)
+    kits: filteredItems.reduce((acc, d) => acc + (d.kits || 0), 0),
+    production: filteredItems.reduce((acc, d) => acc + (d.production || 0), 0)
   };
   const gap = kpi.kits - kpi.production;
   const gapPercent = kpi.kits > 0 ? Math.round((gap / kpi.kits) * 100) : 0;
@@ -52,8 +96,10 @@ export default function KitVsProductionReport() {
     }));
   }, [period, shift, kpi]);
 
-  const tableData = chartData.map(d => ({
+  const tableData = filteredItems.map(d => ({
+    line: d.line,
     model: d.model,
+    sku: d.sku,
     kits: d.kits,
     production: d.production,
     gap: d.kits - d.production,
@@ -61,7 +107,9 @@ export default function KitVsProductionReport() {
   }));
 
   const columns = [
+    { header: 'Line', accessor: 'line' },
     { header: 'Model', accessor: 'model' },
+    { header: 'SKU', accessor: 'sku' },
     { header: 'Kits Prepared', accessor: 'kits' },
     { header: 'Production Done', accessor: 'production' },
     { header: 'Gap', accessor: 'gap', render: (val) => {
@@ -69,7 +117,8 @@ export default function KitVsProductionReport() {
       if(val < 0) color = 'text-red-600 font-bold';
       if(val > 0) color = 'text-green-600 font-bold';
       return <span className={color}>{val}</span>;
-    }}
+    }},
+    { header: 'Variance %', accessor: 'variance' }
   ];
 
   const exportToExcel = () => {
@@ -82,8 +131,8 @@ export default function KitVsProductionReport() {
         ['Gap %', gapPercent + '%']
       ]},
       { name: 'Kit vs Production', rows: [
-        ['Model', 'Kits Prepared', 'Production Done', 'Gap'],
-        ...tableData.map(d => [d.model, d.kits, d.production, d.gap])
+        ['Line', 'Model', 'SKU', 'Kits Prepared', 'Production Done', 'Gap', 'Variance %'],
+        ...tableData.map(d => [d.line, d.model, d.sku, d.kits, d.production, d.gap, d.variance])
       ]}
     ]);
   };

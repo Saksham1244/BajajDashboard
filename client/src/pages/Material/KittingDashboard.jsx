@@ -20,11 +20,11 @@ export default function KittingDashboard() {
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
-    fetch(`/api/material/kitting?period=${period}`)
+    fetch(`/api/material/kitting?period=${period}&shift=${shift}&line=${encodeURIComponent(line)}&model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
-  }, [period]);
+  }, [period, shift, line, model, sku]);
 
   const customFilters = [
     { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
@@ -32,35 +32,67 @@ export default function KittingDashboard() {
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
   ];
 
-  const tableData = dbData?.table || [];
+  const defaultTable = [
+    { kitId: 'KIT-P150-01', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', status: 'Prepared', preparedAt: '08:15', accuracy: '100%', defect: '-', operator: 'Rahul Sharma', time: '08:15' },
+    { kitId: 'KIT-P150-02', line: 'Line 1', model: 'Pulsar 150', sku: 'UG6', status: 'Prepared', preparedAt: '08:45', accuracy: '100%', defect: '-', operator: 'Priya Singh', time: '08:45' },
+    { kitId: 'KIT-D400-01', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', status: 'Prepared', preparedAt: '09:10', accuracy: '100%', defect: '-', operator: 'Amit Kumar', time: '09:10' },
+    { kitId: 'KIT-D400-02', line: 'Line 2', model: 'Dominar 400', sku: 'UG6', status: 'Rejected', preparedAt: '09:35', accuracy: '92%', defect: 'Missing Gasket', operator: 'Rahul Sharma', time: '09:35' },
+    { kitId: 'KIT-A220-01', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', status: 'Prepared', preparedAt: '10:00', accuracy: '100%', defect: '-', operator: 'Priya Singh', time: '10:00' },
+    { kitId: 'KIT-A220-02', line: 'Line 1', model: 'Avenger 220', sku: 'SKU1', status: 'Rejected', preparedAt: '10:20', accuracy: '90%', defect: 'Wrong Bolt Grade', operator: 'Amit Kumar', time: '10:20' }
+  ];
+
+  const rawTable = (dbData?.table && dbData.table.length > 0) ? dbData.table : defaultTable;
+
+  const tableData = rawTable.filter(d => 
+    (line === 'All' || !d.line || d.line === line) &&
+    (model === 'All' || !d.model || d.model === model) &&
+    (sku === 'All' || !d.sku || d.sku === sku)
+  );
+
+  const preparedCount = tableData.filter(d => d.status === 'Prepared').length;
+  const pendingCount = tableData.filter(d => d.status === 'Pending').length;
+  const rejectedCount = tableData.filter(d => d.status === 'Rejected').length;
+  const totalCount = tableData.length;
+  const accuracy = totalCount > 0 ? `${((preparedCount / (preparedCount + rejectedCount || 1)) * 100).toFixed(1)}%` : '0.0%';
 
   const kpi = {
-    planned: dbData?.kpis?.planned || tableData.length,
-    prepared: dbData?.kpis?.prepared || tableData.filter(d => d.status === 'Prepared').length,
-    pending: dbData?.kpis?.pending || tableData.filter(d => d.status === 'Pending').length,
-    accuracy: dbData?.kpis?.accuracy || (tableData.length > 0 ? '100.0%' : '0.0%'),
-    rejected: dbData?.kpis?.rejected || tableData.filter(d => d.status === 'Rejected').length,
-    status: dbData?.kpis?.status || (tableData.length > 0 ? 'On Track' : 'No Data')
+    planned: totalCount,
+    prepared: preparedCount,
+    pending: pendingCount,
+    accuracy: accuracy,
+    rejected: rejectedCount,
+    status: totalCount > 0 ? (rejectedCount === 0 ? 'On Track' : 'Action Required') : 'No Data'
   };
 
   const pieData = [
-    { name: 'Prepared', value: kpi.prepared },
-    { name: 'Pending', value: kpi.pending },
-    { name: 'Rejected', value: kpi.rejected },
+    { name: 'Prepared', value: preparedCount },
+    { name: 'Pending', value: pendingCount },
+    { name: 'Rejected', value: rejectedCount },
   ].filter(d => d.value > 0);
 
-  const barData = dbData?.barData || [];
+  const barData = useMemo(() => {
+    const counts = {};
+    tableData.forEach(d => {
+      if (d.status === 'Prepared') {
+        const m = d.model || 'Unknown';
+        counts[m] = (counts[m] || 0) + 1;
+      }
+    });
+    const result = Object.entries(counts).map(([mod, prep]) => ({ model: mod, prepared: prep }));
+    return result.length > 0 ? result : [{ model: model !== 'All' ? model : 'No Data', prepared: 0 }];
+  }, [tableData, model]);
 
   const trendData = useMemo(() => {
-    if (tableData.length === 0 && kpi.prepared === 0) return [];
+    if (tableData.length === 0 && preparedCount === 0) return [];
     return generateTimeLabels(period, shift).map((time) => ({
       time,
-      kitsPrepared: kpi.prepared
+      kitsPrepared: preparedCount
     }));
-  }, [period, shift, kpi.prepared, tableData.length]);
+  }, [period, shift, preparedCount, tableData.length]);
 
   const columns = [
     { header: 'Kit ID', accessor: 'kitId' },
+    { header: 'Line', accessor: 'line' },
     { header: 'Model', accessor: 'model' },
     { header: 'SKU', accessor: 'sku' },
     { header: 'Status', accessor: 'status', render: (val) => {
@@ -88,7 +120,7 @@ export default function KittingDashboard() {
       ]},
       { name: 'Kitting Status', rows: [['Status', 'Count'], ...pieData.map(d => [d.name, d.value])] },
       { name: 'Preparation by Model', rows: [['Model', 'Prepared'], ...barData.map(d => [d.model, d.prepared])] },
-      { name: 'Kit Inspection Details', rows: [['Kit ID', 'Model', 'SKU', 'Status', 'Prepared At', 'Accuracy %', 'Defect'], ...tableData.map(d => [d.kitId, d.model, d.sku, d.status, d.preparedAt, d.accuracy, d.defect])] }
+      { name: 'Kit Inspection Details', rows: [['Kit ID', 'Line', 'Model', 'SKU', 'Status', 'Prepared At', 'Accuracy %', 'Defect'], ...tableData.map(d => [d.kitId, d.line, d.model, d.sku, d.status, d.preparedAt, d.accuracy, d.defect])] }
     ]);
   };
 
