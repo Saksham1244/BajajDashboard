@@ -10,7 +10,7 @@ import useFilterOptions from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function WIPReport() {
-  const { period, shift, getBaseFilters } = useReportFilters();
+  const { period, shift, startDate, endDate, getBaseFilters } = useReportFilters();
   const filterOptions = useFilterOptions();
   const [line, setLine] = useState('All');
   const [wipStatus, setWipStatus] = useState('All');
@@ -18,11 +18,11 @@ export default function WIPReport() {
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
-    fetch(`/api/trace/wip?period=${period}&shift=${shift}&wipStatus=${encodeURIComponent(wipStatus)}&line=${encodeURIComponent(line)}`)
+    fetch(`/api/trace/wip?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}&wipStatus=${encodeURIComponent(wipStatus)}&line=${encodeURIComponent(line)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
-  }, [period, shift, wipStatus, line]);
+  }, [period, shift, startDate, endDate, wipStatus, line]);
   const COLORS = ['#0369a1', '#f97316', '#f43f5e', '#8b5cf6'];
   
   const rawTableData = dbData?.details || dbData?.table || [];

@@ -11,7 +11,7 @@ import useFilterOptions from '../../hooks/useFilterOptions';
 import { generateTimeLabels } from '../../utils/timeDataGenerator';
 
 export default function DowntimeSummaryReport() {
-  const { period, shift, getBaseFilters } = useReportFilters();
+  const { period, shift, startDate, endDate, getBaseFilters } = useReportFilters();
   const filterOptions = useFilterOptions();
   
   const [line, setLine] = useState('All');
@@ -20,11 +20,11 @@ export default function DowntimeSummaryReport() {
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
-    fetch(`/api/maintenance/downtime?period=${period}&shift=${shift}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}`)
+    fetch(`/api/maintenance/downtime?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
-  }, [period, shift, line, station]);
+  }, [period, shift, startDate, endDate, line, station]);
 
   const colors = ['#0369a1','#f97316'];
 
@@ -41,10 +41,12 @@ export default function DowntimeSummaryReport() {
   const totalBreakdowns = tableData.reduce((acc, d) => acc + (Number(d.count) || 0), 0);
   const mostAffected = tableData.length > 0 ? tableData.reduce((prev, curr) => (Number(curr.downtime) > Number(prev.downtime) ? curr : prev)).machine : 'N/A';
 
-  const chartData = dbData?.trend || generateTimeLabels(period, shift).map((time) => ({
-    time,
-    downtime: tableData.length > 0 ? Math.round(totalDowntimeMins / Math.max(1, generateTimeLabels(period, shift).length)) : 0
-  }));
+  const chartData = (dbData?.trend && dbData.trend.length > 0)
+    ? dbData.trend
+    : (tableData.length > 0
+        ? tableData.map(d => ({ time: d.start || d.date || d.shift, downtime: Number(d.downtime) || 0 }))
+        : generateTimeLabels(period, shift).map(time => ({ time, downtime: 0 }))
+      );
 
   const columns = [
     { header: 'Date', accessor: 'date' },

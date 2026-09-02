@@ -1,0 +1,4 @@
+# Ignore agent skill tooling from GitHub language statistics
+.agents/** linguist-vendored
+dist/** linguist-vendored
+node_modules/** linguist-vendored

@@ -114,9 +114,29 @@ const searchIndex = navItems.flatMap(module =>
 
 export default function Sidebar({ isOpen, setIsOpen }) {
   const { user, logout } = useAuth()
-  const [expandedMenus, setExpandedMenus] = useState({ 'Process Monitoring': true })
   const location = useLocation()
   const navigate = useNavigate()
+
+  // Helper to find which menu contains the current path
+  const getActiveModuleName = (pathname) => {
+    const activeModule = navItems.find(m => 
+      m.subItems?.some(sub => sub.path === pathname || (sub.path !== '/' && pathname.startsWith(sub.path)))
+    )
+    return activeModule ? activeModule.name : null
+  }
+
+  const [expandedMenus, setExpandedMenus] = useState(() => {
+    const activeName = getActiveModuleName(location.pathname)
+    return activeName ? { [activeName]: true } : {}
+  })
+
+  // Sync expanded menu when navigating
+  useEffect(() => {
+    const activeName = getActiveModuleName(location.pathname)
+    if (activeName) {
+      setExpandedMenus(prev => ({ ...prev, [activeName]: true }))
+    }
+  }, [location.pathname])
   
   const [searchTerm, setSearchTerm] = useState('')
   const [showResults, setShowResults] = useState(false)
