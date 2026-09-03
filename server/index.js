@@ -621,7 +621,7 @@ app.get(['/api/dashboard/performance', '/api/performance/ole'], async (req, res)
           LEFT JOIN Config_Line L ON E.LineID = L.LineID
           WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
             AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR E.ProdShift = @Shift)
+            AND (@Shift IS NULL OR E.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND E.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND E.ProdShift IN ('2', 'Shift 2', 'B')))
             AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
         `),
         getReq().query(`
@@ -636,7 +636,7 @@ app.get(['/api/dashboard/performance', '/api/performance/ole'], async (req, res)
           LEFT JOIN Config_Line L ON D.SubAsslyLineID = L.LineID
           WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
             AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
             AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
         `),
         getReq().query(`
@@ -649,7 +649,7 @@ app.get(['/api/dashboard/performance', '/api/performance/ole'], async (req, res)
           LEFT JOIN Config_Line L ON H.SubAsslyLineID = L.LineID
           WHERE (@StartDate IS NULL OR H.ProdDate >= @StartDate)
             AND (@EndDate IS NULL OR H.ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR H.ProdShift = @Shift OR H.ProdShift = 'Shift ' + @Shift)
+            AND (@Shift IS NULL OR H.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND H.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND H.ProdShift IN ('2', 'Shift 2', 'B')))
             AND (@Line IS NULL OR L.LineName = @Line OR CAST(H.SubAsslyLineID AS VARCHAR) = @Line)
         `),
         getReq().query(oleTrendQuery)
@@ -746,7 +746,7 @@ app.get('/api/performance/downtime', async (req, res) => {
           LEFT JOIN Config_SubLossCategory SLC ON D.SubLossID = SLC.SubLossID
           WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
             AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
             AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
             AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
           ORDER BY D.StartTime DESC
@@ -762,7 +762,7 @@ app.get('/api/performance/downtime', async (req, res) => {
           LEFT JOIN Config_Station S ON D.StationID = S.StationID
           WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
             AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
             AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
             AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
           GROUP BY LC.LossName
@@ -778,7 +778,7 @@ app.get('/api/performance/downtime', async (req, res) => {
           LEFT JOIN Config_Station S ON D.StationID = S.StationID
           WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
             AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
             AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
             AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
         `)
@@ -849,7 +849,7 @@ app.get('/api/process/pokayoke', async (req, res) => {
           LEFT JOIN Config_Line L ON E.LineID = L.LineID
           WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
             AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR E.ProdShift = @Shift)
+            AND (@Shift IS NULL OR E.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND E.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND E.ProdShift IN ('2', 'Shift 2', 'B')))
             AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
         `),
         getReq().query(`
@@ -859,7 +859,7 @@ app.get('/api/process/pokayoke', async (req, res) => {
           LEFT JOIN Config_Station S ON D.StationID = S.StationID
           WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
             AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR D.ProdShift = @Shift)
+            AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
             AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
             AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
         `)
@@ -929,7 +929,7 @@ app.get('/api/process/bypass', async (req, res) => {
         LEFT JOIN Config_Model M ON SK.ModelID = M.ModelID
         WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
           AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
-          AND (@Shift IS NULL OR D.ProdShift = @Shift)
+          AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
           AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
           AND (@Station IS NULL OR S.StationName = @Station OR CAST(D.StationID AS VARCHAR) = @Station)
         ORDER BY D.StartTime DESC
