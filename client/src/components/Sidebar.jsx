@@ -24,7 +24,7 @@ const navItems = [
     icon: LayoutDashboard,
     subItems: [
       { path: '/production/report', name: 'Production Report' },
-      { path: '/production/straight-pass', name: 'Straight Pass Report' },
+      { path: '/production/rework', name: 'Rework Status Report' },
     ]
   },
   { 
@@ -51,7 +51,6 @@ const navItems = [
     subItems: [
       { path: '/trace/genealogy', name: 'Genealogy Report' },
       { path: '/trace/wip', name: 'WIP Report' },
-      { path: '/trace/rework', name: 'Rework Status Report' },
       { path: '/trace/engine-rework', name: 'Engine Wise Rework Summary' },
     ]
   },
@@ -77,8 +76,6 @@ const navItems = [
       { path: '/maintenance/breakdown', name: 'Breakdown Report' },
       { path: '/maintenance/downtime', name: 'Downtime Summary Report' },
       { path: '/maintenance/mttr-mtbf', name: 'MTTR MTBF Report' },
-      { path: '/maintenance/pm-dashboard', name: 'PM Dashboard' },
-      { path: '/maintenance/pm-report', name: 'PM Report' },
     ]
   },
   {

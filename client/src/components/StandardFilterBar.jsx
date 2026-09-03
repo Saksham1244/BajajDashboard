@@ -29,6 +29,8 @@ export default function StandardFilterBar({ title, icon: Icon, onExcelClick, fil
     minute: '2-digit' 
   });
 
+  const activeShift = filters.find(f => f.activeShift)?.activeShift;
+
   return (
     <>
       {/* Print-Only Executive Header Banner */}
@@ -93,15 +95,14 @@ export default function StandardFilterBar({ title, icon: Icon, onExcelClick, fil
           )
           if (f.type === 'dropdown') return (
             <div key={i} className="flex flex-col gap-1 min-w-[115px]">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-                <span>{f.label}</span>
-                {f.activeShift && <span className="text-[9px] text-emerald-600 font-bold lowercase">live: {f.activeShift}</span>}
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                {f.label}
               </span>
               <select value={f.value} onChange={e => f.onChange(e.target.value)}
                 className="text-xs font-bold text-brand-dark bg-slate-50 border border-slate-200 rounded p-1.5 focus:outline-none focus:ring-1 focus:ring-[#0369a1]">
                 {f.options.map(opt => (
                   <option key={opt} value={opt}>
-                    {opt} {f.activeShift === opt ? '🟢 (Active)' : ''}
+                    {opt}
                   </option>
                 ))}
               </select>
@@ -149,18 +150,26 @@ export default function StandardFilterBar({ title, icon: Icon, onExcelClick, fil
           return null
         })}
 
-        {/* Action Buttons */}
-        <div className="ml-auto flex items-center gap-2 flex-shrink-0">
-          <button onClick={onExcelClick}
-            className="flex items-center gap-2 bg-green-700 text-white px-4 py-2 rounded shadow hover:bg-green-800 transition-colors h-[34px] text-xs font-bold uppercase tracking-wider">
-            <FileSpreadsheet className="w-4 h-4" />
-            Excel
-          </button>
-          <button onClick={onPrintClick || (() => window.print())}
-            className="flex items-center gap-2 bg-[#0369a1] text-white px-4 py-2 rounded shadow hover:bg-[#02517d] transition-colors h-[34px] text-xs font-bold uppercase tracking-wider">
-            <Download className="w-4 h-4" />
-            PDF
-          </button>
+        {/* Action Buttons & Live Shift Badge in Corner */}
+        <div className="ml-auto flex flex-col items-end justify-end gap-1.5 flex-shrink-0">
+          {activeShift && (
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="capitalize">Live: {activeShift}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <button onClick={onExcelClick}
+              className="flex items-center gap-2 bg-green-700 text-white px-4 py-2 rounded shadow hover:bg-green-800 transition-colors h-[34px] text-xs font-bold uppercase tracking-wider">
+              <FileSpreadsheet className="w-4 h-4" />
+              Excel
+            </button>
+            <button onClick={onPrintClick || (() => window.print())}
+              className="flex items-center gap-2 bg-[#0369a1] text-white px-4 py-2 rounded shadow hover:bg-[#02517d] transition-colors h-[34px] text-xs font-bold uppercase tracking-wider">
+              <Download className="w-4 h-4" />
+              PDF
+            </button>
+          </div>
         </div>
 
       </div>

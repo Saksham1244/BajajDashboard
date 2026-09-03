@@ -88,7 +88,8 @@ function App() {
           <Route path="production">
             <Route index element={<Navigate to="report" replace />} />
             <Route path="report" element={<Production />} />
-            <Route path="straight-pass" element={<StraightPassReport />} />
+            <Route path="straight-pass" element={<Navigate to="/production/report" replace />} />
+            <Route path="rework" element={<Suspense fallback={<Loading />}><ReworkStatusReport /></Suspense>} />
           </Route>
 
           {/* Performance Module */}
@@ -109,7 +110,7 @@ function App() {
             <Route index element={<Navigate to="genealogy" replace />} />
             <Route path="genealogy" element={<Suspense fallback={<Loading />}><GenealogyReport /></Suspense>} />
             <Route path="wip" element={<Suspense fallback={<Loading />}><WIPReport /></Suspense>} />
-            <Route path="rework" element={<Suspense fallback={<Loading />}><ReworkStatusReport /></Suspense>} />
+            <Route path="rework" element={<Navigate to="/production/rework" replace />} />
             <Route path="engine-rework" element={<Suspense fallback={<Loading />}><EngineReworkReport /></Suspense>} />
           </Route>
 

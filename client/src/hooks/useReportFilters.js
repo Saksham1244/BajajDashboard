@@ -45,14 +45,14 @@ export function useReportFilters() {
   const getBaseFilters = () => [
     { type: 'period', value: period, onChange: handlePeriodChange },
     { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate },
-    ...(period === 'Shift' ? [{
+    {
       type: 'dropdown',
       label: 'Shift',
-      options: ['Shift 1', 'Shift 2'],
+      options: ['All', 'Shift 1', 'Shift 2'],
       value: shift,
       onChange: setShift,
       activeShift: activeShift
-    }] : [])
+    }
   ];
 
   return {

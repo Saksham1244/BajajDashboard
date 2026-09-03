@@ -10,7 +10,7 @@ import useReportFilters from '../../hooks/useReportFilters';
 import useFilterOptions from '../../hooks/useFilterOptions';
 
 export default function ReworkStatusReport() {
-  const { period, shift, getBaseFilters } = useReportFilters();
+  const { period, shift, startDate, endDate, getBaseFilters } = useReportFilters();
   const filterOptions = useFilterOptions();
 
   const [line, setLine] = useState('All');
@@ -22,11 +22,11 @@ export default function ReworkStatusReport() {
   const [dbData, setDbData] = useState(null);
 
   useEffect(() => {
-    fetch(`/api/trace/rework?period=${period}&shift=${shift}&status=${encodeURIComponent(status)}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}&model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}`)
+    fetch(`/api/trace/rework?period=${period}&shift=${shift}&startDate=${startDate || ''}&endDate=${endDate || ''}&status=${encodeURIComponent(status)}&line=${encodeURIComponent(line)}&station=${encodeURIComponent(station)}&model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}`)
       .then(res => res.json())
       .then(data => setDbData(data))
       .catch(err => console.error(err));
-  }, [period, shift, status, line, station, model, sku]);
+  }, [period, shift, startDate, endDate, status, line, station, model, sku]);
 
   const rawData = dbData?.table || [];
 

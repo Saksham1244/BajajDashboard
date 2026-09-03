@@ -20,12 +20,11 @@ app.get('/api/health', (req, res) => {
 // HELPER FUNCTIONS
 // ==========================================
 const normalizeShift = (s, period) => {
-  if (period && period !== 'Shift') return null;
-  if (!s || s === 'All') return null;
+  if (!s || s === 'All' || s === 'All Shifts') return null;
   const str = String(s).trim();
-  if (str === 'Shift 1' || str === '1') return 'A';
-  if (str === 'Shift 2' || str === '2') return 'B';
-  if (str === 'Shift 3' || str === '3') return 'C';
+  if (str === 'Shift 1' || str === '1' || str === 'A') return 'A';
+  if (str === 'Shift 2' || str === '2' || str === 'B') return 'B';
+  if (str === 'Shift 3' || str === '3' || str === 'C') return 'C';
   return str;
 };
 
@@ -214,11 +213,16 @@ app.get(['/api/dashboard/production', '/api/production/overview', '/api/producti
         SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
       });
 
-      let planVsActualQuery = `
+      const isSingleDay = effectiveStartDate && effectiveEndDate && effectiveStartDate === effectiveEndDate && period !== 'Month' && period !== 'Week';
+
+      let timeTrendQuery = `
         SELECT 
-          'Shift ' + E.ProdShift as name,
+          CONVERT(VARCHAR(10), E.ProdDate, 120) as [time],
+          CONVERT(VARCHAR(10), E.ProdDate, 120) as name,
           ISNULL(SUM(E.PlanQty), 0) as [plan],
-          ISNULL(SUM(E.ENGCompleted_Qty), 0) as actual
+          ISNULL(SUM(E.ENGCompleted_Qty), 0) as actual,
+          ISNULL(SUM(E.ENGCompleted_Qty) - SUM(E.ENGReworkOK_Qty), 0) as straight,
+          ISNULL(SUM(E.ENGReworkOK_Qty), 0) as rework
         FROM Prod_EnginePlanExecution E
         LEFT JOIN Config_Line L ON E.LineID = L.LineID
         LEFT JOIN Config_SKU S ON E.SKUID = S.SKUID
@@ -226,32 +230,31 @@ app.get(['/api/dashboard/production', '/api/production/overview', '/api/producti
         LEFT JOIN Config_ModelFamily F ON M.ModelFamilyID = F.ModelFamilyID
         WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
           AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
-          AND (@Shift IS NULL OR E.ProdShift = @Shift)
+          AND (@Shift IS NULL OR E.ProdShift = @Shift OR (@Shift = 'A' AND E.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift = 'B' AND E.ProdShift IN ('2', 'Shift 2', 'B')))
           AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
           AND (@Model IS NULL OR M.ModelName = @Model)
           AND (@SKU IS NULL OR S.SKUName = @SKU)
-        GROUP BY E.ProdShift
+        GROUP BY E.ProdDate
+        ORDER BY E.ProdDate ASC
       `;
 
-      if (period === 'Month' || period === 'Week') {
-        planVsActualQuery = `
+      if (isSingleDay) {
+        timeTrendQuery = `
           SELECT 
-            CONVERT(VARCHAR(10), E.ProdDate, 120) as name,
-            ISNULL(SUM(E.PlanQty), 0) as [plan],
-            ISNULL(SUM(E.ENGCompleted_Qty), 0) as actual
-          FROM Prod_EnginePlanExecution E
-          LEFT JOIN Config_Line L ON E.LineID = L.LineID
-          LEFT JOIN Config_SKU S ON E.SKUID = S.SKUID
-          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
-          LEFT JOIN Config_ModelFamily F ON M.ModelFamilyID = F.ModelFamilyID
-          WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
-            AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR E.ProdShift = @Shift)
-            AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
-            AND (@Model IS NULL OR M.ModelName = @Model)
-            AND (@SKU IS NULL OR S.SKUName = @SKU)
-          GROUP BY E.ProdDate
-          ORDER BY E.ProdDate ASC
+            CONVERT(VARCHAR(5), H.Timestamp, 108) as [time],
+            CONVERT(VARCHAR(5), H.Timestamp, 108) as name,
+            ISNULL(SUM(H.PlannedQuantity), 0) as [plan],
+            ISNULL(SUM(H.TotalQuantity), 0) as actual,
+            ISNULL(SUM(H.GoodQuantity), 0) as straight,
+            ISNULL(SUM(H.RejectionQuantity), 0) as rework
+          FROM Perf_Hourly_OLE H
+          LEFT JOIN Config_Line L ON H.SubAsslyLineID = L.LineID
+          WHERE (@StartDate IS NULL OR H.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR H.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR H.ProdShift = @Shift OR (@Shift = 'A' AND H.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift = 'B' AND H.ProdShift IN ('2', 'Shift 2', 'B')))
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(H.SubAsslyLineID AS VARCHAR) = @Line)
+          GROUP BY CONVERT(VARCHAR(5), H.Timestamp, 108)
+          ORDER BY [time] ASC
         `;
       }
 
@@ -264,7 +267,7 @@ app.get(['/api/dashboard/production', '/api/production/overview', '/api/producti
           Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
           Model: { type: sql.VarChar(50), value: (model && model !== 'All') ? model : null },
           SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
-        }).query(planVsActualQuery),
+        }).query(timeTrendQuery),
         createSqlRequest(pool, {
           StartDate: { type: sql.Date, value: effectiveStartDate },
           EndDate: { type: sql.Date, value: effectiveEndDate },
@@ -279,6 +282,8 @@ app.get(['/api/dashboard/production', '/api/production/overview', '/api/producti
             ISNULL(F.ModelFamilyName, 'Family-' + CAST(E.SKUID AS VARCHAR)) as modelFamily,
             ISNULL(SUM(E.PlanQty), 0) as [plan],
             ISNULL(SUM(E.ENGCompleted_Qty), 0) as actual,
+            ISNULL(SUM(E.ENGCompleted_Qty) - SUM(E.ENGReworkOK_Qty), 0) as straight,
+            ISNULL(SUM(E.ENGReworkOK_Qty), 0) as rework,
             ISNULL(SUM(E.ENGMainLine_Qty) - SUM(E.ENGCompleted_Qty), 0) as wip,
             ISNULL(SUM(E.ENGMaterialHold_Qty) + SUM(E.ENGQualityHold_Qty), 0) as rollover
           FROM Prod_EnginePlanExecution E
@@ -571,7 +576,40 @@ app.get(['/api/dashboard/performance', '/api/performance/ole'], async (req, res)
         Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null }
       });
 
-      const [prodRes, dtRes, hourlyRes] = await Promise.allSettled([
+      const isSingleDay = effectiveStartDate && effectiveEndDate && effectiveStartDate === effectiveEndDate && period !== 'Month' && period !== 'Week';
+      const oleTrendQuery = isSingleDay ? `
+        SELECT 
+          CONVERT(VARCHAR(5), H.Timestamp, 108) as [time],
+          CAST(ISNULL(AVG(H.OLE), 0) AS DECIMAL(5,1)) as ole,
+          CAST(ISNULL(AVG(H.Availability), 0) AS DECIMAL(5,1)) as availability,
+          CAST(ISNULL(AVG(H.Performance), 0) AS DECIMAL(5,1)) as performance,
+          85.0 as target
+        FROM Perf_Hourly_OLE H
+        LEFT JOIN Config_Line L ON H.SubAsslyLineID = L.LineID
+        WHERE (@StartDate IS NULL OR H.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR H.ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR H.ProdShift = @Shift OR (@Shift = 'A' AND H.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift = 'B' AND H.ProdShift IN ('2', 'Shift 2', 'B')))
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(H.SubAsslyLineID AS VARCHAR) = @Line)
+        GROUP BY CONVERT(VARCHAR(5), H.Timestamp, 108)
+        ORDER BY [time] ASC
+      ` : `
+        SELECT 
+          CONVERT(VARCHAR(10), H.ProdDate, 120) as [time],
+          CAST(ISNULL(AVG(H.OLE), 0) AS DECIMAL(5,1)) as ole,
+          CAST(ISNULL(AVG(H.Availability), 0) AS DECIMAL(5,1)) as availability,
+          CAST(ISNULL(AVG(H.Performance), 0) AS DECIMAL(5,1)) as performance,
+          85.0 as target
+        FROM Perf_Hourly_OLE H
+        LEFT JOIN Config_Line L ON H.SubAsslyLineID = L.LineID
+        WHERE (@StartDate IS NULL OR H.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR H.ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR H.ProdShift = @Shift OR (@Shift = 'A' AND H.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift = 'B' AND H.ProdShift IN ('2', 'Shift 2', 'B')))
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(H.SubAsslyLineID AS VARCHAR) = @Line)
+        GROUP BY H.ProdDate
+        ORDER BY H.ProdDate ASC
+      `;
+
+      const [prodRes, dtRes, hourlyRes, trendRes] = await Promise.allSettled([
         getReq().query(`
           SELECT 
             ISNULL(SUM(E.PlanQty), 0) as totalPlan,
@@ -613,19 +651,22 @@ app.get(['/api/dashboard/performance', '/api/performance/ole'], async (req, res)
             AND (@EndDate IS NULL OR H.ProdDate <= @EndDate)
             AND (@Shift IS NULL OR H.ProdShift = @Shift OR H.ProdShift = 'Shift ' + @Shift)
             AND (@Line IS NULL OR L.LineName = @Line OR CAST(H.SubAsslyLineID AS VARCHAR) = @Line)
-        `)
+        `),
+        getReq().query(oleTrendQuery)
       ]);
 
       const prodRow = (prodRes.status === 'fulfilled' && prodRes.value?.recordset?.[0]) || { totalPlan: 0, totalProd: 0, totalRework: 0, totalNotOk: 0, dayCount: 0 };
       const dtRow = (dtRes.status === 'fulfilled' && dtRes.value?.recordset?.[0]) || { totalDT: 0, mechanicalDT: 0, electricalDT: 0, qualityDT: 0, setupDT: 0, processDT: 0 };
       const hourlyRow = (hourlyRes.status === 'fulfilled' && hourlyRes.value?.recordset?.[0]) || {};
+      const oleTrend = (trendRes.status === 'fulfilled' && trendRes.value?.recordset) || [];
 
       const hasData = (prodRow.totalPlan > 0 || prodRow.totalProd > 0 || dtRow.totalDT > 0 || (hourlyRow.avgOLE !== null && hourlyRow.avgOLE !== undefined));
 
       if (!hasData) {
         return res.json({
           kpis: { ole: 0, oee: 0, availability: 0, performance: 0 },
-          downtime: []
+          downtime: [],
+          oleTrend: []
         });
       }
 
@@ -653,7 +694,7 @@ app.get(['/api/dashboard/performance', '/api/performance/ole'], async (req, res)
         { name: 'Setup', downTime: dtRow.setupDT || 0, runTime: Math.max(0, Math.round(plannedMinutes * 0.25) - (dtRow.setupDT || 0)) }
       ] : [];
 
-      return res.json({ kpis, downtime });
+      return res.json({ kpis, downtime, oleTrend });
     }
   } catch (err) {
     console.error('Performance endpoint error:', err.message);
@@ -661,7 +702,8 @@ app.get(['/api/dashboard/performance', '/api/performance/ole'], async (req, res)
 
   res.json({
     kpis: { ole: 0, oee: 0, availability: 0, performance: 0 },
-    downtime: []
+    downtime: [],
+    oleTrend: []
   });
 });
 
@@ -2296,78 +2338,160 @@ app.get('/api/material/request', async (req, res) => {
 
 app.get('/api/material/kitting', async (req, res) => {
   const { period, shift, startDate, endDate, line, model, sku } = req.query;
+  const dbShift = normalizeShift(shift, period);
   const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
 
   try {
     const pool = await poolPromise;
     if (pool) {
-      const request = createSqlRequest(pool, {
+      const getReq = () => createSqlRequest(pool, {
         StartDate: { type: sql.Date, value: effectiveStartDate },
         EndDate: { type: sql.Date, value: effectiveEndDate },
+        Shift: { type: sql.VarChar(20), value: dbShift },
         Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
         Model: { type: sql.VarChar(50), value: (model && model !== 'All') ? model : null },
         SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
       });
 
-      const [kpiRes, tableRes] = await Promise.allSettled([
-        request.query(`
+      const isSingleDay = effectiveStartDate && effectiveEndDate && effectiveStartDate === effectiveEndDate && period !== 'Month' && period !== 'Week';
+
+      const trendQuery = isSingleDay ? `
+        SELECT 
+          CONVERT(VARCHAR(2), K.InspectionTime, 108) + ':00' as [time],
+          COUNT(K.UID) as inspected,
+          SUM(CASE WHEN K.[Status] = 'NOK' THEN 1 ELSE 0 END) as defects,
+          SUM(CASE WHEN K.[Status] = 'OK' THEN 1 ELSE 0 END) as ok
+        FROM Prod_Kit_Inspection_Log K
+        LEFT JOIN Config_Model M ON K.ModelID = M.ModelID
+        LEFT JOIN Config_SKU S ON K.SKUID = S.SKUID
+        LEFT JOIN Config_Line L ON K.LineID = L.LineID
+        WHERE (@StartDate IS NULL OR K.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR K.ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR K.ProdShift = @Shift OR (@Shift = 'A' AND K.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift = 'B' AND K.ProdShift IN ('2', 'Shift 2', 'B')))
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(K.LineID AS VARCHAR) = @Line)
+          AND (@Model IS NULL OR M.ModelName = @Model)
+          AND (@SKU IS NULL OR S.SKUName = @SKU)
+        GROUP BY CONVERT(VARCHAR(2), K.InspectionTime, 108)
+        ORDER BY [time] ASC
+      ` : `
+        SELECT 
+          CONVERT(VARCHAR(10), K.ProdDate, 120) as [time],
+          COUNT(K.UID) as inspected,
+          SUM(CASE WHEN K.[Status] = 'NOK' THEN 1 ELSE 0 END) as defects,
+          SUM(CASE WHEN K.[Status] = 'OK' THEN 1 ELSE 0 END) as ok
+        FROM Prod_Kit_Inspection_Log K
+        LEFT JOIN Config_Model M ON K.ModelID = M.ModelID
+        LEFT JOIN Config_SKU S ON K.SKUID = S.SKUID
+        LEFT JOIN Config_Line L ON K.LineID = L.LineID
+        WHERE (@StartDate IS NULL OR K.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR K.ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR K.ProdShift = @Shift OR (@Shift = 'A' AND K.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift = 'B' AND K.ProdShift IN ('2', 'Shift 2', 'B')))
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(K.LineID AS VARCHAR) = @Line)
+          AND (@Model IS NULL OR M.ModelName = @Model)
+          AND (@SKU IS NULL OR S.SKUName = @SKU)
+        GROUP BY K.ProdDate
+        ORDER BY K.ProdDate ASC
+      `;
+
+      const [kpiRes, tableRes, defectRes, trendRes] = await Promise.allSettled([
+        getReq().query(`
           SELECT 
-            ISNULL(SUM(PlanQty), 0) as planned,
-            ISNULL(SUM(KitAssembly_Qty), 0) as prepared,
-            ISNULL(SUM(PlanQty) - SUM(KitAssembly_Qty), 0) as pending
-          FROM Prod_EnginePlanExecution
-          WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
-            AND (@EndDate IS NULL OR ProdDate <= @EndDate)
-        `),
-        request.query(`
-          SELECT TOP 60
-            'KIT-' + W.EngineNo as kitId,
-            ISNULL(L.LineName, 'Line ' + CAST(W.LineID AS VARCHAR)) as line,
-            ISNULL(M.ModelName, 'Pulsar 150') as model,
-            ISNULL(S.SKUName, 'UG5') as sku,
-            CASE WHEN D.EngineNo IS NOT NULL THEN 'Rejected' ELSE 'Prepared' END as [status],
-            CONVERT(VARCHAR(5), W.StartTime, 108) as preparedAt,
-            CASE WHEN D.EngineNo IS NOT NULL THEN '92%' ELSE '100%' END as accuracy,
-            ISNULL(D.Remark, '-') as defect,
-            'Operator' as operator,
-            CONVERT(VARCHAR(5), W.StartTime, 108) as [time]
-          FROM Prod_Engine_WIP W
-          LEFT JOIN Prod_Defect_Log D ON W.EngineNo = D.EngineNo
-          LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
-          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
-          LEFT JOIN Config_Line L ON W.LineID = L.LineID
-          WHERE (@StartDate IS NULL OR CAST(W.StartTime AS DATE) >= @StartDate)
-            AND (@EndDate IS NULL OR CAST(W.StartTime AS DATE) <= @EndDate)
-            AND (@Line IS NULL OR L.LineName = @Line OR CAST(W.LineID AS VARCHAR) = @Line)
+            COUNT(K.UID) as totalInspected,
+            SUM(CASE WHEN K.[Status] = 'OK' THEN 1 ELSE 0 END) as okCount,
+            SUM(CASE WHEN K.[Status] = 'NOK' THEN 1 ELSE 0 END) as nokCount,
+            ISNULL(AVG(CAST(K.Accuracy AS FLOAT)), 100) as avgAccuracy
+          FROM Prod_Kit_Inspection_Log K
+          LEFT JOIN Config_Model M ON K.ModelID = M.ModelID
+          LEFT JOIN Config_SKU S ON K.SKUID = S.SKUID
+          LEFT JOIN Config_Line L ON K.LineID = L.LineID
+          WHERE (@StartDate IS NULL OR K.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR K.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR K.ProdShift = @Shift OR (@Shift = 'A' AND K.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift = 'B' AND K.ProdShift IN ('2', 'Shift 2', 'B')))
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(K.LineID AS VARCHAR) = @Line)
             AND (@Model IS NULL OR M.ModelName = @Model)
             AND (@SKU IS NULL OR S.SKUName = @SKU)
-          ORDER BY W.StartTime DESC
-        `)
+        `),
+        getReq().query(`
+          SELECT TOP 200
+            K.KitID as kitId,
+            ISNULL(L.LineName, 'Line C') as line,
+            ISNULL(M.ModelName, 'Pulsar 150') as model,
+            ISNULL(S.SKUName, 'P150-TWIN') as sku,
+            CASE WHEN K.[Status] = 'OK' THEN 'Prepared' ELSE 'Rejected' END as [status],
+            CONVERT(VARCHAR(5), K.InspectionTime, 108) as preparedAt,
+            CAST(K.Accuracy AS VARCHAR) + '%' as accuracy,
+            ISNULL(K.DefectReason, '-') as defect,
+            K.InspectorName as operator,
+            CONVERT(VARCHAR(10), K.ProdDate, 120) as [date],
+            CONVERT(VARCHAR(5), K.InspectionTime, 108) as [time]
+          FROM Prod_Kit_Inspection_Log K
+          LEFT JOIN Config_Model M ON K.ModelID = M.ModelID
+          LEFT JOIN Config_SKU S ON K.SKUID = S.SKUID
+          LEFT JOIN Config_Line L ON K.LineID = L.LineID
+          WHERE (@StartDate IS NULL OR K.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR K.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR K.ProdShift = @Shift OR (@Shift = 'A' AND K.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift = 'B' AND K.ProdShift IN ('2', 'Shift 2', 'B')))
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(K.LineID AS VARCHAR) = @Line)
+            AND (@Model IS NULL OR M.ModelName = @Model)
+            AND (@SKU IS NULL OR S.SKUName = @SKU)
+          ORDER BY K.ProdDate DESC, K.InspectionTime DESC
+        `),
+        getReq().query(`
+          SELECT 
+            K.DefectReason as defect,
+            COUNT(K.UID) as [count]
+          FROM Prod_Kit_Inspection_Log K
+          LEFT JOIN Config_Model M ON K.ModelID = M.ModelID
+          LEFT JOIN Config_SKU S ON K.SKUID = S.SKUID
+          LEFT JOIN Config_Line L ON K.LineID = L.LineID
+          WHERE K.[Status] = 'NOK' 
+            AND K.DefectReason IS NOT NULL 
+            AND K.DefectReason != '-'
+            AND (@StartDate IS NULL OR K.ProdDate >= @StartDate)
+            AND (@EndDate IS NULL OR K.ProdDate <= @EndDate)
+            AND (@Shift IS NULL OR K.ProdShift = @Shift OR (@Shift = 'A' AND K.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift = 'B' AND K.ProdShift IN ('2', 'Shift 2', 'B')))
+            AND (@Line IS NULL OR L.LineName = @Line OR CAST(K.LineID AS VARCHAR) = @Line)
+            AND (@Model IS NULL OR M.ModelName = @Model)
+            AND (@SKU IS NULL OR S.SKUName = @SKU)
+          GROUP BY K.DefectReason
+          ORDER BY [count] DESC
+        `),
+        getReq().query(trendQuery)
       ]);
 
-      const kpiRow = (kpiRes.status === 'fulfilled' && kpiRes.value?.recordset?.[0]) || { planned: 0, prepared: 0, pending: 0 };
+      const kpiRow = (kpiRes.status === 'fulfilled' && kpiRes.value?.recordset?.[0]) || {};
       const table = (tableRes.status === 'fulfilled' && tableRes.value?.recordset) || [];
+      const defectBreakdown = (defectRes.status === 'fulfilled' && defectRes.value?.recordset) || [];
+      const trend = (trendRes.status === 'fulfilled' && trendRes.value?.recordset) || [];
 
-      const preparedCount = table.filter(t => t.status === 'Prepared').length;
-      const rejectedCount = table.filter(t => t.status === 'Rejected').length;
-      const totalKits = table.length;
+      const totalInspected = kpiRow.totalInspected || table.length;
+      const okCount = kpiRow.okCount || table.filter(t => t.status === 'Prepared' || t.status === 'OK').length;
+      const nokCount = kpiRow.nokCount || table.filter(t => t.status === 'Rejected' || t.status === 'NOK').length;
+      const passRate = totalInspected > 0 ? `${((okCount / totalInspected) * 100).toFixed(1)}%` : '0.0%';
 
       const barData = [
         { model: 'Pulsar 150', prepared: table.filter(t => t.model === 'Pulsar 150' && t.status === 'Prepared').length },
+        { model: 'Pulsar NS200', prepared: table.filter(t => t.model === 'Pulsar NS200' && t.status === 'Prepared').length },
         { model: 'Dominar 400', prepared: table.filter(t => t.model === 'Dominar 400' && t.status === 'Prepared').length },
-        { model: 'Avenger 220', prepared: table.filter(t => t.model === 'Avenger 220' && t.status === 'Prepared').length }
+        { model: 'Platina 110', prepared: table.filter(t => t.model === 'Platina 110' && t.status === 'Prepared').length }
       ].filter(d => d.prepared > 0);
 
       return res.json({
         kpis: {
-          planned: kpiRow.planned || totalKits,
-          prepared: kpiRow.prepared || preparedCount,
-          pending: Math.max(0, kpiRow.pending),
-          accuracy: totalKits > 0 ? `${((preparedCount / totalKits) * 100).toFixed(1)}%` : (kpiRow.prepared > 0 ? '100.0%' : '0.0%'),
-          rejected: rejectedCount,
-          status: (totalKits > 0 || kpiRow.prepared > 0) ? 'On Track' : 'No Data'
+          planned: totalInspected,
+          prepared: okCount,
+          pending: Math.max(0, totalInspected - okCount - nokCount),
+          accuracy: passRate,
+          rejected: nokCount,
+          totalInspected,
+          okCount,
+          nokCount,
+          passRate,
+          status: totalInspected > 0 ? (nokCount === 0 ? 'On Track' : 'Action Required') : 'No Data'
         },
         barData,
+        defectBreakdown,
+        trend,
         table
       });
     }
@@ -2376,8 +2500,10 @@ app.get('/api/material/kitting', async (req, res) => {
   }
 
   res.json({
-    kpis: { planned: 0, prepared: 0, pending: 0, accuracy: '0.0%', rejected: 0, status: 'No Data' },
+    kpis: { planned: 0, prepared: 0, pending: 0, accuracy: '0.0%', rejected: 0, totalInspected: 0, okCount: 0, nokCount: 0, passRate: '0.0%', status: 'No Data' },
     barData: [],
+    defectBreakdown: [],
+    trend: [],
     table: []
   });
 });

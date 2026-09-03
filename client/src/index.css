@@ -58,7 +58,7 @@
 @media print {
   @page {
     size: A4 landscape;
-    margin: 8mm 10mm 10mm 10mm;
+    margin: 6mm 8mm 6mm 8mm;
   }
 
   /* Force background colors, gradients, and borders to render in print */
@@ -81,7 +81,15 @@
     padding: 0 !important;
   }
 
-  /* Hide interactive controls in print */
+  /* Container and Layout width */
+  .max-w-\[1600px\], .max-w-7xl, .container, main {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide interactive controls and sidebar in print */
   .print\:hidden,
   aside,
   header,
@@ -100,6 +108,42 @@
     display: block !important;
   }
 
+  /* Force desktop multi-column grids in print */
+  .grid {
+    display: grid !important;
+  }
+
+  .grid.lg\:grid-cols-6, 
+  .grid.grid-cols-6 {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .grid.md\:grid-cols-5, 
+  .grid.grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .grid.md\:grid-cols-4, 
+  .grid.grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .grid.md\:grid-cols-3, 
+  .grid.grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .grid.lg\:grid-cols-2, 
+  .grid.md\:grid-cols-2, 
+  .grid.grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
   /* Prevent page cutoff for cards, KPI blocks, and chart containers */
   .card, 
   .kpi-block, 
@@ -116,8 +160,19 @@
     border: 1px solid #cbd5e1 !important;
     background-color: #ffffff !important;
     border-radius: 6px !important;
-    margin-bottom: 8px !important;
-    padding: 8px 12px !important;
+    margin-bottom: 6px !important;
+    padding: 8px 10px !important;
+  }
+
+  /* Chart container sizing for 2-column landscape print */
+  .h-\[240px\], 
+  .h-\[220px\], 
+  .h-\[200px\], 
+  .h-\[250px\], 
+  .h-\[260px\] {
+    height: 180px !important;
+    min-height: 180px !important;
+    max-height: 180px !important;
   }
 
   /* Table pagination and crisp border styling */
@@ -144,16 +199,16 @@
     background-color: #f1f5f9 !important;
     color: #334155 !important;
     border-bottom: 1.5px solid #94a3b8 !important;
-    padding: 6px 8px !important;
-    font-size: 9pt !important;
+    padding: 5px 8px !important;
+    font-size: 8.5pt !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
   }
 
   td {
     border-bottom: 1px solid #e2e8f0 !important;
-    padding: 5px 8px !important;
-    font-size: 9pt !important;
+    padding: 4px 8px !important;
+    font-size: 8.5pt !important;
     color: #1e293b !important;
   }
 
