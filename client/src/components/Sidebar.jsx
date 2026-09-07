@@ -160,7 +160,10 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   }
 
   const toggleMenu = (name) => {
-    if (isOpen) {
+    if (!isOpen) {
+      if (setIsOpen) setIsOpen(true)
+      setExpandedMenus(prev => ({ ...prev, [name]: true }))
+    } else {
       setExpandedMenus(prev => ({ ...prev, [name]: !prev[name] }))
     }
   }
@@ -204,7 +207,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                         <li key={idx}>
                           <button
                             onClick={() => handleSelect(result.path)}
-                            className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                            className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer"
                           >
                             {result.name}
                           </button>
@@ -221,9 +224,13 @@ export default function Sidebar({ isOpen, setIsOpen }) {
             </AnimatePresence>
           </div>
         ) : (
-          <div className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center text-slate-400">
+          <button 
+            onClick={() => { if (!isOpen && setIsOpen) setIsOpen(true); }}
+            className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+            title="Click to search & expand"
+          >
             <Search className="w-5 h-5" />
-          </div>
+          </button>
         )}
       </div>
 
@@ -241,9 +248,10 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                 <button
                   onClick={() => toggleMenu(item.name)}
                   className={`
-                    flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-200 w-full
+                    flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-200 w-full cursor-pointer
                     ${isChildActive ? 'bg-slate-800/80 text-white' : 'hover:bg-slate-800/50 hover:text-white'}
                   `}
+                  title={!isOpen ? item.name : undefined}
                 >
                   <div className="flex items-center">
                     <item.icon className="w-5 h-5 flex-shrink-0 text-brand-secondary" />
@@ -258,10 +266,14 @@ export default function Sidebar({ isOpen, setIsOpen }) {
               ) : (
                 <NavLink
                   to={item.path}
+                  onClick={() => {
+                    if (!isOpen && setIsOpen) setIsOpen(true)
+                  }}
                   className={`
-                    flex items-center px-3 py-3 rounded-xl transition-all duration-200
+                    flex items-center px-3 py-3 rounded-xl transition-all duration-200 cursor-pointer
                     ${isItemActive ? 'bg-brand-accent/20 text-brand-accent font-medium' : 'hover:bg-slate-800/50 hover:text-white'}
                   `}
+                  title={!isOpen ? item.name : undefined}
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0 text-brand-secondary" />
                   {isOpen && <span className="ml-3 whitespace-nowrap font-medium text-sm">{item.name}</span>}
@@ -324,7 +336,11 @@ export default function Sidebar({ isOpen, setIsOpen }) {
             </button>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-3">
+          <div 
+            onClick={() => { if (!isOpen && setIsOpen) setIsOpen(true); }}
+            className="flex flex-col items-center gap-3 cursor-pointer"
+            title="Click to expand"
+          >
             <div className="relative" title={`${user?.UserName || 'admin'} (ID: #${user?.UserID || '2'} • ${user?.DepartmentRoleID === 1 ? 'Administrator' : 'Plant Operator'})`}>
               <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-600 to-blue-500 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-blue-900/30 ring-2 ring-white/10">
                 {user?.UserName ? user.UserName.charAt(0).toUpperCase() : <User className="w-4 h-4 text-white" />}
@@ -332,7 +348,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
               <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
             </div>
             <button 
-              onClick={logout}
+              onClick={(e) => { e.stopPropagation(); logout(); }}
               className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-colors cursor-pointer" 
               title="Log out"
             >
@@ -344,5 +360,6 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     </motion.aside>
   )
 }
+
 
 

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Download, FileSpreadsheet, Search } from 'lucide-react'
+import { getActiveShift } from '../hooks/useReportFilters'
 
 const today = () => new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]
 
@@ -29,7 +30,7 @@ export default function StandardFilterBar({ title, icon: Icon, onExcelClick, fil
     minute: '2-digit' 
   });
 
-  const activeShift = filters.find(f => f.activeShift)?.activeShift;
+  const activeShift = filters.find(f => f?.activeShift)?.activeShift || getActiveShift();
 
   return (
     <>
@@ -51,129 +52,132 @@ export default function StandardFilterBar({ title, icon: Icon, onExcelClick, fil
       </div>
 
       {/* Screen Interactive Filter Bar */}
-      <div className="print:hidden w-full bg-white border border-slate-200 rounded-lg shadow-sm p-3 sticky top-0 z-10">
-        <div className="flex flex-wrap items-end gap-3">
+      <div className="print:hidden w-full bg-white border border-slate-200 rounded-lg shadow-sm px-3.5 py-2 sticky top-0 z-10 min-h-[66px] flex items-center">
+        <div className="flex flex-wrap items-center justify-between gap-3 w-full">
 
-          {/* Title */}
-          <div className="flex items-center gap-2 pr-4 border-r border-slate-200 flex-shrink-0">
-            {Icon && (
-              <div className="w-8 h-8 bg-[#0369a1] rounded flex items-center justify-center">
-                <Icon className="w-5 h-5 text-white" />
-              </div>
-            )}
-            <h2 className="text-base font-black text-[#0369a1] leading-tight whitespace-nowrap">{title}</h2>
-          </div>
+          {/* Left Area: Title + Filters */}
+          <div className="flex flex-wrap items-end gap-3 flex-1 min-w-0">
+            {/* Title */}
+            <div className="flex items-center gap-2 pr-4 border-r border-slate-200 flex-shrink-0 h-[48px]">
+              {Icon && (
+                <div className="w-8 h-8 bg-[#0369a1] rounded flex items-center justify-center flex-shrink-0">
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+              )}
+              <h2 className="text-base font-black text-[#0369a1] leading-tight whitespace-nowrap">{title}</h2>
+            </div>
 
-        {/* Filters */}
-        {filters.map((f, i) => {
-          if (f.type === 'period') return (
-            <div key={i} className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Period</span>
-                <div className="flex rounded overflow-hidden border border-slate-200">
-                {['Shift', 'Day', 'Week', 'Month'].map(p => (
-                  <button key={p} onClick={() => f.onChange(p)}
-                    className={`px-3 py-1.5 text-[11px] font-bold transition-colors ${f.value === p ? 'bg-[#0369a1] text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
-                    {p}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )
-          if (f.type === 'daterange') return (
-            <div key={i} className="flex items-end gap-2">
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Start Date</span>
-                <input type="date" value={f.from} onChange={e => f.onFromChange(e.target.value)}
-                  className="text-xs font-bold text-brand-dark bg-slate-50 border border-slate-200 rounded p-1.5 focus:outline-none focus:ring-1 focus:ring-[#0369a1]" />
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">End Date</span>
-                <input type="date" value={f.to} onChange={e => f.onToChange(e.target.value)}
-                  className="text-xs font-bold text-brand-dark bg-slate-50 border border-slate-200 rounded p-1.5 focus:outline-none focus:ring-1 focus:ring-[#0369a1]" />
-              </div>
-            </div>
-          )
-          if (f.type === 'dropdown') return (
-            <div key={i} className="flex flex-col gap-1 min-w-[115px]">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                {f.label}
-              </span>
-              <select value={f.value} onChange={e => f.onChange(e.target.value)}
-                className="text-xs font-bold text-brand-dark bg-slate-50 border border-slate-200 rounded p-1.5 focus:outline-none focus:ring-1 focus:ring-[#0369a1]">
-                {f.options.map(opt => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )
-          if (f.type === 'search') return (
-            <div key={i} className="flex flex-col gap-1 flex-1 min-w-[220px]">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{f.label}</span>
-              <div className="flex items-center gap-1.5 w-full">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    value={f.value}
-                    onChange={e => f.onChange(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' && f.onSearch) f.onSearch(f.value)
-                    }}
-                    placeholder={f.placeholder || 'Enter UID...'}
-                    className="text-xs font-bold text-brand-dark bg-slate-50 border border-slate-200 rounded p-1.5 focus:outline-none focus:ring-1 focus:ring-[#0369a1] w-full pr-7"
-                  />
-                  {f.value && (
+            {/* Filters */}
+            {filters.filter(f => f && !f.hidden).map((f, i) => {
+              if (f.type === 'period') return (
+                <div key={i} className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none">Period</span>
+                  <div className="flex rounded overflow-hidden border border-slate-200 h-[31px]">
+                    {['Shift', 'Day', 'Week', 'Month'].map(p => (
+                      <button key={p} onClick={() => f.onChange(p)}
+                        className={`px-3 py-1 text-[11px] font-bold transition-colors flex items-center justify-center ${f.value === p ? 'bg-[#0369a1] text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+              if (f.type === 'daterange') return (
+                <div key={i} className="flex items-end gap-2">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none">Start Date</span>
+                    <input type="date" value={f.from} onChange={e => f.onFromChange(e.target.value)}
+                      className="text-xs font-bold text-brand-dark bg-slate-50 border border-slate-200 rounded px-2 h-[31px] focus:outline-none focus:ring-1 focus:ring-[#0369a1]" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none">End Date</span>
+                    <input type="date" value={f.to} onChange={e => f.onToChange(e.target.value)}
+                      className="text-xs font-bold text-brand-dark bg-slate-50 border border-slate-200 rounded px-2 h-[31px] focus:outline-none focus:ring-1 focus:ring-[#0369a1]" />
+                  </div>
+                </div>
+              )
+              if (f.type === 'dropdown') return (
+                <div key={i} className="flex flex-col gap-1 min-w-[120px]">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none">
+                    {f.label}
+                  </span>
+                  <select value={f.value} onChange={e => f.onChange(e.target.value)}
+                    className="text-xs font-bold text-brand-dark bg-slate-50 border border-slate-200 rounded px-2 h-[31px] focus:outline-none focus:ring-1 focus:ring-[#0369a1]">
+                    {f.options.map(opt => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )
+              if (f.type === 'search') return (
+                <div key={i} className="flex flex-col gap-1 flex-1 min-w-[220px]">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none">{f.label}</span>
+                  <div className="flex items-center gap-1.5 w-full">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={f.value}
+                        onChange={e => f.onChange(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && f.onSearch) f.onSearch(f.value)
+                        }}
+                        placeholder={f.placeholder || 'Enter UID...'}
+                        className="text-xs font-bold text-brand-dark bg-slate-50 border border-slate-200 rounded px-2 pr-7 h-[31px] focus:outline-none focus:ring-1 focus:ring-[#0369a1] w-full"
+                      />
+                      {f.value && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            f.onChange('')
+                            if (f.onSearch) f.onSearch('')
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
                     <button
                       type="button"
-                      onClick={() => {
-                        f.onChange('')
-                        if (f.onSearch) f.onSearch('')
-                      }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                      onClick={() => (f.onSearch ? f.onSearch(f.value) : f.onChange(f.value))}
+                      className="flex items-center gap-1.5 bg-[#0369a1] text-white px-3.5 rounded shadow hover:bg-[#02517d] transition-colors h-[31px] text-xs font-bold uppercase tracking-wider flex-shrink-0"
                     >
-                      ×
+                      <Search className="w-3.5 h-3.5" />
+                      Search
                     </button>
-                  )}
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => (f.onSearch ? f.onSearch(f.value) : f.onChange(f.value))}
-                  className="flex items-center gap-1.5 bg-[#0369a1] text-white px-3.5 py-1.5 rounded shadow hover:bg-[#02517d] transition-colors h-[31px] text-xs font-bold uppercase tracking-wider flex-shrink-0"
-                >
-                  <Search className="w-3.5 h-3.5" />
-                  Search
-                </button>
-              </div>
-            </div>
-          )
-          return null
-        })}
-
-        {/* Action Buttons & Live Shift Badge in Corner */}
-        <div className="ml-auto flex flex-col items-end justify-end gap-1.5 flex-shrink-0">
-          {activeShift && (
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shadow-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="capitalize">Live: {activeShift}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-2">
-            <button onClick={onExcelClick}
-              className="flex items-center gap-2 bg-green-700 text-white px-4 py-2 rounded shadow hover:bg-green-800 transition-colors h-[34px] text-xs font-bold uppercase tracking-wider">
-              <FileSpreadsheet className="w-4 h-4" />
-              Excel
-            </button>
-            <button onClick={onPrintClick || (() => window.print())}
-              className="flex items-center gap-2 bg-[#0369a1] text-white px-4 py-2 rounded shadow hover:bg-[#02517d] transition-colors h-[34px] text-xs font-bold uppercase tracking-wider">
-              <Download className="w-4 h-4" />
-              PDF
-            </button>
+              )
+              return null
+            })}
           </div>
-        </div>
 
+          {/* Right Area: Action Buttons & Live Shift Badge in Corner */}
+          <div className="ml-auto flex flex-col items-end justify-center gap-1 flex-shrink-0">
+            {activeShift && (
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full shadow-xs leading-none">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="capitalize">Live: {activeShift}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <button onClick={onExcelClick}
+                className="flex items-center gap-1.5 bg-green-700 text-white px-3.5 rounded shadow hover:bg-green-800 transition-colors h-[31px] text-xs font-bold uppercase tracking-wider">
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                Excel
+              </button>
+              <button onClick={onPrintClick || (() => window.print())}
+                className="flex items-center gap-1.5 bg-[#0369a1] text-white px-3.5 rounded shadow hover:bg-[#02517d] transition-colors h-[31px] text-xs font-bold uppercase tracking-wider">
+                <Download className="w-3.5 h-3.5" />
+                PDF
+              </button>
+            </div>
+          </div>
+
+        </div>
       </div>
-    </div>
     </>
   )
 }

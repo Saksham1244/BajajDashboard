@@ -307,7 +307,7 @@ export default function Production() {
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-brand-dark flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
-                Production Loss Pareto (Root Cause Breakdown)
+                Production Loss
               </h3>
             </div>
             <div className="h-[220px]">
