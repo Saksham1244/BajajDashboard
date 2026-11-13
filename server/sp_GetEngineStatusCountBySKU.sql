@@ -1,6 +1,5 @@
 -- ======================================================================================
--- Stored Procedure: [dbo].[DS_Prod_EngineStatusCountBySKU]
--- Legacy Alias    : [dbo].[USP_GetEngineStatusCountBySKU], [dbo].[DS_GetEngineStatusCountBySKU]
+-- Stored Procedure: [dbo].[USP_GetEngineStatusCountBySKU]
 -- Parameter       : @SKUID INT = 0 (If 0 or NULL, returns all data without SKU filter)
 -- Description     : Fetches Engine IDs from dbo.Prod_Engine_WIP (filtered by @SKUID if > 0,
 --                   or all engines if @SKUID = 0/NULL), retrieves current running ProdDate
@@ -9,7 +8,7 @@
 --                   and returns ProdDate, ProdShift, and all unique status counts.
 -- ======================================================================================
 
-CREATE OR ALTER PROCEDURE [dbo].[DS_Prod_EngineStatusCountBySKU]
+CREATE OR ALTER PROCEDURE [dbo].[USP_GetEngineStatusCountBySKU]
 (
     @SKUID INT = 0
 )
@@ -143,28 +142,5 @@ BEGIN
                 @ErrorState INT = ERROR_STATE();
         RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
     END CATCH
-END;
-GO
-
--- Backward-Compatibility Aliases
-CREATE OR ALTER PROCEDURE [dbo].[USP_GetEngineStatusCountBySKU]
-(
-    @SKUID INT = 0
-)
-AS
-BEGIN
-    SET NOCOUNT ON;
-    EXEC [dbo].[DS_Prod_EngineStatusCountBySKU] @SKUID = @SKUID;
-END;
-GO
-
-CREATE OR ALTER PROCEDURE [dbo].[DS_GetEngineStatusCountBySKU]
-(
-    @SKUID INT = 0
-)
-AS
-BEGIN
-    SET NOCOUNT ON;
-    EXEC [dbo].[DS_Prod_EngineStatusCountBySKU] @SKUID = @SKUID;
 END;
 GO

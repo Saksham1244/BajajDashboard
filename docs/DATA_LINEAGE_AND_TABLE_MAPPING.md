@@ -550,13 +550,17 @@ Here is the complete inventory of all database tables and views utilized across 
 29. `dbo.Material_Movement_Log`: Real-time material transfer and dispatch logs from Store to Assembly Lines.
 30. `dbo.Prod_Engine_Part_Geneology`: Engine BOM part consumption genealogy linking assembled engine serial numbers to component part numbers.
 
-### D. Stored Procedures Executed
-1. `dbo.DS_Prod_ProductionKPI` *(Standard)* / `dbo.DS_ProductionKPI` *(Alias)* / `dbo.DS_Dashboard_ProductionKPI`: Calculates shift target, actual produced, straight pass, WIP, shortfall, and rollover KPIs.
-2. `dbo.DS_ProdShiftPlan` *(Standard)* / `dbo.GV_ProdShiftPlan` *(Plant SP by Shubham Patil)*: Returns the official production shift plan schedule and target quantities over `dbo.Prod_Shift_Plan`.
-3. `dbo.DS_Process_Conveyor` *(Standard)* / `dbo.DS_ProcessConveyor` *(Alias)* / `dbo.DS_Dashboard_ProcessConveyor`: Fetches real-time conveyor parameters, VFD speed, stoppage reasons, and station downtime.
-4. `dbo.DS_TrackTrace_WIP` *(Standard)* / `dbo.DS_TrackTraceWIP` *(Alias)* / `dbo.DS_Dashboard_TrackTraceWIP`: Aggregates buffer WIP levels, dwell times, and bottleneck status across all line stations.
-5. `dbo.DS_Maint_Downtime` *(Standard)* / `dbo.DS_MaintenanceDowntime` *(Alias)* / `dbo.DS_Dashboard_MaintenanceDowntime`: Computes maintenance loss breakdown, MTTR, and downtime duration trend.
-6. `dbo.DS_Prod_EngineStatusCountBySKU` *(Standard)* / `dbo.DS_GetEngineStatusCountBySKU` / `dbo.USP_GetEngineStatusCountBySKU`: Retrieves aggregated engine status counts partitioned across 19 quality and rework gates grouped by SKU.
+### D. Stored Procedures Executed by Dashboard APIs
+
+#### 1. Custom Dashboard Stored Procedures (Renamed to match Bajaj DS_* Standard)
+1. `dbo.DS_Prod_ProductionKPI` *(Standard)* / `dbo.DS_ProductionKPI` *(Alias)* / `dbo.DS_Dashboard_ProductionKPI`: Calculates shift target, actual produced, straight pass, WIP, shortfall, and rollover KPIs. (Renamed from `DS_Dashboard_ProductionKPI`)
+2. `dbo.DS_Process_Conveyor` *(Standard)* / `dbo.DS_ProcessConveyor` *(Alias)* / `dbo.DS_Dashboard_ProcessConveyor`: Fetches real-time conveyor parameters, VFD speed, stoppage reasons, and station downtime. (Renamed from `DS_Dashboard_ProcessConveyor`)
+3. `dbo.DS_TrackTrace_WIP` *(Standard)* / `dbo.DS_TrackTraceWIP` *(Alias)* / `dbo.DS_Dashboard_TrackTraceWIP`: Aggregates buffer WIP levels, dwell times, and bottleneck status across all line stations. (Renamed from `DS_Dashboard_TrackTraceWIP`)
+4. `dbo.DS_Maint_Downtime` *(Standard)* / `dbo.DS_MaintenanceDowntime` *(Alias)* / `dbo.DS_Dashboard_MaintenanceDowntime`: Computes maintenance loss breakdown, MTTR, and downtime duration trend. (Renamed from `DS_Dashboard_MaintenanceDowntime`)
+
+#### 2. Existing Official Plant Procedures (Kept 100% Unmodified Under Original Names)
+5. `dbo.GV_ProdShiftPlan`: Official production shift plan procedure authored by Shubham Patil, executed directly over `dbo.Prod_Shift_Plan`.
+6. `dbo.USP_GetEngineStatusCountBySKU`: Official engine gate and quality genealogy aggregator, executed directly for SKU gate monitoring.
 
 ### E. Complete Dashboard Stored Procedures Suite (Prefix `DS_*` in PPMS_BajajPant)
 In addition to the 6 primary procedures above, the database contains the plant's official `DS_*` stored procedures cataloged below:

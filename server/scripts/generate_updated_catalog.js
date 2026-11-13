@@ -74,29 +74,29 @@ async function updateCatalog() {
       'S.No': 5,
       'API Route / Feature': 'Track & Trace / Engine Gate Genealogy Tracker',
       'Dashboard Module': 'Track & Trace (Genealogy & Gates)',
-      'Standardized SP Name': 'DS_Prod_EngineStatusCountBySKU',
-      'Legacy / Alias SP': 'USP_GetEngineStatusCountBySKU / DS_GetEngineStatusCountBySKU',
-      'Category': 'Dashboard Screen Procedure (DS_Prod_*)',
+      'Standardized SP Name': 'USP_GetEngineStatusCountBySKU',
+      'Legacy / Alias SP': 'Original Plant Procedure (Unmodified)',
+      'Category': 'User Stored Procedure (USP_*)',
       'Author / Owner': 'Plant Engineering & Quality Team',
       'Parameters Accepted': '@SKUID (e.g. 1 for SKU 1, 0 for All SKUs)',
       'Target Tables Queried': 'Prod_Engine_WIP, Prod_Status_Geneology, ApplicationSetting, Prod_ShiftInformation',
-      'Execution Mode': 'EXEC [dbo].[DS_Prod_EngineStatusCountBySKU] @SKUID = @SKUID',
+      'Execution Mode': 'EXEC [dbo].[USP_GetEngineStatusCountBySKU] @SKUID = @SKUID',
       'Output Recordset / KPIs': '19 Process Gate Counts: Completed, FG, MaterialHold, ForRework, ReworkOK, IPQCHold, FQCHold, Scrapped',
-      'Database Status': 'Active & Deployed in PPMS_BajajPant (200 OK)'
+      'Database Status': 'Original Plant Procedure in PPMS_BajajPant (Active & Verified)'
     },
     {
       'S.No': 6,
       'API Route / Feature': 'GET /api/production/plan',
       'Dashboard Module': 'Production Shift Planning',
-      'Standardized SP Name': 'DS_ProdShiftPlan',
-      'Legacy / Alias SP': 'GV_ProdShiftPlan',
-      'Category': 'Dashboard / Grid View Procedure (DS_ / GV_*)',
+      'Standardized SP Name': 'GV_ProdShiftPlan',
+      'Legacy / Alias SP': 'Original Plant Procedure (Unmodified)',
+      'Category': 'Grid View Procedure (GV_*)',
       'Author / Owner': 'Shubham Patil',
       'Parameters Accepted': 'None (Queries official view Prod_Shift_Plan over Prod_Plan)',
       'Target Tables Queried': 'Prod_Plan, Config_Line, Config_SKU',
-      'Execution Mode': 'await pool.request().execute("DS_ProdShiftPlan")',
+      'Execution Mode': 'await pool.request().execute("GV_ProdShiftPlan")',
       'Output Recordset / KPIs': '160 Shift Plan Records: PlanID, Line, SKU, Model, Target Qty, Start/End Time, Shift Status',
-      'Database Status': 'Active & Deployed in PPMS_BajajPant (200 OK)'
+      'Database Status': 'Original Plant Procedure in PPMS_BajajPant (Active & Verified)'
     }
   ];
 

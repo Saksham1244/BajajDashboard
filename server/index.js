@@ -541,13 +541,8 @@ app.get('/api/production/plan', async (req, res) => {
   try {
     const pool = await poolPromise;
     if (pool) {
-      // Execute official SP authored by Shubham Patil (DS_ProdShiftPlan / GV_ProdShiftPlan)
-      let result;
-      try {
-        result = await pool.request().execute('DS_ProdShiftPlan');
-      } catch (e) {
-        result = await pool.request().execute('GV_ProdShiftPlan');
-      }
+      // Execute official plant SP authored by Shubham Patil
+      const result = await pool.request().execute('GV_ProdShiftPlan');
       let rows = result.recordset || [];
 
       // Apply dynamic filtering on normalized SP output
