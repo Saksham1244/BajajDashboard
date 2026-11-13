@@ -2464,18 +2464,24 @@ app.get('/api/material/dashboard', async (req, res) => {
     if (pool) {
       const result = await pool.request().query(`
         SELECT 
-          PartID as id,
-          PartName as material,
+          s.PartID as id,
+          COALESCE(v.PartName, v.PartDesc, s.PartID) as material,
           'Line 1' as line,
           'Pulsar 150' as model,
           'UG6' as sku,
           'Main Store' as [location],
-          'Safe' as [status],
-          100 as currentStock,
-          25 as minLevel,
-          150 as maxLevel,
+          CASE 
+            WHEN (s.StoreQty + s.LineCKitRackQty + s.LineDKitRackQty + s.LinesideCQty + s.LinesideDQty) <= COALESCE(loc.MinAreaCapacity, 50) THEN 'Critical'
+            WHEN (s.StoreQty + s.LineCKitRackQty + s.LineDKitRackQty + s.LinesideCQty + s.LinesideDQty) >= COALESCE(loc.MaxAreaCapacity, 400) THEN 'Excess'
+            ELSE 'Safe'
+          END as [status],
+          (s.StoreQty + s.LineCKitRackQty + s.LineDKitRackQty + s.LinesideCQty + s.LinesideDQty) as currentStock,
+          COALESCE(loc.MinAreaCapacity, 50) as minLevel,
+          COALESCE(loc.MaxAreaCapacity, 400) as maxLevel,
           'Engine Parts' as category
-        FROM SAP_PartMaster
+        FROM Material_Stock s
+        LEFT JOIN Config_PartVariant v ON s.PartID = v.PartID
+        LEFT JOIN Config_MaterialLocationMapping loc ON s.PartID = loc.PartID
       `);
 
       const table = result.recordset || [];
@@ -2516,15 +2522,21 @@ app.get('/api/material/stock', async (req, res) => {
     if (pool) {
       const result = await pool.request().query(`
         SELECT 
-          PartID as id,
-          PartName as material,
+          s.PartID as id,
+          COALESCE(v.PartName, v.PartDesc, s.PartID) as material,
           'Raw' as matType,
           'Main Store' as [location],
-          100 as available,
-          25 as minLevel,
-          150 as maxLevel,
-          'Safe' as [status]
-        FROM SAP_PartMaster
+          (s.StoreQty + s.LineCKitRackQty + s.LineDKitRackQty + s.LinesideCQty + s.LinesideDQty) as available,
+          COALESCE(loc.MinAreaCapacity, 50) as minLevel,
+          COALESCE(loc.MaxAreaCapacity, 400) as maxLevel,
+          CASE 
+            WHEN (s.StoreQty + s.LineCKitRackQty + s.LineDKitRackQty + s.LinesideCQty + s.LinesideDQty) <= COALESCE(loc.MinAreaCapacity, 50) THEN 'Critical'
+            WHEN (s.StoreQty + s.LineCKitRackQty + s.LineDKitRackQty + s.LinesideCQty + s.LinesideDQty) >= COALESCE(loc.MaxAreaCapacity, 400) THEN 'Excess'
+            ELSE 'Safe'
+          END as [status]
+        FROM Material_Stock s
+        LEFT JOIN Config_PartVariant v ON s.PartID = v.PartID
+        LEFT JOIN Config_MaterialLocationMapping loc ON s.PartID = loc.PartID
       `);
 
       let table = result.recordset || [];
@@ -2548,16 +2560,17 @@ app.get('/api/material/request', async (req, res) => {
     if (pool) {
       const result = await pool.request().query(`
         SELECT 
-          PartID as reqId,
-          PartName as material,
+          CONCAT('REQ-', m.UID) as reqId,
+          COALESCE(v.PartName, v.PartDesc, m.PartID) as material,
           'Line 1' as line,
-          'Demo' as station,
-          50 as requestedQty,
-          50 as issuedQty,
+          'Station 04' as station,
+          m.Quantity as requestedQty,
+          m.Quantity as issuedQty,
           'Fulfilled' as [status],
-          CONVERT(VARCHAR(5), GETDATE(), 108) as reqTime,
-          CONVERT(VARCHAR(5), DATEADD(minute, 10, GETDATE()), 108) as fullTime
-        FROM SAP_PartMaster
+          CONVERT(VARCHAR(5), m.TimeStamp, 108) as reqTime,
+          CONVERT(VARCHAR(5), DATEADD(minute, 12, m.TimeStamp), 108) as fullTime
+        FROM Material_Movement_Log m
+        LEFT JOIN Config_PartVariant v ON m.PartID = v.PartID
       `);
 
       const table = result.recordset || [];
@@ -2820,24 +2833,38 @@ app.get('/api/material/consumption', async (req, res) => {
     if (pool) {
       const result = await pool.request().query(`
         SELECT 
-          PartName as material,
+          COALESCE(v.PartName, v.PartDesc, s.PartID) as material,
           'Line 1' as line,
           'Pulsar 150' as model,
           'UG6' as sku,
-          100 as consumed,
-          100 as expected,
-          0 as variance,
-          0.0 as variancePct
-        FROM SAP_PartMaster
+          COALESCE(cons.ActualConsumed, 24) as consumed,
+          COALESCE(cons.ExpectedConsumed, 24) as expected,
+          COALESCE(cons.ActualConsumed, 24) - COALESCE(cons.ExpectedConsumed, 24) as variance,
+          CASE 
+            WHEN COALESCE(cons.ExpectedConsumed, 24) > 0 
+            THEN CAST(ROUND(((COALESCE(cons.ActualConsumed, 24) - COALESCE(cons.ExpectedConsumed, 24)) * 100.0) / cons.ExpectedConsumed, 1) AS FLOAT)
+            ELSE 0.0 
+          END as variancePct
+        FROM Material_Stock s
+        LEFT JOIN Config_PartVariant v ON s.PartID = v.PartID
+        LEFT JOIN (
+          SELECT PartID, SUM(Qty) as ActualConsumed, SUM(Qty) as ExpectedConsumed
+          FROM Prod_Engine_Part_Geneology
+          GROUP BY PartID
+        ) cons ON s.PartID = cons.PartID
       `);
 
       const table = result.recordset || [];
+      const overConsumed = table.filter(d => (d.variance || 0) > 0).length;
+      const underConsumed = table.filter(d => (d.variance || 0) < 0).length;
+      const avgVariance = table.length > 0 ? (table.reduce((acc, d) => acc + (d.variancePct || 0), 0) / table.length).toFixed(1) : '0.0';
+
       return res.json({
         kpis: {
           totalMaterials: table.length,
-          variancePct: '0.0',
-          overConsumed: 0,
-          underConsumed: 0
+          variancePct: avgVariance,
+          overConsumed,
+          underConsumed
         },
         table
       });

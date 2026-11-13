@@ -31,7 +31,7 @@ flowchart TD
         SP["Stored Procedures (GV_ProdShiftPlan, DS_Dashboard_*)"]
         TransTables["Transactional Tables (Prod_EnginePlanExecution, Perf_Downtime, ...)"]
         ConfigTables["Configuration Tables (Config_Line, Config_Station, Config_Model, ...)"]
-        MasterTables["SAP Master Tables (SAP_PartMaster)"]
+        MasterTables["Material & Stock Tables (Material_Stock, Config_PartVariant, Config_MaterialLocationMapping)"]
     end
 
     UI --> Filter
@@ -410,13 +410,17 @@ flowchart TD
     end
 
     subgraph DB_Layer["Database Tables & Procedures"]
-        S1[("SAP_PartMaster")]
+        S1[("Material_Stock")]
         S2[("Prod_Kit_Inspection_Log")]
         S3[("Prod_Engine_WIP")]
         S4[("Config_Model")]
         S5[("Config_SKU")]
         S6[("Config_ModelFamily")]
         S7[("Config_Line")]
+        S8[("Config_PartVariant")]
+        S9[("Config_MaterialLocationMapping")]
+        S10[("Material_Movement_Log")]
+        S11[("Prod_Engine_Part_Geneology")]
     end
 
     MAT1 --> E_MAT1
@@ -426,24 +430,32 @@ flowchart TD
     MAT5 --> E_MAT3
     MAT6 --> E_MAT5
 
-    E_MAT1 --> S1
-    E_MAT2 --> S1
+    E_MAT1 --> S1 & S8 & S9
+    E_MAT2 --> S10 & S8
     E_MAT3 --> S2 & S4 & S5 & S7
     E_MAT4 --> S3 & S4 & S5 & S6
-    E_MAT5 --> S1
+    E_MAT5 --> S1 & S8 & S11
 ```
+
+> [!NOTE] **Bajaj PPMS Data Architecture Note: ERP Integration & Real Tables**
+> In the official *Bajaj Pantnagar DB Design*, the column comment *"From SAP_PartMaster"* (e.g. for `Config_PartVariant.PartID`) denotes the **external SAP ERP master data feed** providing part numbers to PPMS. In the physical SQL database `PPMS_BajajPant`, parts and stock are managed through the official tables:
+> - `Config_PartVariant`: Complete Part Master table (379+ parts like `ASSEMBLY SHAFT OUTPUT`, `CYLINDER BLOCK`, `CRANKCASE RH/LH`, `PISTON ASSLY`, etc.).
+> - `Material_Stock`: Shop-floor physical stock across Store (`StoreQty`), Kit Racks (`LineCKitRackQty`, `LineDKitRackQty`), Lineside buffers (`LinesideCQty`, `LinesideDQty`), and WIP on kits.
+> - `Config_MaterialLocationMapping`: Storage area mappings and Min/Max capacity thresholds (`MinAreaCapacity`, `MaxAreaCapacity`).
+> - `Material_Movement_Log`: Audit trail of material transfers from Store to Assembly Line.
+> - `Prod_Engine_Part_Geneology`: Engine BOM part consumption tracking linking assembled engine serial numbers to component part numbers.
 
 #### 7.2 Data Dictionary & Table Cross-Reference
 
 | Report / Component | API Endpoint | Database Tables / Procedures | Joined Columns | Extracted Fields & Metrics | UI Destination |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Material Dashboard** (`MaterialDashboard.jsx`) | `/api/material/dashboard` | `SAP_PartMaster` | Line / Storage Location Filter | Total Active Parts, Critical Shortage SKUs, Safety Stock Breaches, Buffer Level % | Stock Health Cards, Category Inventory Bar Chart, Critical Shortages Alert Table |
-| **Stock Status Report** (`StockStatusReport.jsx`) | `/api/material/stock` | `SAP_PartMaster` | `PartNo`, `LocationID` | `PartNo`, `PartDescription`, `CurrentStock`, `SafetyStock`, `BinLocation`, `UnitOfMeasure`, Reorder Status | Stock Coverage (Days), Inventory Value, ABC Classification, Part Master Stock Table |
-| **Material Request Report** (`MaterialRequestReport.jsx`) | `/api/material/request` | `SAP_PartMaster` | Filtered by Request Status | `RequestID`, `PartNo`, `StationID`, `RequestQty`, `FulfilledQty`, `RequestStatus` (Open/Dispatched/Closed) | Open Andon Calls Counter, Fulfilled vs Pending Chart, Material Dispatch Tracking Grid |
+| **Material Dashboard** (`MaterialDashboard.jsx`) | `/api/material/dashboard` | `Material_Stock`<br>`Config_PartVariant`<br>`Config_MaterialLocationMapping` | `s.PartID = v.PartID`<br>`s.PartID = loc.PartID` | Total Active Parts, Critical Shortage SKUs (`currentStock <= MinAreaCapacity`), Safety Stock Breaches, Store + Kit Rack + Lineside Inventory | Stock Health Cards, Category Inventory Bar Chart, Critical Shortages Alert Table |
+| **Stock Status Report** (`StockStatusReport.jsx`) | `/api/material/stock` | `Material_Stock`<br>`Config_PartVariant`<br>`Config_MaterialLocationMapping` | `s.PartID = v.PartID`<br>`s.PartID = loc.PartID` | `PartID`, `PartName`, `AvailableQty` (`StoreQty + LineCKitRackQty + LineDKitRackQty + LinesideCQty + LinesideDQty`), `MinAreaCapacity`, `MaxAreaCapacity`, Status (`Safe`/`Critical`/`Excess`) | Stock Coverage (Days), Inventory Value, Part Master Stock Table |
+| **Material Request Report** (`MaterialRequestReport.jsx`) | `/api/material/request` | `Material_Movement_Log`<br>`Config_PartVariant` | `m.PartID = v.PartID` | `RequestID` (`REQ-UID`), `PartID`, `PartName`, `SourceAreaID` (Store), `DestinationAreaID` (Line), `Quantity`, `TimeStamp` | Open Andon Calls Counter, Fulfilled vs Pending Chart, Material Dispatch Tracking Grid |
 | **Kitting Dashboard & Inspection** (`KittingDashboard.jsx`, `KitInspectionReport.jsx`) | `/api/material/kitting` | `Prod_Kit_Inspection_Log`<br>`Config_Model`<br>`Config_SKU`<br>`Config_Line` | `K.SKUID = S.SKUID`<br>`S.ModelID = M.ModelID`<br>`K.LineID = L.LineID` | `KitBarcode`, `TrayID`, `InspectionResult` (Pass/Fail), `MissingPartsCount`, `InspectorID`, Timestamp | Kit Preparation Rate %, Inspection Pass %, Missing Part Pareto, Kit Audit Log Grid |
 | **Kit vs Production Report** (`KitVsProductionReport.jsx`) | `/api/material/kitting` | `Prod_Kit_Inspection_Log`<br>`Config_Model`<br>`Config_SKU`<br>`Config_Line` | Aggregated by `ProdDate`, `ProdShift`, `ModelID` | Kits Completed vs Engines Assembled, Kit Buffer Gap, Starvation Risk Flag | Kit vs Engine Synchronized Line Chart, Buffer Deficit Warning, Gap Analysis Table |
 | **Engine Stock Report** (`EngineStockReport.jsx`) | `/api/material/engine-stock` | `Prod_Engine_WIP`<br>`Config_SKU`<br>`Config_Model`<br>`Config_ModelFamily` | `W.SKUID = S.SKUID`<br>`S.ModelID = M.ModelID`<br>`M.ModelFamilyID = F.ModelFamilyID` | `EngineNo`, `ModelName`, `ModelFamilyName`, `Status` (Finished / Cleared / In Stock), Storage Bay | Total Finished Engines, Warehouse Bay Allocation, Stock Aging Breakdown |
-| **Material Consumption Report** (`MaterialConsumptionReport.jsx`) | `/api/material/consumption` | `SAP_PartMaster` | Part BOM Grouping | `StandardConsumptionQty`, `ActualIssuedQty`, `VarianceQty`, Scrap Allowance % | Scrap % Gauge, High-Variance BOM Components, Monthly Consumption Ledger |
+| **Material Consumption Report** (`MaterialConsumptionReport.jsx`) | `/api/material/consumption` | `Material_Stock`<br>`Config_PartVariant`<br>`Prod_Engine_Part_Geneology` | `s.PartID = v.PartID`<br>`s.PartID = cons.PartID` | `PartID`, `PartName`, `ActualConsumed` (from `Prod_Engine_Part_Geneology`), `ExpectedConsumed`, `VarianceQty`, `VariancePct` | Scrap % Gauge, High-Variance BOM Components, Monthly Consumption Ledger |
 
 ---
 
@@ -532,7 +544,11 @@ Here is the complete inventory of all database tables and views utilized across 
 23. `dbo.Config_Skill`: Operational competencies required per station.
 24. `dbo.Config_SkillLevel`: L1 to L4 skill competency tier definitions.
 25. `dbo.Config_OperatorSkillMapping`: Operator-to-skill matrix evaluation records.
-26. `dbo.SAP_PartMaster`: ERP synchronized inventory, part numbers, descriptions, buffer limits, bin locations.
+26. `dbo.Config_PartVariant`: Official Part Master (379+ parts) holding `PartID`, `EnginePartID`, `PartName`, and `PartDesc`.
+27. `dbo.Material_Stock`: Shop-floor physical stock across Store (`StoreQty`), Kit Racks (`LineCKitRackQty`, `LineDKitRackQty`), Lineside buffers (`LinesideCQty`, `LinesideDQty`), and WIP on kits.
+28. `dbo.Config_MaterialLocationMapping`: Storage area mappings and Min/Max capacity thresholds (`MinAreaCapacity`, `MaxAreaCapacity`).
+29. `dbo.Material_Movement_Log`: Real-time material transfer and dispatch logs from Store to Assembly Lines.
+30. `dbo.Prod_Engine_Part_Geneology`: Engine BOM part consumption genealogy linking assembled engine serial numbers to component part numbers.
 
 ### D. Stored Procedures Executed
 1. `dbo.DS_Dashboard_ProductionKPI`: Calculates shift target, actual produced, straight pass, WIP, and rollover.
