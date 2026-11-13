@@ -1,66 +1,14 @@
+-- ========================================================================
+-- Stored Procedure: [dbo].[GV_ProdShiftPlan]
+-- Database: PPMS_BajajPant
+-- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 17:54:00 GMT+0530 (India Standard Time)
+-- ========================================================================
 
- 
-
--- =============================================
--- Author:      Shubham Patil
--- CREATE OR ALTER OR ALTER date: 07 May 2026
--- Description: Production Shift Plan Grid
--- =============================================
-
- 
-
-CREATE         PROCEDURE [dbo].[GV_ProdShiftPlan]
-
- 
-
+-- Backward Compatibility: GV_ProdShiftPlan
+CREATE   PROCEDURE [dbo].[GV_ProdShiftPlan]
 AS
 BEGIN
-
- 
-
-    SELECT
-        A.PlanID,
-        A.LineID,
-        B.LineName,
-        A.SKUID,
-        C.SKUName,
-        A.ProdDate,
-        A.ProdShift,
-        A.PlanQty,
-        A.Status,
-        CASE
-            WHEN A.Status = 1 THEN 'Plan'
-            WHEN A.Status = 2 THEN 'Hold'
-            WHEN A.Status = 3 THEN 'Short Close'
-            WHEN A.Status = 4 THEN 'Completed'
-            WHEN A.Status = 5 THEN 'Inprocess'
-        END AS StatusName,
-        A.Priority,
-        A.Source,
-        CASE
-            WHEN A.Source = 1 THEN 'Manual'
-            WHEN A.Source = 2 THEN 'Excel'
-            WHEN A.Source = 3 THEN 'SAP'
-        END AS SourceName
-
- 
-
-    FROM Prod_Shift_Plan AS A
-
- 
-
-    JOIN Config_Line AS B
-        ON A.LineID = B.LineID
-
- 
-
-    JOIN Config_SKU AS C
-        ON A.SKUID = C.SKUID
-
- 
-
-    ORDER BY A.PlanID DESC
-
- 
-
-END
+    SET NOCOUNT ON;
+    EXEC [dbo].[DS_Dashboard_ProdShiftPlan];
+END;
+GO

@@ -257,7 +257,7 @@ app.get(['/api/dashboard/production', '/api/production/overview', '/api/producti
       }
 
       const [spResult, planResult, skuResult, enginesResult, dtResult, wipHoldResult, planExecutionResult] = await Promise.allSettled([
-        spReq.execute('DS_Dashboard_ProductionKPI'),
+        spReq.execute('DS_Prod_ProductionKPI'),
         createSqlRequest(pool, {
           StartDate: { type: sql.Date, value: effectiveStartDate },
           EndDate: { type: sql.Date, value: effectiveEndDate },
@@ -541,8 +541,13 @@ app.get('/api/production/plan', async (req, res) => {
   try {
     const pool = await poolPromise;
     if (pool) {
-      // Execute official SP authored by Shubham Patil
-      const result = await pool.request().execute('GV_ProdShiftPlan');
+      // Execute official SP authored by Shubham Patil (DS_ProdShiftPlan / GV_ProdShiftPlan)
+      let result;
+      try {
+        result = await pool.request().execute('DS_ProdShiftPlan');
+      } catch (e) {
+        result = await pool.request().execute('GV_ProdShiftPlan');
+      }
       let rows = result.recordset || [];
 
       // Apply dynamic filtering on normalized SP output
@@ -1201,7 +1206,7 @@ app.get('/api/process/conveyor', async (req, res) => {
         Station: { type: sql.VarChar(50), value: (station && station !== 'All') ? station : null }
       });
 
-      const spResult = await spReq.execute('DS_Dashboard_ProcessConveyor');
+      const spResult = await spReq.execute('DS_Process_Conveyor');
       const recordsets = spResult.recordsets || [[], [], [], []];
 
       const stations = recordsets[0] || [];
@@ -1391,7 +1396,7 @@ app.get('/api/trace/wip', async (req, res) => {
         WIPStatus: { type: sql.VarChar(50), value: (wipStatus && wipStatus !== 'All') ? wipStatus : null }
       });
 
-      const result = await spReq.execute('DS_Dashboard_TrackTraceWIP');
+      const result = await spReq.execute('DS_TrackTrace_WIP');
       let rows = result.recordset || [];
       if (wipStatus && wipStatus !== 'All') {
         rows = rows.filter(r => r.status.toLowerCase() === wipStatus.toLowerCase());
@@ -2240,7 +2245,7 @@ app.get('/api/maintenance/downtime', async (req, res) => {
         Station: { type: sql.VarChar(50), value: (station && station !== 'All') ? station : null }
       });
 
-      const spResult = await spReq.execute('DS_Dashboard_MaintenanceDowntime');
+      const spResult = await spReq.execute('DS_Maint_Downtime');
       const recordsets = spResult.recordsets || [[], [], []];
 
       const r = recordsets[0]?.[0] || {};

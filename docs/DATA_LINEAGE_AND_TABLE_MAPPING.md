@@ -28,7 +28,7 @@ flowchart TD
     end
 
     subgraph Database["Microsoft SQL Server (Database: PPMS_BajajPant)"]
-        SP["Stored Procedures (GV_ProdShiftPlan, DS_Dashboard_*)"]
+        SP["Stored Procedures (DS_Prod_ProductionKPI, DS_ProdShiftPlan, DS_*)"]
         TransTables["Transactional Tables (Prod_EnginePlanExecution, Perf_Downtime, ...)"]
         ConfigTables["Configuration Tables (Config_Line, Config_Station, Config_Model, ...)"]
         MasterTables["Material & Stock Tables (Material_Stock, Config_PartVariant, Config_MaterialLocationMapping)"]
@@ -102,7 +102,7 @@ flowchart TD
         T9[("Config_ModelFamily")]
         T10[("Prod_Engine_WIP")]
         T11[("Prod_Defect_Log")]
-        SP1[["SP: DS_Dashboard_ProductionKPI"]]
+        SP1[["SP: DS_Prod_ProductionKPI"]]
         SP2[["SP: GV_ProdShiftPlan"]]
     end
 
@@ -123,7 +123,7 @@ flowchart TD
 
 | Report / Component | API Endpoint | Database Tables / Procedures | Joined Columns | Extracted Fields & Metrics | UI Destination |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Production Report** (`Production.jsx`) | `/api/dashboard/production` | `DS_Dashboard_ProductionKPI` (SP)<br>`Prod_EnginePlanExecution`<br>`Perf_Hourly_OLE`<br>`Config_Line`<br>`Config_SKU`<br>`Config_Model`<br>`Config_ModelFamily` | `E.LineID = L.LineID`<br>`E.SKUID = S.SKUID`<br>`S.ModelID = M.ModelID`<br>`M.ModelFamilyID = F.ModelFamilyID` | `PlanQty`, `ENGCompleted_Qty`, `ENGReworkOK_Qty`, `ENGMainLine_Qty`, `ENGMaterialHold_Qty`, `ENGQualityHold_Qty`, Hourly `PlannedQuantity`, `GoodQuantity` | `StatCard` (Plan, Actual, Shortfall, WIP, Rollover), Plan vs Actual Trend Chart, SKU Data Table |
+| **Production Report** (`Production.jsx`) | `/api/dashboard/production` | `DS_Prod_ProductionKPI` (SP)<br>`Prod_EnginePlanExecution`<br>`Perf_Hourly_OLE`<br>`Config_Line`<br>`Config_SKU`<br>`Config_Model`<br>`Config_ModelFamily` | `E.LineID = L.LineID`<br>`E.SKUID = S.SKUID`<br>`S.ModelID = M.ModelID`<br>`M.ModelFamilyID = F.ModelFamilyID` | `PlanQty`, `ENGCompleted_Qty`, `ENGReworkOK_Qty`, `ENGMainLine_Qty`, `ENGMaterialHold_Qty`, `ENGQualityHold_Qty`, Hourly `PlannedQuantity`, `GoodQuantity` | `StatCard` (Plan, Actual, Shortfall, WIP, Rollover), Plan vs Actual Trend Chart, SKU Data Table |
 | **Straight Pass Report** (`StraightPassReport.jsx`) | `/api/production/straight-pass` | `Prod_EnginePlanExecution`<br>`Prod_Engine_WIP`<br>`Prod_Defect_Log`<br>`Config_Line`<br>`Config_SKU`<br>`Config_Model` | `E.LineID = L.LineID`<br>`E.SKUID = S.SKUID`<br>`S.ModelID = M.ModelID`<br>`E.EngineNo = W.EngineNo` | Total Inspected, Straight Pass Qty, Rework Pass Qty, Rejected Qty, First-Time-Right (FTR) Yield %, Defect Descriptions | FTR % Gauge Card, Reworked Trend, Straight Pass vs Defect Breakdown Table |
 | **Production Shift Plan** | `/api/production/plan` | `GV_ProdShiftPlan` (Official SP) | Param: `@ProdDate`, `@ProdShift` | Scheduled Model Codes, Planned Line Allocations, Shift Target Counts | Master Shift Production Schedule Table |
 
@@ -201,7 +201,7 @@ flowchart TD
         PM6[("Config_SKU")]
         PM7[("Config_Model")]
         PM8[("Prod_TorqueData_Log")]
-        SP_CONV[["SP: DS_Dashboard_ProcessConveyor"]]
+        SP_CONV[["SP: DS_Process_Conveyor"]]
     end
 
     PR1 --> E_PR1
@@ -222,7 +222,7 @@ flowchart TD
 | **Poka Yoke Report** (`PokaYokeReport.jsx`) | `/api/process/pokayoke` | `Prod_EnginePlanExecution`<br>`Perf_Downtime`<br>`Config_Line`<br>`Config_Station` | `D.SubAsslyLineID = L.LineID`<br>`D.StationID = S.StationID` | Total Interlock Checks, Active Interlocks, Failed Checks, Station-wise Poka Yoke Status | Interlock OK/NOK Counter, Station Compliance Bar Chart, Real-time Sensor Interlock Grid |
 | **Poka Yoke Bypass Report** (`PokaYokeBypassReport.jsx`) | `/api/process/bypass` | `Perf_Downtime`<br>`Config_Line`<br>`Config_Station`<br>`Config_User`<br>`Config_SKU` | `D.SubAsslyLineID = L.LineID`<br>`D.StationID = S.StationID`<br>`D.UserID = U.UserID` | Bypass Timestamp, Station ID, Reason / Authorization, Approver Name (`Config_User`), Duration | Total Bypass Events, Active Bypasses, High-risk Station Table, Authorized Bypass Log |
 | **Torque Report** (`TorqueReport.jsx`) | `/api/process/torque` | `Prod_TorqueData_Log`<br>`Config_SKU`<br>`Config_Model` | `T.SKUID = S.SKUID`<br>`S.ModelID = M.ModelID` | `SpindleNo`, `TargetTorque`, `ActualTorque`, `TargetAngle`, `ActualAngle`, `TorqueStatus` (OK/NOK), `AngleStatus` | Fastening Pass Rate %, Torque Distribution Curve, Tightening Angle vs Torque Scatter, Bolt-level Log |
-| **Conveyor Report** (`ConveyorReport.jsx`) | `/api/process/conveyor` | `DS_Dashboard_ProcessConveyor` (SP) | Param: `@LineID`, `@ProdDate` | Conveyor Belt Speed (m/min), Drive Motor Current, JPH (Jobs Per Hour), Pitch Time, VFD Frequency | Line Speed Gauge, JPH Actual vs Target Trend, Motor Load Graph, Carrier Tracking Grid |
+| **Conveyor Report** (`ConveyorReport.jsx`) | `/api/process/conveyor` | `DS_Process_Conveyor` (SP) | Param: `@LineID`, `@ProdDate` | Conveyor Belt Speed (m/min), Drive Motor Current, JPH (Jobs Per Hour), Pitch Time, VFD Frequency | Line Speed Gauge, JPH Actual vs Target Trend, Motor Load Graph, Carrier Tracking Grid |
 
 ---
 
@@ -254,7 +254,7 @@ flowchart TD
         TT6[("Config_SKU")]
         TT7[("Config_Model")]
         TT8[("Config_Line")]
-        SP_WIP[["SP: DS_Dashboard_TrackTraceWIP"]]
+        SP_WIP[["SP: DS_TrackTrace_WIP"]]
     end
 
     TR1 --> E_TR1
@@ -273,7 +273,7 @@ flowchart TD
 | Report / Component | API Endpoint | Database Tables / Procedures | Joined Columns | Extracted Fields & Metrics | UI Destination |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Genealogy Report** (`GenealogyReport.jsx`) | `/api/trace/genealogy` | `Prod_Engine_Geneology`<br>`Config_Station`<br>`Config_User` | `G.StationID = S.StationID`<br>`G.UserID = U.UserID` | `EngineNo`, `PartBarcode`, `PartName`, `StationName`, `ScanTimestamp`, `OperatorName`, Batch Code | 2D Barcode Search Bar, Engine BOM Hierarchy Tree, Child Part Traceability Grid |
-| **WIP Report** (`WIPReport.jsx`) | `/api/trace/wip` | `DS_Dashboard_TrackTraceWIP` (SP) | Param: `@LineID`, `@ProdDate` | `StationID`, `StationName`, `EngineCount`, `BottleneckFlag`, Buffer Utilization %, Min/Max Dwell Time | Line Balance Flow Chart, Station WIP Heatmap, Bottleneck Warning Banner, Station WIP Table |
+| **WIP Report** (`WIPReport.jsx`) | `/api/trace/wip` | `DS_TrackTrace_WIP` (SP) | Param: `@LineID`, `@ProdDate` | `StationID`, `StationName`, `EngineCount`, `BottleneckFlag`, Buffer Utilization %, Min/Max Dwell Time | Line Balance Flow Chart, Station WIP Heatmap, Bottleneck Warning Banner, Station WIP Table |
 | **Rework Status Report** (`ReworkStatusReport.jsx`) | `/api/trace/rework` | `Prod_Defect_Log`<br>`Prod_Engine_WIP`<br>`Config_SKU`<br>`Config_Model`<br>`Config_Line` | `D.EngineNo = W.EngineNo`<br>`W.SKUID = S.SKUID`<br>`S.ModelID = M.ModelID`<br>`W.LineID = L.LineID` | `EngineNo`, `DefectCode`, `DefectDescription`, `Status` (Under Rework, Cleared, Scrapped), `ReworkStationID` | Rework Queue Counter, Defect Disposition Pie Chart, Active Rework Engine Grid |
 | **Engine Rework Log** (`EngineReworkReport.jsx`) | `/api/trace/engine-rework` | `Prod_Defect_Log`<br>`Prod_Engine_WIP`<br>`Config_SKU`<br>`Config_Model` | `D.EngineNo = W.EngineNo`<br>`W.SKUID = S.SKUID`<br>`S.ModelID = M.ModelID` | `ReworkStartTime`, `ReworkEndTime`, `ReworkActionTaken`, `PartsReplaced`, `ReworkInspector` | Rework Cycle Time KPI, Defect-to-Action Matrix, Detailed Engine Rework Ledger |
 
@@ -359,7 +359,7 @@ flowchart TD
         MT5[("Config_User")]
         MT6[("Config_PMSchedule")]
         MT7[("Config_PMCheckList")]
-        SP_MDT[["SP: DS_Dashboard_MaintenanceDowntime"]]
+        SP_MDT[["SP: DS_Maint_Downtime"]]
     end
 
     M1 --> E_M1
@@ -381,7 +381,7 @@ flowchart TD
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Maintenance Dashboard** (`MaintenanceDashboard.jsx`) | `/api/maintenance/dashboard` | `Maint_BreakDown_Log`<br>`Config_Station`<br>`Config_Line`<br>`Config_LossCategory` | `B.StationID = S.StationID`<br>`B.LineID = L.LineID`<br>`B.LossID = LC.LossID` | Total Breakdowns, Active Alarms, Open Work Orders, Total Repair Duration, Station Impact | Open BD Counter, MTTR/MTBF Quick Stats, Station Breakdown Heatmap, Breakdown Severity Chart |
 | **Breakdown Report** (`BreakdownReport.jsx`) | `/api/maintenance/breakdown` | `Maint_BreakDown_Log`<br>`Config_Station`<br>`Config_Line`<br>`Config_User` | `B.StationID = S.StationID`<br>`B.LineID = L.LineID`<br>`B.TechnicianID = U.UserID` | `BreakdownStartTime`, `BreakdownEndTime`, `Duration`, `FailureMode`, `ActionTaken`, `TechnicianName`, `RootCause` | Breakdown Time Trend, Top Fault Categories Pareto, Machine Breakdown Incident Log |
-| **Downtime Summary Report** (`DowntimeSummaryReport.jsx`) | `/api/maintenance/downtime` | `DS_Dashboard_MaintenanceDowntime` (SP) | Param: `@LineID`, `@ProdDate` | `MachineName`, `StationName`, `TotalDownTimeMins`, `BreakdownOccurrences`, Cumulative Loss % | Maintenance Loss Distribution, Station Downtime Pareto, Equipment Downtime Matrix |
+| **Downtime Summary Report** (`DowntimeSummaryReport.jsx`) | `/api/maintenance/downtime` | `DS_Maint_Downtime` (SP) | Param: `@LineID`, `@ProdDate` | `MachineName`, `StationName`, `TotalDownTimeMins`, `BreakdownOccurrences`, Cumulative Loss % | Maintenance Loss Distribution, Station Downtime Pareto, Equipment Downtime Matrix |
 | **MTTR & MTBF Report** (`MTTRMTBFReport.jsx`) | `/api/maintenance/mttr-mtbf` | `Maint_BreakDown_Log`<br>`Config_Station`<br>`Config_Line` | `B.StationID = S.StationID`<br>`B.LineID = L.LineID` | Calculated $\text{MTTR} = \frac{\sum \text{Repair Time}}{\text{Failures}}$, $\text{MTBF} = \frac{\text{Operating Time}}{\text{Failures}}$, Availability Rate % | MTTR & MTBF Metric Cards, Reliability Trend Line Chart, Station Reliability Ranking Table |
 | **PM Dashboard & PM Report** (`PMDashboard.jsx`, `PMReport.jsx`) | `/api/maintenance/pm-dashboard`<br>`/api/maintenance/pm-report` | `Config_PMSchedule`<br>`Config_PMCheckList`<br>`Config_Line` | `S.CheckListID = C.CheckListID`<br>`S.LineID = L.LineID` | `ScheduleDate`, `TaskFrequency` (Daily/Weekly/Monthly), `CompletionStatus`, `OverdueDays`, `AssignedTechnician` | PM Compliance % Gauge, Overdue Maintenance Tasks, Scheduled Calendar View, PM Work Order Log |
 
@@ -551,8 +551,21 @@ Here is the complete inventory of all database tables and views utilized across 
 30. `dbo.Prod_Engine_Part_Geneology`: Engine BOM part consumption genealogy linking assembled engine serial numbers to component part numbers.
 
 ### D. Stored Procedures Executed
-1. `dbo.DS_Dashboard_ProductionKPI`: Calculates shift target, actual produced, straight pass, WIP, and rollover.
-2. `dbo.GV_ProdShiftPlan`: Returns the official production shift plan authored for the shop floor.
-3. `dbo.DS_Dashboard_ProcessConveyor`: Fetches real-time conveyor parameters, VFD speed, and JPH.
-4. `dbo.DS_Dashboard_TrackTraceWIP`: Aggregates buffer WIP levels and bottleneck status across all line stations.
-5. `dbo.DS_Dashboard_MaintenanceDowntime`: Computes maintenance loss breakdown and downtime durations.
+1. `dbo.DS_Prod_ProductionKPI` *(Standard)* / `dbo.DS_ProductionKPI` *(Alias)* / `dbo.DS_Dashboard_ProductionKPI`: Calculates shift target, actual produced, straight pass, WIP, shortfall, and rollover KPIs.
+2. `dbo.DS_ProdShiftPlan` *(Standard)* / `dbo.GV_ProdShiftPlan` *(Plant SP by Shubham Patil)*: Returns the official production shift plan schedule and target quantities over `dbo.Prod_Shift_Plan`.
+3. `dbo.DS_Process_Conveyor` *(Standard)* / `dbo.DS_ProcessConveyor` *(Alias)* / `dbo.DS_Dashboard_ProcessConveyor`: Fetches real-time conveyor parameters, VFD speed, stoppage reasons, and station downtime.
+4. `dbo.DS_TrackTrace_WIP` *(Standard)* / `dbo.DS_TrackTraceWIP` *(Alias)* / `dbo.DS_Dashboard_TrackTraceWIP`: Aggregates buffer WIP levels, dwell times, and bottleneck status across all line stations.
+5. `dbo.DS_Maint_Downtime` *(Standard)* / `dbo.DS_MaintenanceDowntime` *(Alias)* / `dbo.DS_Dashboard_MaintenanceDowntime`: Computes maintenance loss breakdown, MTTR, and downtime duration trend.
+6. `dbo.DS_Prod_EngineStatusCountBySKU` *(Standard)* / `dbo.DS_GetEngineStatusCountBySKU` / `dbo.USP_GetEngineStatusCountBySKU`: Retrieves aggregated engine status counts partitioned across 19 quality and rework gates grouped by SKU.
+
+### E. Complete Dashboard Stored Procedures Suite (Prefix `DS_*` in PPMS_BajajPant)
+In addition to the 6 primary procedures above, the database contains the plant's official `DS_*` stored procedures cataloged below:
+- `dbo.DS_ShiftDashboard_KPI`: Production shift summary KPI procedure by Sumit.
+- `dbo.DS_ShiftDashboard_RunningPlan`: Real-time running plan execution tracker by Sumit.
+- `dbo.DS_ShiftDashboard_CCLH`: Crankcase Left-Hand (CCLH) sub-assembly shift KPIs.
+- `dbo.DS_ShiftDashboard_CCRH`: Crankcase Right-Hand (CCRH) sub-assembly shift KPIs.
+- `dbo.DS_ShiftDashboard_CylinderHead`: Cylinder Head sub-assembly shift KPIs.
+- `dbo.DS_Prod_Engine_Station_Tracking`: Engine station tracking ordered by assembly station sequence.
+- `dbo.DS_Prod_Date&Shift`: Global production date and shift parameter resolver.
+- `dbo.DS_Maint_ActiveAlarm_Count`: Active alarm aggregation categorizing Information vs Stoppage alarms.
+- `dbo.DS_QA_AuditMonitoringKPI`: Quality audit notification counter (Normal, Alert, Warning).

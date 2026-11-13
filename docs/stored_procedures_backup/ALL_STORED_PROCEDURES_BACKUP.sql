@@ -1,16 +1,13 @@
 -- ========================================================================
--- BAJAJ AUTO LTD. - PANTNAGAR PLANT PPMS DATABASE
--- COMPLETE STORED PROCEDURES BACKUP
--- Total Procedures: 376
--- Backup Generated: 2026-11-13T06:49:18.859Z
--- Database: PPMS_BajajPant
+-- BAJAJ AUTO LTD - PPMS_BajajPant DATABASE
+-- COMPLETE STORED PROCEDURES BACKUP ARCHIVE
+-- Total Procedures: 388
+-- Backup Timestamp: 2026-11-13T07:04:51.961Z
+-- Database Server: localhost (PPMS_BajajPant)
 -- ========================================================================
 
-USE [PPMS_BajajPant];
-GO
-
 -- ------------------------------------------------------------------------
--- [1/376] Stored Procedure: [dbo].[BT_ActivityData]
+-- [1/388] Stored Procedure: [dbo].[BT_ActivityData]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32,7 +29,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [2/376] Stored Procedure: [dbo].[BT_ApplicationSetting]
+-- [2/388] Stored Procedure: [dbo].[BT_ApplicationSetting]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -465,7 +462,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [3/376] Stored Procedure: [dbo].[BT_Config_Activity_SOP_Mapping]
+-- [3/388] Stored Procedure: [dbo].[BT_Config_Activity_SOP_Mapping]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -831,7 +828,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [4/376] Stored Procedure: [dbo].[BT_Config_Alarm]
+-- [4/388] Stored Procedure: [dbo].[BT_Config_Alarm]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -1054,7 +1051,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [5/376] Stored Procedure: [dbo].[BT_Config_AuditDocumentMapping]
+-- [5/388] Stored Procedure: [dbo].[BT_Config_AuditDocumentMapping]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[BT_Config_AuditDocumentMapping]
@@ -1298,7 +1295,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [6/376] Stored Procedure: [dbo].[BT_Config_AuditList]
+-- [6/388] Stored Procedure: [dbo].[BT_Config_AuditList]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -1763,7 +1760,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [7/376] Stored Procedure: [dbo].[BT_Config_AuditPointLinking]
+-- [7/388] Stored Procedure: [dbo].[BT_Config_AuditPointLinking]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -2243,7 +2240,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [8/376] Stored Procedure: [dbo].[BT_Config_AuditSchedule]
+-- [8/388] Stored Procedure: [dbo].[BT_Config_AuditSchedule]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -2596,7 +2593,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [9/376] Stored Procedure: [dbo].[BT_Config_BOM]
+-- [9/388] Stored Procedure: [dbo].[BT_Config_BOM]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -3036,7 +3033,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [10/376] Stored Procedure: [dbo].[BT_Config_Department]
+-- [10/388] Stored Procedure: [dbo].[BT_Config_Department]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -3314,7 +3311,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [11/376] Stored Procedure: [dbo].[BT_Config_Dropdown]
+-- [11/388] Stored Procedure: [dbo].[BT_Config_Dropdown]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -3452,7 +3449,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [12/376] Stored Procedure: [dbo].[BT_Config_EnginePart]
+-- [12/388] Stored Procedure: [dbo].[BT_Config_EnginePart]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -3770,7 +3767,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [13/376] Stored Procedure: [dbo].[BT_Config_Equipment]
+-- [13/388] Stored Procedure: [dbo].[BT_Config_Equipment]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -4132,7 +4129,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [14/376] Stored Procedure: [dbo].[BT_Config_Equipment_Part]
+-- [14/388] Stored Procedure: [dbo].[BT_Config_Equipment_Part]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -4359,7 +4356,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [15/376] Stored Procedure: [dbo].[BT_Config_EquipmentType]
+-- [15/388] Stored Procedure: [dbo].[BT_Config_EquipmentType]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -4589,7 +4586,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [16/376] Stored Procedure: [dbo].[BT_Config_FQC_EngFiringAuditPoint]
+-- [16/388] Stored Procedure: [dbo].[BT_Config_FQC_EngFiringAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -4950,7 +4947,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [17/376] Stored Procedure: [dbo].[BT_Config_FQC_EngInbuiltAuditPoint]
+-- [17/388] Stored Procedure: [dbo].[BT_Config_FQC_EngInbuiltAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -5343,7 +5340,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [18/376] Stored Procedure: [dbo].[BT_Config_FQC_EngPerformanceAuditPoint]
+-- [18/388] Stored Procedure: [dbo].[BT_Config_FQC_EngPerformanceAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -5770,7 +5767,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [19/376] Stored Procedure: [dbo].[BT_Config_FQC_EngStripAuditPoint]
+-- [19/388] Stored Procedure: [dbo].[BT_Config_FQC_EngStripAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -6170,7 +6167,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [20/376] Stored Procedure: [dbo].[BT_Config_Inspection_Action]
+-- [20/388] Stored Procedure: [dbo].[BT_Config_Inspection_Action]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -6451,7 +6448,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [21/376] Stored Procedure: [dbo].[BT_Config_Inspection_Point]
+-- [21/388] Stored Procedure: [dbo].[BT_Config_Inspection_Point]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -6771,7 +6768,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [22/376] Stored Procedure: [dbo].[BT_Config_InspectionDefect]
+-- [22/388] Stored Procedure: [dbo].[BT_Config_InspectionDefect]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -7142,7 +7139,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [23/376] Stored Procedure: [dbo].[BT_Config_InspectionStation]
+-- [23/388] Stored Procedure: [dbo].[BT_Config_InspectionStation]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[BT_Config_InspectionStation]
@@ -7540,7 +7537,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [24/376] Stored Procedure: [dbo].[BT_Config_IPQC_ManagerAuditPoint]
+-- [24/388] Stored Procedure: [dbo].[BT_Config_IPQC_ManagerAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -7975,7 +7972,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [25/376] Stored Procedure: [dbo].[BT_Config_IPQC_PartPressAuditPoint]
+-- [25/388] Stored Procedure: [dbo].[BT_Config_IPQC_PartPressAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -8365,7 +8362,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [26/376] Stored Procedure: [dbo].[BT_Config_IPQC_PYMachineAuditPoint]
+-- [26/388] Stored Procedure: [dbo].[BT_Config_IPQC_PYMachineAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -8735,7 +8732,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [27/376] Stored Procedure: [dbo].[BT_Config_IPQC_PYOnlineAuditPoint]
+-- [27/388] Stored Procedure: [dbo].[BT_Config_IPQC_PYOnlineAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -9120,7 +9117,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [28/376] Stored Procedure: [dbo].[BT_Config_IPQC_SOPAuditPoint]
+-- [28/388] Stored Procedure: [dbo].[BT_Config_IPQC_SOPAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -9501,7 +9498,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [29/376] Stored Procedure: [dbo].[BT_Config_IPQC_TorqueAuditPoint]
+-- [29/388] Stored Procedure: [dbo].[BT_Config_IPQC_TorqueAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -9911,7 +9908,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [30/376] Stored Procedure: [dbo].[BT_Config_IQC_MiliporeAuditPoint]
+-- [30/388] Stored Procedure: [dbo].[BT_Config_IQC_MiliporeAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -10334,7 +10331,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [31/376] Stored Procedure: [dbo].[BT_Config_IQC_MilliporeAuditPoint]
+-- [31/388] Stored Procedure: [dbo].[BT_Config_IQC_MilliporeAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -10780,7 +10777,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [32/376] Stored Procedure: [dbo].[BT_Config_IQC_VisualInspectAuditPoint]
+-- [32/388] Stored Procedure: [dbo].[BT_Config_IQC_VisualInspectAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -11322,7 +11319,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [33/376] Stored Procedure: [dbo].[BT_Config_JHActivity]
+-- [33/388] Stored Procedure: [dbo].[BT_Config_JHActivity]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -11568,7 +11565,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [34/376] Stored Procedure: [dbo].[BT_Config_KitBOM]
+-- [34/388] Stored Procedure: [dbo].[BT_Config_KitBOM]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -11873,7 +11870,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [35/376] Stored Procedure: [dbo].[BT_Config_Line]
+-- [35/388] Stored Procedure: [dbo].[BT_Config_Line]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -12119,7 +12116,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [36/376] Stored Procedure: [dbo].[BT_Config_LineSpeedOperatorCount]
+-- [36/388] Stored Procedure: [dbo].[BT_Config_LineSpeedOperatorCount]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -12477,7 +12474,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [37/376] Stored Procedure: [dbo].[BT_Config_LineSpeedOperatorMapping]
+-- [37/388] Stored Procedure: [dbo].[BT_Config_LineSpeedOperatorMapping]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -12888,7 +12885,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [38/376] Stored Procedure: [dbo].[BT_Config_LossCategory]
+-- [38/388] Stored Procedure: [dbo].[BT_Config_LossCategory]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -13231,7 +13228,7 @@ SET ANSI_NULLS ON
 GO
 
 -- ------------------------------------------------------------------------
--- [39/376] Stored Procedure: [dbo].[BT_Config_MobileTerminal]
+-- [39/388] Stored Procedure: [dbo].[BT_Config_MobileTerminal]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -13511,7 +13508,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [40/376] Stored Procedure: [dbo].[BT_Config_Model]
+-- [40/388] Stored Procedure: [dbo].[BT_Config_Model]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -13796,7 +13793,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [41/376] Stored Procedure: [dbo].[BT_Config_ModelFamily]
+-- [41/388] Stored Procedure: [dbo].[BT_Config_ModelFamily]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -14038,7 +14035,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [42/376] Stored Procedure: [dbo].[BT_Config_NPD]
+-- [42/388] Stored Procedure: [dbo].[BT_Config_NPD]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -14346,7 +14343,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [43/376] Stored Procedure: [dbo].[BT_Config_OperatorSkillMapping]
+-- [43/388] Stored Procedure: [dbo].[BT_Config_OperatorSkillMapping]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -14654,7 +14651,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [44/376] Stored Procedure: [dbo].[BT_Config_Parameter]
+-- [44/388] Stored Procedure: [dbo].[BT_Config_Parameter]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -15015,7 +15012,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [45/376] Stored Procedure: [dbo].[BT_Config_PartVariant]
+-- [45/388] Stored Procedure: [dbo].[BT_Config_PartVariant]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -15387,7 +15384,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [46/376] Stored Procedure: [dbo].[BT_Config_Plant]
+-- [46/388] Stored Procedure: [dbo].[BT_Config_Plant]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -15619,7 +15616,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [47/376] Stored Procedure: [dbo].[BT_Config_PMCheckList]
+-- [47/388] Stored Procedure: [dbo].[BT_Config_PMCheckList]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -15923,7 +15920,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [48/376] Stored Procedure: [dbo].[BT_Config_PMCheckPoints]
+-- [48/388] Stored Procedure: [dbo].[BT_Config_PMCheckPoints]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -16344,7 +16341,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [49/376] Stored Procedure: [dbo].[BT_Config_PMSchedule]
+-- [49/388] Stored Procedure: [dbo].[BT_Config_PMSchedule]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -16611,7 +16608,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [50/376] Stored Procedure: [dbo].[BT_Config_QADocumentList]
+-- [50/388] Stored Procedure: [dbo].[BT_Config_QADocumentList]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -17020,7 +17017,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [51/376] Stored Procedure: [dbo].[BT_Config_Role]
+-- [51/388] Stored Procedure: [dbo].[BT_Config_Role]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -17302,7 +17299,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [52/376] Stored Procedure: [dbo].[BT_Config_Shop]
+-- [52/388] Stored Procedure: [dbo].[BT_Config_Shop]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -17548,7 +17545,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [53/376] Stored Procedure: [dbo].[BT_Config_Skill]
+-- [53/388] Stored Procedure: [dbo].[BT_Config_Skill]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -17820,7 +17817,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [54/376] Stored Procedure: [dbo].[BT_Config_SkillLevel]
+-- [54/388] Stored Procedure: [dbo].[BT_Config_SkillLevel]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -18090,7 +18087,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [55/376] Stored Procedure: [dbo].[BT_Config_SKU]
+-- [55/388] Stored Procedure: [dbo].[BT_Config_SKU]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -18452,7 +18449,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [56/376] Stored Procedure: [dbo].[BT_Config_SKU_LineTaktTime]
+-- [56/388] Stored Procedure: [dbo].[BT_Config_SKU_LineTaktTime]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -18779,7 +18776,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [57/376] Stored Procedure: [dbo].[BT_Config_SKU_StationTaktTime]
+-- [57/388] Stored Procedure: [dbo].[BT_Config_SKU_StationTaktTime]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -19124,7 +19121,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [58/376] Stored Procedure: [dbo].[BT_Config_SKUProgramMapping]
+-- [58/388] Stored Procedure: [dbo].[BT_Config_SKUProgramMapping]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -19431,7 +19428,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [59/376] Stored Procedure: [dbo].[BT_Config_SOPPoint]
+-- [59/388] Stored Procedure: [dbo].[BT_Config_SOPPoint]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -19702,7 +19699,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [60/376] Stored Procedure: [dbo].[BT_Config_Station]
+-- [60/388] Stored Procedure: [dbo].[BT_Config_Station]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[BT_Config_Station]
@@ -20061,7 +20058,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [61/376] Stored Procedure: [dbo].[BT_Config_Station_JHActivity_Mapping]
+-- [61/388] Stored Procedure: [dbo].[BT_Config_Station_JHActivity_Mapping]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -20399,7 +20396,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [62/376] Stored Procedure: [dbo].[BT_Config_StationClusterDisplayMapping]
+-- [62/388] Stored Procedure: [dbo].[BT_Config_StationClusterDisplayMapping]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -20648,7 +20645,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [63/376] Stored Procedure: [dbo].[BT_Config_StationSkillMapping]
+-- [63/388] Stored Procedure: [dbo].[BT_Config_StationSkillMapping]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -20975,7 +20972,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [64/376] Stored Procedure: [dbo].[BT_Config_StorageArea]
+-- [64/388] Stored Procedure: [dbo].[BT_Config_StorageArea]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -21297,7 +21294,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [65/376] Stored Procedure: [dbo].[BT_Config_StorageLocation]
+-- [65/388] Stored Procedure: [dbo].[BT_Config_StorageLocation]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -21646,7 +21643,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [66/376] Stored Procedure: [dbo].[BT_Config_StorageRack]
+-- [66/388] Stored Procedure: [dbo].[BT_Config_StorageRack]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -21975,7 +21972,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [67/376] Stored Procedure: [dbo].[BT_Config_StorageZone]
+-- [67/388] Stored Procedure: [dbo].[BT_Config_StorageZone]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -22305,7 +22302,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [68/376] Stored Procedure: [dbo].[BT_Config_SubAssly_Line]
+-- [68/388] Stored Procedure: [dbo].[BT_Config_SubAssly_Line]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -22536,7 +22533,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [69/376] Stored Procedure: [dbo].[BT_Config_SubAsslyLine]
+-- [69/388] Stored Procedure: [dbo].[BT_Config_SubAsslyLine]
 -- Created: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:11 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -22784,7 +22781,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [70/376] Stored Procedure: [dbo].[BT_Config_SubLossCategory]
+-- [70/388] Stored Procedure: [dbo].[BT_Config_SubLossCategory]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -23021,7 +23018,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [71/376] Stored Procedure: [dbo].[BT_Config_TicketReason]
+-- [71/388] Stored Procedure: [dbo].[BT_Config_TicketReason]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -23570,7 +23567,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [72/376] Stored Procedure: [dbo].[BT_Config_User]
+-- [72/388] Stored Procedure: [dbo].[BT_Config_User]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -24006,7 +24003,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [73/376] Stored Procedure: [dbo].[BT_Config_Vendor]
+-- [73/388] Stored Procedure: [dbo].[BT_Config_Vendor]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -24371,7 +24368,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [74/376] Stored Procedure: [dbo].[BT_Config_Vendor_ChecklistMetaData]
+-- [74/388] Stored Procedure: [dbo].[BT_Config_Vendor_ChecklistMetaData]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -24616,7 +24613,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [75/376] Stored Procedure: [dbo].[BT_Config_Vendor_InspectionAuditPoint]
+-- [75/388] Stored Procedure: [dbo].[BT_Config_Vendor_InspectionAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -25019,7 +25016,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [76/376] Stored Procedure: [dbo].[BT_Config_Vendor_IPOAuditPoint]
+-- [76/388] Stored Procedure: [dbo].[BT_Config_Vendor_IPOAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -25432,7 +25429,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [77/376] Stored Procedure: [dbo].[BT_Config_Vendor_PartInspectionAuditPoint]
+-- [77/388] Stored Procedure: [dbo].[BT_Config_Vendor_PartInspectionAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -25835,7 +25832,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [78/376] Stored Procedure: [dbo].[BT_Config_Vendor_ProcessInspectionAuditPoint]
+-- [78/388] Stored Procedure: [dbo].[BT_Config_Vendor_ProcessInspectionAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -26248,7 +26245,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [79/376] Stored Procedure: [dbo].[BT_Config_Vendor_SampleInspectionAuditPoint]
+-- [79/388] Stored Procedure: [dbo].[BT_Config_Vendor_SampleInspectionAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -26651,7 +26648,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [80/376] Stored Procedure: [dbo].[BT_Config_VendorPartMapping]
+-- [80/388] Stored Procedure: [dbo].[BT_Config_VendorPartMapping]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[BT_Config_VendorPartMapping]
@@ -27006,7 +27003,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [81/376] Stored Procedure: [dbo].[BT_Config_Zone]
+-- [81/388] Stored Procedure: [dbo].[BT_Config_Zone]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -27253,7 +27250,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [82/376] Stored Procedure: [dbo].[BT_ConfigPMSchedule]
+-- [82/388] Stored Procedure: [dbo].[BT_ConfigPMSchedule]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -27486,7 +27483,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [83/376] Stored Procedure: [dbo].[BT_DaywiseNoProduction]
+-- [83/388] Stored Procedure: [dbo].[BT_DaywiseNoProduction]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -27660,7 +27657,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [84/376] Stored Procedure: [dbo].[BT_EngineBarcodePrint]
+-- [84/388] Stored Procedure: [dbo].[BT_EngineBarcodePrint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -27750,7 +27747,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [85/376] Stored Procedure: [dbo].[BT_LoggedChangeUser]
+-- [85/388] Stored Procedure: [dbo].[BT_LoggedChangeUser]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -27888,7 +27885,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [86/376] Stored Procedure: [dbo].[BT_Operator_LoginAll]
+-- [86/388] Stored Procedure: [dbo].[BT_Operator_LoginAll]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -28116,7 +28113,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [87/376] Stored Procedure: [dbo].[BT_Operator_LoginLogout]
+-- [87/388] Stored Procedure: [dbo].[BT_Operator_LoginLogout]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -28239,7 +28236,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [88/376] Stored Procedure: [dbo].[BT_Operator_LoginLogoutAbsent]
+-- [88/388] Stored Procedure: [dbo].[BT_Operator_LoginLogoutAbsent]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -28433,7 +28430,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [89/376] Stored Procedure: [dbo].[BT_Prod_JHActivity_Log]
+-- [89/388] Stored Procedure: [dbo].[BT_Prod_JHActivity_Log]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[BT_Prod_JHActivity_Log]
@@ -28651,7 +28648,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [90/376] Stored Procedure: [dbo].[BT_ProdEngineTakeIn]
+-- [90/388] Stored Procedure: [dbo].[BT_ProdEngineTakeIn]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -28915,7 +28912,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [91/376] Stored Procedure: [dbo].[BT_ProdEngineTakeOut]
+-- [91/388] Stored Procedure: [dbo].[BT_ProdEngineTakeOut]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -29266,7 +29263,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [92/376] Stored Procedure: [dbo].[BT_ProdShiftPlan]
+-- [92/388] Stored Procedure: [dbo].[BT_ProdShiftPlan]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -29697,7 +29694,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [93/376] Stored Procedure: [dbo].[BT_ProdShiftPlan_Execution]
+-- [93/388] Stored Procedure: [dbo].[BT_ProdShiftPlan_Execution]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -29945,7 +29942,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [94/376] Stored Procedure: [dbo].[BT_ProdShiftPlan_ExecutionPriority]
+-- [94/388] Stored Procedure: [dbo].[BT_ProdShiftPlan_ExecutionPriority]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -30150,7 +30147,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [95/376] Stored Procedure: [dbo].[BT_ProdShiftPlan_SendToLine]
+-- [95/388] Stored Procedure: [dbo].[BT_ProdShiftPlan_SendToLine]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -30310,7 +30307,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [96/376] Stored Procedure: [dbo].[BT_ProdShiftPlanPriority]
+-- [96/388] Stored Procedure: [dbo].[BT_ProdShiftPlanPriority]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -30499,7 +30496,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [97/376] Stored Procedure: [dbo].[BT_PY_Bypass_Log_Insert]
+-- [97/388] Stored Procedure: [dbo].[BT_PY_Bypass_Log_Insert]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[BT_PY_Bypass_Log_Insert]
@@ -30586,7 +30583,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [98/376] Stored Procedure: [dbo].[BT_SA_PlanExecution]
+-- [98/388] Stored Procedure: [dbo].[BT_SA_PlanExecution]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -30754,7 +30751,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [99/376] Stored Procedure: [dbo].[BT_UPD_Downtime]
+-- [99/388] Stored Procedure: [dbo].[BT_UPD_Downtime]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE   PROCEDURE [dbo].[BT_UPD_Downtime]
@@ -30795,7 +30792,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [100/376] Stored Procedure: [dbo].[BT_WeeklyOperatorPlan]
+-- [100/388] Stored Procedure: [dbo].[BT_WeeklyOperatorPlan]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31129,7 +31126,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [101/376] Stored Procedure: [dbo].[DD_4MLossName]
+-- [101/388] Stored Procedure: [dbo].[DD_4MLossName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31156,7 +31153,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [102/376] Stored Procedure: [dbo].[DD_Activity_ModelName]
+-- [102/388] Stored Procedure: [dbo].[DD_Activity_ModelName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31190,7 +31187,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [103/376] Stored Procedure: [dbo].[DD_Activity_SKUName]
+-- [103/388] Stored Procedure: [dbo].[DD_Activity_SKUName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31225,7 +31222,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [104/376] Stored Procedure: [dbo].[DD_ActivityName]
+-- [104/388] Stored Procedure: [dbo].[DD_ActivityName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31252,7 +31249,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [105/376] Stored Procedure: [dbo].[DD_ActivityName_ActivitySOPMap]
+-- [105/388] Stored Procedure: [dbo].[DD_ActivityName_ActivitySOPMap]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31281,7 +31278,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [106/376] Stored Procedure: [dbo].[DD_ActivityType]
+-- [106/388] Stored Procedure: [dbo].[DD_ActivityType]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31324,7 +31321,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [107/376] Stored Procedure: [dbo].[DD_AlarmTypeName]
+-- [107/388] Stored Procedure: [dbo].[DD_AlarmTypeName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31361,7 +31358,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [108/376] Stored Procedure: [dbo].[DD_AreaName]
+-- [108/388] Stored Procedure: [dbo].[DD_AreaName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31388,7 +31385,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [109/376] Stored Procedure: [dbo].[DD_AuditList]
+-- [109/388] Stored Procedure: [dbo].[DD_AuditList]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31415,7 +31412,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [110/376] Stored Procedure: [dbo].[DD_BDCategory]
+-- [110/388] Stored Procedure: [dbo].[DD_BDCategory]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31442,7 +31439,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [111/376] Stored Procedure: [dbo].[DD_ChecklistName]
+-- [111/388] Stored Procedure: [dbo].[DD_ChecklistName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31468,7 +31465,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [112/376] Stored Procedure: [dbo].[DD_Config_Station_Position1]
+-- [112/388] Stored Procedure: [dbo].[DD_Config_Station_Position1]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[DD_Config_Station_Position1]
@@ -31485,7 +31482,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [113/376] Stored Procedure: [dbo].[DD_Config_Station_Position2]
+-- [113/388] Stored Procedure: [dbo].[DD_Config_Station_Position2]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[DD_Config_Station_Position2]
@@ -31504,7 +31501,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [114/376] Stored Procedure: [dbo].[DD_Config_Station_Position3]
+-- [114/388] Stored Procedure: [dbo].[DD_Config_Station_Position3]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[DD_Config_Station_Position3]
@@ -31527,7 +31524,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [115/376] Stored Procedure: [dbo].[DD_Config_Station_Position4]
+-- [115/388] Stored Procedure: [dbo].[DD_Config_Station_Position4]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[DD_Config_Station_Position4]
@@ -31551,7 +31548,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [116/376] Stored Procedure: [dbo].[DD_DefectName]
+-- [116/388] Stored Procedure: [dbo].[DD_DefectName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31585,7 +31582,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [117/376] Stored Procedure: [dbo].[DD_DepartmentName]
+-- [117/388] Stored Procedure: [dbo].[DD_DepartmentName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31620,7 +31617,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [118/376] Stored Procedure: [dbo].[DD_DeviceType]
+-- [118/388] Stored Procedure: [dbo].[DD_DeviceType]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31657,7 +31654,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [119/376] Stored Procedure: [dbo].[DD_DocumentName]
+-- [119/388] Stored Procedure: [dbo].[DD_DocumentName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31684,7 +31681,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [120/376] Stored Procedure: [dbo].[DD_EquipmentName]
+-- [120/388] Stored Procedure: [dbo].[DD_EquipmentName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31719,7 +31716,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [121/376] Stored Procedure: [dbo].[DD_EquipmentName_Act_Config]
+-- [121/388] Stored Procedure: [dbo].[DD_EquipmentName_Act_Config]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31758,7 +31755,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [122/376] Stored Procedure: [dbo].[DD_EquipmentTypeName]
+-- [122/388] Stored Procedure: [dbo].[DD_EquipmentTypeName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31785,7 +31782,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [123/376] Stored Procedure: [dbo].[DD_Filter_ActivityDesc]
+-- [123/388] Stored Procedure: [dbo].[DD_Filter_ActivityDesc]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31831,7 +31828,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [124/376] Stored Procedure: [dbo].[DD_Filter_EquipmentName]
+-- [124/388] Stored Procedure: [dbo].[DD_Filter_EquipmentName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31870,7 +31867,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [125/376] Stored Procedure: [dbo].[DD_Filter_ModelName]
+-- [125/388] Stored Procedure: [dbo].[DD_Filter_ModelName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31904,7 +31901,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [126/376] Stored Procedure: [dbo].[DD_Filter_SKUName]
+-- [126/388] Stored Procedure: [dbo].[DD_Filter_SKUName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31939,7 +31936,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [127/376] Stored Procedure: [dbo].[DD_Filter_StageNo]
+-- [127/388] Stored Procedure: [dbo].[DD_Filter_StageNo]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -31976,7 +31973,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [128/376] Stored Procedure: [dbo].[DD_Filter_StationName]
+-- [128/388] Stored Procedure: [dbo].[DD_Filter_StationName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32012,7 +32009,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [129/376] Stored Procedure: [dbo].[DD_Filter_SubAsslyLineName]
+-- [129/388] Stored Procedure: [dbo].[DD_Filter_SubAsslyLineName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[DD_Filter_SubAsslyLineName]
@@ -32041,7 +32038,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [130/376] Stored Procedure: [dbo].[DD_Filter_UserID]
+-- [130/388] Stored Procedure: [dbo].[DD_Filter_UserID]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[DD_Filter_UserID]
@@ -32070,7 +32067,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [131/376] Stored Procedure: [dbo].[DD_Filter_ZoneName]
+-- [131/388] Stored Procedure: [dbo].[DD_Filter_ZoneName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32107,7 +32104,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [132/376] Stored Procedure: [dbo].[DD_FrequencyType]
+-- [132/388] Stored Procedure: [dbo].[DD_FrequencyType]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32142,7 +32139,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [133/376] Stored Procedure: [dbo].[DD_Get_ActivityName]
+-- [133/388] Stored Procedure: [dbo].[DD_Get_ActivityName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE      PROCEDURE [dbo].[DD_Get_ActivityName]
@@ -32161,7 +32158,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [134/376] Stored Procedure: [dbo].[DD_Get_EnginePartName]
+-- [134/388] Stored Procedure: [dbo].[DD_Get_EnginePartName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[DD_Get_EnginePartName]
@@ -32180,7 +32177,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [135/376] Stored Procedure: [dbo].[DD_Get_ParameterName]
+-- [135/388] Stored Procedure: [dbo].[DD_Get_ParameterName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE      PROCEDURE [dbo].[DD_Get_ParameterName]
@@ -32199,7 +32196,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [136/376] Stored Procedure: [dbo].[DD_Get_PartName]
+-- [136/388] Stored Procedure: [dbo].[DD_Get_PartName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[DD_Get_PartName]
@@ -32218,7 +32215,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [137/376] Stored Procedure: [dbo].[DD_Get_SOPName]
+-- [137/388] Stored Procedure: [dbo].[DD_Get_SOPName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE      PROCEDURE [dbo].[DD_Get_SOPName]
@@ -32237,7 +32234,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [138/376] Stored Procedure: [dbo].[DD_GetSAPPartDetails]
+-- [138/388] Stored Procedure: [dbo].[DD_GetSAPPartDetails]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[DD_GetSAPPartDetails]
@@ -32260,7 +32257,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [139/376] Stored Procedure: [dbo].[DD_HardCoded]
+-- [139/388] Stored Procedure: [dbo].[DD_HardCoded]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32296,7 +32293,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [140/376] Stored Procedure: [dbo].[DD_Inspection_StationName]
+-- [140/388] Stored Procedure: [dbo].[DD_Inspection_StationName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32323,7 +32320,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [141/376] Stored Procedure: [dbo].[DD_InspectionDefectName]
+-- [141/388] Stored Procedure: [dbo].[DD_InspectionDefectName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32348,7 +32345,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [142/376] Stored Procedure: [dbo].[DD_InspectionPointAction]
+-- [142/388] Stored Procedure: [dbo].[DD_InspectionPointAction]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32384,7 +32381,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [143/376] Stored Procedure: [dbo].[DD_InspectionPointName]
+-- [143/388] Stored Procedure: [dbo].[DD_InspectionPointName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32410,7 +32407,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [144/376] Stored Procedure: [dbo].[DD_InspectionPointType]
+-- [144/388] Stored Procedure: [dbo].[DD_InspectionPointType]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32446,7 +32443,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [145/376] Stored Procedure: [dbo].[DD_InspectionStationName]
+-- [145/388] Stored Procedure: [dbo].[DD_InspectionStationName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================-- Author:        Sumit-- CREATE OR ALTER OR ALTER date:   3 may 2026-- Description:   inspection name dropdown for inspection defect screen-- =============================================
@@ -32464,7 +32461,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [146/376] Stored Procedure: [dbo].[DD_IPQC_AuditListDropdown]
+-- [146/388] Stored Procedure: [dbo].[DD_IPQC_AuditListDropdown]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[DD_IPQC_AuditListDropdown]
@@ -32490,7 +32487,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [147/376] Stored Procedure: [dbo].[DD_IPQC_PartDropdown]
+-- [147/388] Stored Procedure: [dbo].[DD_IPQC_PartDropdown]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[DD_IPQC_PartDropdown]
@@ -32516,7 +32513,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [148/376] Stored Procedure: [dbo].[DD_JHActivityName]
+-- [148/388] Stored Procedure: [dbo].[DD_JHActivityName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32543,7 +32540,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [149/376] Stored Procedure: [dbo].[DD_LineName]
+-- [149/388] Stored Procedure: [dbo].[DD_LineName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32577,7 +32574,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [150/376] Stored Procedure: [dbo].[DD_LineSpeedOpCt_SubAsslyLineName]
+-- [150/388] Stored Procedure: [dbo].[DD_LineSpeedOpCt_SubAsslyLineName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32613,7 +32610,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [151/376] Stored Procedure: [dbo].[DD_LocationID]
+-- [151/388] Stored Procedure: [dbo].[DD_LocationID]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32646,7 +32643,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [152/376] Stored Procedure: [dbo].[DD_LossName]
+-- [152/388] Stored Procedure: [dbo].[DD_LossName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32680,7 +32677,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [153/376] Stored Procedure: [dbo].[DD_MaterialMoveType]
+-- [153/388] Stored Procedure: [dbo].[DD_MaterialMoveType]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[DD_MaterialMoveType]
@@ -32721,7 +32718,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [154/376] Stored Procedure: [dbo].[DD_ModelFamilyName]
+-- [154/388] Stored Procedure: [dbo].[DD_ModelFamilyName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32753,7 +32750,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [155/376] Stored Procedure: [dbo].[DD_ModelName]
+-- [155/388] Stored Procedure: [dbo].[DD_ModelName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32785,7 +32782,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [156/376] Stored Procedure: [dbo].[DD_ParameterName]
+-- [156/388] Stored Procedure: [dbo].[DD_ParameterName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32819,7 +32816,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [157/376] Stored Procedure: [dbo].[DD_ParentID]
+-- [157/388] Stored Procedure: [dbo].[DD_ParentID]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32853,7 +32850,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [158/376] Stored Procedure: [dbo].[DD_PartDesc]
+-- [158/388] Stored Procedure: [dbo].[DD_PartDesc]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32878,7 +32875,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [159/376] Stored Procedure: [dbo].[DD_PartDescription]
+-- [159/388] Stored Procedure: [dbo].[DD_PartDescription]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32903,7 +32900,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [160/376] Stored Procedure: [dbo].[DD_PartInspectionType]
+-- [160/388] Stored Procedure: [dbo].[DD_PartInspectionType]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32942,7 +32939,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [161/376] Stored Procedure: [dbo].[DD_PartLevel]
+-- [161/388] Stored Procedure: [dbo].[DD_PartLevel]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -32981,7 +32978,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [162/376] Stored Procedure: [dbo].[DD_PartMaster]
+-- [162/388] Stored Procedure: [dbo].[DD_PartMaster]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33008,7 +33005,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [163/376] Stored Procedure: [dbo].[DD_PartName]
+-- [163/388] Stored Procedure: [dbo].[DD_PartName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33035,7 +33032,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [164/376] Stored Procedure: [dbo].[DD_PartQuantity]
+-- [164/388] Stored Procedure: [dbo].[DD_PartQuantity]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33064,7 +33061,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [165/376] Stored Procedure: [dbo].[DD_PartTracking]
+-- [165/388] Stored Procedure: [dbo].[DD_PartTracking]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33110,7 +33107,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [166/376] Stored Procedure: [dbo].[DD_PlantName]
+-- [166/388] Stored Procedure: [dbo].[DD_PlantName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33144,7 +33141,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [167/376] Stored Procedure: [dbo].[DD_Priority]
+-- [167/388] Stored Procedure: [dbo].[DD_Priority]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33181,7 +33178,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [168/376] Stored Procedure: [dbo].[DD_RackName]
+-- [168/388] Stored Procedure: [dbo].[DD_RackName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33208,7 +33205,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [169/376] Stored Procedure: [dbo].[DD_RealtimeStatusDashboard_SKU]
+-- [169/388] Stored Procedure: [dbo].[DD_RealtimeStatusDashboard_SKU]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[DD_RealtimeStatusDashboard_SKU]
@@ -33286,7 +33283,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [170/376] Stored Procedure: [dbo].[DD_RoleName]
+-- [170/388] Stored Procedure: [dbo].[DD_RoleName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33312,7 +33309,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [171/376] Stored Procedure: [dbo].[DD_ShiftDashboard_SKU]
+-- [171/388] Stored Procedure: [dbo].[DD_ShiftDashboard_SKU]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[DD_ShiftDashboard_SKU]
@@ -33372,7 +33369,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [172/376] Stored Procedure: [dbo].[DD_ShopName]
+-- [172/388] Stored Procedure: [dbo].[DD_ShopName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33406,7 +33403,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [173/376] Stored Procedure: [dbo].[DD_SkillLevel]
+-- [173/388] Stored Procedure: [dbo].[DD_SkillLevel]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33443,7 +33440,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [174/376] Stored Procedure: [dbo].[DD_SkillLevelName]
+-- [174/388] Stored Procedure: [dbo].[DD_SkillLevelName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33470,7 +33467,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [175/376] Stored Procedure: [dbo].[DD_SkillName]
+-- [175/388] Stored Procedure: [dbo].[DD_SkillName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33497,7 +33494,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [176/376] Stored Procedure: [dbo].[DD_SKUName]
+-- [176/388] Stored Procedure: [dbo].[DD_SKUName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33529,7 +33526,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [177/376] Stored Procedure: [dbo].[DD_SOP Point]
+-- [177/388] Stored Procedure: [dbo].[DD_SOP Point]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33555,7 +33552,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [178/376] Stored Procedure: [dbo].[DD_SOPPoint]
+-- [178/388] Stored Procedure: [dbo].[DD_SOPPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33581,7 +33578,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [179/376] Stored Procedure: [dbo].[DD_StageNo]
+-- [179/388] Stored Procedure: [dbo].[DD_StageNo]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[DD_StageNo]
@@ -33601,7 +33598,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [180/376] Stored Procedure: [dbo].[DD_StageNo_Act_Config]
+-- [180/388] Stored Procedure: [dbo].[DD_StageNo_Act_Config]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33637,7 +33634,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [181/376] Stored Procedure: [dbo].[DD_Standards]
+-- [181/388] Stored Procedure: [dbo].[DD_Standards]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33676,7 +33673,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [182/376] Stored Procedure: [dbo].[DD_StationName]
+-- [182/388] Stored Procedure: [dbo].[DD_StationName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33710,7 +33707,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [183/376] Stored Procedure: [dbo].[DD_StationName_Act_Config]
+-- [183/388] Stored Procedure: [dbo].[DD_StationName_Act_Config]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33747,7 +33744,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [184/376] Stored Procedure: [dbo].[DD_StationName_StationSkillMap]
+-- [184/388] Stored Procedure: [dbo].[DD_StationName_StationSkillMap]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33784,7 +33781,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [185/376] Stored Procedure: [dbo].[DD_StationType]
+-- [185/388] Stored Procedure: [dbo].[DD_StationType]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[DD_StationType]
@@ -33827,7 +33824,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [186/376] Stored Procedure: [dbo].[DD_StorageAreaType]
+-- [186/388] Stored Procedure: [dbo].[DD_StorageAreaType]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33866,7 +33863,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [187/376] Stored Procedure: [dbo].[DD_StorageType]
+-- [187/388] Stored Procedure: [dbo].[DD_StorageType]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33903,7 +33900,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [188/376] Stored Procedure: [dbo].[DD_StorageZoneName]
+-- [188/388] Stored Procedure: [dbo].[DD_StorageZoneName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33937,7 +33934,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [189/376] Stored Procedure: [dbo].[DD_SubAssemblyLineName]
+-- [189/388] Stored Procedure: [dbo].[DD_SubAssemblyLineName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -33971,7 +33968,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [190/376] Stored Procedure: [dbo].[DD_SubAsslyLineName_LineSpeedOperatorMap]
+-- [190/388] Stored Procedure: [dbo].[DD_SubAsslyLineName_LineSpeedOperatorMap]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -34008,7 +34005,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [191/376] Stored Procedure: [dbo].[DD_SubAsslyName]
+-- [191/388] Stored Procedure: [dbo].[DD_SubAsslyName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -34034,7 +34031,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [192/376] Stored Procedure: [dbo].[DD_SubLossName]
+-- [192/388] Stored Procedure: [dbo].[DD_SubLossName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -34061,7 +34058,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [193/376] Stored Procedure: [dbo].[DD_UserID]
+-- [193/388] Stored Procedure: [dbo].[DD_UserID]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       Procedure [dbo].[DD_UserID]
@@ -34072,7 +34069,7 @@ CREATE       Procedure [dbo].[DD_UserID]
 GO
 
 -- ------------------------------------------------------------------------
--- [194/376] Stored Procedure: [dbo].[DD_UserName]
+-- [194/388] Stored Procedure: [dbo].[DD_UserName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -34098,7 +34095,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [195/376] Stored Procedure: [dbo].[DD_Username_OpSkillMap]
+-- [195/388] Stored Procedure: [dbo].[DD_Username_OpSkillMap]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -34127,7 +34124,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [196/376] Stored Procedure: [dbo].[DD_VendorName]
+-- [196/388] Stored Procedure: [dbo].[DD_VendorName]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -34154,7 +34151,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [197/376] Stored Procedure: [dbo].[DD_VendorType]
+-- [197/388] Stored Procedure: [dbo].[DD_VendorType]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[DD_VendorType]
@@ -34188,218 +34185,132 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [198/376] Stored Procedure: [dbo].[DS_Dashboard_MaintenanceDowntime]
--- Created: Fri Nov 13 2026 17:49:01 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 17:49:01 GMT+0530 (India Standard Time)
+-- [198/388] Stored Procedure: [dbo].[DS_Dashboard_MaintenanceDowntime]
+-- Created: Fri Nov 13 2026 17:49:01 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
--- 4. DS_Dashboard_MaintenanceDowntime
 CREATE   PROCEDURE [dbo].[DS_Dashboard_MaintenanceDowntime]
-    @StartDate DATE = NULL,
-    @EndDate DATE = NULL,
-    @Shift VARCHAR(20) = NULL,
-    @Line VARCHAR(50) = NULL,
-    @Station VARCHAR(50) = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    -- Recordset 0: Summary KPIs
-    SELECT 
-        CAST(ROUND(SUM(COALESCE(D.TotalBDTime, D.BDDuration, 0)) / 60.0, 1) AS FLOAT) AS totalDowntimeHrs,
-        AVG(COALESCE(D.TotalBDTime, D.BDDuration, 0)) AS avgDowntimeMins,
-        COUNT(D.BreakdownID) AS totalBreakdowns
-    FROM dbo.Maint_BreakDown_Log D
-    LEFT JOIN dbo.Config_Station S ON D.StationID = S.StationID
-    LEFT JOIN dbo.Config_Line L ON S.SubAsslyLineID = L.LineID
-    WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
-      AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
-      AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
-      AND (@Line IS NULL OR L.LineName = @Line OR CAST(S.SubAsslyLineID AS VARCHAR) = @Line);
-
-    -- Recordset 1: Table Details per Machine / Station
-    SELECT 
-        ISNULL(S.StationName, 'Station ' + CAST(D.StationID AS VARCHAR)) AS machine,
-        ISNULL(L.LineName, 'Line C') AS line,
-        COUNT(D.BreakdownID) AS breakdownCount,
-        SUM(COALESCE(D.TotalBDTime, D.BDDuration, 0)) AS downtime,
-        ISNULL(D.BDRemark, 'Mechanical Breakdown') AS reason,
-        AVG(COALESCE(D.TotalBDTime, D.BDDuration, 0)) AS mttr
-    FROM dbo.Maint_BreakDown_Log D
-    LEFT JOIN dbo.Config_Station S ON D.StationID = S.StationID
-    LEFT JOIN dbo.Config_Line L ON S.SubAsslyLineID = L.LineID
-    WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
-      AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
-      AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
-      AND (@Line IS NULL OR L.LineName = @Line OR CAST(S.SubAsslyLineID AS VARCHAR) = @Line)
-    GROUP BY S.StationName, D.StationID, L.LineName, D.BDRemark;
-
-    -- Recordset 2: Trend
-    SELECT 
-        CONVERT(VARCHAR(10), D.ProdDate, 120) AS date,
-        SUM(COALESCE(D.TotalBDTime, D.BDDuration, 0)) AS downtimeMins,
-        COUNT(D.BreakdownID) AS count
-    FROM dbo.Maint_BreakDown_Log D
-    WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
-      AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
-    GROUP BY D.ProdDate
-    ORDER BY D.ProdDate ASC;
-END;
+        @StartDate DATE = NULL,
+        @EndDate DATE = NULL,
+        @Shift VARCHAR(20) = NULL,
+        @Line VARCHAR(50) = NULL,
+        @Station VARCHAR(50) = NULL
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+        EXEC [dbo].[DS_Maint_Downtime] @StartDate, @EndDate, @Shift, @Line, @Station;
+    END;
 GO
 
 -- ------------------------------------------------------------------------
--- [199/376] Stored Procedure: [dbo].[DS_Dashboard_ProcessConveyor]
--- Created: Fri Nov 13 2026 17:48:10 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 17:48:10 GMT+0530 (India Standard Time)
+-- [199/388] Stored Procedure: [dbo].[DS_Dashboard_ProcessConveyor]
+-- Created: Fri Nov 13 2026 17:48:10 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
--- 2. DS_Dashboard_ProcessConveyor
 CREATE   PROCEDURE [dbo].[DS_Dashboard_ProcessConveyor]
-    @StartDate DATE = NULL,
-    @EndDate DATE = NULL,
-    @Shift VARCHAR(20) = NULL,
-    @Line VARCHAR(50) = NULL,
-    @Station VARCHAR(50) = NULL
+        @StartDate DATE = NULL,
+        @EndDate DATE = NULL,
+        @Shift VARCHAR(20) = NULL,
+        @Line VARCHAR(50) = NULL,
+        @Station VARCHAR(50) = NULL
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+        EXEC [dbo].[DS_Process_Conveyor] @StartDate, @EndDate, @Shift, @Line, @Station;
+    END;
+GO
+
+-- ------------------------------------------------------------------------
+-- [200/388] Stored Procedure: [dbo].[DS_Dashboard_ProdShiftPlan]
+-- Created: Fri Nov 13 2026 17:54:00 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 17:54:00 GMT+0530 (India Standard Time)
+-- ------------------------------------------------------------------------
+-- 1. DS_Dashboard_ProdShiftPlan (renamed from GV_ProdShiftPlan)
+CREATE   PROCEDURE [dbo].[DS_Dashboard_ProdShiftPlan]
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Recordset 0: Stations overview
-    SELECT 
-        ISNULL(S.StationName, 'Station ' + CAST(D.StationID AS VARCHAR)) AS station,
-        ISNULL(L.LineName, 'Line C') AS line,
-        CAST(ROUND(100.0 - (SUM(ISNULL(D.TotalDT, 0)) * 100.0 / 480.0), 1) AS FLOAT) AS uptimePct,
-        COUNT(D.DowntimeID) AS stoppageCount
-    FROM dbo.Perf_Downtime D
-    LEFT JOIN dbo.Config_Station S ON D.StationID = S.StationID
-    LEFT JOIN dbo.Config_Line L ON D.SubAsslyLineID = L.LineID
-    WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
-      AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
-      AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
-      AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
-    GROUP BY S.StationName, D.StationID, L.LineName;
-
-    -- Recordset 1: Stoppage Reasons
-    SELECT 
-        ISNULL(D.Reason, 'Equipment Halt') AS reason,
-        COUNT(D.DowntimeID) AS count,
-        SUM(ISNULL(D.TotalDT, 0)) AS downtime
-    FROM dbo.Perf_Downtime D
-    LEFT JOIN dbo.Config_Line L ON D.SubAsslyLineID = L.LineID
-    WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
-      AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
-      AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
-      AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
-    GROUP BY D.Reason;
-
-    -- Recordset 2: Downtime by Station
-    SELECT 
-        ISNULL(S.StationName, 'Station ' + CAST(D.StationID AS VARCHAR)) AS station,
-        ISNULL(L.LineName, 'Line C') AS line,
-        SUM(ISNULL(D.TotalDT, 0)) AS totalStoppageTime
-    FROM dbo.Perf_Downtime D
-    LEFT JOIN dbo.Config_Station S ON D.StationID = S.StationID
-    LEFT JOIN dbo.Config_Line L ON D.SubAsslyLineID = L.LineID
-    WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
-      AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
-      AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
-      AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
-    GROUP BY S.StationName, D.StationID, L.LineName;
-
-    -- Recordset 3: Plan Stats
-    SELECT 
-        4.0 AS plannedSpeed,
-        COUNT(DISTINCT PlanID) AS planCount
-    FROM dbo.Prod_Plan
-    WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
-      AND (@EndDate IS NULL OR ProdDate <= @EndDate);
+    SELECT
+        A.PlanID,
+        A.LineID,
+        B.LineName,
+        A.SKUID,
+        C.SKUName,
+        A.ProdDate,
+        A.ProdShift,
+        A.PlanQty,
+        A.Status,
+        CASE
+            WHEN A.Status = 1 THEN 'Plan'
+            WHEN A.Status = 2 THEN 'Hold'
+            WHEN A.Status = 3 THEN 'Short Close'
+            WHEN A.Status = 4 THEN 'Completed'
+            WHEN A.Status = 5 THEN 'Inprocess'
+        END AS StatusName,
+        A.Priority,
+        A.Source,
+        CASE
+            WHEN A.Source = 1 THEN 'Manual'
+            WHEN A.Source = 2 THEN 'Excel'
+            WHEN A.Source = 3 THEN 'SAP'
+        END AS SourceName
+    FROM dbo.Prod_Plan AS A
+    LEFT JOIN dbo.Config_Line AS B ON A.LineID = B.LineID
+    LEFT JOIN dbo.Config_SKU AS C ON A.SKUID = C.SKUID
+    ORDER BY A.PlanID DESC;
 END;
 GO
 
 -- ------------------------------------------------------------------------
--- [200/376] Stored Procedure: [dbo].[DS_Dashboard_ProductionKPI]
--- Created: Fri Nov 13 2026 17:48:10 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 17:48:10 GMT+0530 (India Standard Time)
+-- [201/388] Stored Procedure: [dbo].[DS_Dashboard_ProductionKPI]
+-- Created: Fri Nov 13 2026 17:48:10 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
--- 1. DS_Dashboard_ProductionKPI
 CREATE   PROCEDURE [dbo].[DS_Dashboard_ProductionKPI]
-    @StartDate DATE = NULL,
-    @EndDate DATE = NULL,
-    @Shift VARCHAR(20) = NULL,
-    @Line VARCHAR(50) = NULL,
-    @Model VARCHAR(50) = NULL,
-    @SKU VARCHAR(50) = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    SELECT 
-        ISNULL(SUM(E.PlanQty), 0) AS totalPlan,
-        ISNULL(SUM(E.ENGCompleted_Qty), 0) AS totalProd,
-        ISNULL(SUM(E.PlanQty) - SUM(E.ENGCompleted_Qty), 0) AS shortfall,
-        ISNULL(SUM(E.ENGCompleted_Qty) - SUM(E.ENGReworkOK_Qty), 0) AS straightPass,
-        ISNULL(SUM(E.ENGMainLine_Qty) - SUM(E.ENGCompleted_Qty), 0) AS wip,
-        ISNULL(SUM(E.ENGMaterialHold_Qty) + SUM(E.ENGQualityHold_Qty), 0) AS rollover,
-        CASE 
-            WHEN SUM(E.ENGCompleted_Qty) > 0 
-            THEN CAST(ROUND(((SUM(E.ENGCompleted_Qty) - SUM(E.ENGReworkOK_Qty)) * 100.0) / SUM(E.ENGCompleted_Qty), 1) AS FLOAT)
-            ELSE 100.0 
-        END AS straightPassRate,
-        CASE 
-            WHEN SUM(E.PlanQty) > 0 
-            THEN CAST(ROUND((SUM(E.ENGCompleted_Qty) * 100.0) / SUM(E.PlanQty), 1) AS FLOAT)
-            ELSE 0.0 
-        END AS fulfillmentRate
-    FROM dbo.Prod_EnginePlanExecution E
-    LEFT JOIN dbo.Config_Line L ON E.LineID = L.LineID
-    LEFT JOIN dbo.Config_SKU S ON E.SKUID = S.SKUID
-    LEFT JOIN dbo.Config_Model M ON S.ModelID = M.ModelID
-    WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
-      AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
-      AND (@Shift IS NULL OR E.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND E.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND E.ProdShift IN ('2', 'Shift 2', 'B')))
-      AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
-      AND (@Model IS NULL OR M.ModelName = @Model)
-      AND (@SKU IS NULL OR S.SKUName = @SKU);
-END;
+        @StartDate DATE = NULL,
+        @EndDate DATE = NULL,
+        @Shift VARCHAR(20) = NULL,
+        @Line VARCHAR(50) = NULL,
+        @Model VARCHAR(50) = NULL,
+        @SKU VARCHAR(50) = NULL
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+        EXEC [dbo].[DS_Prod_ProductionKPI] @StartDate, @EndDate, @Shift, @Line, @Model, @SKU;
+    END;
 GO
 
 -- ------------------------------------------------------------------------
--- [201/376] Stored Procedure: [dbo].[DS_Dashboard_TrackTraceWIP]
--- Created: Fri Nov 13 2026 17:49:00 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 17:49:00 GMT+0530 (India Standard Time)
+-- [202/388] Stored Procedure: [dbo].[DS_Dashboard_TrackTraceWIP]
+-- Created: Fri Nov 13 2026 17:49:00 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
--- 3. DS_Dashboard_TrackTraceWIP
 CREATE   PROCEDURE [dbo].[DS_Dashboard_TrackTraceWIP]
-    @StartDate DATE = NULL,
-    @EndDate DATE = NULL,
-    @Shift VARCHAR(20) = NULL,
-    @Line VARCHAR(50) = NULL,
-    @WIPStatus VARCHAR(50) = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    SELECT 
-        W.EngineNo AS id,
-        W.EngineNo AS engineNo,
-        ISNULL(L.LineName, 'Line C') AS line,
-        ISNULL(M.ModelName, 'Pulsar 150') AS model,
-        ISNULL(S.SKUName, 'PD501060') AS sku,
-        'Station ' + CAST(COALESCE(W.ReEntryStation, W.NotOkStation, 1) AS VARCHAR) AS currentStation,
-        CASE 
-            WHEN W.Status = 1 THEN 'In-Process'
-            WHEN W.Status = 2 THEN 'Rework'
-            WHEN W.Status = 3 THEN 'Blocked'
-            WHEN W.Status = 4 THEN 'Completed'
-            ELSE 'Idle'
-        END AS status,
-        CONVERT(VARCHAR(19), W.StartTime, 120) AS startTime,
-        CONVERT(VARCHAR(5), W.StartTime, 108) AS entryTime,
-        DATEDIFF(MINUTE, W.StartTime, GETDATE()) AS durationMinutes
-    FROM dbo.Prod_Engine_WIP W
-    LEFT JOIN dbo.Config_Line L ON W.LineID = L.LineID
-    LEFT JOIN dbo.Config_SKU S ON W.SKUID = S.SKUID
-    LEFT JOIN dbo.Config_Model M ON S.ModelID = M.ModelID
-    ORDER BY W.StartTime DESC;
-END;
+        @StartDate DATE = NULL,
+        @EndDate DATE = NULL,
+        @Shift VARCHAR(20) = NULL,
+        @Line VARCHAR(50) = NULL,
+        @WIPStatus VARCHAR(50) = NULL
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+        EXEC [dbo].[DS_TrackTrace_WIP] @StartDate, @EndDate, @Shift, @Line, @WIPStatus;
+    END;
 GO
 
 -- ------------------------------------------------------------------------
--- [202/376] Stored Procedure: [dbo].[DS_Maint_ActiveAlarm_Count]
+-- [203/388] Stored Procedure: [dbo].[DS_GetEngineStatusCountBySKU]
+-- Created: Fri Nov 13 2026 17:54:00 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
+-- ------------------------------------------------------------------------
+CREATE   PROCEDURE [dbo].[DS_GetEngineStatusCountBySKU]
+    (
+        @SKUID INT = 0
+    )
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+        EXEC [dbo].[DS_Prod_EngineStatusCountBySKU] @SKUID = @SKUID;
+    END;
+GO
+
+-- ------------------------------------------------------------------------
+-- [204/388] Stored Procedure: [dbo].[DS_Maint_ActiveAlarm_Count]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[DS_Maint_ActiveAlarm_Count]
@@ -34422,7 +34333,164 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [203/376] Stored Procedure: [dbo].[DS_Prod_Date&Shift]
+-- [205/388] Stored Procedure: [dbo].[DS_Maint_Downtime]
+-- Created: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
+-- ------------------------------------------------------------------------
+CREATE   PROCEDURE [dbo].[DS_Maint_Downtime]
+        @StartDate DATE = NULL,
+        @EndDate DATE = NULL,
+        @Shift VARCHAR(20) = NULL,
+        @Line VARCHAR(50) = NULL,
+        @Station VARCHAR(50) = NULL
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+
+        -- Recordset 0: Summary KPIs
+        SELECT 
+            CAST(ROUND(SUM(COALESCE(D.TotalBDTime, D.BDDuration, 0)) / 60.0, 1) AS FLOAT) AS totalDowntimeHrs,
+            AVG(COALESCE(D.TotalBDTime, D.BDDuration, 0)) AS avgDowntimeMins,
+            COUNT(D.BreakdownID) AS totalBreakdowns
+        FROM dbo.Maint_BreakDown_Log D
+        LEFT JOIN dbo.Config_Station S ON D.StationID = S.StationID
+        LEFT JOIN dbo.Config_Line L ON S.SubAsslyLineID = L.LineID
+        WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(S.SubAsslyLineID AS VARCHAR) = @Line);
+
+        -- Recordset 1: Table Details per Machine / Station
+        SELECT 
+            ISNULL(S.StationName, 'Station ' + CAST(D.StationID AS VARCHAR)) AS machine,
+            ISNULL(L.LineName, 'Line C') AS line,
+            COUNT(D.BreakdownID) AS breakdownCount,
+            SUM(COALESCE(D.TotalBDTime, D.BDDuration, 0)) AS downtime,
+            ISNULL(D.BDRemark, 'Mechanical Breakdown') AS reason,
+            AVG(COALESCE(D.TotalBDTime, D.BDDuration, 0)) AS mttr
+        FROM dbo.Maint_BreakDown_Log D
+        LEFT JOIN dbo.Config_Station S ON D.StationID = S.StationID
+        LEFT JOIN dbo.Config_Line L ON S.SubAsslyLineID = L.LineID
+        WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(S.SubAsslyLineID AS VARCHAR) = @Line)
+        GROUP BY S.StationName, D.StationID, L.LineName, D.BDRemark;
+
+        -- Recordset 2: Trend
+        SELECT 
+            CONVERT(VARCHAR(10), D.ProdDate, 120) AS date,
+            SUM(COALESCE(D.TotalBDTime, D.BDDuration, 0)) AS downtimeMins,
+            COUNT(D.BreakdownID) AS count
+        FROM dbo.Maint_BreakDown_Log D
+        WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+        GROUP BY D.ProdDate
+        ORDER BY D.ProdDate ASC;
+    END;
+GO
+
+-- ------------------------------------------------------------------------
+-- [206/388] Stored Procedure: [dbo].[DS_MaintenanceDowntime]
+-- Created: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
+-- ------------------------------------------------------------------------
+CREATE   PROCEDURE [dbo].[DS_MaintenanceDowntime]
+        @StartDate DATE = NULL,
+        @EndDate DATE = NULL,
+        @Shift VARCHAR(20) = NULL,
+        @Line VARCHAR(50) = NULL,
+        @Station VARCHAR(50) = NULL
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+        EXEC [dbo].[DS_Maint_Downtime] @StartDate, @EndDate, @Shift, @Line, @Station;
+    END;
+GO
+
+-- ------------------------------------------------------------------------
+-- [207/388] Stored Procedure: [dbo].[DS_Process_Conveyor]
+-- Created: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
+-- ------------------------------------------------------------------------
+CREATE   PROCEDURE [dbo].[DS_Process_Conveyor]
+        @StartDate DATE = NULL,
+        @EndDate DATE = NULL,
+        @Shift VARCHAR(20) = NULL,
+        @Line VARCHAR(50) = NULL,
+        @Station VARCHAR(50) = NULL
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+
+        -- Recordset 0: Stations overview
+        SELECT 
+            ISNULL(S.StationName, 'Station ' + CAST(D.StationID AS VARCHAR)) AS station,
+            ISNULL(L.LineName, 'Line C') AS line,
+            CAST(ROUND(100.0 - (SUM(ISNULL(D.TotalDT, 0)) * 100.0 / 480.0), 1) AS FLOAT) AS uptimePct,
+            COUNT(D.DowntimeID) AS stoppageCount
+        FROM dbo.Perf_Downtime D
+        LEFT JOIN dbo.Config_Station S ON D.StationID = S.StationID
+        LEFT JOIN dbo.Config_Line L ON D.SubAsslyLineID = L.LineID
+        WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+        GROUP BY S.StationName, D.StationID, L.LineName;
+
+        -- Recordset 1: Stoppage Reasons
+        SELECT 
+            ISNULL(D.Reason, 'Equipment Halt') AS reason,
+            COUNT(D.DowntimeID) AS count,
+            SUM(ISNULL(D.TotalDT, 0)) AS downtime
+        FROM dbo.Perf_Downtime D
+        LEFT JOIN dbo.Config_Line L ON D.SubAsslyLineID = L.LineID
+        WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+        GROUP BY D.Reason;
+
+        -- Recordset 2: Downtime by Station
+        SELECT 
+            ISNULL(S.StationName, 'Station ' + CAST(D.StationID AS VARCHAR)) AS station,
+            ISNULL(L.LineName, 'Line C') AS line,
+            SUM(ISNULL(D.TotalDT, 0)) AS totalStoppageTime
+        FROM dbo.Perf_Downtime D
+        LEFT JOIN dbo.Config_Station S ON D.StationID = S.StationID
+        LEFT JOIN dbo.Config_Line L ON D.SubAsslyLineID = L.LineID
+        WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.SubAsslyLineID AS VARCHAR) = @Line)
+        GROUP BY S.StationName, D.StationID, L.LineName;
+
+        -- Recordset 3: Plan Stats
+        SELECT 
+            4.0 AS plannedSpeed,
+            COUNT(DISTINCT PlanID) AS planCount
+        FROM dbo.Prod_Plan
+        WHERE (@StartDate IS NULL OR ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR ProdDate <= @EndDate);
+    END;
+GO
+
+-- ------------------------------------------------------------------------
+-- [208/388] Stored Procedure: [dbo].[DS_ProcessConveyor]
+-- Created: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
+-- ------------------------------------------------------------------------
+CREATE   PROCEDURE [dbo].[DS_ProcessConveyor]
+        @StartDate DATE = NULL,
+        @EndDate DATE = NULL,
+        @Shift VARCHAR(20) = NULL,
+        @Line VARCHAR(50) = NULL,
+        @Station VARCHAR(50) = NULL
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+        EXEC [dbo].[DS_Process_Conveyor] @StartDate, @EndDate, @Shift, @Line, @Station;
+    END;
+GO
+
+-- ------------------------------------------------------------------------
+-- [209/388] Stored Procedure: [dbo].[DS_Prod_Date&Shift]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[DS_Prod_Date&Shift]
@@ -34459,7 +34527,7 @@ select * from ApplicationSetting
 GO
 
 -- ------------------------------------------------------------------------
--- [204/376] Stored Procedure: [dbo].[DS_Prod_Engine_Station_Tracking]
+-- [210/388] Stored Procedure: [dbo].[DS_Prod_Engine_Station_Tracking]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -34486,7 +34554,203 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [205/376] Stored Procedure: [dbo].[DS_QA_AuditMonitoringKPI]
+-- [211/388] Stored Procedure: [dbo].[DS_Prod_EngineStatusCountBySKU]
+-- Created: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
+-- ------------------------------------------------------------------------
+CREATE   PROCEDURE [dbo].[DS_Prod_EngineStatusCountBySKU]
+    (
+        @SKUID INT = 0
+    )
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+        BEGIN TRY
+            DECLARE @ProdDateStr NVARCHAR(50),
+                    @ProdShift NVARCHAR(50),
+                    @ProdDate DATE;
+
+            SELECT TOP (1) 
+                @ProdDateStr = TRIM(ParameterValue)
+            FROM dbo.ApplicationSetting
+            WHERE ParameterID = 1
+            ORDER BY UID DESC;
+
+            IF @ProdDateStr IS NULL
+            BEGIN
+                SELECT TOP (1) @ProdDateStr = TRIM(ParameterValue)
+                FROM dbo.Prod_ShiftInformation
+                WHERE ParameterName = 'ProdDate'
+                ORDER BY UID DESC;
+            END
+
+            -- Try format 105 (DD-MM-YYYY) first, then standard YYYY-MM-DD
+            SET @ProdDate = TRY_CONVERT(DATE, @ProdDateStr, 105);
+            IF @ProdDate IS NULL AND @ProdDateStr IS NOT NULL
+            BEGIN
+                SET @ProdDate = TRY_CONVERT(DATE, @ProdDateStr, 120);
+            END
+
+            SELECT TOP (1) 
+                @ProdShift = TRIM(ParameterValue)
+            FROM dbo.ApplicationSetting
+            WHERE ParameterID = 2
+            ORDER BY UID DESC;
+
+            IF @ProdShift IS NULL
+            BEGIN
+                SELECT TOP (1) @ProdShift = TRIM(ParameterValue)
+                FROM dbo.Prod_ShiftInformation
+                WHERE ParameterName = 'ProdShift'
+                ORDER BY UID DESC;
+            END
+
+            CREATE TABLE #WIP_Engines (
+                EngineNo NVARCHAR(50) COLLATE DATABASE_DEFAULT
+            );
+
+            INSERT INTO #WIP_Engines (EngineNo)
+            SELECT DISTINCT
+                W.EngineNo
+            FROM dbo.Prod_Engine_WIP W
+            WHERE (@SKUID IS NULL OR @SKUID = 0 OR W.SKUID = @SKUID);
+
+            CREATE TABLE #Geneology_Ranked (
+                EngineNo NVARCHAR(50) COLLATE DATABASE_DEFAULT,
+                Status INT,
+                rn INT
+            );
+
+            INSERT INTO #Geneology_Ranked (EngineNo, Status, rn)
+            SELECT 
+                G.EngineNo,
+                G.Status,
+                ROW_NUMBER() OVER (
+                    PARTITION BY G.EngineNo 
+                    ORDER BY G.[Timestamp] DESC, G.RowID DESC
+                ) AS rn
+            FROM dbo.Prod_Status_Geneology G
+            INNER JOIN #WIP_Engines W ON G.EngineNo = W.EngineNo COLLATE DATABASE_DEFAULT
+            WHERE (@ProdDate IS NULL OR G.ProdDate = @ProdDate)
+              AND (@ProdShift IS NULL 
+                   OR G.ProdShift = @ProdShift COLLATE DATABASE_DEFAULT
+                   OR (@ProdShift = 'A' AND G.ProdShift IN ('1', 'Shift 1', 'Shift A', 'A'))
+                   OR (@ProdShift = 'B' AND G.ProdShift IN ('2', 'Shift 2', 'Shift B', 'B'))
+                   OR (@ProdShift = 'C' AND G.ProdShift IN ('3', 'Shift 3', 'Shift C', 'C')));
+
+            SELECT 
+                ISNULL(@ProdDate, CAST(GETDATE() AS DATE)) AS ProdDate,
+                ISNULL(@ProdShift, 'A') AS ProdShift,
+                COUNT(CASE WHEN Status = 6  THEN 1 END) AS NotOK,
+                COUNT(CASE WHEN Status = 7  THEN 1 END) AS NotOKBypass,
+                COUNT(CASE WHEN Status = 8  THEN 1 END) AS OKBypass,
+                COUNT(CASE WHEN Status = 9  THEN 1 END) AS CompletedEng,
+                COUNT(CASE WHEN Status = 10 THEN 1 END) AS FGEngine,
+                COUNT(CASE WHEN Status = 12 THEN 1 END) AS EngMaterialHold,
+                COUNT(CASE WHEN Status = 13 THEN 1 END) AS MaterialHoldCleared,
+                COUNT(CASE WHEN Status = 14 THEN 1 END) AS ForRework,
+                COUNT(CASE WHEN Status = 15 THEN 1 END) AS ReworkOK,
+                COUNT(CASE WHEN Status = 26 THEN 1 END) AS EngFQCHold,
+                COUNT(CASE WHEN Status = 21 THEN 1 END) AS EngIPQCHold,
+                COUNT(CASE WHEN Status = 19 THEN 1 END) AS IPQCRework,
+                COUNT(CASE WHEN Status = 22 THEN 1 END) AS IPQCHoldCleared,
+                COUNT(CASE WHEN Status = 27 THEN 1 END) AS FQCHoldCleared,
+                COUNT(CASE WHEN Status = 24 THEN 1 END) AS FQCRework,
+                COUNT(CASE WHEN Status = 25 THEN 1 END) AS FGReworkOK,
+                COUNT(CASE WHEN Status = 28 THEN 1 END) AS FGReworkRejected,
+                COUNT(CASE WHEN Status = 11 THEN 1 END) AS EngineScrapped
+            FROM #Geneology_Ranked
+            WHERE rn = 1;
+
+            DROP TABLE IF EXISTS #Geneology_Ranked;
+            DROP TABLE IF EXISTS #WIP_Engines;
+        END TRY
+        BEGIN CATCH
+            DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE(),
+                    @ErrorSeverity INT = ERROR_SEVERITY(),
+                    @ErrorState INT = ERROR_STATE();
+            RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+        END CATCH
+    END;
+GO
+
+-- ------------------------------------------------------------------------
+-- [212/388] Stored Procedure: [dbo].[DS_Prod_ProductionKPI]
+-- Created: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
+-- ------------------------------------------------------------------------
+CREATE   PROCEDURE [dbo].[DS_Prod_ProductionKPI]
+        @StartDate DATE = NULL,
+        @EndDate DATE = NULL,
+        @Shift VARCHAR(20) = NULL,
+        @Line VARCHAR(50) = NULL,
+        @Model VARCHAR(50) = NULL,
+        @SKU VARCHAR(50) = NULL
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+
+        SELECT 
+            ISNULL(SUM(E.PlanQty), 0) AS totalPlan,
+            ISNULL(SUM(E.ENGCompleted_Qty), 0) AS totalProd,
+            ISNULL(SUM(E.PlanQty) - SUM(E.ENGCompleted_Qty), 0) AS shortfall,
+            ISNULL(SUM(E.ENGCompleted_Qty) - SUM(E.ENGReworkOK_Qty), 0) AS straightPass,
+            ISNULL(SUM(E.ENGMainLine_Qty) - SUM(E.ENGCompleted_Qty), 0) AS wip,
+            ISNULL(SUM(E.ENGMaterialHold_Qty) + SUM(E.ENGQualityHold_Qty), 0) AS rollover,
+            CASE 
+                WHEN SUM(E.ENGCompleted_Qty) > 0 
+                THEN CAST(ROUND(((SUM(E.ENGCompleted_Qty) - SUM(E.ENGReworkOK_Qty)) * 100.0) / SUM(E.ENGCompleted_Qty), 1) AS FLOAT)
+                ELSE 100.0 
+            END AS straightPassRate,
+            CASE 
+                WHEN SUM(E.PlanQty) > 0 
+                THEN CAST(ROUND((SUM(E.ENGCompleted_Qty) * 100.0) / SUM(E.PlanQty), 1) AS FLOAT)
+                ELSE 0.0 
+            END AS fulfillmentRate
+        FROM dbo.Prod_EnginePlanExecution E
+        LEFT JOIN dbo.Config_Line L ON E.LineID = L.LineID
+        LEFT JOIN dbo.Config_SKU S ON E.SKUID = S.SKUID
+        LEFT JOIN dbo.Config_Model M ON S.ModelID = M.ModelID
+        WHERE (@StartDate IS NULL OR E.ProdDate >= @StartDate)
+          AND (@EndDate IS NULL OR E.ProdDate <= @EndDate)
+          AND (@Shift IS NULL OR E.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND E.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND E.ProdShift IN ('2', 'Shift 2', 'B')))
+          AND (@Line IS NULL OR L.LineName = @Line OR CAST(E.LineID AS VARCHAR) = @Line)
+          AND (@Model IS NULL OR M.ModelName = @Model)
+          AND (@SKU IS NULL OR S.SKUName = @SKU);
+    END;
+GO
+
+-- ------------------------------------------------------------------------
+-- [213/388] Stored Procedure: [dbo].[DS_ProdShiftPlan]
+-- Created: Fri Nov 13 2026 17:54:00 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 17:56:16 GMT+0530 (India Standard Time)
+-- ------------------------------------------------------------------------
+-- 2. DS_ProdShiftPlan (Alias to GV_ProdShiftPlan)
+CREATE   PROCEDURE [dbo].[DS_ProdShiftPlan]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    EXEC [dbo].[GV_ProdShiftPlan];
+END;
+GO
+
+-- ------------------------------------------------------------------------
+-- [214/388] Stored Procedure: [dbo].[DS_ProductionKPI]
+-- Created: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
+-- ------------------------------------------------------------------------
+CREATE   PROCEDURE [dbo].[DS_ProductionKPI]
+        @StartDate DATE = NULL,
+        @EndDate DATE = NULL,
+        @Shift VARCHAR(20) = NULL,
+        @Line VARCHAR(50) = NULL,
+        @Model VARCHAR(50) = NULL,
+        @SKU VARCHAR(50) = NULL
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+        EXEC [dbo].[DS_Prod_ProductionKPI] @StartDate, @EndDate, @Shift, @Line, @Model, @SKU;
+    END;
+GO
+
+-- ------------------------------------------------------------------------
+-- [215/388] Stored Procedure: [dbo].[DS_QA_AuditMonitoringKPI]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[DS_QA_AuditMonitoringKPI]
@@ -34519,7 +34783,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [206/376] Stored Procedure: [dbo].[DS_ShiftDashboard_CCLH]
+-- [216/388] Stored Procedure: [dbo].[DS_ShiftDashboard_CCLH]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -34585,7 +34849,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [207/376] Stored Procedure: [dbo].[DS_ShiftDashboard_CCRH]
+-- [217/388] Stored Procedure: [dbo].[DS_ShiftDashboard_CCRH]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -34651,7 +34915,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [208/376] Stored Procedure: [dbo].[DS_ShiftDashboard_CylinderHead]
+-- [218/388] Stored Procedure: [dbo].[DS_ShiftDashboard_CylinderHead]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -34718,7 +34982,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [209/376] Stored Procedure: [dbo].[DS_ShiftDashboard_KPI]
+-- [219/388] Stored Procedure: [dbo].[DS_ShiftDashboard_KPI]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -34791,7 +35055,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [210/376] Stored Procedure: [dbo].[DS_ShiftDashboard_RunningPlan]
+-- [220/388] Stored Procedure: [dbo].[DS_ShiftDashboard_RunningPlan]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -34858,7 +35122,63 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [211/376] Stored Procedure: [dbo].[EngineWIP_StatusDashboard]
+-- [221/388] Stored Procedure: [dbo].[DS_TrackTrace_WIP]
+-- Created: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
+-- ------------------------------------------------------------------------
+CREATE   PROCEDURE [dbo].[DS_TrackTrace_WIP]
+        @StartDate DATE = NULL,
+        @EndDate DATE = NULL,
+        @Shift VARCHAR(20) = NULL,
+        @Line VARCHAR(50) = NULL,
+        @WIPStatus VARCHAR(50) = NULL
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+
+        SELECT 
+            W.EngineNo AS id,
+            W.EngineNo AS engineNo,
+            ISNULL(L.LineName, 'Line C') AS line,
+            ISNULL(M.ModelName, 'Pulsar 150') AS model,
+            ISNULL(S.SKUName, 'PD501060') AS sku,
+            'Station ' + CAST(COALESCE(W.ReEntryStation, W.NotOkStation, 1) AS VARCHAR) AS currentStation,
+            CASE 
+                WHEN W.Status = 1 THEN 'In-Process'
+                WHEN W.Status = 2 THEN 'Rework'
+                WHEN W.Status = 3 THEN 'Blocked'
+                WHEN W.Status = 4 THEN 'Completed'
+                ELSE 'Idle'
+            END AS status,
+            CONVERT(VARCHAR(19), W.StartTime, 120) AS startTime,
+            CONVERT(VARCHAR(5), W.StartTime, 108) AS entryTime,
+            DATEDIFF(MINUTE, W.StartTime, GETDATE()) AS durationMinutes
+        FROM dbo.Prod_Engine_WIP W
+        LEFT JOIN dbo.Config_Line L ON W.LineID = L.LineID
+        LEFT JOIN dbo.Config_SKU S ON W.SKUID = S.SKUID
+        LEFT JOIN dbo.Config_Model M ON S.ModelID = M.ModelID
+        ORDER BY W.StartTime DESC;
+    END;
+GO
+
+-- ------------------------------------------------------------------------
+-- [222/388] Stored Procedure: [dbo].[DS_TrackTraceWIP]
+-- Created: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
+-- ------------------------------------------------------------------------
+CREATE   PROCEDURE [dbo].[DS_TrackTraceWIP]
+        @StartDate DATE = NULL,
+        @EndDate DATE = NULL,
+        @Shift VARCHAR(20) = NULL,
+        @Line VARCHAR(50) = NULL,
+        @WIPStatus VARCHAR(50) = NULL
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+        EXEC [dbo].[DS_TrackTrace_WIP] @StartDate, @EndDate, @Shift, @Line, @WIPStatus;
+    END;
+GO
+
+-- ------------------------------------------------------------------------
+-- [223/388] Stored Procedure: [dbo].[EngineWIP_StatusDashboard]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[EngineWIP_StatusDashboard]
@@ -34989,7 +35309,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [212/376] Stored Procedure: [dbo].[GetActiveAlarmDashboard]
+-- [224/388] Stored Procedure: [dbo].[GetActiveAlarmDashboard]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================================================
@@ -35032,7 +35352,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [213/376] Stored Procedure: [dbo].[Grid_History]
+-- [225/388] Stored Procedure: [dbo].[Grid_History]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -35053,7 +35373,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [214/376] Stored Procedure: [dbo].[GV_ActivityMonitoring_ActivityStatus]
+-- [226/388] Stored Procedure: [dbo].[GV_ActivityMonitoring_ActivityStatus]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[GV_ActivityMonitoring_ActivityStatus]
@@ -35088,7 +35408,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [215/376] Stored Procedure: [dbo].[GV_ActivityMonitoring_Pivoted]
+-- [227/388] Stored Procedure: [dbo].[GV_ActivityMonitoring_Pivoted]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -35287,7 +35607,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [216/376] Stored Procedure: [dbo].[GV_ApplicationSetting]
+-- [228/388] Stored Procedure: [dbo].[GV_ApplicationSetting]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -35354,7 +35674,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [217/376] Stored Procedure: [dbo].[GV_Config_Activity_SOP_Mapping]
+-- [229/388] Stored Procedure: [dbo].[GV_Config_Activity_SOP_Mapping]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -35468,7 +35788,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [218/376] Stored Procedure: [dbo].[GV_Config_Alarm]
+-- [230/388] Stored Procedure: [dbo].[GV_Config_Alarm]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -35568,7 +35888,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [219/376] Stored Procedure: [dbo].[GV_Config_Area]
+-- [231/388] Stored Procedure: [dbo].[GV_Config_Area]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -35624,7 +35944,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [220/376] Stored Procedure: [dbo].[GV_Config_AuditDocumentMapping]
+-- [232/388] Stored Procedure: [dbo].[GV_Config_AuditDocumentMapping]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -35717,7 +36037,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [221/376] Stored Procedure: [dbo].[GV_Config_AuditList]
+-- [233/388] Stored Procedure: [dbo].[GV_Config_AuditList]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -35804,7 +36124,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [222/376] Stored Procedure: [dbo].[GV_Config_AuditPointLinking]
+-- [234/388] Stored Procedure: [dbo].[GV_Config_AuditPointLinking]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -35953,7 +36273,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [223/376] Stored Procedure: [dbo].[GV_Config_AuditSchedule]
+-- [235/388] Stored Procedure: [dbo].[GV_Config_AuditSchedule]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -36065,7 +36385,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [224/376] Stored Procedure: [dbo].[GV_Config_BOM]
+-- [236/388] Stored Procedure: [dbo].[GV_Config_BOM]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[GV_Config_BOM]
@@ -36176,7 +36496,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [225/376] Stored Procedure: [dbo].[GV_Config_Department]
+-- [237/388] Stored Procedure: [dbo].[GV_Config_Department]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -36232,7 +36552,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [226/376] Stored Procedure: [dbo].[GV_Config_EnginePart]
+-- [238/388] Stored Procedure: [dbo].[GV_Config_EnginePart]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -36289,7 +36609,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [227/376] Stored Procedure: [dbo].[GV_Config_Equipment]
+-- [239/388] Stored Procedure: [dbo].[GV_Config_Equipment]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[GV_Config_Equipment]
@@ -36369,7 +36689,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [228/376] Stored Procedure: [dbo].[GV_Config_EquipmentPart]
+-- [240/388] Stored Procedure: [dbo].[GV_Config_EquipmentPart]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -36439,7 +36759,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [229/376] Stored Procedure: [dbo].[GV_Config_EquipmentType]
+-- [241/388] Stored Procedure: [dbo].[GV_Config_EquipmentType]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -36496,7 +36816,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [230/376] Stored Procedure: [dbo].[GV_Config_FQC_EngFiringAuditPoint]
+-- [242/388] Stored Procedure: [dbo].[GV_Config_FQC_EngFiringAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -36565,7 +36885,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [231/376] Stored Procedure: [dbo].[GV_Config_FQC_EngInbuiltAuditPoint]
+-- [243/388] Stored Procedure: [dbo].[GV_Config_FQC_EngInbuiltAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -36638,7 +36958,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [232/376] Stored Procedure: [dbo].[GV_Config_FQC_EngPerformanceAuditPoint]
+-- [244/388] Stored Procedure: [dbo].[GV_Config_FQC_EngPerformanceAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -36719,7 +37039,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [233/376] Stored Procedure: [dbo].[GV_Config_FQC_EngStripAuditPoint]
+-- [245/388] Stored Procedure: [dbo].[GV_Config_FQC_EngStripAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -36794,7 +37114,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [234/376] Stored Procedure: [dbo].[GV_Config_History]
+-- [246/388] Stored Procedure: [dbo].[GV_Config_History]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -36847,7 +37167,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [235/376] Stored Procedure: [dbo].[GV_Config_Inspection_Action]
+-- [247/388] Stored Procedure: [dbo].[GV_Config_Inspection_Action]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[GV_Config_Inspection_Action]
@@ -36902,7 +37222,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [236/376] Stored Procedure: [dbo].[GV_Config_InspectionDefect]
+-- [248/388] Stored Procedure: [dbo].[GV_Config_InspectionDefect]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[GV_Config_InspectionDefect]
@@ -36938,7 +37258,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [237/376] Stored Procedure: [dbo].[GV_Config_InspectionPoint]
+-- [249/388] Stored Procedure: [dbo].[GV_Config_InspectionPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -37036,7 +37356,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [238/376] Stored Procedure: [dbo].[GV_Config_InspectionStation]
+-- [250/388] Stored Procedure: [dbo].[GV_Config_InspectionStation]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -37099,7 +37419,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [239/376] Stored Procedure: [dbo].[GV_Config_IPQC_ManagerAuditPoint]
+-- [251/388] Stored Procedure: [dbo].[GV_Config_IPQC_ManagerAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -37191,7 +37511,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [240/376] Stored Procedure: [dbo].[GV_Config_IPQC_PYOnlineAuditPoint]
+-- [252/388] Stored Procedure: [dbo].[GV_Config_IPQC_PYOnlineAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -37283,7 +37603,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [241/376] Stored Procedure: [dbo].[GV_Config_IPQC_SOPAuditPoint]
+-- [253/388] Stored Procedure: [dbo].[GV_Config_IPQC_SOPAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -37368,7 +37688,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [242/376] Stored Procedure: [dbo].[GV_Config_IPQC_TorqueAuditPoint]
+-- [254/388] Stored Procedure: [dbo].[GV_Config_IPQC_TorqueAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -37471,7 +37791,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [243/376] Stored Procedure: [dbo].[GV_Config_IQC_MiliporeAuditPoint]
+-- [255/388] Stored Procedure: [dbo].[GV_Config_IQC_MiliporeAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -37573,7 +37893,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [244/376] Stored Procedure: [dbo].[GV_Config_IQC_VisualInspectAuditPoint]
+-- [256/388] Stored Procedure: [dbo].[GV_Config_IQC_VisualInspectAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -37670,7 +37990,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [245/376] Stored Procedure: [dbo].[GV_Config_JHActivity]
+-- [257/388] Stored Procedure: [dbo].[GV_Config_JHActivity]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -37725,7 +38045,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [246/376] Stored Procedure: [dbo].[GV_Config_KitBOM]
+-- [258/388] Stored Procedure: [dbo].[GV_Config_KitBOM]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[GV_Config_KitBOM]
@@ -37804,7 +38124,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [247/376] Stored Procedure: [dbo].[GV_Config_Line]
+-- [259/388] Stored Procedure: [dbo].[GV_Config_Line]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -37867,7 +38187,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [248/376] Stored Procedure: [dbo].[GV_Config_LineSpeedOperatorCount]
+-- [260/388] Stored Procedure: [dbo].[GV_Config_LineSpeedOperatorCount]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -37951,7 +38271,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [249/376] Stored Procedure: [dbo].[GV_Config_LineSpeedOperatorMapping]
+-- [261/388] Stored Procedure: [dbo].[GV_Config_LineSpeedOperatorMapping]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -38029,7 +38349,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [250/376] Stored Procedure: [dbo].[GV_Config_LossCategory]
+-- [262/388] Stored Procedure: [dbo].[GV_Config_LossCategory]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -38087,7 +38407,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [251/376] Stored Procedure: [dbo].[GV_Config_MobileTerminal]
+-- [263/388] Stored Procedure: [dbo].[GV_Config_MobileTerminal]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -38176,7 +38496,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [252/376] Stored Procedure: [dbo].[GV_Config_Model]
+-- [264/388] Stored Procedure: [dbo].[GV_Config_Model]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -38239,7 +38559,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [253/376] Stored Procedure: [dbo].[GV_Config_ModelFamily]
+-- [265/388] Stored Procedure: [dbo].[GV_Config_ModelFamily]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -38296,7 +38616,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [254/376] Stored Procedure: [dbo].[GV_Config_OperatorSkillMapping]
+-- [266/388] Stored Procedure: [dbo].[GV_Config_OperatorSkillMapping]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -38367,7 +38687,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [255/376] Stored Procedure: [dbo].[GV_Config_Parameter]
+-- [267/388] Stored Procedure: [dbo].[GV_Config_Parameter]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -38459,7 +38779,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [256/376] Stored Procedure: [dbo].[GV_Config_PartVariant]
+-- [268/388] Stored Procedure: [dbo].[GV_Config_PartVariant]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[GV_Config_PartVariant]
@@ -38547,7 +38867,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [257/376] Stored Procedure: [dbo].[GV_Config_Plant]
+-- [269/388] Stored Procedure: [dbo].[GV_Config_Plant]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -38604,7 +38924,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [258/376] Stored Procedure: [dbo].[GV_Config_PMChecklist]
+-- [270/388] Stored Procedure: [dbo].[GV_Config_PMChecklist]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -38667,7 +38987,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [259/376] Stored Procedure: [dbo].[GV_Config_PMCheckPoints]
+-- [271/388] Stored Procedure: [dbo].[GV_Config_PMCheckPoints]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -38755,7 +39075,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [260/376] Stored Procedure: [dbo].[GV_Config_PMSchedule]
+-- [272/388] Stored Procedure: [dbo].[GV_Config_PMSchedule]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -38833,7 +39153,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [261/376] Stored Procedure: [dbo].[GV_Config_QADocumentList]
+-- [273/388] Stored Procedure: [dbo].[GV_Config_QADocumentList]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -38915,7 +39235,7 @@ WHERE TableName = 'Config_QADocumentList'
 GO
 
 -- ------------------------------------------------------------------------
--- [262/376] Stored Procedure: [dbo].[GV_Config_QADocumentList_Revision]
+-- [274/388] Stored Procedure: [dbo].[GV_Config_QADocumentList_Revision]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[GV_Config_QADocumentList_Revision]
@@ -38958,7 +39278,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [263/376] Stored Procedure: [dbo].[GV_Config_Role]
+-- [275/388] Stored Procedure: [dbo].[GV_Config_Role]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -39014,7 +39334,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [264/376] Stored Procedure: [dbo].[GV_Config_Shop]
+-- [276/388] Stored Procedure: [dbo].[GV_Config_Shop]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -39077,7 +39397,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [265/376] Stored Procedure: [dbo].[GV_Config_Skill]
+-- [277/388] Stored Procedure: [dbo].[GV_Config_Skill]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -39133,7 +39453,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [266/376] Stored Procedure: [dbo].[GV_Config_SkillLevel]
+-- [278/388] Stored Procedure: [dbo].[GV_Config_SkillLevel]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -39189,7 +39509,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [267/376] Stored Procedure: [dbo].[GV_Config_SKU]
+-- [279/388] Stored Procedure: [dbo].[GV_Config_SKU]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -39260,7 +39580,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [268/376] Stored Procedure: [dbo].[GV_Config_SKU_LineTaktTime]
+-- [280/388] Stored Procedure: [dbo].[GV_Config_SKU_LineTaktTime]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[GV_Config_SKU_LineTaktTime]
@@ -39346,7 +39666,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [269/376] Stored Procedure: [dbo].[GV_Config_SKU_StationTaktTime]
+-- [281/388] Stored Procedure: [dbo].[GV_Config_SKU_StationTaktTime]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -39406,7 +39726,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [270/376] Stored Procedure: [dbo].[GV_Config_Station]
+-- [282/388] Stored Procedure: [dbo].[GV_Config_Station]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -39490,7 +39810,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [271/376] Stored Procedure: [dbo].[GV_Config_Station_JHActivity_Mapping]
+-- [283/388] Stored Procedure: [dbo].[GV_Config_Station_JHActivity_Mapping]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[GV_Config_Station_JHActivity_Mapping]
@@ -39571,7 +39891,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [272/376] Stored Procedure: [dbo].[GV_Config_StationClusterDisplayMapping]
+-- [284/388] Stored Procedure: [dbo].[GV_Config_StationClusterDisplayMapping]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -39667,7 +39987,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [273/376] Stored Procedure: [dbo].[GV_Config_StationSkillMapping]
+-- [285/388] Stored Procedure: [dbo].[GV_Config_StationSkillMapping]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[GV_Config_StationSkillMapping]
@@ -39752,7 +40072,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [274/376] Stored Procedure: [dbo].[GV_Config_StorageArea]
+-- [286/388] Stored Procedure: [dbo].[GV_Config_StorageArea]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -39821,7 +40141,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [275/376] Stored Procedure: [dbo].[GV_Config_StorageLocation]
+-- [287/388] Stored Procedure: [dbo].[GV_Config_StorageLocation]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -39884,7 +40204,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [276/376] Stored Procedure: [dbo].[GV_Config_StorageRack]
+-- [288/388] Stored Procedure: [dbo].[GV_Config_StorageRack]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -39945,7 +40265,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [277/376] Stored Procedure: [dbo].[GV_Config_StorageZone]
+-- [289/388] Stored Procedure: [dbo].[GV_Config_StorageZone]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -40006,7 +40326,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [278/376] Stored Procedure: [dbo].[GV_Config_SubAssembly]
+-- [290/388] Stored Procedure: [dbo].[GV_Config_SubAssembly]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -40070,7 +40390,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [279/376] Stored Procedure: [dbo].[GV_Config_SubAssemblyLine]
+-- [291/388] Stored Procedure: [dbo].[GV_Config_SubAssemblyLine]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -40133,7 +40453,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [280/376] Stored Procedure: [dbo].[GV_Config_SubLossCategory]
+-- [292/388] Stored Procedure: [dbo].[GV_Config_SubLossCategory]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -40196,7 +40516,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [281/376] Stored Procedure: [dbo].[GV_Config_TicketReason]
+-- [293/388] Stored Procedure: [dbo].[GV_Config_TicketReason]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -40273,7 +40593,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [282/376] Stored Procedure: [dbo].[GV_Config_User]
+-- [294/388] Stored Procedure: [dbo].[GV_Config_User]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -40348,7 +40668,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [283/376] Stored Procedure: [dbo].[GV_Config_Vendor]
+-- [295/388] Stored Procedure: [dbo].[GV_Config_Vendor]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -40423,7 +40743,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [284/376] Stored Procedure: [dbo].[GV_Config_Vendor_ChecklistMetaData]
+-- [296/388] Stored Procedure: [dbo].[GV_Config_Vendor_ChecklistMetaData]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -40486,7 +40806,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [285/376] Stored Procedure: [dbo].[GV_Config_Vendor_InspectionAuditPoint]
+-- [297/388] Stored Procedure: [dbo].[GV_Config_Vendor_InspectionAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -40559,7 +40879,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [286/376] Stored Procedure: [dbo].[GV_Config_Vendor_IPOAuditPoint]
+-- [298/388] Stored Procedure: [dbo].[GV_Config_Vendor_IPOAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -40634,7 +40954,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [287/376] Stored Procedure: [dbo].[GV_Config_Vendor_PartInspectionAuditPoint]
+-- [299/388] Stored Procedure: [dbo].[GV_Config_Vendor_PartInspectionAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -40707,7 +41027,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [288/376] Stored Procedure: [dbo].[GV_Config_Vendor_ProcessInspectionAuditPoint]
+-- [300/388] Stored Procedure: [dbo].[GV_Config_Vendor_ProcessInspectionAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -40782,7 +41102,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [289/376] Stored Procedure: [dbo].[GV_Config_VendorPartMapping]
+-- [301/388] Stored Procedure: [dbo].[GV_Config_VendorPartMapping]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -40875,7 +41195,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [290/376] Stored Procedure: [dbo].[GV_Config_Zone]
+-- [302/388] Stored Procedure: [dbo].[GV_Config_Zone]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -40938,7 +41258,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [291/376] Stored Procedure: [dbo].[GV_ConfigVendorSampleInspectionAuditPoint]
+-- [303/388] Stored Procedure: [dbo].[GV_ConfigVendorSampleInspectionAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -41011,7 +41331,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [292/376] Stored Procedure: [dbo].[GV_CurrnetandLastEngine]
+-- [304/388] Stored Procedure: [dbo].[GV_CurrnetandLastEngine]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -41041,7 +41361,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [293/376] Stored Procedure: [dbo].[GV_EngineTakeOut]
+-- [305/388] Stored Procedure: [dbo].[GV_EngineTakeOut]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -41089,7 +41409,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [294/376] Stored Procedure: [dbo].[GV_GetAuditScreen]
+-- [306/388] Stored Procedure: [dbo].[GV_GetAuditScreen]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[GV_GetAuditScreen]
@@ -41107,7 +41427,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [295/376] Stored Procedure: [dbo].[GV_IPQC_PartPressAuditPoint]
+-- [307/388] Stored Procedure: [dbo].[GV_IPQC_PartPressAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -41199,7 +41519,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [296/376] Stored Procedure: [dbo].[GV_IPQC_PYMachineAuditPoint]
+-- [308/388] Stored Procedure: [dbo].[GV_IPQC_PYMachineAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -41291,7 +41611,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [297/376] Stored Procedure: [dbo].[GV_IPQC_TorqueAuditPoint]
+-- [309/388] Stored Procedure: [dbo].[GV_IPQC_TorqueAuditPoint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -41391,7 +41711,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [298/376] Stored Procedure: [dbo].[GV_LoggedUserChange]
+-- [310/388] Stored Procedure: [dbo].[GV_LoggedUserChange]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -41433,7 +41753,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [299/376] Stored Procedure: [dbo].[GV_MachineAlarmMonitoring]
+-- [311/388] Stored Procedure: [dbo].[GV_MachineAlarmMonitoring]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[GV_MachineAlarmMonitoring]
@@ -41468,7 +41788,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [300/376] Stored Procedure: [dbo].[GV_Maint_ActiveAlarm]
+-- [312/388] Stored Procedure: [dbo].[GV_Maint_ActiveAlarm]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -41508,7 +41828,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [301/376] Stored Procedure: [dbo].[GV_Maint_Breakdown_Monitoring]
+-- [313/388] Stored Procedure: [dbo].[GV_Maint_Breakdown_Monitoring]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[GV_Maint_Breakdown_Monitoring]
@@ -41568,7 +41888,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [302/376] Stored Procedure: [dbo].[GV_OperatorLogin]
+-- [314/388] Stored Procedure: [dbo].[GV_OperatorLogin]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -41612,7 +41932,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [303/376] Stored Procedure: [dbo].[GV_PartInspectionType]
+-- [315/388] Stored Procedure: [dbo].[GV_PartInspectionType]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[GV_PartInspectionType]
@@ -41638,7 +41958,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [304/376] Stored Procedure: [dbo].[GV_Perf_Downtime]
+-- [316/388] Stored Procedure: [dbo].[GV_Perf_Downtime]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[GV_Perf_Downtime]
@@ -41696,7 +42016,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [305/376] Stored Procedure: [dbo].[GV_Perf_PlannedShutDown]
+-- [317/388] Stored Procedure: [dbo].[GV_Perf_PlannedShutDown]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       Procedure [dbo].[GV_Perf_PlannedShutDown]
@@ -41716,7 +42036,7 @@ SELECT TOP (100) a.[UID]
 GO
 
 -- ------------------------------------------------------------------------
--- [306/376] Stored Procedure: [dbo].[GV_Prod_DailyOperatorPlan]
+-- [318/388] Stored Procedure: [dbo].[GV_Prod_DailyOperatorPlan]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     Procedure [dbo].[GV_Prod_DailyOperatorPlan]
@@ -41744,7 +42064,7 @@ SELECT  [UID]
 GO
 
 -- ------------------------------------------------------------------------
--- [307/376] Stored Procedure: [dbo].[GV_ProdEngineTakeIn]
+-- [319/388] Stored Procedure: [dbo].[GV_ProdEngineTakeIn]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -41807,76 +42127,20 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [308/376] Stored Procedure: [dbo].[GV_ProdShiftPlan]
--- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
+-- [320/388] Stored Procedure: [dbo].[GV_ProdShiftPlan]
+-- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 17:54:00 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
--- =============================================
--- Author:      Shubham Patil
--- CREATE OR ALTER OR ALTER date: 07 May 2026
--- Description: Production Shift Plan Grid
--- =============================================
-
- 
-
-CREATE         PROCEDURE [dbo].[GV_ProdShiftPlan]
-
- 
-
+-- Backward Compatibility: GV_ProdShiftPlan
+CREATE   PROCEDURE [dbo].[GV_ProdShiftPlan]
 AS
 BEGIN
-
- 
-
-    SELECT
-        A.PlanID,
-        A.LineID,
-        B.LineName,
-        A.SKUID,
-        C.SKUName,
-        A.ProdDate,
-        A.ProdShift,
-        A.PlanQty,
-        A.Status,
-        CASE
-            WHEN A.Status = 1 THEN 'Plan'
-            WHEN A.Status = 2 THEN 'Hold'
-            WHEN A.Status = 3 THEN 'Short Close'
-            WHEN A.Status = 4 THEN 'Completed'
-            WHEN A.Status = 5 THEN 'Inprocess'
-        END AS StatusName,
-        A.Priority,
-        A.Source,
-        CASE
-            WHEN A.Source = 1 THEN 'Manual'
-            WHEN A.Source = 2 THEN 'Excel'
-            WHEN A.Source = 3 THEN 'SAP'
-        END AS SourceName
-
- 
-
-    FROM Prod_Shift_Plan AS A
-
- 
-
-    JOIN Config_Line AS B
-        ON A.LineID = B.LineID
-
- 
-
-    JOIN Config_SKU AS C
-        ON A.SKUID = C.SKUID
-
- 
-
-    ORDER BY A.PlanID DESC
-
- 
-
-END
+    SET NOCOUNT ON;
+    EXEC [dbo].[DS_Dashboard_ProdShiftPlan];
+END;
 GO
 
 -- ------------------------------------------------------------------------
--- [309/376] Stored Procedure: [dbo].[GV_ProdShiftPlan_Execution]
+-- [321/388] Stored Procedure: [dbo].[GV_ProdShiftPlan_Execution]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -41951,7 +42215,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [310/376] Stored Procedure: [dbo].[GV_QA_AuditMonitoring]
+-- [322/388] Stored Procedure: [dbo].[GV_QA_AuditMonitoring]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[GV_QA_AuditMonitoring]
@@ -42011,7 +42275,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [311/376] Stored Procedure: [dbo].[GV_SA_PlanExecution]
+-- [323/388] Stored Procedure: [dbo].[GV_SA_PlanExecution]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -42075,7 +42339,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [312/376] Stored Procedure: [dbo].[GV_SAPEngineOrder]
+-- [324/388] Stored Procedure: [dbo].[GV_SAPEngineOrder]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -42124,7 +42388,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [313/376] Stored Procedure: [dbo].[GV_SAPEngineOrderReprint]
+-- [325/388] Stored Procedure: [dbo].[GV_SAPEngineOrderReprint]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -42173,7 +42437,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [314/376] Stored Procedure: [dbo].[GV_TorqueData]
+-- [326/388] Stored Procedure: [dbo].[GV_TorqueData]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[GV_TorqueData]
@@ -42241,7 +42505,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [315/376] Stored Procedure: [dbo].[GV_TorqueSummary]
+-- [327/388] Stored Procedure: [dbo].[GV_TorqueSummary]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[GV_TorqueSummary]
@@ -42320,7 +42584,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [316/376] Stored Procedure: [dbo].[GV_Weekly_OpratorPlan]
+-- [328/388] Stored Procedure: [dbo].[GV_Weekly_OpratorPlan]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       Procedure [dbo].[GV_Weekly_OpratorPlan]
@@ -42342,7 +42606,7 @@ SELECT [UID]
 GO
 
 -- ------------------------------------------------------------------------
--- [317/376] Stored Procedure: [dbo].[Insert_TestData]
+-- [329/388] Stored Procedure: [dbo].[Insert_TestData]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[Insert_TestData]
@@ -42354,7 +42618,7 @@ End
 GO
 
 -- ------------------------------------------------------------------------
--- [318/376] Stored Procedure: [dbo].[PokayokeControl]
+-- [330/388] Stored Procedure: [dbo].[PokayokeControl]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[PokayokeControl]
@@ -42379,7 +42643,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [319/376] Stored Procedure: [dbo].[Prod_AlarmLog]
+-- [331/388] Stored Procedure: [dbo].[Prod_AlarmLog]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -42450,7 +42714,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [320/376] Stored Procedure: [dbo].[Prod_GenealogyDataLog]
+-- [332/388] Stored Procedure: [dbo].[Prod_GenealogyDataLog]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[Prod_GenealogyDataLog]
@@ -42574,7 +42838,7 @@ END;
 GO
 
 -- ------------------------------------------------------------------------
--- [321/376] Stored Procedure: [dbo].[Prod_KittingOrderDownload]
+-- [333/388] Stored Procedure: [dbo].[Prod_KittingOrderDownload]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[Prod_KittingOrderDownload]
@@ -42830,7 +43094,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [322/376] Stored Procedure: [dbo].[Prod_SAOrderDownload]
+-- [334/388] Stored Procedure: [dbo].[Prod_SAOrderDownload]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[Prod_SAOrderDownload]
@@ -43099,7 +43363,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [323/376] Stored Procedure: [dbo].[Prod_TrackingValidation]
+-- [335/388] Stored Procedure: [dbo].[Prod_TrackingValidation]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 Create PROCEDURE [dbo].[Prod_TrackingValidation]
@@ -43211,7 +43475,7 @@ END;
 GO
 
 -- ------------------------------------------------------------------------
--- [324/376] Stored Procedure: [dbo].[Prod_WIPStatusUpdate]
+-- [336/388] Stored Procedure: [dbo].[Prod_WIPStatusUpdate]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[Prod_WIPStatusUpdate]
@@ -43269,7 +43533,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [325/376] Stored Procedure: [dbo].[Prod_WIPStatusUpdateKit]
+-- [337/388] Stored Procedure: [dbo].[Prod_WIPStatusUpdateKit]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 Create   PROCEDURE [dbo].[Prod_WIPStatusUpdateKit]
@@ -43339,7 +43603,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [326/376] Stored Procedure: [dbo].[RethrowError]
+-- [338/388] Stored Procedure: [dbo].[RethrowError]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE         PROCEDURE [dbo].[RethrowError]
@@ -43389,7 +43653,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [327/376] Stored Procedure: [dbo].[SP_Engine_Station_Tracking]
+-- [339/388] Stored Procedure: [dbo].[SP_Engine_Station_Tracking]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -43416,7 +43680,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [328/376] Stored Procedure: [dbo].[SP_GetActiveAlarmDashboard]
+-- [340/388] Stored Procedure: [dbo].[SP_GetActiveAlarmDashboard]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================================================
@@ -43459,7 +43723,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [329/376] Stored Procedure: [dbo].[SP_GetEngineStatusCountBySKU]
+-- [341/388] Stored Procedure: [dbo].[SP_GetEngineStatusCountBySKU]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- Alias SP
@@ -43482,7 +43746,7 @@ END;
 GO
 
 -- ------------------------------------------------------------------------
--- [330/376] Stored Procedure: [dbo].[SP_NPDUpdate]
+-- [342/388] Stored Procedure: [dbo].[SP_NPDUpdate]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[SP_NPDUpdate]
@@ -43560,7 +43824,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [331/376] Stored Procedure: [dbo].[SP_ProcessSAPMaterialReceiving]
+-- [343/388] Stored Procedure: [dbo].[SP_ProcessSAPMaterialReceiving]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[SP_ProcessSAPMaterialReceiving]
@@ -44251,7 +44515,7 @@ END;
 GO
 
 -- ------------------------------------------------------------------------
--- [332/376] Stored Procedure: [dbo].[SP_Prod_EngineNo_SKU]
+-- [344/388] Stored Procedure: [dbo].[SP_Prod_EngineNo_SKU]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE   PROCEDURE [dbo].[SP_Prod_EngineNo_SKU]
@@ -44289,7 +44553,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [333/376] Stored Procedure: [dbo].[SP_Update_ShiftInformation]
+-- [345/388] Stored Procedure: [dbo].[SP_Update_ShiftInformation]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     Procedure [dbo].[SP_Update_ShiftInformation]
@@ -44305,7 +44569,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [334/376] Stored Procedure: [dbo].[SubAssembly_RealtimeStatusDashboard]
+-- [346/388] Stored Procedure: [dbo].[SubAssembly_RealtimeStatusDashboard]
 -- Created: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:12 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[SubAssembly_RealtimeStatusDashboard]
@@ -44650,7 +44914,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [335/376] Stored Procedure: [dbo].[SubAssembly-RealtimeStatusDashboard]
+-- [347/388] Stored Procedure: [dbo].[SubAssembly-RealtimeStatusDashboard]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[SubAssembly-RealtimeStatusDashboard]
@@ -44936,7 +45200,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [336/376] Stored Procedure: [dbo].[Tab_Q_ApproveIPQCAudit]
+-- [348/388] Stored Procedure: [dbo].[Tab_Q_ApproveIPQCAudit]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 create PROCEDURE [dbo].[Tab_Q_ApproveIPQCAudit]
@@ -45059,7 +45323,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [337/376] Stored Procedure: [dbo].[Tab_Q_FQC_Approve_AuditList]
+-- [349/388] Stored Procedure: [dbo].[Tab_Q_FQC_Approve_AuditList]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE   PROCEDURE [dbo].[Tab_Q_FQC_Approve_AuditList]
@@ -45249,7 +45513,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [338/376] Stored Procedure: [dbo].[Tab_Q_FQC_EngInbuiltAuditPoint_Submit]
+-- [350/388] Stored Procedure: [dbo].[Tab_Q_FQC_EngInbuiltAuditPoint_Submit]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE   PROCEDURE [dbo].[Tab_Q_FQC_EngInbuiltAuditPoint_Submit]
@@ -45497,7 +45761,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [339/376] Stored Procedure: [dbo].[Tab_Q_FQC_EngPerformanceAuditPoint_Submit]
+-- [351/388] Stored Procedure: [dbo].[Tab_Q_FQC_EngPerformanceAuditPoint_Submit]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_FQC_EngPerformanceAuditPoint_Submit]
@@ -45824,7 +46088,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [340/376] Stored Procedure: [dbo].[Tab_Q_FQC_GetApprovedFQCAuditList]
+-- [352/388] Stored Procedure: [dbo].[Tab_Q_FQC_GetApprovedFQCAuditList]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_FQC_GetApprovedFQCAuditList]
@@ -45921,7 +46185,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [341/376] Stored Procedure: [dbo].[Tab_Q_FQC_GetEngInbuiltCheckpointDetails_ForExecute]
+-- [353/388] Stored Procedure: [dbo].[Tab_Q_FQC_GetEngInbuiltCheckpointDetails_ForExecute]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE   PROCEDURE [dbo].[Tab_Q_FQC_GetEngInbuiltCheckpointDetails_ForExecute]
@@ -46009,7 +46273,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [342/376] Stored Procedure: [dbo].[Tab_Q_FQC_GetEngPerformanceCheckpointDetails_ForExecute]
+-- [354/388] Stored Procedure: [dbo].[Tab_Q_FQC_GetEngPerformanceCheckpointDetails_ForExecute]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_FQC_GetEngPerformanceCheckpointDetails_ForExecute]
@@ -46131,7 +46395,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [343/376] Stored Procedure: [dbo].[Tab_Q_FQC_GetExecuted_EngInbuilt_CheckpointDetails]
+-- [355/388] Stored Procedure: [dbo].[Tab_Q_FQC_GetExecuted_EngInbuilt_CheckpointDetails]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_FQC_GetExecuted_EngInbuilt_CheckpointDetails]
@@ -46193,7 +46457,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [344/376] Stored Procedure: [dbo].[Tab_Q_FQC_GetExecuted_EngPerformance_CheckpointDetails]
+-- [356/388] Stored Procedure: [dbo].[Tab_Q_FQC_GetExecuted_EngPerformance_CheckpointDetails]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_FQC_GetExecuted_EngPerformance_CheckpointDetails]
@@ -46292,7 +46556,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [345/376] Stored Procedure: [dbo].[Tab_Q_FQC_GetScheduledAuditList]
+-- [357/388] Stored Procedure: [dbo].[Tab_Q_FQC_GetScheduledAuditList]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_FQC_GetScheduledAuditList]
@@ -46480,7 +46744,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [346/376] Stored Procedure: [dbo].[Tab_Q_FQC_GetWaitingForApprovalFQCAuditList]
+-- [358/388] Stored Procedure: [dbo].[Tab_Q_FQC_GetWaitingForApprovalFQCAuditList]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_FQC_GetWaitingForApprovalFQCAuditList]
@@ -46642,7 +46906,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [347/376] Stored Procedure: [dbo].[Tab_Q_FQC_GetWaitingForApprovalFQCAuditPoints]
+-- [359/388] Stored Procedure: [dbo].[Tab_Q_FQC_GetWaitingForApprovalFQCAuditPoints]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_FQC_GetWaitingForApprovalFQCAuditPoints]
@@ -46840,7 +47104,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [348/376] Stored Procedure: [dbo].[Tab_Q_FQC_MonitoringScreenInspectBtn]
+-- [360/388] Stored Procedure: [dbo].[Tab_Q_FQC_MonitoringScreenInspectBtn]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE   PROCEDURE [dbo].[Tab_Q_FQC_MonitoringScreenInspectBtn]
@@ -47264,7 +47528,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [349/376] Stored Procedure: [dbo].[Tab_Q_FQC_MoveToNextSampleLevel_EngInbuilt]
+-- [361/388] Stored Procedure: [dbo].[Tab_Q_FQC_MoveToNextSampleLevel_EngInbuilt]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE   PROCEDURE [dbo].[Tab_Q_FQC_MoveToNextSampleLevel_EngInbuilt]
@@ -47695,7 +47959,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [350/376] Stored Procedure: [dbo].[Tab_Q_FQC_MoveToNextSampleLevel_EngPerformance]
+-- [362/388] Stored Procedure: [dbo].[Tab_Q_FQC_MoveToNextSampleLevel_EngPerformance]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_FQC_MoveToNextSampleLevel_EngPerformance]
@@ -48098,7 +48362,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [351/376] Stored Procedure: [dbo].[Tab_Q_FQC_UpdateEngInbuilt_EngineNo]
+-- [363/388] Stored Procedure: [dbo].[Tab_Q_FQC_UpdateEngInbuilt_EngineNo]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE   PROCEDURE [dbo].[Tab_Q_FQC_UpdateEngInbuilt_EngineNo]
@@ -48192,7 +48456,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [352/376] Stored Procedure: [dbo].[Tab_Q_FQC_UpdateEngInbuiltCheckpointResult]
+-- [364/388] Stored Procedure: [dbo].[Tab_Q_FQC_UpdateEngInbuiltCheckpointResult]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE   PROCEDURE [dbo].[Tab_Q_FQC_UpdateEngInbuiltCheckpointResult]
@@ -48337,7 +48601,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [353/376] Stored Procedure: [dbo].[Tab_Q_FQC_UpdateEngPerformance_EngineNo]
+-- [365/388] Stored Procedure: [dbo].[Tab_Q_FQC_UpdateEngPerformance_EngineNo]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_FQC_UpdateEngPerformance_EngineNo]
@@ -48491,7 +48755,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [354/376] Stored Procedure: [dbo].[Tab_Q_FQC_UpdateEngPerformanceCheckpointResult]
+-- [366/388] Stored Procedure: [dbo].[Tab_Q_FQC_UpdateEngPerformanceCheckpointResult]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_FQC_UpdateEngPerformanceCheckpointResult]
@@ -48703,7 +48967,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [355/376] Stored Procedure: [dbo].[Tab_Q_IPQC_AuditPoint_Submit]
+-- [367/388] Stored Procedure: [dbo].[Tab_Q_IPQC_AuditPoint_Submit]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_IPQC_AuditPoint_Submit]
@@ -49096,7 +49360,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [356/376] Stored Procedure: [dbo].[Tab_Q_IPQC_AuditPoints_ForExecute]
+-- [368/388] Stored Procedure: [dbo].[Tab_Q_IPQC_AuditPoints_ForExecute]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_IPQC_AuditPoints_ForExecute]
@@ -49155,7 +49419,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [357/376] Stored Procedure: [dbo].[Tab_Q_IPQC_GetExecuted_CheckpointDetails]
+-- [369/388] Stored Procedure: [dbo].[Tab_Q_IPQC_GetExecuted_CheckpointDetails]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 create PROCEDURE [dbo].[Tab_Q_IPQC_GetExecuted_CheckpointDetails]
@@ -49222,7 +49486,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [358/376] Stored Procedure: [dbo].[Tab_Q_IPQC_GetScheduledAuditList]
+-- [370/388] Stored Procedure: [dbo].[Tab_Q_IPQC_GetScheduledAuditList]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE   PROCEDURE [dbo].[Tab_Q_IPQC_GetScheduledAuditList]
@@ -49430,7 +49694,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [359/376] Stored Procedure: [dbo].[Tab_Q_IPQC_GetWaitingForApprovalIPQCAuditList]
+-- [371/388] Stored Procedure: [dbo].[Tab_Q_IPQC_GetWaitingForApprovalIPQCAuditList]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 create PROCEDURE [dbo].[Tab_Q_IPQC_GetWaitingForApprovalIPQCAuditList]
@@ -49586,7 +49850,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [360/376] Stored Procedure: [dbo].[Tab_Q_IPQC_MonitoringScreenInspectBtn]
+-- [372/388] Stored Procedure: [dbo].[Tab_Q_IPQC_MonitoringScreenInspectBtn]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE   PROCEDURE [dbo].[Tab_Q_IPQC_MonitoringScreenInspectBtn]
@@ -49902,7 +50166,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [361/376] Stored Procedure: [dbo].[Tab_Q_IPQC_UpdateCheckpointResult]
+-- [373/388] Stored Procedure: [dbo].[Tab_Q_IPQC_UpdateCheckpointResult]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 create PROCEDURE [dbo].[Tab_Q_IPQC_UpdateCheckpointResult]
@@ -50004,7 +50268,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [362/376] Stored Procedure: [dbo].[Tab_Q_IQC_ApproveIQCAudit]
+-- [374/388] Stored Procedure: [dbo].[Tab_Q_IQC_ApproveIQCAudit]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_IQC_ApproveIQCAudit]
@@ -50141,7 +50405,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [363/376] Stored Procedure: [dbo].[Tab_Q_IQC_GetApprovedIQCAuditHistory]
+-- [375/388] Stored Procedure: [dbo].[Tab_Q_IQC_GetApprovedIQCAuditHistory]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_IQC_GetApprovedIQCAuditHistory]
@@ -50248,7 +50512,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [364/376] Stored Procedure: [dbo].[Tab_Q_IQC_GetCheckpointDetailsForExecute]
+-- [376/388] Stored Procedure: [dbo].[Tab_Q_IQC_GetCheckpointDetailsForExecute]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_IQC_GetCheckpointDetailsForExecute]
@@ -50407,7 +50671,7 @@ END;
 GO
 
 -- ------------------------------------------------------------------------
--- [365/376] Stored Procedure: [dbo].[Tab_Q_IQC_GetExecutedCheckpointDetails]
+-- [377/388] Stored Procedure: [dbo].[Tab_Q_IQC_GetExecutedCheckpointDetails]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_IQC_GetExecutedCheckpointDetails]
@@ -50618,7 +50882,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [366/376] Stored Procedure: [dbo].[Tab_Q_IQC_GetPlannedIQCAuditList]
+-- [378/388] Stored Procedure: [dbo].[Tab_Q_IQC_GetPlannedIQCAuditList]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_IQC_GetPlannedIQCAuditList]
@@ -50744,7 +51008,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [367/376] Stored Procedure: [dbo].[Tab_Q_IQC_GetWaitingForApprovalAuditHistory]
+-- [379/388] Stored Procedure: [dbo].[Tab_Q_IQC_GetWaitingForApprovalAuditHistory]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_IQC_GetWaitingForApprovalAuditHistory]
@@ -50851,7 +51115,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [368/376] Stored Procedure: [dbo].[Tab_Q_IQC_MoveToNextSampleLevel]
+-- [380/388] Stored Procedure: [dbo].[Tab_Q_IQC_MoveToNextSampleLevel]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_IQC_MoveToNextSampleLevel]
@@ -51647,7 +51911,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [369/376] Stored Procedure: [dbo].[Tab_Q_IQC_UpdateIQCCheckpointResult]
+-- [381/388] Stored Procedure: [dbo].[Tab_Q_IQC_UpdateIQCCheckpointResult]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE PROCEDURE [dbo].[Tab_Q_IQC_UpdateIQCCheckpointResult]
@@ -51831,7 +52095,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [370/376] Stored Procedure: [dbo].[TB_SKUID]
+-- [382/388] Stored Procedure: [dbo].[TB_SKUID]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 Create   Procedure [dbo].[TB_SKUID]
@@ -51843,7 +52107,7 @@ Create   Procedure [dbo].[TB_SKUID]
 GO
 
 -- ------------------------------------------------------------------------
--- [371/376] Stored Procedure: [dbo].[TB_UserName]
+-- [383/388] Stored Procedure: [dbo].[TB_UserName]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       Procedure [dbo].[TB_UserName]
@@ -51855,7 +52119,7 @@ CREATE       Procedure [dbo].[TB_UserName]
 GO
 
 -- ------------------------------------------------------------------------
--- [372/376] Stored Procedure: [dbo].[TestSP]
+-- [384/388] Stored Procedure: [dbo].[TestSP]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[TestSP]
@@ -51873,7 +52137,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [373/376] Stored Procedure: [dbo].[UPD_Downtime]
+-- [385/388] Stored Procedure: [dbo].[UPD_Downtime]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE       PROCEDURE [dbo].[UPD_Downtime]
@@ -51912,8 +52176,8 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [374/376] Stored Procedure: [dbo].[USP_GetEngineStatusCountBySKU]
--- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 16:48:01 GMT+0530 (India Standard Time)
+-- [386/388] Stored Procedure: [dbo].[USP_GetEngineStatusCountBySKU]
+-- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Nov 13 2026 18:03:43 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE   PROCEDURE [dbo].[USP_GetEngineStatusCountBySKU]
     (
@@ -51922,117 +52186,12 @@ CREATE   PROCEDURE [dbo].[USP_GetEngineStatusCountBySKU]
     AS
     BEGIN
         SET NOCOUNT ON;
-        BEGIN TRY
-            DECLARE @ProdDateStr NVARCHAR(50),
-                    @ProdShift NVARCHAR(50),
-                    @ProdDate DATE;
-
-            SELECT TOP (1) 
-                @ProdDateStr = TRIM(ParameterValue)
-            FROM dbo.ApplicationSetting
-            WHERE ParameterID = 1
-            ORDER BY UID DESC;
-
-            IF @ProdDateStr IS NULL
-            BEGIN
-                SELECT TOP (1) @ProdDateStr = TRIM(ParameterValue)
-                FROM dbo.Prod_ShiftInformation
-                WHERE ParameterName = 'ProdDate'
-                ORDER BY UID DESC;
-            END
-
-            -- Try format 105 (DD-MM-YYYY) first, then standard YYYY-MM-DD
-            SET @ProdDate = TRY_CONVERT(DATE, @ProdDateStr, 105);
-            IF @ProdDate IS NULL AND @ProdDateStr IS NOT NULL
-            BEGIN
-                SET @ProdDate = TRY_CONVERT(DATE, @ProdDateStr, 120);
-            END
-
-            SELECT TOP (1) 
-                @ProdShift = TRIM(ParameterValue)
-            FROM dbo.ApplicationSetting
-            WHERE ParameterID = 2
-            ORDER BY UID DESC;
-
-            IF @ProdShift IS NULL
-            BEGIN
-                SELECT TOP (1) @ProdShift = TRIM(ParameterValue)
-                FROM dbo.Prod_ShiftInformation
-                WHERE ParameterName = 'ProdShift'
-                ORDER BY UID DESC;
-            END
-
-            CREATE TABLE #WIP_Engines (
-                EngineNo NVARCHAR(50) COLLATE DATABASE_DEFAULT
-            );
-
-            INSERT INTO #WIP_Engines (EngineNo)
-            SELECT DISTINCT
-                W.EngineNo
-            FROM dbo.Prod_Engine_WIP W
-            WHERE (@SKUID IS NULL OR @SKUID = 0 OR W.SKUID = @SKUID);
-
-            CREATE TABLE #Geneology_Ranked (
-                EngineNo NVARCHAR(50) COLLATE DATABASE_DEFAULT,
-                Status INT,
-                rn INT
-            );
-
-            INSERT INTO #Geneology_Ranked (EngineNo, Status, rn)
-            SELECT 
-                G.EngineNo,
-                G.Status,
-                ROW_NUMBER() OVER (
-                    PARTITION BY G.EngineNo 
-                    ORDER BY G.[Timestamp] DESC, G.RowID DESC
-                ) AS rn
-            FROM dbo.Prod_Status_Geneology G
-            INNER JOIN #WIP_Engines W ON G.EngineNo = W.EngineNo COLLATE DATABASE_DEFAULT
-            WHERE (@ProdDate IS NULL OR G.ProdDate = @ProdDate)
-              AND (@ProdShift IS NULL 
-                   OR G.ProdShift = @ProdShift COLLATE DATABASE_DEFAULT
-                   OR (@ProdShift = 'A' AND G.ProdShift IN ('1', 'Shift 1', 'Shift A', 'A'))
-                   OR (@ProdShift = 'B' AND G.ProdShift IN ('2', 'Shift 2', 'Shift B', 'B'))
-                   OR (@ProdShift = 'C' AND G.ProdShift IN ('3', 'Shift 3', 'Shift C', 'C')));
-
-            SELECT 
-                ISNULL(@ProdDate, CAST(GETDATE() AS DATE)) AS ProdDate,
-                ISNULL(@ProdShift, 'A') AS ProdShift,
-                COUNT(CASE WHEN Status = 6  THEN 1 END) AS NotOK,
-                COUNT(CASE WHEN Status = 7  THEN 1 END) AS NotOKBypass,
-                COUNT(CASE WHEN Status = 8  THEN 1 END) AS OKBypass,
-                COUNT(CASE WHEN Status = 9  THEN 1 END) AS CompletedEng,
-                COUNT(CASE WHEN Status = 10 THEN 1 END) AS FGEngine,
-                COUNT(CASE WHEN Status = 12 THEN 1 END) AS EngMaterialHold,
-                COUNT(CASE WHEN Status = 13 THEN 1 END) AS MaterialHoldCleared,
-                COUNT(CASE WHEN Status = 14 THEN 1 END) AS ForRework,
-                COUNT(CASE WHEN Status = 15 THEN 1 END) AS ReworkOK,
-                COUNT(CASE WHEN Status = 26 THEN 1 END) AS EngFQCHold,
-                COUNT(CASE WHEN Status = 21 THEN 1 END) AS EngIPQCHold,
-                COUNT(CASE WHEN Status = 19 THEN 1 END) AS IPQCRework,
-                COUNT(CASE WHEN Status = 22 THEN 1 END) AS IPQCHoldCleared,
-                COUNT(CASE WHEN Status = 27 THEN 1 END) AS FQCHoldCleared,
-                COUNT(CASE WHEN Status = 24 THEN 1 END) AS FQCRework,
-                COUNT(CASE WHEN Status = 25 THEN 1 END) AS FGReworkOK,
-                COUNT(CASE WHEN Status = 28 THEN 1 END) AS FGReworkRejected,
-                COUNT(CASE WHEN Status = 11 THEN 1 END) AS EngineScrapped
-            FROM #Geneology_Ranked
-            WHERE rn = 1;
-
-            DROP TABLE IF EXISTS #Geneology_Ranked;
-            DROP TABLE IF EXISTS #WIP_Engines;
-        END TRY
-        BEGIN CATCH
-            DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE(),
-                    @ErrorSeverity INT = ERROR_SEVERITY(),
-                    @ErrorState INT = ERROR_STATE();
-            RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
-        END CATCH
+        EXEC [dbo].[DS_Prod_EngineStatusCountBySKU] @SKUID = @SKUID;
     END;
 GO
 
 -- ------------------------------------------------------------------------
--- [375/376] Stored Procedure: [dbo].[usp_GetNextActivityID]
+-- [387/388] Stored Procedure: [dbo].[usp_GetNextActivityID]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 -- =============================================
@@ -52103,7 +52262,7 @@ END
 GO
 
 -- ------------------------------------------------------------------------
--- [376/376] Stored Procedure: [dbo].[View_JHActivity]
+-- [388/388] Stored Procedure: [dbo].[View_JHActivity]
 -- Created: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time) | Last Modified: Fri Oct 09 2026 14:26:13 GMT+0530 (India Standard Time)
 -- ------------------------------------------------------------------------
 CREATE     PROCEDURE [dbo].[View_JHActivity]
