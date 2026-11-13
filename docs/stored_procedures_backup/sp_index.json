@@ -1,0 +1,2258 @@
+[
+  {
+    "name": "BT_ActivityData",
+    "created": "2026-10-09T08:56:11.280Z",
+    "modified": "2026-10-09T08:56:11.280Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_ApplicationSetting",
+    "created": "2026-10-09T08:56:11.297Z",
+    "modified": "2026-10-09T08:56:11.297Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Activity_SOP_Mapping",
+    "created": "2026-10-09T08:56:11.330Z",
+    "modified": "2026-10-09T08:56:11.330Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Alarm",
+    "created": "2026-10-09T08:56:11.337Z",
+    "modified": "2026-10-09T08:56:11.337Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_AuditDocumentMapping",
+    "created": "2026-10-09T08:56:11.347Z",
+    "modified": "2026-10-09T08:56:11.347Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_AuditList",
+    "created": "2026-10-09T08:56:11.360Z",
+    "modified": "2026-10-09T08:56:11.360Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_AuditPointLinking",
+    "created": "2026-10-09T08:56:11.377Z",
+    "modified": "2026-10-09T08:56:11.377Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_AuditSchedule",
+    "created": "2026-10-09T08:56:11.390Z",
+    "modified": "2026-10-09T08:56:11.390Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_BOM",
+    "created": "2026-10-09T08:56:11.403Z",
+    "modified": "2026-10-09T08:56:11.403Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Department",
+    "created": "2026-10-09T08:56:11.413Z",
+    "modified": "2026-10-09T08:56:11.413Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Dropdown",
+    "created": "2026-10-09T08:56:11.417Z",
+    "modified": "2026-10-09T08:56:11.417Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_EnginePart",
+    "created": "2026-10-09T08:56:11.427Z",
+    "modified": "2026-10-09T08:56:11.427Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Equipment",
+    "created": "2026-10-09T08:56:11.437Z",
+    "modified": "2026-10-09T08:56:11.437Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Equipment_Part",
+    "created": "2026-10-09T08:56:11.443Z",
+    "modified": "2026-10-09T08:56:11.443Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_EquipmentType",
+    "created": "2026-10-09T08:56:11.453Z",
+    "modified": "2026-10-09T08:56:11.453Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_FQC_EngFiringAuditPoint",
+    "created": "2026-10-09T08:56:11.460Z",
+    "modified": "2026-10-09T08:56:11.460Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_FQC_EngInbuiltAuditPoint",
+    "created": "2026-10-09T08:56:11.473Z",
+    "modified": "2026-10-09T08:56:11.473Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_FQC_EngPerformanceAuditPoint",
+    "created": "2026-10-09T08:56:11.483Z",
+    "modified": "2026-10-09T08:56:11.483Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_FQC_EngStripAuditPoint",
+    "created": "2026-10-09T08:56:11.497Z",
+    "modified": "2026-10-09T08:56:11.497Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Inspection_Action",
+    "created": "2026-10-09T08:56:11.503Z",
+    "modified": "2026-10-09T08:56:11.503Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Inspection_Point",
+    "created": "2026-10-09T08:56:11.517Z",
+    "modified": "2026-10-09T08:56:11.517Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_InspectionDefect",
+    "created": "2026-10-09T08:56:11.527Z",
+    "modified": "2026-10-09T08:56:11.527Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_InspectionStation",
+    "created": "2026-10-09T08:56:11.537Z",
+    "modified": "2026-10-09T08:56:11.537Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_IPQC_ManagerAuditPoint",
+    "created": "2026-10-09T08:56:11.550Z",
+    "modified": "2026-10-09T08:56:11.550Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_IPQC_PartPressAuditPoint",
+    "created": "2026-10-09T08:56:11.560Z",
+    "modified": "2026-10-09T08:56:11.560Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_IPQC_PYMachineAuditPoint",
+    "created": "2026-10-09T08:56:11.570Z",
+    "modified": "2026-10-09T08:56:11.570Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_IPQC_PYOnlineAuditPoint",
+    "created": "2026-10-09T08:56:11.580Z",
+    "modified": "2026-10-09T08:56:11.580Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_IPQC_SOPAuditPoint",
+    "created": "2026-10-09T08:56:11.593Z",
+    "modified": "2026-10-09T08:56:11.593Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_IPQC_TorqueAuditPoint",
+    "created": "2026-10-09T08:56:11.603Z",
+    "modified": "2026-10-09T08:56:11.603Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_IQC_MiliporeAuditPoint",
+    "created": "2026-10-09T08:56:11.613Z",
+    "modified": "2026-10-09T08:56:11.613Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_IQC_MilliporeAuditPoint",
+    "created": "2026-10-09T08:56:11.627Z",
+    "modified": "2026-10-09T08:56:11.627Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_IQC_VisualInspectAuditPoint",
+    "created": "2026-10-09T08:56:11.643Z",
+    "modified": "2026-10-09T08:56:11.643Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_JHActivity",
+    "created": "2026-10-09T08:56:11.653Z",
+    "modified": "2026-10-09T08:56:11.653Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_KitBOM",
+    "created": "2026-10-09T08:56:11.660Z",
+    "modified": "2026-10-09T08:56:11.660Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Line",
+    "created": "2026-10-09T08:56:11.670Z",
+    "modified": "2026-10-09T08:56:11.670Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_LineSpeedOperatorCount",
+    "created": "2026-10-09T08:56:11.680Z",
+    "modified": "2026-10-09T08:56:11.680Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_LineSpeedOperatorMapping",
+    "created": "2026-10-09T08:56:11.693Z",
+    "modified": "2026-10-09T08:56:11.693Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_LossCategory",
+    "created": "2026-10-09T08:56:11.703Z",
+    "modified": "2026-10-09T08:56:11.703Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_MobileTerminal",
+    "created": "2026-10-09T08:56:11.710Z",
+    "modified": "2026-10-09T08:56:11.710Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Model",
+    "created": "2026-10-09T08:56:11.720Z",
+    "modified": "2026-10-09T08:56:11.720Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_ModelFamily",
+    "created": "2026-10-09T08:56:11.730Z",
+    "modified": "2026-10-09T08:56:11.730Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_NPD",
+    "created": "2026-10-09T08:56:11.740Z",
+    "modified": "2026-10-09T08:56:11.740Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_OperatorSkillMapping",
+    "created": "2026-10-09T08:56:11.747Z",
+    "modified": "2026-10-09T08:56:11.747Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Parameter",
+    "created": "2026-10-09T08:56:11.757Z",
+    "modified": "2026-10-09T08:56:11.757Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_PartVariant",
+    "created": "2026-10-09T08:56:11.770Z",
+    "modified": "2026-10-09T08:56:11.770Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Plant",
+    "created": "2026-10-09T08:56:11.777Z",
+    "modified": "2026-10-09T08:56:11.777Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_PMCheckList",
+    "created": "2026-10-09T08:56:11.787Z",
+    "modified": "2026-10-09T08:56:11.787Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_PMCheckPoints",
+    "created": "2026-10-09T08:56:11.800Z",
+    "modified": "2026-10-09T08:56:11.800Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_PMSchedule",
+    "created": "2026-10-09T08:56:11.807Z",
+    "modified": "2026-10-09T08:56:11.807Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_QADocumentList",
+    "created": "2026-10-09T08:56:11.820Z",
+    "modified": "2026-10-09T08:56:11.820Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Role",
+    "created": "2026-10-09T08:56:11.830Z",
+    "modified": "2026-10-09T08:56:11.830Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Shop",
+    "created": "2026-10-09T08:56:11.837Z",
+    "modified": "2026-10-09T08:56:11.837Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Skill",
+    "created": "2026-10-09T08:56:11.847Z",
+    "modified": "2026-10-09T08:56:11.847Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_SkillLevel",
+    "created": "2026-10-09T08:56:11.857Z",
+    "modified": "2026-10-09T08:56:11.857Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_SKU",
+    "created": "2026-10-09T08:56:11.863Z",
+    "modified": "2026-10-09T08:56:11.863Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_SKU_LineTaktTime",
+    "created": "2026-10-09T08:56:11.877Z",
+    "modified": "2026-10-09T08:56:11.877Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_SKU_StationTaktTime",
+    "created": "2026-10-09T08:56:11.883Z",
+    "modified": "2026-10-09T08:56:11.883Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_SKUProgramMapping",
+    "created": "2026-10-09T08:56:11.893Z",
+    "modified": "2026-10-09T08:56:11.893Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_SOPPoint",
+    "created": "2026-10-09T08:56:11.900Z",
+    "modified": "2026-10-09T08:56:11.900Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Station",
+    "created": "2026-10-09T08:56:11.913Z",
+    "modified": "2026-10-09T08:56:11.913Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Station_JHActivity_Mapping",
+    "created": "2026-10-09T08:56:11.923Z",
+    "modified": "2026-10-09T08:56:11.923Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_StationClusterDisplayMapping",
+    "created": "2026-10-09T08:56:11.933Z",
+    "modified": "2026-10-09T08:56:11.933Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_StationSkillMapping",
+    "created": "2026-10-09T08:56:11.943Z",
+    "modified": "2026-10-09T08:56:11.943Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_StorageArea",
+    "created": "2026-10-09T08:56:11.950Z",
+    "modified": "2026-10-09T08:56:11.950Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_StorageLocation",
+    "created": "2026-10-09T08:56:11.960Z",
+    "modified": "2026-10-09T08:56:11.960Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_StorageRack",
+    "created": "2026-10-09T08:56:11.970Z",
+    "modified": "2026-10-09T08:56:11.970Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_StorageZone",
+    "created": "2026-10-09T08:56:11.977Z",
+    "modified": "2026-10-09T08:56:11.977Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_SubAssly_Line",
+    "created": "2026-10-09T08:56:11.987Z",
+    "modified": "2026-10-09T08:56:11.987Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_SubAsslyLine",
+    "created": "2026-10-09T08:56:11.997Z",
+    "modified": "2026-10-09T08:56:11.997Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_SubLossCategory",
+    "created": "2026-10-09T08:56:12.007Z",
+    "modified": "2026-10-09T08:56:12.007Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_TicketReason",
+    "created": "2026-10-09T08:56:12.020Z",
+    "modified": "2026-10-09T08:56:12.020Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_User",
+    "created": "2026-10-09T08:56:12.040Z",
+    "modified": "2026-10-09T08:56:12.040Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Vendor",
+    "created": "2026-10-09T08:56:12.050Z",
+    "modified": "2026-10-09T08:56:12.050Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Vendor_ChecklistMetaData",
+    "created": "2026-10-09T08:56:12.060Z",
+    "modified": "2026-10-09T08:56:12.060Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Vendor_InspectionAuditPoint",
+    "created": "2026-10-09T08:56:12.070Z",
+    "modified": "2026-10-09T08:56:12.070Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Vendor_IPOAuditPoint",
+    "created": "2026-10-09T08:56:12.080Z",
+    "modified": "2026-10-09T08:56:12.080Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Vendor_PartInspectionAuditPoint",
+    "created": "2026-10-09T08:56:12.093Z",
+    "modified": "2026-10-09T08:56:12.093Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Vendor_ProcessInspectionAuditPoint",
+    "created": "2026-10-09T08:56:12.103Z",
+    "modified": "2026-10-09T08:56:12.103Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Vendor_SampleInspectionAuditPoint",
+    "created": "2026-10-09T08:56:12.113Z",
+    "modified": "2026-10-09T08:56:12.113Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_VendorPartMapping",
+    "created": "2026-10-09T08:56:12.127Z",
+    "modified": "2026-10-09T08:56:12.127Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Config_Zone",
+    "created": "2026-10-09T08:56:12.133Z",
+    "modified": "2026-10-09T08:56:12.133Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_ConfigPMSchedule",
+    "created": "2026-10-09T08:56:12.140Z",
+    "modified": "2026-10-09T08:56:12.140Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_DaywiseNoProduction",
+    "created": "2026-10-09T08:56:12.147Z",
+    "modified": "2026-10-09T08:56:12.147Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_EngineBarcodePrint",
+    "created": "2026-10-09T08:56:12.150Z",
+    "modified": "2026-10-09T08:56:12.150Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_LoggedChangeUser",
+    "created": "2026-10-09T08:56:12.157Z",
+    "modified": "2026-10-09T08:56:12.157Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Operator_LoginAll",
+    "created": "2026-10-09T08:56:12.170Z",
+    "modified": "2026-10-09T08:56:12.170Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Operator_LoginLogout",
+    "created": "2026-10-09T08:56:12.177Z",
+    "modified": "2026-10-09T08:56:12.177Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Operator_LoginLogoutAbsent",
+    "created": "2026-10-09T08:56:12.180Z",
+    "modified": "2026-10-09T08:56:12.180Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_Prod_JHActivity_Log",
+    "created": "2026-10-09T08:56:12.187Z",
+    "modified": "2026-10-09T08:56:12.187Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_ProdEngineTakeIn",
+    "created": "2026-10-09T08:56:12.203Z",
+    "modified": "2026-10-09T08:56:12.203Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_ProdEngineTakeOut",
+    "created": "2026-10-09T08:56:12.213Z",
+    "modified": "2026-10-09T08:56:12.213Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_ProdShiftPlan",
+    "created": "2026-10-09T08:56:12.223Z",
+    "modified": "2026-10-09T08:56:12.223Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_ProdShiftPlan_Execution",
+    "created": "2026-10-09T08:56:12.230Z",
+    "modified": "2026-10-09T08:56:12.230Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_ProdShiftPlan_ExecutionPriority",
+    "created": "2026-10-09T08:56:12.237Z",
+    "modified": "2026-10-09T08:56:12.237Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_ProdShiftPlan_SendToLine",
+    "created": "2026-10-09T08:56:12.240Z",
+    "modified": "2026-10-09T08:56:12.240Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_ProdShiftPlanPriority",
+    "created": "2026-10-09T08:56:12.247Z",
+    "modified": "2026-10-09T08:56:12.247Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_PY_Bypass_Log_Insert",
+    "created": "2026-10-09T08:56:12.250Z",
+    "modified": "2026-10-09T08:56:12.250Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_SA_PlanExecution",
+    "created": "2026-10-09T08:56:12.257Z",
+    "modified": "2026-10-09T08:56:12.257Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_UPD_Downtime",
+    "created": "2026-10-09T08:56:12.260Z",
+    "modified": "2026-10-09T08:56:12.260Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "BT_WeeklyOperatorPlan",
+    "created": "2026-10-09T08:56:12.267Z",
+    "modified": "2026-10-09T08:56:12.267Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_4MLossName",
+    "created": "2026-10-09T08:56:12.273Z",
+    "modified": "2026-10-09T08:56:12.273Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Activity_ModelName",
+    "created": "2026-10-09T08:56:12.273Z",
+    "modified": "2026-10-09T08:56:12.273Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Activity_SKUName",
+    "created": "2026-10-09T08:56:12.277Z",
+    "modified": "2026-10-09T08:56:12.277Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_ActivityName",
+    "created": "2026-10-09T08:56:12.280Z",
+    "modified": "2026-10-09T08:56:12.280Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_ActivityName_ActivitySOPMap",
+    "created": "2026-10-09T08:56:12.280Z",
+    "modified": "2026-10-09T08:56:12.280Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_ActivityType",
+    "created": "2026-10-09T08:56:12.283Z",
+    "modified": "2026-10-09T08:56:12.283Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_AlarmTypeName",
+    "created": "2026-10-09T08:56:12.287Z",
+    "modified": "2026-10-09T08:56:12.287Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_AreaName",
+    "created": "2026-10-09T08:56:12.287Z",
+    "modified": "2026-10-09T08:56:12.287Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_AuditList",
+    "created": "2026-10-09T08:56:12.290Z",
+    "modified": "2026-10-09T08:56:12.290Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_BDCategory",
+    "created": "2026-10-09T08:56:12.290Z",
+    "modified": "2026-10-09T08:56:12.290Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_ChecklistName",
+    "created": "2026-10-09T08:56:12.293Z",
+    "modified": "2026-10-09T08:56:12.293Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Config_Station_Position1",
+    "created": "2026-10-09T08:56:12.293Z",
+    "modified": "2026-10-09T08:56:12.293Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Config_Station_Position2",
+    "created": "2026-10-09T08:56:12.297Z",
+    "modified": "2026-10-09T08:56:12.297Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Config_Station_Position3",
+    "created": "2026-10-09T08:56:12.300Z",
+    "modified": "2026-10-09T08:56:12.300Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Config_Station_Position4",
+    "created": "2026-10-09T08:56:12.300Z",
+    "modified": "2026-10-09T08:56:12.300Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_DefectName",
+    "created": "2026-10-09T08:56:12.303Z",
+    "modified": "2026-10-09T08:56:12.303Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_DepartmentName",
+    "created": "2026-10-09T08:56:12.307Z",
+    "modified": "2026-10-09T08:56:12.307Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_DeviceType",
+    "created": "2026-10-09T08:56:12.307Z",
+    "modified": "2026-10-09T08:56:12.307Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_DocumentName",
+    "created": "2026-10-09T08:56:12.310Z",
+    "modified": "2026-10-09T08:56:12.310Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_EquipmentName",
+    "created": "2026-10-09T08:56:12.310Z",
+    "modified": "2026-10-09T08:56:12.310Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_EquipmentName_Act_Config",
+    "created": "2026-10-09T08:56:12.313Z",
+    "modified": "2026-10-09T08:56:12.313Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_EquipmentTypeName",
+    "created": "2026-10-09T08:56:12.313Z",
+    "modified": "2026-10-09T08:56:12.313Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Filter_ActivityDesc",
+    "created": "2026-10-09T08:56:12.317Z",
+    "modified": "2026-10-09T08:56:12.317Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Filter_EquipmentName",
+    "created": "2026-10-09T08:56:12.320Z",
+    "modified": "2026-10-09T08:56:12.320Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Filter_ModelName",
+    "created": "2026-10-09T08:56:12.323Z",
+    "modified": "2026-10-09T08:56:12.323Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Filter_SKUName",
+    "created": "2026-10-09T08:56:12.323Z",
+    "modified": "2026-10-09T08:56:12.323Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Filter_StageNo",
+    "created": "2026-10-09T08:56:12.327Z",
+    "modified": "2026-10-09T08:56:12.327Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Filter_StationName",
+    "created": "2026-10-09T08:56:12.330Z",
+    "modified": "2026-10-09T08:56:12.330Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Filter_SubAsslyLineName",
+    "created": "2026-10-09T08:56:12.330Z",
+    "modified": "2026-10-09T08:56:12.330Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Filter_UserID",
+    "created": "2026-10-09T08:56:12.333Z",
+    "modified": "2026-10-09T08:56:12.333Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Filter_ZoneName",
+    "created": "2026-10-09T08:56:12.337Z",
+    "modified": "2026-10-09T08:56:12.337Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_FrequencyType",
+    "created": "2026-10-09T08:56:12.337Z",
+    "modified": "2026-10-09T08:56:12.337Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Get_ActivityName",
+    "created": "2026-10-09T08:56:12.340Z",
+    "modified": "2026-10-09T08:56:12.340Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Get_EnginePartName",
+    "created": "2026-10-09T08:56:12.340Z",
+    "modified": "2026-10-09T08:56:12.340Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Get_ParameterName",
+    "created": "2026-10-09T08:56:12.343Z",
+    "modified": "2026-10-09T08:56:12.343Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Get_PartName",
+    "created": "2026-10-09T08:56:12.343Z",
+    "modified": "2026-10-09T08:56:12.343Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Get_SOPName",
+    "created": "2026-10-09T08:56:12.347Z",
+    "modified": "2026-10-09T08:56:12.347Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_GetSAPPartDetails",
+    "created": "2026-10-09T08:56:12.347Z",
+    "modified": "2026-10-09T08:56:12.347Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_HardCoded",
+    "created": "2026-10-09T08:56:12.350Z",
+    "modified": "2026-10-09T08:56:12.350Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Inspection_StationName",
+    "created": "2026-10-09T08:56:12.350Z",
+    "modified": "2026-10-09T08:56:12.350Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_InspectionDefectName",
+    "created": "2026-10-09T08:56:12.353Z",
+    "modified": "2026-10-09T08:56:12.353Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_InspectionPointAction",
+    "created": "2026-10-09T08:56:12.357Z",
+    "modified": "2026-10-09T08:56:12.357Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_InspectionPointName",
+    "created": "2026-10-09T08:56:12.357Z",
+    "modified": "2026-10-09T08:56:12.357Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_InspectionPointType",
+    "created": "2026-10-09T08:56:12.360Z",
+    "modified": "2026-10-09T08:56:12.360Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_InspectionStationName",
+    "created": "2026-10-09T08:56:12.360Z",
+    "modified": "2026-10-09T08:56:12.360Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_IPQC_AuditListDropdown",
+    "created": "2026-10-09T08:56:12.363Z",
+    "modified": "2026-10-09T08:56:12.363Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_IPQC_PartDropdown",
+    "created": "2026-10-09T08:56:12.367Z",
+    "modified": "2026-10-09T08:56:12.367Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_JHActivityName",
+    "created": "2026-10-09T08:56:12.367Z",
+    "modified": "2026-10-09T08:56:12.367Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_LineName",
+    "created": "2026-10-09T08:56:12.370Z",
+    "modified": "2026-10-09T08:56:12.370Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_LineSpeedOpCt_SubAsslyLineName",
+    "created": "2026-10-09T08:56:12.377Z",
+    "modified": "2026-10-09T08:56:12.377Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_LocationID",
+    "created": "2026-10-09T08:56:12.380Z",
+    "modified": "2026-10-09T08:56:12.380Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_LossName",
+    "created": "2026-10-09T08:56:12.380Z",
+    "modified": "2026-10-09T08:56:12.380Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_MaterialMoveType",
+    "created": "2026-10-09T08:56:12.383Z",
+    "modified": "2026-10-09T08:56:12.383Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_ModelFamilyName",
+    "created": "2026-10-09T08:56:12.383Z",
+    "modified": "2026-10-09T08:56:12.383Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_ModelName",
+    "created": "2026-10-09T08:56:12.387Z",
+    "modified": "2026-10-09T08:56:12.387Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_ParameterName",
+    "created": "2026-10-09T08:56:12.387Z",
+    "modified": "2026-10-09T08:56:12.387Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_ParentID",
+    "created": "2026-10-09T08:56:12.390Z",
+    "modified": "2026-10-09T08:56:12.390Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_PartDesc",
+    "created": "2026-10-09T08:56:12.390Z",
+    "modified": "2026-10-09T08:56:12.390Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_PartDescription",
+    "created": "2026-10-09T08:56:12.393Z",
+    "modified": "2026-10-09T08:56:12.393Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_PartInspectionType",
+    "created": "2026-10-09T08:56:12.397Z",
+    "modified": "2026-10-09T08:56:12.397Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_PartLevel",
+    "created": "2026-10-09T08:56:12.397Z",
+    "modified": "2026-10-09T08:56:12.397Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_PartMaster",
+    "created": "2026-10-09T08:56:12.400Z",
+    "modified": "2026-10-09T08:56:12.400Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_PartName",
+    "created": "2026-10-09T08:56:12.400Z",
+    "modified": "2026-10-09T08:56:12.400Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_PartQuantity",
+    "created": "2026-10-09T08:56:12.403Z",
+    "modified": "2026-10-09T08:56:12.403Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_PartTracking",
+    "created": "2026-10-09T08:56:12.407Z",
+    "modified": "2026-10-09T08:56:12.407Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_PlantName",
+    "created": "2026-10-09T08:56:12.407Z",
+    "modified": "2026-10-09T08:56:12.407Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Priority",
+    "created": "2026-10-09T08:56:12.410Z",
+    "modified": "2026-10-09T08:56:12.410Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_RackName",
+    "created": "2026-10-09T08:56:12.410Z",
+    "modified": "2026-10-09T08:56:12.410Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_RealtimeStatusDashboard_SKU",
+    "created": "2026-10-09T08:56:12.413Z",
+    "modified": "2026-10-09T08:56:12.413Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_RoleName",
+    "created": "2026-10-09T08:56:12.417Z",
+    "modified": "2026-10-09T08:56:12.417Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_ShiftDashboard_SKU",
+    "created": "2026-10-09T08:56:12.420Z",
+    "modified": "2026-10-09T08:56:12.420Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_ShopName",
+    "created": "2026-10-09T08:56:12.420Z",
+    "modified": "2026-10-09T08:56:12.420Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_SkillLevel",
+    "created": "2026-10-09T08:56:12.423Z",
+    "modified": "2026-10-09T08:56:12.423Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_SkillLevelName",
+    "created": "2026-10-09T08:56:12.423Z",
+    "modified": "2026-10-09T08:56:12.423Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_SkillName",
+    "created": "2026-10-09T08:56:12.427Z",
+    "modified": "2026-10-09T08:56:12.427Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_SKUName",
+    "created": "2026-10-09T08:56:12.430Z",
+    "modified": "2026-10-09T08:56:12.430Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_SOP Point",
+    "created": "2026-10-09T08:56:12.430Z",
+    "modified": "2026-10-09T08:56:12.430Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_SOPPoint",
+    "created": "2026-10-09T08:56:12.430Z",
+    "modified": "2026-10-09T08:56:12.430Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_StageNo",
+    "created": "2026-10-09T08:56:12.433Z",
+    "modified": "2026-10-09T08:56:12.433Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_StageNo_Act_Config",
+    "created": "2026-10-09T08:56:12.437Z",
+    "modified": "2026-10-09T08:56:12.437Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Standards",
+    "created": "2026-10-09T08:56:12.440Z",
+    "modified": "2026-10-09T08:56:12.440Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_StationName",
+    "created": "2026-10-09T08:56:12.440Z",
+    "modified": "2026-10-09T08:56:12.440Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_StationName_Act_Config",
+    "created": "2026-10-09T08:56:12.440Z",
+    "modified": "2026-10-09T08:56:12.440Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_StationName_StationSkillMap",
+    "created": "2026-10-09T08:56:12.443Z",
+    "modified": "2026-10-09T08:56:12.443Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_StationType",
+    "created": "2026-10-09T08:56:12.447Z",
+    "modified": "2026-10-09T08:56:12.447Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_StorageAreaType",
+    "created": "2026-10-09T08:56:12.447Z",
+    "modified": "2026-10-09T08:56:12.447Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_StorageType",
+    "created": "2026-10-09T08:56:12.450Z",
+    "modified": "2026-10-09T08:56:12.450Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_StorageZoneName",
+    "created": "2026-10-09T08:56:12.450Z",
+    "modified": "2026-10-09T08:56:12.450Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_SubAssemblyLineName",
+    "created": "2026-10-09T08:56:12.453Z",
+    "modified": "2026-10-09T08:56:12.453Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_SubAsslyLineName_LineSpeedOperatorMap",
+    "created": "2026-10-09T08:56:12.457Z",
+    "modified": "2026-10-09T08:56:12.457Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_SubAsslyName",
+    "created": "2026-10-09T08:56:12.457Z",
+    "modified": "2026-10-09T08:56:12.457Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_SubLossName",
+    "created": "2026-10-09T08:56:12.460Z",
+    "modified": "2026-10-09T08:56:12.460Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_UserID",
+    "created": "2026-10-09T08:56:12.460Z",
+    "modified": "2026-10-09T08:56:12.460Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_UserName",
+    "created": "2026-10-09T08:56:12.463Z",
+    "modified": "2026-10-09T08:56:12.463Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_Username_OpSkillMap",
+    "created": "2026-10-09T08:56:12.463Z",
+    "modified": "2026-10-09T08:56:12.463Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_VendorName",
+    "created": "2026-10-09T08:56:12.467Z",
+    "modified": "2026-10-09T08:56:12.467Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DD_VendorType",
+    "created": "2026-10-09T08:56:12.470Z",
+    "modified": "2026-10-09T08:56:12.470Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DS_Dashboard_MaintenanceDowntime",
+    "created": "2026-11-13T12:19:01.020Z",
+    "modified": "2026-11-13T12:19:01.020Z",
+    "isDashboardSP": true
+  },
+  {
+    "name": "DS_Dashboard_ProcessConveyor",
+    "created": "2026-11-13T12:18:10.777Z",
+    "modified": "2026-11-13T12:18:10.777Z",
+    "isDashboardSP": true
+  },
+  {
+    "name": "DS_Dashboard_ProductionKPI",
+    "created": "2026-11-13T12:18:10.750Z",
+    "modified": "2026-11-13T12:18:10.750Z",
+    "isDashboardSP": true
+  },
+  {
+    "name": "DS_Dashboard_TrackTraceWIP",
+    "created": "2026-11-13T12:19:00.997Z",
+    "modified": "2026-11-13T12:19:00.997Z",
+    "isDashboardSP": true
+  },
+  {
+    "name": "DS_Maint_ActiveAlarm_Count",
+    "created": "2026-10-09T08:56:12.477Z",
+    "modified": "2026-10-09T08:56:12.477Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DS_Prod_Date&Shift",
+    "created": "2026-10-09T08:56:12.477Z",
+    "modified": "2026-10-09T08:56:12.477Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DS_Prod_Engine_Station_Tracking",
+    "created": "2026-10-09T08:56:12.480Z",
+    "modified": "2026-10-09T08:56:12.480Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DS_QA_AuditMonitoringKPI",
+    "created": "2026-10-09T08:56:12.483Z",
+    "modified": "2026-10-09T08:56:12.483Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DS_ShiftDashboard_CCLH",
+    "created": "2026-10-09T08:56:12.483Z",
+    "modified": "2026-10-09T08:56:12.483Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DS_ShiftDashboard_CCRH",
+    "created": "2026-10-09T08:56:12.487Z",
+    "modified": "2026-10-09T08:56:12.487Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DS_ShiftDashboard_CylinderHead",
+    "created": "2026-10-09T08:56:12.490Z",
+    "modified": "2026-10-09T08:56:12.490Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DS_ShiftDashboard_KPI",
+    "created": "2026-10-09T08:56:12.493Z",
+    "modified": "2026-10-09T08:56:12.493Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "DS_ShiftDashboard_RunningPlan",
+    "created": "2026-10-09T08:56:12.497Z",
+    "modified": "2026-10-09T08:56:12.497Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "EngineWIP_StatusDashboard",
+    "created": "2026-10-09T08:56:12.503Z",
+    "modified": "2026-10-09T08:56:12.503Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GetActiveAlarmDashboard",
+    "created": "2026-10-09T08:56:12.503Z",
+    "modified": "2026-10-09T08:56:12.503Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Grid_History",
+    "created": "2026-10-09T08:56:12.507Z",
+    "modified": "2026-10-09T08:56:12.507Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_ActivityMonitoring_ActivityStatus",
+    "created": "2026-10-09T08:56:12.553Z",
+    "modified": "2026-10-09T08:56:12.553Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_ActivityMonitoring_Pivoted",
+    "created": "2026-10-09T08:56:12.560Z",
+    "modified": "2026-10-09T08:56:12.560Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_ApplicationSetting",
+    "created": "2026-10-09T08:56:12.577Z",
+    "modified": "2026-10-09T08:56:12.577Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Activity_SOP_Mapping",
+    "created": "2026-10-09T08:56:12.583Z",
+    "modified": "2026-10-09T08:56:12.583Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Alarm",
+    "created": "2026-10-09T08:56:12.587Z",
+    "modified": "2026-10-09T08:56:12.587Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Area",
+    "created": "2026-10-09T08:56:12.590Z",
+    "modified": "2026-10-09T08:56:12.590Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_AuditDocumentMapping",
+    "created": "2026-10-09T08:56:12.593Z",
+    "modified": "2026-10-09T08:56:12.593Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_AuditList",
+    "created": "2026-10-09T08:56:12.597Z",
+    "modified": "2026-10-09T08:56:12.597Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_AuditPointLinking",
+    "created": "2026-10-09T08:56:12.600Z",
+    "modified": "2026-10-09T08:56:12.600Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_AuditSchedule",
+    "created": "2026-10-09T08:56:12.607Z",
+    "modified": "2026-10-09T08:56:12.607Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_BOM",
+    "created": "2026-10-09T08:56:12.610Z",
+    "modified": "2026-10-09T08:56:12.610Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Department",
+    "created": "2026-10-09T08:56:12.613Z",
+    "modified": "2026-10-09T08:56:12.613Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_EnginePart",
+    "created": "2026-10-09T08:56:12.613Z",
+    "modified": "2026-10-09T08:56:12.613Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Equipment",
+    "created": "2026-10-09T08:56:12.617Z",
+    "modified": "2026-10-09T08:56:12.617Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_EquipmentPart",
+    "created": "2026-10-09T08:56:12.620Z",
+    "modified": "2026-10-09T08:56:12.620Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_EquipmentType",
+    "created": "2026-10-09T08:56:12.623Z",
+    "modified": "2026-10-09T08:56:12.623Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_FQC_EngFiringAuditPoint",
+    "created": "2026-10-09T08:56:12.627Z",
+    "modified": "2026-10-09T08:56:12.627Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_FQC_EngInbuiltAuditPoint",
+    "created": "2026-10-09T08:56:12.630Z",
+    "modified": "2026-10-09T08:56:12.630Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_FQC_EngPerformanceAuditPoint",
+    "created": "2026-10-09T08:56:12.633Z",
+    "modified": "2026-10-09T08:56:12.633Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_FQC_EngStripAuditPoint",
+    "created": "2026-10-09T08:56:12.637Z",
+    "modified": "2026-10-09T08:56:12.637Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_History",
+    "created": "2026-10-09T08:56:12.640Z",
+    "modified": "2026-10-09T08:56:12.640Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Inspection_Action",
+    "created": "2026-10-09T08:56:12.640Z",
+    "modified": "2026-10-09T08:56:12.640Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_InspectionDefect",
+    "created": "2026-10-09T08:56:12.643Z",
+    "modified": "2026-10-09T08:56:12.643Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_InspectionPoint",
+    "created": "2026-10-09T08:56:12.647Z",
+    "modified": "2026-10-09T08:56:12.647Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_InspectionStation",
+    "created": "2026-10-09T08:56:12.650Z",
+    "modified": "2026-10-09T08:56:12.650Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_IPQC_ManagerAuditPoint",
+    "created": "2026-10-09T08:56:12.653Z",
+    "modified": "2026-10-09T08:56:12.653Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_IPQC_PYOnlineAuditPoint",
+    "created": "2026-10-09T08:56:12.653Z",
+    "modified": "2026-10-09T08:56:12.653Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_IPQC_SOPAuditPoint",
+    "created": "2026-10-09T08:56:12.657Z",
+    "modified": "2026-10-09T08:56:12.657Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_IPQC_TorqueAuditPoint",
+    "created": "2026-10-09T08:56:12.660Z",
+    "modified": "2026-10-09T08:56:12.660Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_IQC_MiliporeAuditPoint",
+    "created": "2026-10-09T08:56:12.663Z",
+    "modified": "2026-10-09T08:56:12.663Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_IQC_VisualInspectAuditPoint",
+    "created": "2026-10-09T08:56:12.667Z",
+    "modified": "2026-10-09T08:56:12.667Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_JHActivity",
+    "created": "2026-10-09T08:56:12.670Z",
+    "modified": "2026-10-09T08:56:12.670Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_KitBOM",
+    "created": "2026-10-09T08:56:12.677Z",
+    "modified": "2026-10-09T08:56:12.677Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Line",
+    "created": "2026-10-09T08:56:12.680Z",
+    "modified": "2026-10-09T08:56:12.680Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_LineSpeedOperatorCount",
+    "created": "2026-10-09T08:56:12.680Z",
+    "modified": "2026-10-09T08:56:12.680Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_LineSpeedOperatorMapping",
+    "created": "2026-10-09T08:56:12.687Z",
+    "modified": "2026-10-09T08:56:12.687Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_LossCategory",
+    "created": "2026-10-09T08:56:12.690Z",
+    "modified": "2026-10-09T08:56:12.690Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_MobileTerminal",
+    "created": "2026-10-09T08:56:12.693Z",
+    "modified": "2026-10-09T08:56:12.693Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Model",
+    "created": "2026-10-09T08:56:12.697Z",
+    "modified": "2026-10-09T08:56:12.697Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_ModelFamily",
+    "created": "2026-10-09T08:56:12.700Z",
+    "modified": "2026-10-09T08:56:12.700Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_OperatorSkillMapping",
+    "created": "2026-10-09T08:56:12.700Z",
+    "modified": "2026-10-09T08:56:12.700Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Parameter",
+    "created": "2026-10-09T08:56:12.707Z",
+    "modified": "2026-10-09T08:56:12.707Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_PartVariant",
+    "created": "2026-10-09T08:56:12.723Z",
+    "modified": "2026-10-09T08:56:12.723Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Plant",
+    "created": "2026-10-09T08:56:12.727Z",
+    "modified": "2026-10-09T08:56:12.727Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_PMChecklist",
+    "created": "2026-10-09T08:56:12.730Z",
+    "modified": "2026-10-09T08:56:12.730Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_PMCheckPoints",
+    "created": "2026-10-09T08:56:12.730Z",
+    "modified": "2026-10-09T08:56:12.730Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_PMSchedule",
+    "created": "2026-10-09T08:56:12.733Z",
+    "modified": "2026-10-09T08:56:12.733Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_QADocumentList",
+    "created": "2026-10-09T08:56:12.737Z",
+    "modified": "2026-10-09T08:56:12.737Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_QADocumentList_Revision",
+    "created": "2026-10-09T08:56:12.740Z",
+    "modified": "2026-10-09T08:56:12.740Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Role",
+    "created": "2026-10-09T08:56:12.740Z",
+    "modified": "2026-10-09T08:56:12.740Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Shop",
+    "created": "2026-10-09T08:56:12.743Z",
+    "modified": "2026-10-09T08:56:12.743Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Skill",
+    "created": "2026-10-09T08:56:12.747Z",
+    "modified": "2026-10-09T08:56:12.747Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_SkillLevel",
+    "created": "2026-10-09T08:56:12.750Z",
+    "modified": "2026-10-09T08:56:12.750Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_SKU",
+    "created": "2026-10-09T08:56:12.753Z",
+    "modified": "2026-10-09T08:56:12.753Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_SKU_LineTaktTime",
+    "created": "2026-10-09T08:56:12.753Z",
+    "modified": "2026-10-09T08:56:12.753Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_SKU_StationTaktTime",
+    "created": "2026-10-09T08:56:12.760Z",
+    "modified": "2026-10-09T08:56:12.760Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Station",
+    "created": "2026-10-09T08:56:12.767Z",
+    "modified": "2026-10-09T08:56:12.767Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Station_JHActivity_Mapping",
+    "created": "2026-10-09T08:56:12.770Z",
+    "modified": "2026-10-09T08:56:12.770Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_StationClusterDisplayMapping",
+    "created": "2026-10-09T08:56:12.773Z",
+    "modified": "2026-10-09T08:56:12.773Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_StationSkillMapping",
+    "created": "2026-10-09T08:56:12.777Z",
+    "modified": "2026-10-09T08:56:12.777Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_StorageArea",
+    "created": "2026-10-09T08:56:12.780Z",
+    "modified": "2026-10-09T08:56:12.780Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_StorageLocation",
+    "created": "2026-10-09T08:56:12.780Z",
+    "modified": "2026-10-09T08:56:12.780Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_StorageRack",
+    "created": "2026-10-09T08:56:12.783Z",
+    "modified": "2026-10-09T08:56:12.783Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_StorageZone",
+    "created": "2026-10-09T08:56:12.787Z",
+    "modified": "2026-10-09T08:56:12.787Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_SubAssembly",
+    "created": "2026-10-09T08:56:12.790Z",
+    "modified": "2026-10-09T08:56:12.790Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_SubAssemblyLine",
+    "created": "2026-10-09T08:56:12.793Z",
+    "modified": "2026-10-09T08:56:12.793Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_SubLossCategory",
+    "created": "2026-10-09T08:56:12.793Z",
+    "modified": "2026-10-09T08:56:12.793Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_TicketReason",
+    "created": "2026-10-09T08:56:12.797Z",
+    "modified": "2026-10-09T08:56:12.797Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_User",
+    "created": "2026-10-09T08:56:12.800Z",
+    "modified": "2026-10-09T08:56:12.800Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Vendor",
+    "created": "2026-10-09T08:56:12.803Z",
+    "modified": "2026-10-09T08:56:12.803Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Vendor_ChecklistMetaData",
+    "created": "2026-10-09T08:56:12.807Z",
+    "modified": "2026-10-09T08:56:12.807Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Vendor_InspectionAuditPoint",
+    "created": "2026-10-09T08:56:12.810Z",
+    "modified": "2026-10-09T08:56:12.810Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Vendor_IPOAuditPoint",
+    "created": "2026-10-09T08:56:12.813Z",
+    "modified": "2026-10-09T08:56:12.813Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Vendor_PartInspectionAuditPoint",
+    "created": "2026-10-09T08:56:12.817Z",
+    "modified": "2026-10-09T08:56:12.817Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Vendor_ProcessInspectionAuditPoint",
+    "created": "2026-10-09T08:56:12.820Z",
+    "modified": "2026-10-09T08:56:12.820Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_VendorPartMapping",
+    "created": "2026-10-09T08:56:12.823Z",
+    "modified": "2026-10-09T08:56:12.823Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Config_Zone",
+    "created": "2026-10-09T08:56:12.823Z",
+    "modified": "2026-10-09T08:56:12.823Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_ConfigVendorSampleInspectionAuditPoint",
+    "created": "2026-10-09T08:56:12.830Z",
+    "modified": "2026-10-09T08:56:12.830Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_CurrnetandLastEngine",
+    "created": "2026-10-09T08:56:12.830Z",
+    "modified": "2026-10-09T08:56:12.830Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_EngineTakeOut",
+    "created": "2026-10-09T08:56:12.837Z",
+    "modified": "2026-10-09T08:56:12.837Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_GetAuditScreen",
+    "created": "2026-10-09T08:56:12.840Z",
+    "modified": "2026-10-09T08:56:12.840Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_IPQC_PartPressAuditPoint",
+    "created": "2026-10-09T08:56:12.840Z",
+    "modified": "2026-10-09T08:56:12.840Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_IPQC_PYMachineAuditPoint",
+    "created": "2026-10-09T08:56:12.843Z",
+    "modified": "2026-10-09T08:56:12.843Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_IPQC_TorqueAuditPoint",
+    "created": "2026-10-09T08:56:12.847Z",
+    "modified": "2026-10-09T08:56:12.847Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_LoggedUserChange",
+    "created": "2026-10-09T08:56:12.847Z",
+    "modified": "2026-10-09T08:56:12.847Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_MachineAlarmMonitoring",
+    "created": "2026-10-09T08:56:12.850Z",
+    "modified": "2026-10-09T08:56:12.850Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Maint_ActiveAlarm",
+    "created": "2026-10-09T08:56:12.853Z",
+    "modified": "2026-10-09T08:56:12.853Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Maint_Breakdown_Monitoring",
+    "created": "2026-10-09T08:56:12.860Z",
+    "modified": "2026-10-09T08:56:12.860Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_OperatorLogin",
+    "created": "2026-10-09T08:56:12.860Z",
+    "modified": "2026-10-09T08:56:12.860Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_PartInspectionType",
+    "created": "2026-10-09T08:56:12.863Z",
+    "modified": "2026-10-09T08:56:12.863Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Perf_Downtime",
+    "created": "2026-10-09T08:56:12.863Z",
+    "modified": "2026-10-09T08:56:12.863Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Perf_PlannedShutDown",
+    "created": "2026-10-09T08:56:12.867Z",
+    "modified": "2026-10-09T08:56:12.867Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Prod_DailyOperatorPlan",
+    "created": "2026-10-09T08:56:12.870Z",
+    "modified": "2026-10-09T08:56:12.870Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_ProdEngineTakeIn",
+    "created": "2026-10-09T08:56:12.880Z",
+    "modified": "2026-10-09T08:56:12.880Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_ProdShiftPlan",
+    "created": "2026-10-09T08:56:12.880Z",
+    "modified": "2026-10-09T08:56:12.880Z",
+    "isDashboardSP": true
+  },
+  {
+    "name": "GV_ProdShiftPlan_Execution",
+    "created": "2026-10-09T08:56:12.883Z",
+    "modified": "2026-10-09T08:56:12.883Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_QA_AuditMonitoring",
+    "created": "2026-10-09T08:56:12.887Z",
+    "modified": "2026-10-09T08:56:12.887Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_SA_PlanExecution",
+    "created": "2026-10-09T08:56:12.890Z",
+    "modified": "2026-10-09T08:56:12.890Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_SAPEngineOrder",
+    "created": "2026-10-09T08:56:12.890Z",
+    "modified": "2026-10-09T08:56:12.890Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_SAPEngineOrderReprint",
+    "created": "2026-10-09T08:56:12.893Z",
+    "modified": "2026-10-09T08:56:12.893Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_TorqueData",
+    "created": "2026-10-09T08:56:12.897Z",
+    "modified": "2026-10-09T08:56:12.897Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_TorqueSummary",
+    "created": "2026-10-09T08:56:12.900Z",
+    "modified": "2026-10-09T08:56:12.900Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "GV_Weekly_OpratorPlan",
+    "created": "2026-10-09T08:56:12.903Z",
+    "modified": "2026-10-09T08:56:12.903Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Insert_TestData",
+    "created": "2026-10-09T08:56:12.903Z",
+    "modified": "2026-10-09T08:56:12.903Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "PokayokeControl",
+    "created": "2026-10-09T08:56:12.907Z",
+    "modified": "2026-10-09T08:56:12.907Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Prod_AlarmLog",
+    "created": "2026-10-09T08:56:12.913Z",
+    "modified": "2026-10-09T08:56:12.913Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Prod_GenealogyDataLog",
+    "created": "2026-10-09T08:56:12.917Z",
+    "modified": "2026-10-09T08:56:12.917Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Prod_KittingOrderDownload",
+    "created": "2026-10-09T08:56:12.927Z",
+    "modified": "2026-10-09T08:56:12.927Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Prod_SAOrderDownload",
+    "created": "2026-10-09T08:56:12.940Z",
+    "modified": "2026-10-09T08:56:12.940Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Prod_TrackingValidation",
+    "created": "2026-10-09T08:56:12.947Z",
+    "modified": "2026-10-09T08:56:12.947Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Prod_WIPStatusUpdate",
+    "created": "2026-10-09T08:56:12.950Z",
+    "modified": "2026-10-09T08:56:12.950Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Prod_WIPStatusUpdateKit",
+    "created": "2026-10-09T08:56:12.950Z",
+    "modified": "2026-10-09T08:56:12.950Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "RethrowError",
+    "created": "2026-10-09T08:56:12.953Z",
+    "modified": "2026-10-09T08:56:12.953Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "SP_Engine_Station_Tracking",
+    "created": "2026-10-09T08:56:12.957Z",
+    "modified": "2026-10-09T08:56:12.957Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "SP_GetActiveAlarmDashboard",
+    "created": "2026-10-09T08:56:12.960Z",
+    "modified": "2026-10-09T08:56:12.960Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "SP_GetEngineStatusCountBySKU",
+    "created": "2026-10-09T08:56:12.963Z",
+    "modified": "2026-10-09T08:56:12.963Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "SP_NPDUpdate",
+    "created": "2026-10-09T08:56:12.967Z",
+    "modified": "2026-10-09T08:56:12.967Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "SP_ProcessSAPMaterialReceiving",
+    "created": "2026-10-09T08:56:12.980Z",
+    "modified": "2026-10-09T08:56:12.980Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "SP_Prod_EngineNo_SKU",
+    "created": "2026-10-09T08:56:12.983Z",
+    "modified": "2026-10-09T08:56:12.983Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "SP_Update_ShiftInformation",
+    "created": "2026-10-09T08:56:12.987Z",
+    "modified": "2026-10-09T08:56:12.987Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "SubAssembly_RealtimeStatusDashboard",
+    "created": "2026-10-09T08:56:12.993Z",
+    "modified": "2026-10-09T08:56:12.993Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "SubAssembly-RealtimeStatusDashboard",
+    "created": "2026-10-09T08:56:13.000Z",
+    "modified": "2026-10-09T08:56:13.000Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_ApproveIPQCAudit",
+    "created": "2026-10-09T08:56:13.003Z",
+    "modified": "2026-10-09T08:56:13.003Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_Approve_AuditList",
+    "created": "2026-10-09T08:56:13.010Z",
+    "modified": "2026-10-09T08:56:13.010Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_EngInbuiltAuditPoint_Submit",
+    "created": "2026-10-09T08:56:13.020Z",
+    "modified": "2026-10-09T08:56:13.020Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_EngPerformanceAuditPoint_Submit",
+    "created": "2026-10-09T08:56:13.027Z",
+    "modified": "2026-10-09T08:56:13.027Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_GetApprovedFQCAuditList",
+    "created": "2026-10-09T08:56:13.030Z",
+    "modified": "2026-10-09T08:56:13.030Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_GetEngInbuiltCheckpointDetails_ForExecute",
+    "created": "2026-10-09T08:56:13.033Z",
+    "modified": "2026-10-09T08:56:13.033Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_GetEngPerformanceCheckpointDetails_ForExecute",
+    "created": "2026-10-09T08:56:13.040Z",
+    "modified": "2026-10-09T08:56:13.040Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_GetExecuted_EngInbuilt_CheckpointDetails",
+    "created": "2026-10-09T08:56:13.040Z",
+    "modified": "2026-10-09T08:56:13.040Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_GetExecuted_EngPerformance_CheckpointDetails",
+    "created": "2026-10-09T08:56:13.043Z",
+    "modified": "2026-10-09T08:56:13.043Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_GetScheduledAuditList",
+    "created": "2026-10-09T08:56:13.050Z",
+    "modified": "2026-10-09T08:56:13.050Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_GetWaitingForApprovalFQCAuditList",
+    "created": "2026-10-09T08:56:13.053Z",
+    "modified": "2026-10-09T08:56:13.053Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_GetWaitingForApprovalFQCAuditPoints",
+    "created": "2026-10-09T08:56:13.060Z",
+    "modified": "2026-10-09T08:56:13.060Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_MonitoringScreenInspectBtn",
+    "created": "2026-10-09T08:56:13.067Z",
+    "modified": "2026-10-09T08:56:13.067Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_MoveToNextSampleLevel_EngInbuilt",
+    "created": "2026-10-09T08:56:13.083Z",
+    "modified": "2026-10-09T08:56:13.083Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_MoveToNextSampleLevel_EngPerformance",
+    "created": "2026-10-09T08:56:13.093Z",
+    "modified": "2026-10-09T08:56:13.093Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_UpdateEngInbuilt_EngineNo",
+    "created": "2026-10-09T08:56:13.097Z",
+    "modified": "2026-10-09T08:56:13.097Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_UpdateEngInbuiltCheckpointResult",
+    "created": "2026-10-09T08:56:13.100Z",
+    "modified": "2026-10-09T08:56:13.100Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_UpdateEngPerformance_EngineNo",
+    "created": "2026-10-09T08:56:13.107Z",
+    "modified": "2026-10-09T08:56:13.107Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_FQC_UpdateEngPerformanceCheckpointResult",
+    "created": "2026-10-09T08:56:13.110Z",
+    "modified": "2026-10-09T08:56:13.110Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IPQC_AuditPoint_Submit",
+    "created": "2026-10-09T08:56:13.120Z",
+    "modified": "2026-10-09T08:56:13.120Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IPQC_AuditPoints_ForExecute",
+    "created": "2026-10-09T08:56:13.123Z",
+    "modified": "2026-10-09T08:56:13.123Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IPQC_GetExecuted_CheckpointDetails",
+    "created": "2026-10-09T08:56:13.127Z",
+    "modified": "2026-10-09T08:56:13.127Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IPQC_GetScheduledAuditList",
+    "created": "2026-10-09T08:56:13.130Z",
+    "modified": "2026-10-09T08:56:13.130Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IPQC_GetWaitingForApprovalIPQCAuditList",
+    "created": "2026-10-09T08:56:13.137Z",
+    "modified": "2026-10-09T08:56:13.137Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IPQC_MonitoringScreenInspectBtn",
+    "created": "2026-10-09T08:56:13.143Z",
+    "modified": "2026-10-09T08:56:13.143Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IPQC_UpdateCheckpointResult",
+    "created": "2026-10-09T08:56:13.147Z",
+    "modified": "2026-10-09T08:56:13.147Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IQC_ApproveIQCAudit",
+    "created": "2026-10-09T08:56:13.150Z",
+    "modified": "2026-10-09T08:56:13.150Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IQC_GetApprovedIQCAuditHistory",
+    "created": "2026-10-09T08:56:13.157Z",
+    "modified": "2026-10-09T08:56:13.157Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IQC_GetCheckpointDetailsForExecute",
+    "created": "2026-10-09T08:56:13.160Z",
+    "modified": "2026-10-09T08:56:13.160Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IQC_GetExecutedCheckpointDetails",
+    "created": "2026-10-09T08:56:13.163Z",
+    "modified": "2026-10-09T08:56:13.163Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IQC_GetPlannedIQCAuditList",
+    "created": "2026-10-09T08:56:13.167Z",
+    "modified": "2026-10-09T08:56:13.167Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IQC_GetWaitingForApprovalAuditHistory",
+    "created": "2026-10-09T08:56:13.170Z",
+    "modified": "2026-10-09T08:56:13.170Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IQC_MoveToNextSampleLevel",
+    "created": "2026-10-09T08:56:13.187Z",
+    "modified": "2026-10-09T08:56:13.187Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "Tab_Q_IQC_UpdateIQCCheckpointResult",
+    "created": "2026-10-09T08:56:13.193Z",
+    "modified": "2026-10-09T08:56:13.193Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "TB_SKUID",
+    "created": "2026-10-09T08:56:13.197Z",
+    "modified": "2026-10-09T08:56:13.197Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "TB_UserName",
+    "created": "2026-10-09T08:56:13.197Z",
+    "modified": "2026-10-09T08:56:13.197Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "TestSP",
+    "created": "2026-10-09T08:56:13.200Z",
+    "modified": "2026-10-09T08:56:13.200Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "UPD_Downtime",
+    "created": "2026-10-09T08:56:13.200Z",
+    "modified": "2026-10-09T08:56:13.200Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "USP_GetEngineStatusCountBySKU",
+    "created": "2026-10-09T08:56:13.207Z",
+    "modified": "2026-11-13T11:18:01.677Z",
+    "isDashboardSP": true
+  },
+  {
+    "name": "usp_GetNextActivityID",
+    "created": "2026-10-09T08:56:13.210Z",
+    "modified": "2026-10-09T08:56:13.210Z",
+    "isDashboardSP": false
+  },
+  {
+    "name": "View_JHActivity",
+    "created": "2026-10-09T08:56:13.213Z",
+    "modified": "2026-10-09T08:56:13.213Z",
+    "isDashboardSP": false
+  }
+]
