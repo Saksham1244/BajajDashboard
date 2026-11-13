@@ -1,4 +1,4 @@
-const { poolPromise, sql } = require('./server/db');
+const { poolPromise, sql } = require('../db');
 
 async function deployProcedures() {
   const pool = await poolPromise;

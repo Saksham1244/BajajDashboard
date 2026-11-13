@@ -162,9 +162,9 @@ async function seedComprehensiveDummyData() {
   `);
   console.log('✓ ApplicationSetting updated to 13-11-2026, Shift A');
 
-  // Fix USP_GetEngineStatusCountBySKU date handling
+  // Standardize DS_Prod_EngineStatusCountBySKU date handling
   await pool.request().query(`
-    CREATE OR ALTER PROCEDURE [dbo].[USP_GetEngineStatusCountBySKU]
+    CREATE OR ALTER PROCEDURE [dbo].[DS_Prod_EngineStatusCountBySKU]
     (
         @SKUID INT = 0
     )
@@ -279,7 +279,16 @@ async function seedComprehensiveDummyData() {
         END CATCH
     END;
   `);
-  console.log('✓ USP_GetEngineStatusCountBySKU procedure updated and verified');
+
+  await pool.request().query(`
+    CREATE OR ALTER PROCEDURE [dbo].[USP_GetEngineStatusCountBySKU] (@SKUID INT = 0)
+    AS BEGIN SET NOCOUNT ON; EXEC [dbo].[DS_Prod_EngineStatusCountBySKU] @SKUID = @SKUID; END;
+  `);
+  await pool.request().query(`
+    CREATE OR ALTER PROCEDURE [dbo].[DS_GetEngineStatusCountBySKU] (@SKUID INT = 0)
+    AS BEGIN SET NOCOUNT ON; EXEC [dbo].[DS_Prod_EngineStatusCountBySKU] @SKUID = @SKUID; END;
+  `);
+  console.log('✓ DS_Prod_EngineStatusCountBySKU procedure updated and verified');
 
   // -------------------------------------------------------------
   // 2. CLEAR TRANSACTIONAL TABLES

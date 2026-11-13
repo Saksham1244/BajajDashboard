@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { poolPromise } = require('./server/db');
+const { poolPromise } = require('../db');
 
 async function backupAllSPs() {
   const pool = await poolPromise;
@@ -24,8 +24,9 @@ async function backupAllSPs() {
   const procs = result.recordset;
   console.log(`Found ${procs.length} stored procedures in database.`);
 
-  const docsDir = path.join(__dirname, 'docs', 'stored_procedures_backup');
-  const serverDir = path.join(__dirname, 'server', 'stored_procedures_backup');
+  const rootDir = path.join(__dirname, '..', '..');
+  const docsDir = path.join(rootDir, 'docs', 'stored_procedures_backup');
+  const serverDir = path.join(rootDir, 'server', 'stored_procedures_backup');
   if (!fs.existsSync(docsDir)) fs.mkdirSync(docsDir, { recursive: true });
   if (!fs.existsSync(serverDir)) fs.mkdirSync(serverDir, { recursive: true });
 

@@ -1,8 +1,10 @@
 USE [PPMS_BajajPant];
 GO
 
--- 3. DS_Dashboard_TrackTraceWIP
-CREATE OR ALTER PROCEDURE [dbo].[DS_Dashboard_TrackTraceWIP]
+-- ========================================================================
+-- 3. DS_TrackTrace_WIP
+-- ========================================================================
+CREATE OR ALTER PROCEDURE [dbo].[DS_TrackTrace_WIP]
     @StartDate DATE = NULL,
     @EndDate DATE = NULL,
     @Shift VARCHAR(20) = NULL,
@@ -37,8 +39,21 @@ BEGIN
 END;
 GO
 
--- 4. DS_Dashboard_MaintenanceDowntime
-CREATE OR ALTER PROCEDURE [dbo].[DS_Dashboard_MaintenanceDowntime]
+-- Backward-Compatibility Aliases
+CREATE OR ALTER PROCEDURE [dbo].[DS_TrackTraceWIP]
+    @StartDate DATE = NULL, @EndDate DATE = NULL, @Shift VARCHAR(20) = NULL, @Line VARCHAR(50) = NULL, @WIPStatus VARCHAR(50) = NULL
+AS BEGIN SET NOCOUNT ON; EXEC [dbo].[DS_TrackTrace_WIP] @StartDate, @EndDate, @Shift, @Line, @WIPStatus; END;
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[DS_Dashboard_TrackTraceWIP]
+    @StartDate DATE = NULL, @EndDate DATE = NULL, @Shift VARCHAR(20) = NULL, @Line VARCHAR(50) = NULL, @WIPStatus VARCHAR(50) = NULL
+AS BEGIN SET NOCOUNT ON; EXEC [dbo].[DS_TrackTrace_WIP] @StartDate, @EndDate, @Shift, @Line, @WIPStatus; END;
+GO
+
+-- ========================================================================
+-- 4. DS_Maint_Downtime
+-- ========================================================================
+CREATE OR ALTER PROCEDURE [dbo].[DS_Maint_Downtime]
     @StartDate DATE = NULL,
     @EndDate DATE = NULL,
     @Shift VARCHAR(20) = NULL,
@@ -89,4 +104,15 @@ BEGIN
     GROUP BY D.ProdDate
     ORDER BY D.ProdDate ASC;
 END;
+GO
+
+-- Backward-Compatibility Aliases
+CREATE OR ALTER PROCEDURE [dbo].[DS_MaintenanceDowntime]
+    @StartDate DATE = NULL, @EndDate DATE = NULL, @Shift VARCHAR(20) = NULL, @Line VARCHAR(50) = NULL, @Station VARCHAR(50) = NULL
+AS BEGIN SET NOCOUNT ON; EXEC [dbo].[DS_Maint_Downtime] @StartDate, @EndDate, @Shift, @Line, @Station; END;
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[DS_Dashboard_MaintenanceDowntime]
+    @StartDate DATE = NULL, @EndDate DATE = NULL, @Shift VARCHAR(20) = NULL, @Line VARCHAR(50) = NULL, @Station VARCHAR(50) = NULL
+AS BEGIN SET NOCOUNT ON; EXEC [dbo].[DS_Maint_Downtime] @StartDate, @EndDate, @Shift, @Line, @Station; END;
 GO

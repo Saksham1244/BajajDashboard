@@ -1,5 +1,6 @@
 -- ======================================================================================
--- Stored Procedure: [dbo].[USP_GetEngineStatusCountBySKU]
+-- Stored Procedure: [dbo].[DS_Prod_EngineStatusCountBySKU]
+-- Legacy Alias    : [dbo].[USP_GetEngineStatusCountBySKU], [dbo].[DS_GetEngineStatusCountBySKU]
 -- Parameter       : @SKUID INT = 0 (If 0 or NULL, returns all data without SKU filter)
 -- Description     : Fetches Engine IDs from dbo.Prod_Engine_WIP (filtered by @SKUID if > 0,
 --                   or all engines if @SKUID = 0/NULL), retrieves current running ProdDate
@@ -8,7 +9,7 @@
 --                   and returns ProdDate, ProdShift, and all unique status counts.
 -- ======================================================================================
 
-CREATE OR ALTER PROCEDURE [dbo].[USP_GetEngineStatusCountBySKU]
+CREATE OR ALTER PROCEDURE [dbo].[DS_Prod_EngineStatusCountBySKU]
 (
     @SKUID INT = 0
 )
@@ -25,7 +26,7 @@ BEGIN
         -- 1. Read Current Running Date (ParameterID = 1) from ApplicationSetting
         --------------------------------------------------------------------------------
         SELECT TOP (1) 
-            @ProdDateStr = ParameterValue
+            @ProdDateStr = TRIM(ParameterValue)
         FROM dbo.ApplicationSetting
         WHERE ParameterID = 1
         ORDER BY UID DESC;
@@ -33,7 +34,7 @@ BEGIN
         -- Fallback to Prod_ShiftInformation if ApplicationSetting is empty
         IF @ProdDateStr IS NULL
         BEGIN
-            SELECT TOP (1) @ProdDateStr = ParameterValue
+            SELECT TOP (1) @ProdDateStr = TRIM(ParameterValue)
             FROM dbo.Prod_ShiftInformation
             WHERE ParameterName = 'ProdDate'
             ORDER BY UID DESC;
@@ -44,12 +45,16 @@ BEGIN
         BEGIN
             SET @ProdDate = TRY_CONVERT(DATE, @ProdDateStr, 105);
         END
+        IF @ProdDate IS NULL AND @ProdDateStr IS NOT NULL
+        BEGIN
+            SET @ProdDate = TRY_CONVERT(DATE, @ProdDateStr, 120);
+        END
 
         --------------------------------------------------------------------------------
         -- 2. Read Current Running Shift (ParameterID = 2) from ApplicationSetting
         --------------------------------------------------------------------------------
         SELECT TOP (1) 
-            @ProdShift = ParameterValue
+            @ProdShift = TRIM(ParameterValue)
         FROM dbo.ApplicationSetting
         WHERE ParameterID = 2
         ORDER BY UID DESC;
@@ -57,15 +62,14 @@ BEGIN
         -- Fallback to Prod_ShiftInformation if ApplicationSetting is empty
         IF @ProdShift IS NULL
         BEGIN
-            SELECT TOP (1) @ProdShift = ParameterValue
+            SELECT TOP (1) @ProdShift = TRIM(ParameterValue)
             FROM dbo.Prod_ShiftInformation
             WHERE ParameterName = 'ProdShift'
             ORDER BY UID DESC;
         END
 
         --------------------------------------------------------------------------------
-        -- 3. Fetch WIP Engines into temporary table
-        --    (If @SKUID is 0 or NULL, show all data without SKU filter)
+        -- 3. Gather Engines from Prod_Engine_WIP
         --------------------------------------------------------------------------------
         CREATE TABLE #WIP_Engines (
             EngineNo NVARCHAR(50) COLLATE DATABASE_DEFAULT
@@ -78,7 +82,7 @@ BEGIN
         WHERE (@SKUID IS NULL OR @SKUID = 0 OR W.SKUID = @SKUID);
 
         --------------------------------------------------------------------------------
-        -- 4. Fetch latest status from Prod_Status_Geneology for those engines in running shift
+        -- 4. Get Latest Status per Engine from Prod_Status_Geneology
         --------------------------------------------------------------------------------
         CREATE TABLE #Geneology_Ranked (
             EngineNo NVARCHAR(50) COLLATE DATABASE_DEFAULT,
@@ -104,11 +108,11 @@ BEGIN
                OR (@ProdShift = 'C' AND G.ProdShift IN ('3', 'Shift 3', 'Shift C', 'C')));
 
         --------------------------------------------------------------------------------
-        -- 5. Return ProdDate, ProdShift, and all unique status counts
+        -- 5. Aggregate Status Counts for Single Record Output
         --------------------------------------------------------------------------------
         SELECT 
-            @ProdDate AS ProdDate,
-            @ProdShift AS ProdShift,
+            ISNULL(@ProdDate, CAST(GETDATE() AS DATE)) AS ProdDate,
+            ISNULL(@ProdShift, 'A') AS ProdShift,
             COUNT(CASE WHEN Status = 6  THEN 1 END) AS NotOK,
             COUNT(CASE WHEN Status = 7  THEN 1 END) AS NotOKBypass,
             COUNT(CASE WHEN Status = 8  THEN 1 END) AS OKBypass,
@@ -132,7 +136,6 @@ BEGIN
 
         DROP TABLE IF EXISTS #Geneology_Ranked;
         DROP TABLE IF EXISTS #WIP_Engines;
-
     END TRY
     BEGIN CATCH
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE(),
@@ -143,13 +146,25 @@ BEGIN
 END;
 GO
 
--- Alias SP
-CREATE OR ALTER PROCEDURE [dbo].[SP_GetEngineStatusCountBySKU]
+-- Backward-Compatibility Aliases
+CREATE OR ALTER PROCEDURE [dbo].[USP_GetEngineStatusCountBySKU]
 (
     @SKUID INT = 0
 )
 AS
 BEGIN
-    EXEC [dbo].[USP_GetEngineStatusCountBySKU] @SKUID = @SKUID;
+    SET NOCOUNT ON;
+    EXEC [dbo].[DS_Prod_EngineStatusCountBySKU] @SKUID = @SKUID;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[DS_GetEngineStatusCountBySKU]
+(
+    @SKUID INT = 0
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    EXEC [dbo].[DS_Prod_EngineStatusCountBySKU] @SKUID = @SKUID;
 END;
 GO

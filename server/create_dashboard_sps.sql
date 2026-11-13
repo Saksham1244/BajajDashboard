@@ -1,8 +1,10 @@
 USE [PPMS_BajajPant];
 GO
 
--- 1. DS_Dashboard_ProductionKPI
-CREATE OR ALTER PROCEDURE [dbo].[DS_Dashboard_ProductionKPI]
+-- ========================================================================
+-- 1. DS_Prod_ProductionKPI
+-- ========================================================================
+CREATE OR ALTER PROCEDURE [dbo].[DS_Prod_ProductionKPI]
     @StartDate DATE = NULL,
     @EndDate DATE = NULL,
     @Shift VARCHAR(20) = NULL,
@@ -43,8 +45,21 @@ BEGIN
 END;
 GO
 
--- 2. DS_Dashboard_ProcessConveyor
-CREATE OR ALTER PROCEDURE [dbo].[DS_Dashboard_ProcessConveyor]
+-- Backward-Compatibility Aliases
+CREATE OR ALTER PROCEDURE [dbo].[DS_ProductionKPI]
+    @StartDate DATE = NULL, @EndDate DATE = NULL, @Shift VARCHAR(20) = NULL, @Line VARCHAR(50) = NULL, @Model VARCHAR(50) = NULL, @SKU VARCHAR(50) = NULL
+AS BEGIN SET NOCOUNT ON; EXEC [dbo].[DS_Prod_ProductionKPI] @StartDate, @EndDate, @Shift, @Line, @Model, @SKU; END;
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[DS_Dashboard_ProductionKPI]
+    @StartDate DATE = NULL, @EndDate DATE = NULL, @Shift VARCHAR(20) = NULL, @Line VARCHAR(50) = NULL, @Model VARCHAR(50) = NULL, @SKU VARCHAR(50) = NULL
+AS BEGIN SET NOCOUNT ON; EXEC [dbo].[DS_Prod_ProductionKPI] @StartDate, @EndDate, @Shift, @Line, @Model, @SKU; END;
+GO
+
+-- ========================================================================
+-- 2. DS_Process_Conveyor
+-- ========================================================================
+CREATE OR ALTER PROCEDURE [dbo].[DS_Process_Conveyor]
     @StartDate DATE = NULL,
     @EndDate DATE = NULL,
     @Shift VARCHAR(20) = NULL,
@@ -106,8 +121,21 @@ BEGIN
 END;
 GO
 
--- 3. DS_Dashboard_TrackTraceWIP
-CREATE OR ALTER PROCEDURE [dbo].[DS_Dashboard_TrackTraceWIP]
+-- Backward-Compatibility Aliases
+CREATE OR ALTER PROCEDURE [dbo].[DS_ProcessConveyor]
+    @StartDate DATE = NULL, @EndDate DATE = NULL, @Shift VARCHAR(20) = NULL, @Line VARCHAR(50) = NULL, @Station VARCHAR(50) = NULL
+AS BEGIN SET NOCOUNT ON; EXEC [dbo].[DS_Process_Conveyor] @StartDate, @EndDate, @Shift, @Line, @Station; END;
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[DS_Dashboard_ProcessConveyor]
+    @StartDate DATE = NULL, @EndDate DATE = NULL, @Shift VARCHAR(20) = NULL, @Line VARCHAR(50) = NULL, @Station VARCHAR(50) = NULL
+AS BEGIN SET NOCOUNT ON; EXEC [dbo].[DS_Process_Conveyor] @StartDate, @EndDate, @Shift, @Line, @Station; END;
+GO
+
+-- ========================================================================
+-- 3. DS_TrackTrace_WIP
+-- ========================================================================
+CREATE OR ALTER PROCEDURE [dbo].[DS_TrackTrace_WIP]
     @StartDate DATE = NULL,
     @EndDate DATE = NULL,
     @Shift VARCHAR(20) = NULL,
@@ -118,12 +146,12 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT 
-        W.UID AS id,
+        W.EngineNo AS id,
         W.EngineNo AS engineNo,
         ISNULL(L.LineName, 'Line C') AS line,
         ISNULL(M.ModelName, 'Pulsar 150') AS model,
         ISNULL(S.SKUName, 'PD501060') AS sku,
-        'Station 0' + CAST((W.UID % 8 + 1) AS VARCHAR) AS currentStation,
+        'Station ' + CAST(COALESCE(W.ReEntryStation, W.NotOkStation, 1) AS VARCHAR) AS currentStation,
         CASE 
             WHEN W.Status = 1 THEN 'In-Process'
             WHEN W.Status = 2 THEN 'Rework'
@@ -142,8 +170,21 @@ BEGIN
 END;
 GO
 
--- 4. DS_Dashboard_MaintenanceDowntime
-CREATE OR ALTER PROCEDURE [dbo].[DS_Dashboard_MaintenanceDowntime]
+-- Backward-Compatibility Aliases
+CREATE OR ALTER PROCEDURE [dbo].[DS_TrackTraceWIP]
+    @StartDate DATE = NULL, @EndDate DATE = NULL, @Shift VARCHAR(20) = NULL, @Line VARCHAR(50) = NULL, @WIPStatus VARCHAR(50) = NULL
+AS BEGIN SET NOCOUNT ON; EXEC [dbo].[DS_TrackTrace_WIP] @StartDate, @EndDate, @Shift, @Line, @WIPStatus; END;
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[DS_Dashboard_TrackTraceWIP]
+    @StartDate DATE = NULL, @EndDate DATE = NULL, @Shift VARCHAR(20) = NULL, @Line VARCHAR(50) = NULL, @WIPStatus VARCHAR(50) = NULL
+AS BEGIN SET NOCOUNT ON; EXEC [dbo].[DS_TrackTrace_WIP] @StartDate, @EndDate, @Shift, @Line, @WIPStatus; END;
+GO
+
+-- ========================================================================
+-- 4. DS_Maint_Downtime
+-- ========================================================================
+CREATE OR ALTER PROCEDURE [dbo].[DS_Maint_Downtime]
     @StartDate DATE = NULL,
     @EndDate DATE = NULL,
     @Shift VARCHAR(20) = NULL,
@@ -155,42 +196,54 @@ BEGIN
 
     -- Recordset 0: Summary KPIs
     SELECT 
-        CAST(ROUND(SUM(ISNULL(D.TotalMins, 0)) / 60.0, 1) AS FLOAT) AS totalDowntimeHrs,
-        AVG(ISNULL(D.TotalMins, 0)) AS avgDowntimeMins,
-        COUNT(D.UID) AS totalBreakdowns
+        CAST(ROUND(SUM(COALESCE(D.TotalBDTime, D.BDDuration, 0)) / 60.0, 1) AS FLOAT) AS totalDowntimeHrs,
+        AVG(COALESCE(D.TotalBDTime, D.BDDuration, 0)) AS avgDowntimeMins,
+        COUNT(D.BreakdownID) AS totalBreakdowns
     FROM dbo.Maint_BreakDown_Log D
-    LEFT JOIN dbo.Config_Line L ON D.LineID = L.LineID
-    WHERE (@StartDate IS NULL OR D.BreakDownDate >= @StartDate)
-      AND (@EndDate IS NULL OR D.BreakDownDate <= @EndDate)
-      AND (@Shift IS NULL OR D.Shift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.Shift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.Shift IN ('2', 'Shift 2', 'B')))
-      AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.LineID AS VARCHAR) = @Line);
+    LEFT JOIN dbo.Config_Station S ON D.StationID = S.StationID
+    LEFT JOIN dbo.Config_Line L ON S.SubAsslyLineID = L.LineID
+    WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+      AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+      AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
+      AND (@Line IS NULL OR L.LineName = @Line OR CAST(S.SubAsslyLineID AS VARCHAR) = @Line);
 
     -- Recordset 1: Table Details per Machine / Station
     SELECT 
         ISNULL(S.StationName, 'Station ' + CAST(D.StationID AS VARCHAR)) AS machine,
         ISNULL(L.LineName, 'Line C') AS line,
-        COUNT(D.UID) AS breakdownCount,
-        SUM(ISNULL(D.TotalMins, 0)) AS downtime,
+        COUNT(D.BreakdownID) AS breakdownCount,
+        SUM(COALESCE(D.TotalBDTime, D.BDDuration, 0)) AS downtime,
         ISNULL(D.BDRemark, 'Mechanical Breakdown') AS reason,
-        AVG(ISNULL(D.TotalMins, 0)) AS mttr
+        AVG(COALESCE(D.TotalBDTime, D.BDDuration, 0)) AS mttr
     FROM dbo.Maint_BreakDown_Log D
     LEFT JOIN dbo.Config_Station S ON D.StationID = S.StationID
-    LEFT JOIN dbo.Config_Line L ON D.LineID = L.LineID
-    WHERE (@StartDate IS NULL OR D.BreakDownDate >= @StartDate)
-      AND (@EndDate IS NULL OR D.BreakDownDate <= @EndDate)
-      AND (@Shift IS NULL OR D.Shift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.Shift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.Shift IN ('2', 'Shift 2', 'B')))
-      AND (@Line IS NULL OR L.LineName = @Line OR CAST(D.LineID AS VARCHAR) = @Line)
+    LEFT JOIN dbo.Config_Line L ON S.SubAsslyLineID = L.LineID
+    WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+      AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+      AND (@Shift IS NULL OR D.ProdShift = @Shift OR (@Shift IN ('A', '1', 'Shift 1') AND D.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift IN ('B', '2', 'Shift 2') AND D.ProdShift IN ('2', 'Shift 2', 'B')))
+      AND (@Line IS NULL OR L.LineName = @Line OR CAST(S.SubAsslyLineID AS VARCHAR) = @Line)
     GROUP BY S.StationName, D.StationID, L.LineName, D.BDRemark;
 
     -- Recordset 2: Trend
     SELECT 
-        CONVERT(VARCHAR(10), D.BreakDownDate, 120) AS date,
-        SUM(ISNULL(D.TotalMins, 0)) AS downtimeMins,
-        COUNT(D.UID) AS count
+        CONVERT(VARCHAR(10), D.ProdDate, 120) AS date,
+        SUM(COALESCE(D.TotalBDTime, D.BDDuration, 0)) AS downtimeMins,
+        COUNT(D.BreakdownID) AS count
     FROM dbo.Maint_BreakDown_Log D
-    WHERE (@StartDate IS NULL OR D.BreakDownDate >= @StartDate)
-      AND (@EndDate IS NULL OR D.BreakDownDate <= @EndDate)
-    GROUP BY D.BreakDownDate
-    ORDER BY D.BreakDownDate ASC;
+    WHERE (@StartDate IS NULL OR D.ProdDate >= @StartDate)
+      AND (@EndDate IS NULL OR D.ProdDate <= @EndDate)
+    GROUP BY D.ProdDate
+    ORDER BY D.ProdDate ASC;
 END;
+GO
+
+-- Backward-Compatibility Aliases
+CREATE OR ALTER PROCEDURE [dbo].[DS_MaintenanceDowntime]
+    @StartDate DATE = NULL, @EndDate DATE = NULL, @Shift VARCHAR(20) = NULL, @Line VARCHAR(50) = NULL, @Station VARCHAR(50) = NULL
+AS BEGIN SET NOCOUNT ON; EXEC [dbo].[DS_Maint_Downtime] @StartDate, @EndDate, @Shift, @Line, @Station; END;
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[DS_Dashboard_MaintenanceDowntime]
+    @StartDate DATE = NULL, @EndDate DATE = NULL, @Shift VARCHAR(20) = NULL, @Line VARCHAR(50) = NULL, @Station VARCHAR(50) = NULL
+AS BEGIN SET NOCOUNT ON; EXEC [dbo].[DS_Maint_Downtime] @StartDate, @EndDate, @Shift, @Line, @Station; END;
 GO

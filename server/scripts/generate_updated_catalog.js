@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
-const xlsx = require('./client/node_modules/xlsx');
+const xlsx = require(path.join(__dirname, '..', '..', 'client', 'node_modules', 'xlsx'));
 
 async function updateCatalog() {
-  const origPath = path.join(__dirname, 'BAJAJ_PPMS_API_LINEAGE_AND_PROCEDURES_CATALOG.xlsx');
+  const rootDir = path.join(__dirname, '..', '..');
+  const origPath = path.join(rootDir, 'BAJAJ_PPMS_API_LINEAGE_AND_PROCEDURES_CATALOG.xlsx');
   const wb = xlsx.readFile(origPath);
 
   // Read existing sheets we want to keep
@@ -364,7 +365,7 @@ async function updateCatalog() {
   ];
 
   // 3. Read all 388 stored procedures from sp_index.json
-  const spIndex = JSON.parse(fs.readFileSync(path.join(__dirname, 'docs', 'stored_procedures_backup', 'sp_index.json'), 'utf8'));
+  const spIndex = JSON.parse(fs.readFileSync(path.join(rootDir, 'docs', 'stored_procedures_backup', 'sp_index.json'), 'utf8'));
   const allDbProcsData = spIndex.map((s, idx) => {
     let cat = 'Other';
     if (s.name.startsWith('DS_')) cat = 'Dashboard Screen Procedure (DS_*)';
@@ -415,8 +416,8 @@ async function updateCatalog() {
   const artifactPath = 'C:\\Users\\Admin\\.gemini\\antigravity\\brain\\333bd165-94eb-4f42-bd23-69b959bbb694\\BAJAJ_PPMS_API_LINEAGE_AND_PROCEDURES_CATALOG.xlsx';
   const targets = [
     origPath,
-    path.join(__dirname, 'docs', 'BAJAJ_PPMS_API_LINEAGE_AND_PROCEDURES_CATALOG.xlsx'),
-    path.join(__dirname, 'docs', 'BAJAJ_PPMS_API_LINEAGE_AND_PROCEDURES_CATALOG_LATEST.xlsx'),
+    path.join(rootDir, 'docs', 'BAJAJ_PPMS_API_LINEAGE_AND_PROCEDURES_CATALOG.xlsx'),
+    path.join(rootDir, 'docs', 'BAJAJ_PPMS_API_LINEAGE_AND_PROCEDURES_CATALOG_LATEST.xlsx'),
     artifactPath
   ];
 
