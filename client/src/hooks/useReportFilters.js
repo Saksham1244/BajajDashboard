@@ -14,8 +14,8 @@ export const getActiveShift = () => {
   return 'Shift 1'; // Outside operational hours (23:00-06:00), default to upcoming Shift 1
 };
 
-export function useReportFilters() {
-  const [period, setPeriod] = useState('Shift');
+export function useReportFilters(allowedPeriods = ['Shift', 'Day', 'Week', 'Month']) {
+  const [period, setPeriod] = useState(allowedPeriods[0] || 'Shift');
   const [startDate, setStartDate] = useState(getToday());
   const [endDate, setEndDate] = useState(getToday());
   
@@ -51,7 +51,7 @@ export function useReportFilters() {
 
   const getBaseFilters = () => {
     const base = [
-      { type: 'period', value: period, onChange: handlePeriodChange },
+      { type: 'period', value: period, onChange: handlePeriodChange, periods: allowedPeriods },
       { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate }
     ];
 

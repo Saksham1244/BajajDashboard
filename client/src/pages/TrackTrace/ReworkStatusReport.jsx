@@ -105,10 +105,10 @@ export default function ReworkStatusReport() {
       />
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Rework" value={totalRework} sub="Rework Logged" color="red" />
-          <StatCard title="Pending" value={pendingCount} sub={`${totalRework > 0 ? ((pendingCount / totalRework) * 100).toFixed(1) : 0}% of Total`} color="amber" />
-          <StatCard title="In-Progress" value={inProgressCount} sub={`${totalRework > 0 ? ((inProgressCount / totalRework) * 100).toFixed(1) : 0}% of Total`} color="blue" />
-          <StatCard title="Completed" value={completedCount} sub={`${totalRework > 0 ? ((completedCount / totalRework) * 100).toFixed(1) : 0}% of Total`} color="green" />
+          <StatCard period={period} title="Total Rework" value={totalRework} sub="Rework Logged" color="red" />
+          <StatCard period={period} title="Pending" value={pendingCount} sub={`${totalRework > 0 ? ((pendingCount / totalRework) * 100).toFixed(1) : 0}% of Total`} color="amber" />
+          <StatCard period={period} title="In-Progress" value={inProgressCount} sub={`${totalRework > 0 ? ((inProgressCount / totalRework) * 100).toFixed(1) : 0}% of Total`} color="blue" />
+          <StatCard period={period} title="Completed" value={completedCount} sub={`${totalRework > 0 ? ((completedCount / totalRework) * 100).toFixed(1) : 0}% of Total`} color="green" />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

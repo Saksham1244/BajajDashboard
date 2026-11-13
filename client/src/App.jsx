@@ -157,11 +157,11 @@ function App() {
           <Route path="workforce">
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<Suspense fallback={<Loading />}><WorkforceDashboard /></Suspense>} />
-            <Route path="skill-matrix-dashboard" element={<Suspense fallback={<Loading />}><SkillMatrixDashboard /></Suspense>} />
-            <Route path="attendance" element={<Suspense fallback={<Loading />}><AttendanceReport /></Suspense>} />
             <Route path="skill-matrix" element={<Suspense fallback={<Loading />}><SkillMatrixReport /></Suspense>} />
-            <Route path="skill-matrix-report" element={<Suspense fallback={<Loading />}><SkillMatrixReport /></Suspense>} />
-            <Route path="allocation" element={<Suspense fallback={<Loading />}><WorkforceAllocationReport /></Suspense>} />
+            <Route path="skill-matrix-dashboard" element={<Navigate to="/workforce/skill-matrix" replace />} />
+            <Route path="skill-matrix-report" element={<Navigate to="/workforce/skill-matrix" replace />} />
+            <Route path="attendance" element={<Navigate to="/workforce/dashboard" replace />} />
+            <Route path="allocation" element={<Navigate to="/workforce/dashboard" replace />} />
           </Route>
 
           {/* Catch-all */}

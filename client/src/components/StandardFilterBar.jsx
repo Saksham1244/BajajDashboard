@@ -19,7 +19,7 @@ const today = () => new Date(new Date().getTime() - new Date().getTimezoneOffset
  *   { type: 'dropdown', label, options, value, onChange }
  *   { type: 'search', label, value, onChange, placeholder }
  */
-export default function StandardFilterBar({ title, icon: Icon, onExcelClick, filters = [], onPrintClick }) {
+export default function StandardFilterBar({ title, icon: Icon, onExcelClick, filters = [], onPrintClick, extraActions }) {
   const currentDateFormatted = new Date().toLocaleDateString('en-IN', { 
     day: '2-digit', 
     month: 'short', 
@@ -73,7 +73,7 @@ export default function StandardFilterBar({ title, icon: Icon, onExcelClick, fil
                 <div key={i} className="flex flex-col gap-1">
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none">Period</span>
                   <div className="flex rounded overflow-hidden border border-slate-200 h-[31px]">
-                    {['Shift', 'Day', 'Week', 'Month'].map(p => (
+                    {(f.periods || ['Shift', 'Day', 'Week', 'Month']).map(p => (
                       <button key={p} onClick={() => f.onChange(p)}
                         className={`px-3 py-1 text-[11px] font-bold transition-colors flex items-center justify-center ${f.value === p ? 'bg-[#0369a1] text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
                         {p}
@@ -163,6 +163,7 @@ export default function StandardFilterBar({ title, icon: Icon, onExcelClick, fil
               </div>
             )}
             <div className="flex items-center gap-2">
+              {extraActions}
               <button onClick={onExcelClick}
                 className="flex items-center gap-1.5 bg-green-700 text-white px-3.5 rounded shadow hover:bg-green-800 transition-colors h-[31px] text-xs font-bold uppercase tracking-wider">
                 <FileSpreadsheet className="w-3.5 h-3.5" />

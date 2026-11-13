@@ -126,10 +126,10 @@ export default function KitInspectionReport() {
       
       <div className="flex-1 flex flex-col gap-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard title="Total Inspected" value={kpi.total} sub="Completed Kit Audits" color="blue" />
-          <StatCard title="OK Kits" value={kpi.ok} trend="+100%" trendLabel="Ready for Line" sub="Zero Defect Kits" color="green" />
-          <StatCard title="NOK / Rejected" value={kpi.nok} trend={kpi.nok > 0 ? `${((kpi.nok / Math.max(1, kpi.total)) * 100).toFixed(1)}%` : '0%'} trendLabel="Reject Rate" sub="Sent for Correction" color="red" />
-          <StatCard title="Pass Rate %" value={kpi.passRate} trend={Number(kpi.passRate.replace('%', '')) >= 95 ? 'Passed' : 'Low Yield'} sub="Kitting Quality Yield" color="purple" />
+          <StatCard period={period} title="Total Inspected" value={kpi.total} sub="Completed Kit Audits" color="blue" />
+          <StatCard period={period} title="OK Kits" value={kpi.ok} trend="+100%" trendLabel="Ready for Line" sub="Zero Defect Kits" color="green" />
+          <StatCard period={period} title="NOK / Rejected" value={kpi.nok} trend={kpi.nok > 0 ? `${((kpi.nok / Math.max(1, kpi.total)) * 100).toFixed(1)}%` : '0%'} trendLabel="Reject Rate" sub="Sent for Correction" color="red" />
+          <StatCard period={period} title="Pass Rate %" value={kpi.passRate} trend={Number(kpi.passRate.replace('%', '')) >= 95 ? 'Passed' : 'Low Yield'} sub="Kitting Quality Yield" color="purple" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">

@@ -96,11 +96,8 @@ const navItems = [
     name: 'Workforce Module',
     icon: Users,
     subItems: [
-      { path: '/workforce/dashboard', name: 'Workforce Dashboard' },
-      { path: '/workforce/skill-matrix-dashboard', name: 'Skill Matrix Dashboard' },
-      { path: '/workforce/attendance', name: 'Attendance Report' },
-      { path: '/workforce/skill-matrix-report', name: 'Skill Matrix Report' },
-      { path: '/workforce/allocation', name: 'Workforce Allocation Report' },
+      { path: '/workforce/dashboard', name: 'Workforce & Allocation Dashboard' },
+      { path: '/workforce/skill-matrix', name: 'Skill Matrix & Competency Report' },
     ]
   }
 ]

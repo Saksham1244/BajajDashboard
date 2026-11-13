@@ -44,7 +44,7 @@ export default function Production() {
   const totalProd = dbData?.kpis?.totalProd ?? 0;
   const shortfall = dbData?.kpis?.shortfall ?? 0;
   const wip = dbData?.kpis?.wip ?? 0;
-  const rollover = dbData?.kpis?.rollover ?? 0;
+  const rollover = dbData?.kpis?.holdQty ?? dbData?.kpis?.rollover ?? 0;
 
   // Straight Pass metrics
   const straightList = dbData?.straightPass || [];
@@ -91,7 +91,31 @@ export default function Production() {
     return [];
   }, [skuData]);
 
-  const paretoData = dbData?.pareto || [];
+  const paretoData = useMemo(() => {
+    const raw = dbData?.pareto || [];
+    if (!raw.length) return [];
+    // Sort strictly by duration (Time) descending for Time vs Reason Pareto
+    const sorted = [...raw].sort((a, b) => (Number(b.duration) || 0) - (Number(a.duration) || 0));
+    const totalDuration = sorted.reduce((sum, d) => sum + (Number(d.duration) || 0), 0) || 1;
+    let running = 0;
+    return sorted.map(d => {
+      const dur = Number(d.duration) || 0;
+      running += dur;
+      return {
+        ...d,
+        duration: dur,
+        cumPercent: Math.min(100, Math.round((running / totalDuration) * 100))
+      };
+    });
+  }, [dbData?.pareto]);
+
+  const totalParetoDuration = useMemo(() => {
+    return paretoData.reduce((sum, d) => sum + (d.duration || 0), 0);
+  }, [paretoData]);
+
+  const planExecutionData = useMemo(() => {
+    return dbData?.planExecution || [];
+  }, [dbData?.planExecution]);
 
   const columns = [
     { header: 'Line', accessor: 'line' },
@@ -102,9 +126,44 @@ export default function Production() {
     { header: 'Straight Pass (FTR)', accessor: (row) => row.straight ?? (row.actual - (row.rework || 0)) },
     { header: 'Rework Pass', accessor: (row) => row.rework ?? 0 },
     { header: 'FTR Yield %', accessor: 'ftr' },
-    { header: 'WIP Units', accessor: 'wip' },
-    { header: 'Rollover', accessor: 'rollover' },
   ];
+
+  const planExecutionColumns = [
+    { header: 'Plan ID', accessor: 'planId' },
+    { header: 'Date', accessor: 'prodDate' },
+    { header: 'Shift', accessor: 'shift' },
+    { header: 'Line', accessor: 'line' },
+    { header: 'Model', accessor: 'model' },
+    { header: 'SKU Name', accessor: 'sku' },
+    { header: 'Plan Qty', accessor: 'planQty' },
+    { header: 'Actual Qty', accessor: 'actualQty' },
+    { header: 'Straight Pass', accessor: 'straightPass' },
+    { header: 'Rework OK', accessor: 'reworkPass' },
+    { 
+      header: 'Achievement %', 
+      accessor: (r) => (
+        <span className={`font-bold ${r.achievementPct >= 100 ? 'text-emerald-600' : r.achievementPct >= 95 ? 'text-sky-600' : 'text-amber-600'}`}>
+          {r.achievementPct}%
+        </span>
+      )
+    },
+    { 
+      header: 'Status', 
+      accessor: (r) => (
+        <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+          r.status === 'Completed' 
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+            : r.status === 'In-Progress'
+            ? 'bg-sky-50 text-sky-700 border border-sky-200'
+            : 'bg-amber-50 text-amber-700 border border-amber-200'
+        }`}>
+          {r.status}
+        </span>
+      )
+    }
+  ];
+
+  const isDayOrShift = period === 'Shift' || period === 'Day';
 
   const exportToExcel = () => {
     exportToXLSX('Production_Report.xlsx', [
@@ -118,8 +177,8 @@ export default function Production() {
           ['Reworked & Cleared', reworkTotal],
           ['First-Time-Right (FTR Rate)', `${ftrRate}%`],
           ['Production Shortfall / Gap', shortfall],
-          ['Active WIP Units', wip],
-          ['Rollover Units', rollover]
+          ['Active WIP Units', isDayOrShift && wip !== null ? wip : 'N/A (Shift/Day only)'],
+          ['Engine Hold Units', isDayOrShift && rollover !== null ? rollover : 'N/A (Shift/Day only)']
         ]
       },
       { 
@@ -130,17 +189,37 @@ export default function Production() {
         ]
       },
       { 
-        name: 'Shortfall Loss Pareto', 
+        name: 'Downtime Pareto', 
         rows: [
-          ['Loss Reason', 'Category', 'Stoppage Events', 'Duration (Mins)', 'Cumulative %'],
-          ...paretoData.map(d => [d.reason, d.category || 'Breakdown', d.count, d.duration, `${d.cumPercent}%`])
+          ['Loss Reason', 'Category', 'Downtime Duration (Mins)', 'Stoppage Events', 'Cumulative %'],
+          ...paretoData.map(d => [d.reason, d.category || 'Breakdown', d.duration, d.count, `${d.cumPercent}%`])
         ]
       },
       { 
         name: 'Model & SKU Details', 
         rows: [
-          ['Line', 'Model Family', 'SKU Name', 'Plan Qty', 'Actual Qty', 'Straight Pass', 'Rework', 'FTR Yield %', 'WIP', 'Rollover'],
-          ...skuData.map(d => [d.line, d.modelFamily, d.name, d.plan, d.actual, d.straight ?? (d.actual - (d.rework || 0)), d.rework ?? 0, d.ftr, d.wip, d.rollover])
+          ['Line', 'Model Family', 'SKU Name', 'Plan Qty', 'Actual Qty', 'Straight Pass', 'Rework', 'FTR Yield %'],
+          ...skuData.map(d => [d.line, d.modelFamily, d.name, d.plan, d.actual, d.straight ?? (d.actual - (d.rework || 0)), d.rework ?? 0, d.ftr])
+        ]
+      },
+      {
+        name: 'Plan-wise Execution',
+        rows: [
+          ['Plan ID', 'Date', 'Shift', 'Line', 'Model', 'SKU Name', 'Plan Qty', 'Actual Qty', 'Straight Pass', 'Rework OK', 'Achievement %', 'Status'],
+          ...planExecutionData.map(d => [
+            d.planId,
+            d.prodDate,
+            d.shift,
+            d.line,
+            d.model,
+            d.sku,
+            d.planQty,
+            d.actualQty,
+            d.straightPass,
+            d.reworkPass,
+            `${d.achievementPct}%`,
+            d.status
+          ])
         ]
       }
     ]);
@@ -182,7 +261,12 @@ export default function Production() {
             color="amber" 
           />
           <StatCard title="Shortfall / Gap" value={shortfall} sub="Remaining Target" color="rose" />
-          <StatCard title="Active WIP & Rollover" value={`${wip} / ${rollover}`} sub="WIP / Hold" color="purple" />
+          <StatCard 
+            title="Active WIP & Hold" 
+            value={isDayOrShift && wip !== null ? `${wip} / ${rollover}` : 'N/A'} 
+            sub={isDayOrShift && wip !== null ? 'WIP / Hold Qty' : 'Shift / Day only'} 
+            color="purple" 
+          />
         </div>
 
         {/* Charts Row 1: Plan vs Actual & Straight Pass Trend */}
@@ -302,13 +386,18 @@ export default function Production() {
             </div>
           </div>
 
-          {/* Loss Pareto Chart */}
+          {/* Downtime Pareto Chart (Time vs Reason) */}
           <div className="card p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-brand-dark flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
-                Production Loss
+                Downtime Pareto (Time vs Reason)
               </h3>
+              {totalParetoDuration > 0 && (
+                <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                  Total Loss: {totalParetoDuration} mins
+                </span>
+              )}
             </div>
             <div className="h-[220px]">
               {paretoData.length === 0 ? (
@@ -317,17 +406,29 @@ export default function Production() {
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={paretoData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                  <ComposedChart data={paretoData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                     <XAxis 
                       dataKey="reason" 
                       interval={0}
-                      tick={{ fontSize: 10 }}
-                      stroke="#64748b"
+                      tick={{ fontSize: 10 }} 
+                      stroke="#64748b" 
                       tickFormatter={(val) => (val && val.length > 14 ? `${val.substring(0, 12)}…` : val)}
                     />
-                    <YAxis yAxisId="left" tick={{ fontSize: 11 }} stroke="#64748b" />
-                    <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11 }} stroke="#64748b" />
+                    <YAxis 
+                      yAxisId="left" 
+                      tick={{ fontSize: 11 }} 
+                      stroke="#64748b"
+                      tickFormatter={(v) => `${v}m`}
+                    />
+                    <YAxis 
+                      yAxisId="right" 
+                      orientation="right" 
+                      domain={[0, 100]} 
+                      tickFormatter={(v) => `${v}%`} 
+                      tick={{ fontSize: 11 }} 
+                      stroke="#64748b" 
+                    />
                     <Tooltip
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
@@ -335,9 +436,9 @@ export default function Production() {
                           return (
                             <div className="bg-slate-900 text-white text-xs p-2.5 rounded shadow-lg border border-slate-700">
                               <p className="font-bold text-amber-400">{data.reason}</p>
-                              <p className="mt-1">Loss Events: <span className="font-semibold text-white">{data.count}</span></p>
-                              <p>Duration: <span className="font-semibold text-sky-400">{data.duration} mins</span></p>
-                              <p>Cumulative: <span className="font-semibold text-rose-400">{data.cumPercent}%</span></p>
+                              <p className="mt-1">Downtime Time: <span className="font-semibold text-sky-400">{data.duration} mins</span></p>
+                              <p>Loss Events: <span className="font-semibold text-white">{data.count}</span></p>
+                              <p>Cumulative %: <span className="font-semibold text-rose-400">{data.cumPercent}%</span></p>
                             </div>
                           );
                         }
@@ -345,8 +446,8 @@ export default function Production() {
                       }}
                     />
                     <Legend />
-                    <Bar yAxisId="left" dataKey="count" name="Loss Count" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                    <Line yAxisId="right" type="monotone" dataKey="cumPercent" name="Cumulative %" stroke="#ef4444" strokeWidth={2.5} />
+                    <Bar yAxisId="left" dataKey="duration" name="Downtime Time (mins)" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                    <Line yAxisId="right" type="monotone" dataKey="cumPercent" name="Cumulative %" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 3 }} />
                   </ComposedChart>
                 </ResponsiveContainer>
               )}
@@ -365,6 +466,24 @@ export default function Production() {
             </span>
           </div>
           <DataTable columns={columns} data={skuData} />
+        </div>
+
+        {/* Plan-wise Production Execution Table */}
+        <div className="card p-4 flex-1">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-brand-dark">
+                Plan-wise Production Execution
+              </h3>
+              <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                Live Plan Tracker
+              </span>
+            </div>
+            <span className="text-xs font-bold text-slate-500">
+              {planExecutionData.length} scheduled plans
+            </span>
+          </div>
+          <DataTable columns={planExecutionColumns} data={planExecutionData} />
         </div>
       </div>
     </div>

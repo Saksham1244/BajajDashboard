@@ -144,6 +144,8 @@ export default function Performance() {
             trendLabel="vs Benchmark"
             sub="Overall Equipment Efficiency" 
             color="blue" 
+            period={period}
+            sparkline={oleTrendData.map(d => d.ole)}
           />
           <StatCard 
             title="Availability Rate" 
@@ -152,6 +154,8 @@ export default function Performance() {
             trendLabel="Uptime Index"
             sub="Operating vs Planned Time" 
             color="green" 
+            period={period}
+            sparkline={oleTrendData.map(d => d.availability)}
           />
           <StatCard 
             title="Performance Rate" 
@@ -160,6 +164,8 @@ export default function Performance() {
             trendLabel="Throughput"
             sub="Speed & Throughput Index" 
             color="amber" 
+            period={period}
+            sparkline={oleTrendData.map(d => d.performance)}
           />
           <StatCard 
             title="Overall Line Eff. (OLE)" 
@@ -168,6 +174,8 @@ export default function Performance() {
             trendLabel="Line Yield"
             sub="Total Line Efficiency" 
             color="purple" 
+            period={period}
+            sparkline={oleTrendData.map(d => d.ole)}
           />
         </div>
 
