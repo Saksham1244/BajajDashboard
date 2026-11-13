@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 const { poolPromise, sql } = require('./db');
 
@@ -3155,6 +3157,23 @@ app.get('/api/workforce/allocation', async (req, res) => {
 
   res.json({ table: [] });
 });
+
+// ==========================================
+// SERVE FRONTEND (PRODUCTION / SERVICE MODE)
+// ==========================================
+const clientDist = path.join(__dirname, '../client/dist');
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api')) {
+      const indexPath = path.join(clientDist, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        return res.sendFile(indexPath);
+      }
+    }
+    next();
+  });
+}
 
 // ==========================================
 // START SERVER
