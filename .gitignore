@@ -1,9 +1,71 @@
+# ==========================================
+# Dependencies & Build Output
+# ==========================================
 node_modules/
-.env
 dist/
+build/
 .DS_Store
+Thumbs.db
 .agents/
-*.rar
 
+# ==========================================
+# Environment & Secrets
+# ==========================================
+.env
+.env.*
+!.env.example
+
+# ==========================================
+# Documentation & Specifications
+# ==========================================
+docs/
+decision.md
+descision.md
+design_doc.md
+flow.md
+
+# ==========================================
+# Office Documents & Data Files (Excel, Word, PDF)
+# ==========================================
+*.xlsx
+*.xls
+*.csv
+*.docx
+*.doc
+*.pdf
+*.rar
+*.zip
+*.7z
 ~$*
+
+# ==========================================
+# Database Dumps, SP Backups & Raw SQL Scripts
+# ==========================================
+*.sql
+*.bak
+stored_procedures_backup/
+docs/stored_procedures_backup/
+server/stored_procedures_backup/
+DEPLOY_DASHBOARD_STORED_PROCEDURES.sql
+server/create_dashboard_sps.sql
+server/create_dashboard_sps_fixed.sql
+server/db_schema.sql
+server/sp_GetEngineStatusCountBySKU.sql
+
+# ==========================================
+# Scratch, One-off & Temporary Utility Scripts
+# ==========================================
 scratch/
+quote_fallbacks.js
+server/check.js
+server/check_columns.js
+server/list_tables.js
+server/test_db.js
+server/scripts/
+
+# ==========================================
+# Logs & Diagnostic Files
+# ==========================================
+*.log
+npm-debug.log*
+yarn-debug.log*

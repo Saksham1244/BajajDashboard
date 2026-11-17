@@ -7,6 +7,16 @@ async function seedComprehensiveDummyData() {
 
   const pool = await poolPromise;
 
+  const targetDate = process.argv[2] ? new Date(process.argv[2]) : new Date();
+  const today = targetDate;
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const todayYyyyMmDd = `${yyyy}-${mm}-${dd}`;
+  const todayDdMmYyyy = `${dd}-${mm}-${yyyy}`;
+  const todayCompact = `${yyyy}${mm}${dd}`;
+  const todayShort = `${mm}${dd}`;
+
   // -------------------------------------------------------------
   // 1. ENSURE SUPPORTING TABLES EXIST
   // -------------------------------------------------------------
@@ -126,10 +136,10 @@ async function seedComprehensiveDummyData() {
     DECLARE @c2 INT = (SELECT TOP 1 CheckListId FROM Config_PMCheckList WHERE CheckListId > @c1 ORDER BY CheckListId ASC);
 
     INSERT INTO Config_PMSchedule (LineId, CheckListId, StartDate, StartCount, FrequencyType, FrequencyValue, Alert, EstimatedDuration) VALUES
-      (1, @c1, '2026-11-10', 1, 1, 7, 0, 30),
-      (1, @c2, '2026-11-12', 1, 1, 1, 0, 15),
-      (1, @c1, '2026-11-13', 1, 1, 7, 0, 30),
-      (1, @c2, '2026-11-15', 1, 1, 14, 0, 45);
+      (1, @c1, DATEADD(day, -3, CAST(GETDATE() AS DATE)), 1, 1, 7, 0, 30),
+      (1, @c2, DATEADD(day, -1, CAST(GETDATE() AS DATE)), 1, 1, 1, 0, 15),
+      (1, @c1, CAST(GETDATE() AS DATE), 1, 1, 7, 0, 30),
+      (1, @c2, DATEADD(day, 2, CAST(GETDATE() AS DATE)), 1, 1, 14, 0, 45);
   `);
   console.log('✓ Config_PMCheckList and Config_PMSchedule seeded');
 
@@ -155,12 +165,12 @@ async function seedComprehensiveDummyData() {
   `);
   console.log('✓ Config_Skill and Config_OperatorSkillMapping seeded');
 
-  // Update ApplicationSetting to Today (2026-11-13) Shift A
+  // Update ApplicationSetting to Today Shift A
   await pool.request().query(`
-    UPDATE ApplicationSetting SET ParameterValue = '13-11-2026' WHERE ParameterID = 1;
+    UPDATE ApplicationSetting SET ParameterValue = '${todayDdMmYyyy}' WHERE ParameterID = 1;
     UPDATE ApplicationSetting SET ParameterValue = 'A' WHERE ParameterID = 2;
   `);
-  console.log('✓ ApplicationSetting updated to 13-11-2026, Shift A');
+  console.log(`✓ ApplicationSetting updated to ${todayDdMmYyyy}, Shift A`);
 
   // Fix USP_GetEngineStatusCountBySKU date handling
   await pool.request().query(`
@@ -312,18 +322,17 @@ async function seedComprehensiveDummyData() {
   console.log('✓ Transactional tables cleared');
 
   // -------------------------------------------------------------
-  // 3. GENERATE 40 DAYS OF DATES UP TO TODAY (2026-11-13)
+  // 3. GENERATE 40 DAYS OF DATES UP TO TODAY
   // -------------------------------------------------------------
-  console.log('\n[3/7] Generating 40 operational days of production data...');
+  console.log(`\n[3/7] Generating 40 operational days of production data up to ${todayYyyyMmDd}...`);
   const dates = [];
-  const today = new Date(2026, 10, 13); // 2026-11-13
   for (let i = 39; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    dates.push(`${yyyy}-${mm}-${dd}`);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    dates.push(`${y}-${m}-${day}`);
   }
 
   console.log(`Date range: ${dates[0]} to ${dates[dates.length - 1]} (${dates.length} days)`);
@@ -598,17 +607,17 @@ async function seedComprehensiveDummyData() {
           .input('LineID', sql.Int, 1)
           .input('AuditListID', sql.Int, aId)
           .input('AuditInstanceID', sql.Int, totalAudits + 1)
-          .input('StartDateTime', sql.DateTime, new Date(aStart))
-          .input('EndDateTime', sql.DateTime, new Date(aEnd))
-          .input('ActualStartDateTime', sql.DateTime, new Date(aStart))
-          .input('ActualEndDateTime', sql.DateTime, new Date(aEnd))
+          .input('StartDateTime', sql.VarChar(30), aStart)
+          .input('EndDateTime', sql.VarChar(30), aEnd)
+          .input('ActualStartDateTime', sql.VarChar(30), aStart)
+          .input('ActualEndDateTime', sql.VarChar(30), aEnd)
           .input('Notification', sql.Int, 0)
           .input('Status', sql.Int, aStatus)
           .query(`
             INSERT INTO QA_AuditMonitoring 
               (LineID, AuditListID, AuditInstanceID, StartDateTime, EndDateTime, ActualStartDateTime, ActualEndDateTime, Notification, Status)
             VALUES 
-              (@LineID, @AuditListID, @AuditInstanceID, @StartDateTime, @EndDateTime, @ActualStartDateTime, @ActualEndDateTime, @Notification, @Status)
+              (@LineID, @AuditListID, @AuditInstanceID, CAST(@StartDateTime AS DATETIME), CAST(@EndDateTime AS DATETIME), CAST(@ActualStartDateTime AS DATETIME), CAST(@ActualEndDateTime AS DATETIME), @Notification, @Status)
           `);
         totalAudits++;
       }
@@ -718,36 +727,36 @@ async function seedComprehensiveDummyData() {
 
   // Specific engines to seed covering all gate statuses requested by user
   const testEngines = [
-    { engineNo: 'ENG20261113001', vr: 'VR1113001', kit: 'KIT001', stages: 14, status: 10, skuId: 1, desc: 'FG Engine' },
-    { engineNo: 'ENG20261113002', vr: 'VR1113002', kit: 'KIT002', stages: 14, status: 9, skuId: 1, desc: 'Assembly Completed' },
-    { engineNo: 'ENG20261113003', vr: 'VR1113003', kit: 'KIT003', stages: 10, status: 5, skuId: 1, desc: 'Engine In-Process' },
-    { engineNo: 'ENG20261113004', vr: 'VR1113004', kit: 'KIT004', stages: 7, status: 6, skuId: 1, desc: 'Not OK' },
-    { engineNo: 'ENG20261113005', vr: 'VR1113005', kit: 'KIT005', stages: 7, status: 7, skuId: 2, desc: 'Not OK Bypass' },
-    { engineNo: 'ENG20261113006', vr: 'VR1113006', kit: 'KIT006', stages: 12, status: 8, skuId: 2, desc: 'OK Bypass' },
-    { engineNo: 'ENG20261113007', vr: 'VR1113007', kit: 'KIT007', stages: 14, status: 11, skuId: 2, desc: 'Engine Scrapped' },
-    { engineNo: 'ENG20261113008', vr: 'VR1113008', kit: 'KIT008', stages: 6, status: 12, skuId: 3, desc: 'Material Hold' },
-    { engineNo: 'ENG20261113009', vr: 'VR1113009', kit: 'KIT009', stages: 9, status: 13, skuId: 3, desc: 'Material Hold Cleared' },
-    { engineNo: 'ENG20261113010', vr: 'VR1113010', kit: 'KIT010', stages: 8, status: 14, skuId: 3, desc: 'Production Rework' },
-    { engineNo: 'ENG20261113011', vr: 'VR1113011', kit: 'KIT011', stages: 11, status: 15, skuId: 5, desc: 'Rework OK' },
-    { engineNo: 'ENG20261113012', vr: 'VR1113012', kit: 'KIT012', stages: 7, status: 19, skuId: 5, desc: 'IPQC Rework' },
-    { engineNo: 'ENG20261113013', vr: 'VR1113013', kit: 'KIT013', stages: 7, status: 21, skuId: 5, desc: 'IPQC Hold' },
-    { engineNo: 'ENG20261113014', vr: 'VR1113014', kit: 'KIT014', stages: 9, status: 22, skuId: 1, desc: 'IPQC Hold Cleared' },
-    { engineNo: 'ENG20261113015', vr: 'VR1113015', kit: 'KIT015', stages: 14, status: 24, skuId: 1, desc: 'FQC Rework' },
-    { engineNo: 'ENG20261113016', vr: 'VR1113016', kit: 'KIT016', stages: 14, status: 25, skuId: 1, desc: 'FG Rework OK' },
-    { engineNo: 'ENG20261113017', vr: 'VR1113017', kit: 'KIT017', stages: 14, status: 26, skuId: 2, desc: 'FQC Hold' },
-    { engineNo: 'ENG20261113018', vr: 'VR1113018', kit: 'KIT018', stages: 14, status: 27, skuId: 2, desc: 'FQC Hold Cleared' },
-    { engineNo: 'ENG20261113019', vr: 'VR1113019', kit: 'KIT019', stages: 14, status: 28, skuId: 2, desc: 'FG Rejected' }
+    { engineNo: `ENG${todayCompact}001`, vr: `VR${todayShort}001`, kit: 'KIT001', stages: 14, status: 10, skuId: 1, desc: 'FG Engine' },
+    { engineNo: `ENG${todayCompact}002`, vr: `VR${todayShort}002`, kit: 'KIT002', stages: 14, status: 9, skuId: 1, desc: 'Assembly Completed' },
+    { engineNo: `ENG${todayCompact}003`, vr: `VR${todayShort}003`, kit: 'KIT003', stages: 10, status: 5, skuId: 1, desc: 'Engine In-Process' },
+    { engineNo: `ENG${todayCompact}004`, vr: `VR${todayShort}004`, kit: 'KIT004', stages: 7, status: 6, skuId: 1, desc: 'Not OK' },
+    { engineNo: `ENG${todayCompact}005`, vr: `VR${todayShort}005`, kit: 'KIT005', stages: 7, status: 7, skuId: 2, desc: 'Not OK Bypass' },
+    { engineNo: `ENG${todayCompact}006`, vr: `VR${todayShort}006`, kit: 'KIT006', stages: 12, status: 8, skuId: 2, desc: 'OK Bypass' },
+    { engineNo: `ENG${todayCompact}007`, vr: `VR${todayShort}007`, kit: 'KIT007', stages: 14, status: 11, skuId: 2, desc: 'Engine Scrapped' },
+    { engineNo: `ENG${todayCompact}008`, vr: `VR${todayShort}008`, kit: 'KIT008', stages: 6, status: 12, skuId: 3, desc: 'Material Hold' },
+    { engineNo: `ENG${todayCompact}009`, vr: `VR${todayShort}009`, kit: 'KIT009', stages: 9, status: 13, skuId: 3, desc: 'Material Hold Cleared' },
+    { engineNo: `ENG${todayCompact}010`, vr: `VR${todayShort}010`, kit: 'KIT010', stages: 8, status: 14, skuId: 3, desc: 'Production Rework' },
+    { engineNo: `ENG${todayCompact}011`, vr: `VR${todayShort}011`, kit: 'KIT011', stages: 11, status: 15, skuId: 5, desc: 'Rework OK' },
+    { engineNo: `ENG${todayCompact}012`, vr: `VR${todayShort}012`, kit: 'KIT012', stages: 7, status: 19, skuId: 5, desc: 'IPQC Rework' },
+    { engineNo: `ENG${todayCompact}013`, vr: `VR${todayShort}013`, kit: 'KIT013', stages: 7, status: 21, skuId: 5, desc: 'IPQC Hold' },
+    { engineNo: `ENG${todayCompact}014`, vr: `VR${todayShort}014`, kit: 'KIT014', stages: 9, status: 22, skuId: 1, desc: 'IPQC Hold Cleared' },
+    { engineNo: `ENG${todayCompact}015`, vr: `VR${todayShort}015`, kit: 'KIT015', stages: 14, status: 24, skuId: 1, desc: 'FQC Rework' },
+    { engineNo: `ENG${todayCompact}016`, vr: `VR${todayShort}016`, kit: 'KIT016', stages: 14, status: 25, skuId: 1, desc: 'FG Rework OK' },
+    { engineNo: `ENG${todayCompact}017`, vr: `VR${todayShort}017`, kit: 'KIT017', stages: 14, status: 26, skuId: 2, desc: 'FQC Hold' },
+    { engineNo: `ENG${todayCompact}018`, vr: `VR${todayShort}018`, kit: 'KIT018', stages: 14, status: 27, skuId: 2, desc: 'FQC Hold Cleared' },
+    { engineNo: `ENG${todayCompact}019`, vr: `VR${todayShort}019`, kit: 'KIT019', stages: 14, status: 28, skuId: 2, desc: 'FG Rejected' }
   ];
 
   // Fetch a plan ID from today to link WIP
-  const todayPlanRes = await pool.request().query("SELECT TOP 1 PlanID FROM Prod_Plan WHERE ProdDate = '2026-11-13' AND ProdShift = 'A' ORDER BY PlanID DESC");
+  const todayPlanRes = await pool.request().query(`SELECT TOP 1 PlanID FROM Prod_Plan WHERE ProdDate = '${todayYyyyMmDd}' AND ProdShift = 'A' ORDER BY PlanID DESC`);
   const defaultPlanId = todayPlanRes.recordset[0]?.PlanID || 1;
 
   let totalGenealogy = 0;
 
   for (let ei = 0; ei < testEngines.length; ei++) {
     const eng = testEngines[ei];
-    const startTime = new Date(2026, 10, 13, 8, 10 + ei * 3, 0);
+    const startTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 8, 10 + ei * 3, 0);
 
     // Insert into Prod_Engine_WIP
     await pool.request()
@@ -776,7 +785,7 @@ async function seedComprehensiveDummyData() {
       .input('Timestamp', sql.DateTime, startTime)
       .input('EngineNo', sql.NVarChar(14), eng.engineNo)
       .input('Status', sql.Int, 4) // Pre-Assembly
-      .input('ProdDate', sql.Date, '2026-11-13')
+      .input('ProdDate', sql.Date, todayYyyyMmDd)
       .input('ProdShift', sql.NVarChar(10), 'A')
       .query(`
         INSERT INTO Prod_Status_Geneology (Timestamp, EngineNo, Status, ProdDate, ProdShift)
@@ -789,7 +798,7 @@ async function seedComprehensiveDummyData() {
       .input('Timestamp', sql.DateTime, finishTime)
       .input('EngineNo', sql.NVarChar(14), eng.engineNo)
       .input('Status', sql.Int, eng.status)
-      .input('ProdDate', sql.Date, '2026-11-13')
+      .input('ProdDate', sql.Date, todayYyyyMmDd)
       .input('ProdShift', sql.NVarChar(10), 'A')
       .query(`
         INSERT INTO Prod_Status_Geneology (Timestamp, EngineNo, Status, ProdDate, ProdShift)

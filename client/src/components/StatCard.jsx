@@ -20,7 +20,10 @@ export default function StatCard({
   color = 'blue', 
   autoScale = false, 
   period = 'Month', 
-  sparkline 
+  sparkline,
+  leftTitle,
+  leftValue,
+  leftSub
 }) {
   const presets = {
     blue:   { border: 'border-t-[#0369a1]',  text: 'text-[#0369a1]', spark: 'bg-[#0369a1]' },
@@ -54,6 +57,13 @@ export default function StatCard({
       trendText = trend;
       trendUp = !trend.includes('-') && !trend.includes('▼') && !trend.toLowerCase().includes('reject') && !trend.toLowerCase().includes('low');
     }
+  }
+
+  let displayLeftValue = leftValue;
+  if (typeof leftValue === 'number') {
+    displayLeftValue = leftValue.toLocaleString();
+  } else if (leftValue === undefined || leftValue === null || String(leftValue).includes('undefined')) {
+    displayLeftValue = '0';
   }
 
   let displayValue = value;
@@ -145,6 +155,71 @@ export default function StatCard({
     }
     return `${momentumLabel}: ${effectiveSparkline.join(' → ')}`;
   }, [momentumLabel, isAllZero, effectiveSparkline]);
+
+  if (leftTitle !== undefined && leftTitle !== null && leftValue !== undefined && leftValue !== null) {
+    return (
+      <div className={`card flex flex-col justify-between gap-2 border-t-4 ${borderClass} relative overflow-hidden p-3.5`}>
+        <div className="grid grid-cols-2 divide-x divide-slate-200">
+          {/* Left Side: Checkpoint Stat */}
+          <div className="pr-3 flex flex-col justify-between">
+            <p className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider leading-tight truncate" title={leftTitle}>
+              {leftTitle}
+            </p>
+            <p className={`text-2xl font-black ${textClass} leading-none mt-1.5`}>
+              {displayLeftValue}
+            </p>
+            {leftSub && <p className="text-[10px] text-slate-400 font-medium mt-1 truncate">{leftSub}</p>}
+          </div>
+
+          {/* Right Side: Checklist Stat */}
+          <div className="pl-3 flex flex-col justify-between">
+            <p className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider leading-tight truncate" title={title}>
+              {title}
+            </p>
+            <p className={`text-2xl font-black ${textClass} leading-none mt-1.5`}>
+              {displayValue}
+            </p>
+            {sub && <p className="text-[10px] text-slate-400 font-medium mt-1 truncate">{sub}</p>}
+          </div>
+        </div>
+
+        <div className="flex items-end justify-between gap-2 mt-0.5 pt-1.5 border-t border-slate-100/90">
+          <div className="flex flex-col">
+            {isValidTrend ? (
+              <p className={`text-[11px] font-bold ${trendUp ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {trendText} {trendLabel ? trendLabel : ''}
+              </p>
+            ) : (
+              <span className="text-[10px] text-slate-400 font-medium">{resolvedPeriod} Total</span>
+            )}
+          </div>
+
+          {/* Dynamic Micro-Sparkline */}
+          <div 
+            className="flex items-end gap-1 h-5 px-1.5 py-0.5 rounded bg-slate-50/80 border border-slate-100 cursor-help" 
+            title={tooltipText}
+          >
+            {isAllZero ? (
+              <div className="w-8 h-0.5 bg-slate-200 self-center rounded-full" />
+            ) : (
+              effectiveSparkline.map((val, idx) => {
+                const heightPct = val === 0 ? 8 : Math.max(15, Math.round((val / maxSpark) * 100));
+                const barUnit = momentumLabel.includes('Hourly') ? 'Hour' : momentumLabel.includes('Daily') ? 'Day' : 'Interval';
+                return (
+                  <div
+                    key={idx}
+                    className={`w-1 rounded-sm transition-all duration-300 ${sparkColor} ${idx === effectiveSparkline.length - 1 ? 'opacity-100 shadow-sm' : 'opacity-55'}`}
+                    style={{ height: `${heightPct}%` }}
+                    title={`${barUnit} ${idx + 1}: ${val}`}
+                  />
+                );
+              })
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`card flex flex-col justify-between gap-1.5 border-t-4 ${borderClass} relative overflow-hidden`}>

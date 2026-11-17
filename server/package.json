@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "seed": "node seed_live_data.js",
+    "seed": "node seed_comprehensive_dummy_data.js",
+    "seed:comprehensive": "node seed_comprehensive_dummy_data.js",
+    "seed:legacy": "node seed_live_data.js",
     "seed:30days": "node seed_30_days.js",
     "seed:rollback": "node rollback_seed.js",
     "test": "echo \"Error: no test specified\" && exit 1"

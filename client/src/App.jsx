@@ -130,9 +130,9 @@ function App() {
             <Route path="iqc-checklist" element={<Suspense fallback={<Loading />}><IQCChecklistReport /></Suspense>} />
             <Route path="ipqc-checklist" element={<Suspense fallback={<Loading />}><IPQCChecklistReport /></Suspense>} />
             <Route path="fqc-checklist" element={<Suspense fallback={<Loading />}><FQCChecklistReport /></Suspense>} />
-            <Route path="iqc-checkpoint" element={<Suspense fallback={<Loading />}><IQCCheckpointReport /></Suspense>} />
-            <Route path="ipqc-checkpoint" element={<Suspense fallback={<Loading />}><IPQCCheckpointReport /></Suspense>} />
-            <Route path="fqc-checkpoint" element={<Suspense fallback={<Loading />}><FQCCheckpointReport /></Suspense>} />
+            <Route path="iqc-checkpoint" element={<Navigate to="/quality/iqc-checklist" replace />} />
+            <Route path="ipqc-checkpoint" element={<Navigate to="/quality/ipqc-checklist" replace />} />
+            <Route path="fqc-checkpoint" element={<Navigate to="/quality/fqc-checklist" replace />} />
           </Route>
 
           {/* Maintenance Module */}
