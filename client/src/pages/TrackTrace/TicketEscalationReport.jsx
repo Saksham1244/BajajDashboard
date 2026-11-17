@@ -515,22 +515,22 @@ export default function TicketEscalationReport() {
 
           <div className="flex items-center gap-3 text-xs">
             {/* Status Selector moved to the table header beside Escalated Tag Highlight */}
-            <div className="flex items-center gap-1.5 bg-white border border-orange-300 rounded-lg px-2.5 py-1 shadow-2xs">
+            <div className="flex items-center gap-2 bg-white border border-orange-300 hover:border-orange-400 rounded-lg px-2.5 py-1 shadow-2xs transition-colors">
               <span className="font-black text-orange-900 uppercase tracking-wider text-[10.5px]">Status:</span>
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="bg-white font-bold rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500 cursor-pointer"
+                className="bg-transparent font-bold text-xs text-slate-800 focus:outline-none cursor-pointer pr-1"
               >
                 <option value="All">All Statuses</option>
                 <option value="Open">Open</option>
-                <option value="Escalated">⚠️ Escalated</option>
+                <option value="Escalated">Escalated</option>
                 <option value="Closed">Closed</option>
               </select>
             </div>
 
-            <span className="flex items-center gap-1.5 font-semibold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200 shadow-2xs">
-              <span className="w-2 h-2 rounded-full bg-rose-500" />
+            <span className="flex items-center gap-1.5 font-bold text-xs text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200 shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
               <span>Escalated Tag Highlighted</span>
             </span>
           </div>
@@ -544,20 +544,20 @@ export default function TicketEscalationReport() {
               <tr>
                 <th className="p-1.5 text-center w-[2.5%]"></th>
                 <th className="p-1.5 w-[6%] truncate" title="Ticket ID">Ticket ID</th>
-                <th className="p-1.5 w-[9%] truncate" title="Reason">Reason</th>
+                <th className="p-1.5 w-[9.5%] truncate" title="Reason">Reason</th>
                 <th className="p-1.5 w-[7%] truncate" title="Date & Time">Date & Time</th>
-                <th className="p-1.5 w-[4.5%] truncate" title="Line Name">Line</th>
+                <th className="p-1.5 w-[4%] truncate" title="Line Name">Line</th>
                 <th className="p-1.5 w-[8%] truncate" title="Station Name">Station</th>
-                <th className="p-1.5 w-[6%] truncate" title="Activity Desc">Activity</th>
+                <th className="p-1.5 w-[4%] truncate" title="Activity Desc">Activity</th>
                 <th className="p-1.5 w-[6.5%] truncate" title="Part Name">Part Name</th>
-                <th className="p-1.5 w-[6%] truncate" title="Equipment Name">Equipment</th>
-                <th className="p-1.5 w-[5.5%] truncate" title="Breakdown ID">Breakdown</th>
+                <th className="p-1.5 w-[5%] truncate" title="Equipment Name">Equipment</th>
+                <th className="p-1.5 w-[4.5%] truncate" title="Breakdown ID">Breakdown</th>
                 <th className="p-1.5 w-[7.5%] truncate" title="Engine No">Engine No</th>
-                <th className="p-1.5 w-[5.5%] truncate" title="Raised By">Raised By</th>
-                <th className="p-1.5 w-[6.5%] truncate" title="Action By">Action By</th>
+                <th className="p-1.5 w-[5%] truncate" title="Raised By">Raised By</th>
+                <th className="p-1.5 w-[7%] truncate" title="Action By">Action By</th>
                 <th className="p-1.5 w-[8.5%] truncate" title="Remark">Remark</th>
-                <th className="p-1.5 w-[5.5%] truncate" title="Expected Closure">Exp Closure</th>
-                <th className="p-1.5 text-center w-[5.5%] truncate" title="Status">Status</th>
+                <th className="p-1.5 text-center w-[6.5%] whitespace-nowrap" title="Expected Closure">Exp Closure</th>
+                <th className="p-1.5 text-center w-[8.5%] whitespace-nowrap" title="Status">Status</th>
               </tr>
             </thead>
 
@@ -695,12 +695,12 @@ export default function TicketEscalationReport() {
 
                         {/* 13. Action By */}
                         <td className="p-1.5 truncate" title={ticket.ActionBy}>
-                          <span className={`font-semibold px-1 py-0.5 rounded text-[10px] truncate inline-block max-w-full ${
+                          <span className={`font-semibold px-2 py-0.5 rounded-full text-[10.5px] truncate inline-block max-w-full ${
                             ticket.ActionBy === 'Higher Management'
                               ? 'bg-amber-100 text-amber-900 font-bold border border-amber-300'
-                              : 'bg-orange-50 text-orange-800'
+                              : 'bg-slate-100 text-slate-700'
                           }`}>
-                            {ticket.ActionBy}
+                            {ticket.ActionBy === 'Higher Management' ? 'Higher Mgmt' : ticket.ActionBy}
                           </span>
                         </td>
 
@@ -710,7 +710,7 @@ export default function TicketEscalationReport() {
                         </td>
 
                         {/* 15. Expected Closure */}
-                        <td className="p-1.5 text-[10px] truncate" title={ticket.ExpectedClosure ? new Date(ticket.ExpectedClosure).toLocaleDateString('en-IN') : '-'}>
+                        <td className="p-1.5 text-center whitespace-nowrap text-[10.5px]" title={ticket.ExpectedClosure ? new Date(ticket.ExpectedClosure).toLocaleDateString('en-IN') : '-'}>
                           {ticket.ExpectedClosure ? (
                             <span className={`font-semibold ${
                               new Date(ticket.ExpectedClosure) < new Date() && ticket.statusText !== 'Closed'
@@ -723,18 +723,30 @@ export default function TicketEscalationReport() {
                         </td>
 
                         {/* 16. Status (with Escalated tag) */}
-                        <td className="p-1.5 text-center truncate">
+                        <td className="p-1.5 text-center whitespace-nowrap">
                           {ticket.isEscalated ? (
-                            <span className="inline-flex items-center justify-center gap-0.5 px-1 py-0.5 bg-rose-600 text-white rounded text-[9.5px] font-black uppercase shadow-2xs truncate max-w-full" title="Escalated">
-                              ⚠️ Escalated
+                            <span 
+                              className="inline-flex items-center justify-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-rose-50 text-rose-700 border border-rose-300 shadow-2xs whitespace-nowrap"
+                              title="Escalated Ticket - Requires Management Attention"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                              <span>Escalated</span>
+                            </span>
+                          ) : ticket.statusText === 'Closed' ? (
+                            <span 
+                              className="inline-flex items-center justify-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs whitespace-nowrap"
+                              title="Closed Ticket"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                              <span>Closed</span>
                             </span>
                           ) : (
-                            <span className={`inline-block px-1.5 py-0.5 rounded text-[9.5px] font-black uppercase truncate max-w-full ${
-                              ticket.statusText === 'Closed'
-                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                : 'bg-amber-100 text-amber-800 border border-amber-200'
-                            }`}>
-                              {ticket.statusText}
+                            <span 
+                              className="inline-flex items-center justify-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shadow-2xs whitespace-nowrap"
+                              title="Open Ticket"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                              <span>Open</span>
                             </span>
                           )}
                         </td>
