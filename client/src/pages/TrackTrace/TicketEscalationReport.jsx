@@ -331,21 +331,6 @@ export default function TicketEscalationReport() {
               />
             </div>
 
-            {/* Status Filter IN HEADER (Requested: "add stastu filter in the header") */}
-            <div className="flex items-center gap-1.5 text-xs bg-orange-50/70 border border-orange-200 rounded-lg px-2.5 py-1">
-              <span className="font-black text-orange-900 uppercase tracking-wider text-[10.5px]">Status:</span>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="bg-white border border-orange-300 font-bold rounded px-2 py-0.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500 shadow-2xs"
-              >
-                <option value="All">All Statuses</option>
-                <option value="Open">Open</option>
-                <option value="Escalated">⚠️ Escalated</option>
-                <option value="Closed">Closed</option>
-              </select>
-            </div>
-
             {/* Shift Dropdown */}
             <div className="flex items-center gap-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1">
               <span className="font-semibold text-slate-600">Shift:</span>
@@ -529,7 +514,22 @@ export default function TicketEscalationReport() {
           </div>
 
           <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1 font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+            {/* Status Selector moved to the table header beside Escalated Tag Highlight */}
+            <div className="flex items-center gap-1.5 bg-white border border-orange-300 rounded-lg px-2.5 py-1 shadow-2xs">
+              <span className="font-black text-orange-900 uppercase tracking-wider text-[10.5px]">Status:</span>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="bg-white font-bold rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500 cursor-pointer"
+              >
+                <option value="All">All Statuses</option>
+                <option value="Open">Open</option>
+                <option value="Escalated">⚠️ Escalated</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
+
+            <span className="flex items-center gap-1.5 font-semibold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200 shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-rose-500" />
               <span>Escalated Tag Highlighted</span>
             </span>
