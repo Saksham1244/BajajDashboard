@@ -32,6 +32,7 @@ const GenealogyReport        = lazy(() => import('./pages/TrackTrace/GenealogyRe
 const WIPReport              = lazy(() => import('./pages/TrackTrace/WIPReport'))
 const ReworkStatusReport     = lazy(() => import('./pages/TrackTrace/ReworkStatusReport'))
 const EngineReworkReport     = lazy(() => import('./pages/TrackTrace/EngineReworkReport'))
+const TicketEscalationReport = lazy(() => import('./pages/TrackTrace/TicketEscalationReport'))
 
 const DefectReport           = lazy(() => import('./pages/Quality/DefectReport'))
 const PQCAReport             = lazy(() => import('./pages/Quality/PQCAReport'))
@@ -120,6 +121,8 @@ function App() {
             <Route path="wip" element={<Suspense fallback={<Loading />}><WIPReport /></Suspense>} />
             <Route path="rework" element={<Navigate to="/production/rework" replace />} />
             <Route path="engine-rework" element={<Suspense fallback={<Loading />}><EngineReworkReport /></Suspense>} />
+            <Route path="ticket-escalation" element={<Suspense fallback={<Loading />}><TicketEscalationReport /></Suspense>} />
+            <Route path="ticket-report" element={<Navigate to="/trace/ticket-escalation" replace />} />
           </Route>
 
           {/* Quality Module */}

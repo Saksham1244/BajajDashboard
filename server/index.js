@@ -2404,6 +2404,400 @@ app.get('/api/trace/engine-rework', async (req, res) => {
   });
 });
 
+// ======================================================================================
+// 3.4. [dbo].[TicketManagement] - TICKET ESCALATION REPORT
+// Used by: GET /api/trace/ticket-escalation (TicketEscalationReport.jsx)
+// Section 3: Ticket Details (with Escalated tag, status filter)
+// Section 4: Ticket Communication Details
+// Section 5: Engine Hold Details & Defect Points
+// ======================================================================================
+app.get('/api/trace/ticket-escalation', async (req, res) => {
+  const { period, shift, startDate, endDate, line, status, createdBy, actionBy, search } = req.query;
+  const dbShift = normalizeShift(shift, period);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const query = `
+        SELECT 
+          TM.UID,
+          TM.TicketID,
+          TM.TimeStamp,
+          TM.LineID,
+          L.LineName,
+          TM.StationID,
+          S.StationName,
+          S.StationDesc,
+          TM.ActivityID,
+          A.ActivityDesc,
+          TM.PartID,
+          COALESCE(PV.PartName, B.PartDesc, EP.EnginePartDesc, TM.PartID) AS PartName,
+          TM.EquipmentID,
+          E.EquipmentName,
+          TM.BreakdownID,
+          TM.EngineNo,
+          TM.RaiseBy,
+          TM.Reason,
+          TM.ActionBy,
+          TM.Remark,
+          TM.TrackingSeqNo,
+          TM.ExpectedClosure,
+          TM.TicketStatus
+        FROM TicketManagement TM
+        LEFT JOIN Config_Line L ON TM.LineID = L.LineID
+        LEFT JOIN Config_Station S ON TM.StationID = S.StationID
+        LEFT JOIN Config_Activity A ON TM.ActivityID = A.ActivityID
+        LEFT JOIN Config_Equipment E ON TM.EquipmentID = E.EquipmentID
+        LEFT JOIN Config_PartVariant PV ON TM.PartID = PV.PartID
+        LEFT JOIN Config_BOM B ON TM.PartID = B.PartID
+        LEFT JOIN Config_EnginePart EP ON TM.PartID = EP.EnginePartID
+        ORDER BY TM.TicketID DESC, TM.TrackingSeqNo ASC
+      `;
+      const ticketRes = await pool.request().query(query);
+      const ticketRows = ticketRes.recordset || [];
+
+      const holdRes = await pool.request().query(`
+        SELECT 
+          EH.UID,
+          EH.TicketID,
+          EH.AuditGroup,
+          EH.HoldType,
+          EH.PartID,
+          COALESCE(PV.PartName, EH.PartID) AS PartName,
+          EH.PartBatchID,
+          EH.PlanID,
+          EH.ForwardQty,
+          EH.BackwordQty,
+          EH.OkQty,
+          EH.RejectedQty,
+          EH.Status
+        FROM Prod_EngineHold EH
+        LEFT JOIN Config_PartVariant PV ON EH.PartID = PV.PartID
+      `);
+      const holdRows = holdRes.recordset || [];
+
+      const defectRes = await pool.request().query(`
+        SELECT 
+          DL.DefectLogID,
+          DL.TicketID,
+          DL.TimeStamp,
+          DL.InspectionRefID,
+          DL.DefectRefID,
+          DL.EngineNo,
+          DL.Remark,
+          DL.EngineStatus,
+          DL.DefectStatus,
+          U.UserName AS UpdatedBy,
+          DL.LastUpdatedTime,
+          DL.QAlert,
+          COALESCE(IP.InspectionPointName, 'Station ' + CAST(DL.InspectionRefID as varchar)) AS InspectionPoint,
+          COALESCE(ID.DefectName, DL.Remark) AS DefectPoint
+        FROM Prod_Defect_Log DL
+        LEFT JOIN Config_User U ON DL.UpdatedBy = U.UserID
+        LEFT JOIN Config_Inspection_Point IP ON DL.InspectionRefID = IP.InspectionPointID
+        LEFT JOIN Config_Inspection_Defect ID ON DL.DefectRefID = ID.DefectID
+      `);
+      const defectRows = defectRes.recordset || [];
+
+      const notifRes = await pool.request().query(`
+        SELECT 
+          NM.NotificationID,
+          NM.NotificationDesc,
+          NM.TimeStamp,
+          U.UserName as RaiseBy,
+          NM.LineID,
+          NM.StationID,
+          NM.Category as Department,
+          NM.Role,
+          NM.Status
+        FROM NotificationManagement NM
+        LEFT JOIN Config_User U ON NM.RaiseBy = U.UserID
+        ORDER BY NM.TimeStamp ASC
+      `);
+      const notifRows = notifRes.recordset || [];
+
+      const ticketMap = new Map();
+      ticketRows.forEach(row => {
+        if (!ticketMap.has(row.TicketID)) {
+          ticketMap.set(row.TicketID, {
+            TicketID: row.TicketID,
+            Reason: row.Reason || 'Engine Defect',
+            TimeDate: row.TimeStamp,
+            LineName: row.LineName || `Line ${row.LineID}`,
+            StationName: row.StationName ? `${row.StationName} (${row.StationDesc || ''})` : `Station ${row.StationID}`,
+            ActivityDesc: row.ActivityDesc || '-',
+            PartName: row.PartName || '-',
+            EquipmentName: row.EquipmentName || '-',
+            BreakdownID: row.BreakdownID ? `BD-${row.BreakdownID}` : '-',
+            EngineNo: row.EngineNo || '-',
+            RaiseBy: row.RaiseBy || 'Quality',
+            ActionBy: row.ActionBy || 'Production',
+            Remark: row.Remark || '-',
+            ExpectedClosure: row.ExpectedClosure,
+            TicketStatus: row.TicketStatus,
+            trackingHistory: []
+          });
+        }
+        const tkt = ticketMap.get(row.TicketID);
+        tkt.trackingHistory.push(row);
+        tkt.ActionBy = row.ActionBy || tkt.ActionBy;
+        tkt.Remark = row.Remark || tkt.Remark;
+        tkt.TicketStatus = row.TicketStatus;
+        if (row.ExpectedClosure) tkt.ExpectedClosure = row.ExpectedClosure;
+      });
+
+      const now = new Date();
+      let allTickets = [];
+
+      for (const [tktId, tkt] of ticketMap.entries()) {
+        let statusText = 'Open';
+        if (tkt.TicketStatus === 2) statusText = 'Escalated';
+        else if (tkt.TicketStatus === 3) statusText = 'Closed';
+        else if (tkt.TicketStatus === 4) statusText = 'Under Review';
+
+        const isOverdue = tkt.ExpectedClosure && new Date(tkt.ExpectedClosure) < now && statusText !== 'Closed';
+        const isEscalated = statusText === 'Escalated' || isOverdue;
+
+        const comms = [];
+        tkt.trackingHistory.forEach(tr => {
+          comms.push({
+            Department: tr.ActionBy || tr.RaiseBy || 'Production',
+            Role: tr.ActionBy === 'Higher Management' ? 'Plant Head / Mgmt' : tr.ActionBy === 'Quality' ? 'QA Lead' : 'Supervisor',
+            Remark: tr.Remark,
+            TimeDate: tr.TimeStamp
+          });
+        });
+
+        notifRows.filter(n => n.StationID === tkt.trackingHistory[0]?.StationID).forEach(n => {
+          if (!comms.some(c => c.Remark === n.NotificationDesc)) {
+            comms.push({
+              Department: n.Department,
+              Role: n.Role,
+              Remark: n.NotificationDesc,
+              TimeDate: n.TimeStamp
+            });
+          }
+        });
+
+        const holds = holdRows.filter(h => h.TicketID === tktId || (tkt.EngineNo !== '-' && h.EngineNo === tkt.EngineNo)).map(h => ({
+          AuditGroup: `Group ${h.AuditGroup}`,
+          HoldType: h.HoldType === 1 ? 'Line Hold' : h.HoldType === 2 ? 'Quality Hold' : 'Material Hold',
+          PartID: h.PartID || tkt.PartName || '-',
+          PartBatchID: h.PartBatchID || '-',
+          PlanID: h.PlanID ? `PLAN-${h.PlanID}` : '-',
+          EngineNo: tkt.EngineNo,
+          ForwardQty: h.ForwardQty,
+          BackwardQty: h.BackwordQty,
+          OkQty: h.OkQty,
+          RejectedQty: h.RejectedQty,
+          Status: h.Status === 1 ? 'Active Hold' : h.Status === 2 ? 'Under Inspection' : 'Released'
+        }));
+
+        const defects = defectRows.filter(d => d.TicketID === tktId || (tkt.EngineNo !== '-' && d.EngineNo === tkt.EngineNo)).map(d => ({
+          InspectionPoint: d.InspectionPoint,
+          DefectPoint: d.DefectPoint,
+          EngineNo: d.EngineNo || tkt.EngineNo,
+          Remark: d.Remark,
+          DateTime: d.TimeStamp,
+          EngineStatus: d.EngineStatus === 21 ? 'Rework OK' : d.EngineStatus === 22 ? 'Quality Hold' : 'Inspection Pending',
+          DefectStatus: d.DefectStatus === 1 ? 'Pending' : 'Resolved',
+          UpdatedBy: d.UpdatedBy || 'QA Inspector',
+          LastUpdatedTime: d.LastUpdatedTime
+        }));
+
+        allTickets.push({
+          ...tkt,
+          statusText,
+          isEscalated,
+          communications: comms,
+          engineHold: {
+            holdSummary: holds,
+            defectDetails: defects
+          }
+        });
+      }
+
+      if (line && line !== 'All') {
+        allTickets = allTickets.filter(t => t.LineName === line || t.LineName.includes(line));
+      }
+
+      if (status && status !== 'All') {
+        const lowerStatus = status.toLowerCase();
+        if (lowerStatus === 'escalated') {
+          allTickets = allTickets.filter(t => t.isEscalated);
+        } else {
+          allTickets = allTickets.filter(t => t.statusText.toLowerCase() === lowerStatus);
+        }
+      }
+
+      if (createdBy && createdBy !== 'All') {
+        allTickets = allTickets.filter(t => t.RaiseBy?.toLowerCase() === createdBy.toLowerCase());
+      }
+
+      if (actionBy && actionBy !== 'All') {
+        allTickets = allTickets.filter(t => t.ActionBy?.toLowerCase() === actionBy.toLowerCase());
+      }
+
+      if (search && search.trim()) {
+        const q = search.trim().toLowerCase();
+        allTickets = allTickets.filter(t => 
+          String(t.TicketID).includes(q) ||
+          t.EngineNo?.toLowerCase().includes(q) ||
+          t.Reason?.toLowerCase().includes(q) ||
+          t.Remark?.toLowerCase().includes(q) ||
+          t.LineName?.toLowerCase().includes(q) ||
+          t.StationName?.toLowerCase().includes(q)
+        );
+      }
+
+      const totalCreated = allTickets.length;
+      const totalOpened = allTickets.filter(t => t.statusText === 'Open').length;
+      const totalClosed = allTickets.filter(t => t.statusText === 'Closed').length;
+      const totalEscalated = allTickets.filter(t => t.isEscalated).length;
+
+      return res.json({
+        kpis: {
+          totalCreated,
+          totalOpened,
+          totalClosed,
+          totalEscalated
+        },
+        tickets: allTickets,
+        filterOptions: {
+          lines: ['All', 'Line C', 'Line D'],
+          statuses: ['All', 'Open', 'Escalated', 'Closed'],
+          departments: ['All', 'Quality', 'Production', 'Maintenance', 'Higher Management'],
+          shifts: ['All', 'Shift A', 'Shift B', 'Shift C']
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Ticket Escalation DB error:', err.message);
+  }
+
+  res.json({
+    kpis: { totalCreated: 0, totalOpened: 0, totalClosed: 0, totalEscalated: 0 },
+    tickets: [],
+    filterOptions: {
+      lines: ['All', 'Line C', 'Line D'],
+      statuses: ['All', 'Open', 'Escalated', 'Closed'],
+      departments: ['All', 'Quality', 'Production', 'Maintenance', 'Higher Management'],
+      shifts: ['All', 'Shift A', 'Shift B', 'Shift C']
+    }
+  });
+});
+
+app.post('/api/trace/ticket-escalation/comment', async (req, res) => {
+  const { ticketId, comment, department = 'Higher Management', role = 'Plant Head', actionBy = 'Higher Management', escalate = false } = req.body;
+  if (!ticketId || !comment) {
+    return res.status(400).json({ error: 'ticketId and comment are required' });
+  }
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const maxSeqRes = await pool.request()
+        .input('TicketID', sql.Int, ticketId)
+        .query('SELECT ISNULL(MAX(TrackingSeqNo), 0) as maxSeq, MAX(LineID) as lineId, MAX(StationID) as stationId, MAX(Reason) as reason, MAX(EngineNo) as engineNo FROM TicketManagement WHERE TicketID = @TicketID');
+      
+      const nextSeq = (maxSeqRes.recordset[0]?.maxSeq || 0) + 1;
+      const lineId = maxSeqRes.recordset[0]?.lineId || 1;
+      const stationId = maxSeqRes.recordset[0]?.stationId || 487;
+      const reason = maxSeqRes.recordset[0]?.reason || 'Escalation Update';
+      const engineNo = maxSeqRes.recordset[0]?.engineNo || null;
+      const newStatus = escalate ? 2 : 1;
+
+      await pool.request()
+        .input('TicketID', sql.Int, ticketId)
+        .input('LineID', sql.Int, lineId)
+        .input('StationID', sql.Int, stationId)
+        .input('EngineNo', sql.NVarChar(14), engineNo)
+        .input('Reason', sql.NVarChar(sql.MAX), reason)
+        .input('RaiseBy', sql.NVarChar(50), department)
+        .input('ActionBy', sql.NVarChar(50), actionBy)
+        .input('Remark', sql.NVarChar(sql.MAX), comment)
+        .input('TrackingSeqNo', sql.Int, nextSeq)
+        .input('TicketStatus', sql.Int, newStatus)
+        .query(`
+          INSERT INTO TicketManagement (TicketID, TimeStamp, LineID, StationID, ActivityID, PartID, EquipmentID, BreakdownID, EngineNo, RaiseBy, Reason, ActionBy, Remark, TrackingSeqNo, ExpectedClosure, TicketStatus)
+          VALUES (@TicketID, GETDATE(), @LineID, @StationID, NULL, NULL, NULL, NULL, @EngineNo, @RaiseBy, @Reason, @ActionBy, @Remark, @TrackingSeqNo, NULL, @TicketStatus)
+        `);
+
+      await pool.request()
+        .input('Desc', sql.NVarChar(sql.MAX), `[Mgmt Comment] ${comment}`)
+        .input('RaiseBy', sql.NVarChar(50), '2')
+        .input('LineID', sql.Int, lineId)
+        .input('StationID', sql.Int, stationId)
+        .input('Category', sql.NVarChar(50), department)
+        .input('Role', sql.NVarChar(50), role)
+        .input('Status', sql.Int, 2)
+        .query(`
+          INSERT INTO NotificationManagement (NotificationDesc, TimeStamp, RaiseBy, LineID, StationID, Category, Role, Status)
+          VALUES (@Desc, GETDATE(), @RaiseBy, @LineID, @StationID, @Category, @Role, @Status)
+        `);
+
+      return res.json({ success: true, message: 'Higher management comment recorded and escalation updated' });
+    }
+  } catch (err) {
+    console.error('Comment insertion error:', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/trace/ticket-escalation/email', async (req, res) => {
+  const { ticketId, recipients, subject, managementComment } = req.body;
+  if (!ticketId) {
+    return res.status(400).json({ error: 'ticketId is required' });
+  }
+
+  try {
+    const pool = await poolPromise;
+    if (pool && managementComment) {
+      const maxSeqRes = await pool.request()
+        .input('TicketID', sql.Int, ticketId)
+        .query('SELECT ISNULL(MAX(TrackingSeqNo), 0) as maxSeq, MAX(LineID) as lineId, MAX(StationID) as stationId, MAX(Reason) as reason, MAX(EngineNo) as engineNo FROM TicketManagement WHERE TicketID = @TicketID');
+      
+      const nextSeq = (maxSeqRes.recordset[0]?.maxSeq || 0) + 1;
+      const lineId = maxSeqRes.recordset[0]?.lineId || 1;
+      const stationId = maxSeqRes.recordset[0]?.stationId || 487;
+      const reason = maxSeqRes.recordset[0]?.reason || 'Escalation Notice';
+      const engineNo = maxSeqRes.recordset[0]?.engineNo || null;
+
+      await pool.request()
+        .input('TicketID', sql.Int, ticketId)
+        .input('LineID', sql.Int, lineId)
+        .input('StationID', sql.Int, stationId)
+        .input('EngineNo', sql.NVarChar(14), engineNo)
+        .input('Reason', sql.NVarChar(sql.MAX), reason)
+        .input('RaiseBy', sql.NVarChar(50), 'Higher Management')
+        .input('ActionBy', sql.NVarChar(50), 'Higher Management')
+        .input('Remark', sql.NVarChar(sql.MAX), `[Email Sent to Management] ${managementComment}`)
+        .input('TrackingSeqNo', sql.Int, nextSeq)
+        .input('TicketStatus', sql.Int, 2)
+        .query(`
+          INSERT INTO TicketManagement (TicketID, TimeStamp, LineID, StationID, ActivityID, PartID, EquipmentID, BreakdownID, EngineNo, RaiseBy, Reason, ActionBy, Remark, TrackingSeqNo, ExpectedClosure, TicketStatus)
+          VALUES (@TicketID, GETDATE(), @LineID, @StationID, NULL, NULL, NULL, NULL, @EngineNo, @RaiseBy, @Reason, @ActionBy, @Remark, @TrackingSeqNo, NULL, @TicketStatus)
+        `);
+    }
+
+    const mailtoRecipients = recipients || 'planthead@bajajauto.co.in;qualityhead@bajajauto.co.in';
+    const mailtoSubject = encodeURIComponent(subject || `[PPMS Escalation Alert] Ticket #${ticketId}`);
+    const mailtoBody = encodeURIComponent(`Escalation Report for Ticket #${ticketId}\n\nManagement Comment:\n${managementComment || 'Please review this high priority escalation.'}\n\nGenerated by Bajaj PPMS`);
+    const mailtoUrl = `mailto:${mailtoRecipients}?subject=${mailtoSubject}&body=${mailtoBody}`;
+
+    return res.json({
+      success: true,
+      message: 'Escalation email notification processed and logged to ticket communication history.',
+      mailtoUrl
+    });
+  } catch (err) {
+    console.error('Email dispatch error:', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+
 // ==========================================
 // 5. QUALITY MODULE ENDPOINTS
 // ==========================================
