@@ -2641,11 +2641,19 @@ app.get('/api/trace/ticket-escalation', async (req, res) => {
 
       if (search && search.trim()) {
         const q = search.trim().toLowerCase();
+        const idNum = q.replace(/^tkt-?/i, '').trim();
         allTickets = allTickets.filter(t => 
           String(t.TicketID).includes(q) ||
+          (idNum && String(t.TicketID) === idNum) ||
+          `tkt-${t.TicketID}`.toLowerCase().includes(q) ||
           t.EngineNo?.toLowerCase().includes(q) ||
           t.Reason?.toLowerCase().includes(q) ||
           t.Remark?.toLowerCase().includes(q) ||
+          t.PartName?.toLowerCase().includes(q) ||
+          t.EquipmentName?.toLowerCase().includes(q) ||
+          t.RaiseBy?.toLowerCase().includes(q) ||
+          t.ActionBy?.toLowerCase().includes(q) ||
+          t.statusText?.toLowerCase().includes(q) ||
           t.LineName?.toLowerCase().includes(q) ||
           t.StationName?.toLowerCase().includes(q)
         );
