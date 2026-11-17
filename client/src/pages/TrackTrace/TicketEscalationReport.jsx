@@ -537,27 +537,27 @@ export default function TicketEscalationReport() {
         </div>
 
         {/* Complete Table with All Columns and Dedicated Header */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse min-w-[1250px]">
+        <div className="w-full overflow-hidden">
+          <table className="w-full table-fixed text-left text-[11px] border-collapse">
             {/* Comprehensive Table Header with ALL columns */}
             <thead className="bg-[#fed7aa]/35 border-b border-orange-200 text-slate-800 font-black tracking-tight select-none">
               <tr>
-                <th className="p-2.5 text-center w-10">Expand</th>
-                <th className="p-2.5 w-24">Ticket ID</th>
-                <th className="p-2.5 w-44">Reason</th>
-                <th className="p-2.5 w-32">Date & Time</th>
-                <th className="p-2.5 w-24">Line Name</th>
-                <th className="p-2.5 w-36">Station Name</th>
-                <th className="p-2.5 w-32">Activity Desc</th>
-                <th className="p-2.5 w-36">Part Name</th>
-                <th className="p-2.5 w-32">Equipment Name</th>
-                <th className="p-2.5 w-24">Breakdown ID</th>
-                <th className="p-2.5 w-32">Engine No</th>
-                <th className="p-2.5 w-24">Raised By</th>
-                <th className="p-2.5 w-28">Action By</th>
-                <th className="p-2.5 min-w-[200px]">Remark</th>
-                <th className="p-2.5 w-28">Expected Closure</th>
-                <th className="p-2.5 text-center w-28">Status</th>
+                <th className="p-1.5 text-center w-[2.5%]"></th>
+                <th className="p-1.5 w-[6%] truncate" title="Ticket ID">Ticket ID</th>
+                <th className="p-1.5 w-[9%] truncate" title="Reason">Reason</th>
+                <th className="p-1.5 w-[7%] truncate" title="Date & Time">Date & Time</th>
+                <th className="p-1.5 w-[4.5%] truncate" title="Line Name">Line</th>
+                <th className="p-1.5 w-[8%] truncate" title="Station Name">Station</th>
+                <th className="p-1.5 w-[6%] truncate" title="Activity Desc">Activity</th>
+                <th className="p-1.5 w-[6.5%] truncate" title="Part Name">Part Name</th>
+                <th className="p-1.5 w-[6%] truncate" title="Equipment Name">Equipment</th>
+                <th className="p-1.5 w-[5.5%] truncate" title="Breakdown ID">Breakdown</th>
+                <th className="p-1.5 w-[7.5%] truncate" title="Engine No">Engine No</th>
+                <th className="p-1.5 w-[5.5%] truncate" title="Raised By">Raised By</th>
+                <th className="p-1.5 w-[6.5%] truncate" title="Action By">Action By</th>
+                <th className="p-1.5 w-[8.5%] truncate" title="Remark">Remark</th>
+                <th className="p-1.5 w-[5.5%] truncate" title="Expected Closure">Exp Closure</th>
+                <th className="p-1.5 text-center w-[5.5%] truncate" title="Status">Status</th>
               </tr>
             </thead>
 
@@ -600,15 +600,15 @@ export default function TicketEscalationReport() {
                         } ${isExpanded ? 'bg-orange-50/20' : ''}`}
                       >
                         {/* 1. Expand Toggle */}
-                        <td className="p-2.5 text-center">
+                        <td className="p-1.5 text-center">
                           {hasSubDetails ? (
                             <button
                               type="button"
                               onClick={(e) => { e.stopPropagation(); toggleExpand(ticket.TicketID); }}
-                              className="w-5 h-5 rounded bg-slate-100 hover:bg-orange-100 text-slate-600 hover:text-orange-600 inline-flex items-center justify-center transition-colors"
+                              className="w-4 h-4 rounded bg-slate-100 hover:bg-orange-100 text-slate-600 hover:text-orange-600 inline-flex items-center justify-center transition-colors"
                               title={isExpanded ? "Collapse Details" : "Expand Details"}
                             >
-                              {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                              {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                             </button>
                           ) : (
                             <span className="text-slate-300 text-xs font-bold">-</span>
@@ -616,81 +616,86 @@ export default function TicketEscalationReport() {
                         </td>
 
                         {/* 2. Ticket ID */}
-                        <td className="p-2.5 font-mono font-bold text-slate-900 whitespace-nowrap">
+                        <td className="p-1.5 font-mono font-bold text-slate-900 truncate">
                           <div className="flex items-center gap-1">
-                            <span className="bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                            <span className="bg-slate-100 px-1 py-0.5 rounded border border-slate-200 text-[10px]">
                               TKT-{ticket.TicketID}
                             </span>
                             <button
                               type="button"
                               onClick={(e) => { e.stopPropagation(); copyToClipboard(ticket.TicketID, ticket.TicketID); }}
-                              className="text-slate-400 hover:text-slate-700"
+                              className="text-slate-400 hover:text-slate-700 shrink-0"
                               title="Copy Ticket ID"
                             >
-                              {copiedId === ticket.TicketID ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                              {copiedId === ticket.TicketID ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
                             </button>
                           </div>
                         </td>
 
                         {/* 3. Reason */}
-                        <td className="p-2.5 font-bold text-slate-900 leading-snug">
+                        <td className="p-1.5 font-bold text-slate-900 leading-tight truncate" title={ticket.Reason}>
                           {ticket.Reason}
                         </td>
 
                         {/* 4. Date & Time */}
-                        <td className="p-2.5 text-slate-600 whitespace-nowrap">
-                          {ticket.TimeDate ? new Date(ticket.TimeDate).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-'}
+                        <td className="p-1.5 text-slate-600 text-[10px] leading-tight truncate" title={ticket.TimeDate ? new Date(ticket.TimeDate).toLocaleString('en-IN') : '-'}>
+                          {ticket.TimeDate ? (
+                            <>
+                              <div>{new Date(ticket.TimeDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</div>
+                              <div className="text-slate-400 text-[9.5px]">{new Date(ticket.TimeDate).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })}</div>
+                            </>
+                          ) : '-'}
                         </td>
 
                         {/* 5. Line Name */}
-                        <td className="p-2.5 font-semibold text-slate-800 whitespace-nowrap">
+                        <td className="p-1.5 font-semibold text-slate-800 text-[10.5px] truncate" title={ticket.LineName}>
                           {ticket.LineName}
                         </td>
 
                         {/* 6. Station Name */}
-                        <td className="p-2.5 text-slate-700 font-medium truncate max-w-[150px]" title={ticket.StationName}>
+                        <td className="p-1.5 text-slate-700 font-medium text-[10.5px] truncate" title={ticket.StationName}>
                           {ticket.StationName}
                         </td>
 
                         {/* 7. Activity Desc */}
-                        <td className="p-2.5 text-slate-600 truncate max-w-[130px]" title={ticket.ActivityDesc}>
+                        <td className="p-1.5 text-slate-600 text-[10.5px] truncate" title={ticket.ActivityDesc}>
                           {ticket.ActivityDesc !== '-' ? ticket.ActivityDesc : '-'}
                         </td>
 
                         {/* 8. Part Name */}
-                        <td className="p-2.5 text-slate-700 font-mono text-[11px] truncate max-w-[140px]" title={ticket.PartName}>
+                        <td className="p-1.5 text-slate-700 font-mono text-[10px] truncate" title={ticket.PartName}>
                           {ticket.PartName !== '-' ? ticket.PartName : '-'}
                         </td>
 
                         {/* 9. Equipment Name */}
-                        <td className="p-2.5 text-slate-600 truncate max-w-[130px]" title={ticket.EquipmentName}>
+                        <td className="p-1.5 text-slate-600 text-[10.5px] truncate" title={ticket.EquipmentName}>
                           {ticket.EquipmentName !== '-' ? ticket.EquipmentName : '-'}
                         </td>
 
                         {/* 10. Breakdown ID */}
-                        <td className="p-2.5 font-mono text-slate-600 whitespace-nowrap">
+                        <td className="p-1.5 font-mono text-slate-600 text-[10px] truncate" title={ticket.BreakdownID}>
                           {ticket.BreakdownID !== '-' ? (
-                            <span className="bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                            <span className="bg-slate-100 px-1 py-0.5 rounded border border-slate-200">
                               {ticket.BreakdownID}
                             </span>
                           ) : '-'}
                         </td>
 
                         {/* 11. Engine No */}
-                        <td className="p-2.5 font-mono font-bold text-indigo-700 whitespace-nowrap">
+                        <td className="p-1.5 font-mono font-bold text-indigo-700 text-[10.5px] truncate" title={ticket.EngineNo}>
                           {ticket.EngineNo !== '-' ? ticket.EngineNo : '-'}
                         </td>
 
                         {/* 12. Raised By */}
-                        <td className="p-2.5 whitespace-nowrap">
-                          <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-[11px]">
+                        <td className="p-1.5 truncate" title={ticket.RaiseBy}>
+                          <span className="font-semibold text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[10px] truncate inline-block max-w-full">
                             {ticket.RaiseBy}
                           </span>
                         </td>
 
                         {/* 13. Action By */}
-                        <td className="p-2.5 whitespace-nowrap">
-                          <span className={`font-semibold px-2 py-0.5 rounded text-[11px] ${
+                        <td className="p-1.5 truncate" title={ticket.ActionBy}>
+                          <span className={`font-semibold px-1 py-0.5 rounded text-[10px] truncate inline-block max-w-full ${
                             ticket.ActionBy === 'Higher Management'
                               ? 'bg-amber-100 text-amber-900 font-bold border border-amber-300'
                               : 'bg-orange-50 text-orange-800'
@@ -700,31 +705,31 @@ export default function TicketEscalationReport() {
                         </td>
 
                         {/* 14. Remark */}
-                        <td className="p-2.5 text-slate-800 max-w-[240px] truncate" title={ticket.Remark}>
+                        <td className="p-1.5 text-slate-800 text-[10.5px] truncate" title={ticket.Remark}>
                           "{ticket.Remark}"
                         </td>
 
                         {/* 15. Expected Closure */}
-                        <td className="p-2.5 whitespace-nowrap">
+                        <td className="p-1.5 text-[10px] truncate" title={ticket.ExpectedClosure ? new Date(ticket.ExpectedClosure).toLocaleDateString('en-IN') : '-'}>
                           {ticket.ExpectedClosure ? (
                             <span className={`font-semibold ${
                               new Date(ticket.ExpectedClosure) < new Date() && ticket.statusText !== 'Closed'
                                 ? 'text-rose-600 font-bold'
                                 : 'text-slate-700'
                             }`}>
-                              {new Date(ticket.ExpectedClosure).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                              {new Date(ticket.ExpectedClosure).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                             </span>
                           ) : '-'}
                         </td>
 
                         {/* 16. Status (with Escalated tag) */}
-                        <td className="p-2.5 text-center whitespace-nowrap">
+                        <td className="p-1.5 text-center truncate">
                           {ticket.isEscalated ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-600 text-white rounded-full text-[10.5px] font-black uppercase shadow-xs animate-pulse">
+                            <span className="inline-flex items-center justify-center gap-0.5 px-1 py-0.5 bg-rose-600 text-white rounded text-[9.5px] font-black uppercase shadow-2xs truncate max-w-full" title="Escalated">
                               ⚠️ Escalated
                             </span>
                           ) : (
-                            <span className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-black uppercase ${
+                            <span className={`inline-block px-1.5 py-0.5 rounded text-[9.5px] font-black uppercase truncate max-w-full ${
                               ticket.statusText === 'Closed'
                                 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                                 : 'bg-amber-100 text-amber-800 border border-amber-200'
