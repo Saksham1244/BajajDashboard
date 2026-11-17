@@ -34,6 +34,7 @@ export default function TicketEscalationReport() {
   const [data, setData] = useState({ kpis: {}, tickets: [], filterOptions: {} });
   const [loading, setLoading] = useState(true);
   const [expandedTicketIds, setExpandedTicketIds] = useState(new Set()); // All tickets collapsed by default
+  const [expandedSubSections, setExpandedSubSections] = useState(new Set()); // Hold Summary & Defect logs collapsed by default
   const [copiedId, setCopiedId] = useState(null);
 
   // Fetch Data from API
@@ -148,6 +149,19 @@ export default function TicketEscalationReport() {
     });
   };
 
+  // Toggle Sub-Sections (Hold Summary, Defect Details)
+  const toggleSubSection = (key) => {
+    setExpandedSubSections(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
   const expandAll = () => {
     const allIds = new Set(filteredTickets.map(t => t.TicketID));
     setExpandedTicketIds(allIds);
@@ -155,6 +169,7 @@ export default function TicketEscalationReport() {
 
   const collapseAll = () => {
     setExpandedTicketIds(new Set());
+    setExpandedSubSections(new Set());
   };
 
   // Copy Ticket ID
@@ -455,6 +470,9 @@ export default function TicketEscalationReport() {
                   const hasDefects = ticket.engineHold?.defectDetails && ticket.engineHold.defectDetails.length > 0;
                   const hasSubDetails = hasComms || hasHolds || hasDefects;
 
+                  const isHoldOpen = expandedSubSections.has(`hold_${ticket.TicketID}`);
+                  const isDefectOpen = expandedSubSections.has(`defect_${ticket.TicketID}`);
+
                   return (
                     <React.Fragment key={ticket.TicketID}>
                       {/* Primary Table Row */}
@@ -684,119 +702,151 @@ export default function TicketEscalationReport() {
                                 </div>
                               )}
 
-                              {/* Hold Summary (Only rendered if data exists; NO Section identifier) */}
+                              {/* Hold Summary (Collapsible - Collapsed by default) */}
                               {hasHolds && (
                                 <div className="rounded-lg border border-slate-200 overflow-hidden shadow-2xs bg-white">
-                                  <div className="bg-[#fed7aa]/30 px-3.5 py-1.5 border-b border-orange-200 flex items-center justify-between">
-                                    <h3 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleSubSection(`hold_${ticket.TicketID}`);
+                                    }}
+                                    className={`w-full bg-[#fed7aa]/30 hover:bg-[#fed7aa]/50 px-3.5 py-2 flex items-center justify-between transition-colors text-left ${
+                                      isHoldOpen ? 'border-b border-orange-200' : ''
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-1.5">
                                       <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
-                                      <span>Hold Summary</span>
-                                    </h3>
-                                    <span className="text-[11px] text-slate-500 font-semibold">
-                                      {ticket.engineHold.holdSummary.length} Hold Records
-                                    </span>
-                                  </div>
+                                      <span className="text-xs font-black text-slate-800">Hold Summary</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[11px] text-slate-600 font-semibold bg-white/90 px-2 py-0.5 rounded border border-orange-200">
+                                        {ticket.engineHold.holdSummary.length} Hold Records
+                                      </span>
+                                      <span className="w-5 h-5 rounded bg-white/90 border border-orange-200 inline-flex items-center justify-center text-slate-600">
+                                        {isHoldOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                      </span>
+                                    </div>
+                                  </button>
 
-                                  <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-xs">
-                                      <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                                        <tr>
-                                          <th className="p-2">Audit Group</th>
-                                          <th className="p-2">HoldType</th>
-                                          <th className="p-2">PartID</th>
-                                          <th className="p-2">PartBatch ID</th>
-                                          <th className="p-2">PlanID</th>
-                                          <th className="p-2">Engine No</th>
-                                          <th className="p-2 text-right">Forward Qty</th>
-                                          <th className="p-2 text-right">Backward Qty</th>
-                                          <th className="p-2 text-right">OkQty</th>
-                                          <th className="p-2 text-right">RejectedQty</th>
-                                          <th className="p-2 text-center">Status</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody className="divide-y divide-slate-100">
-                                        {ticket.engineHold.holdSummary.map((h, hIdx) => (
-                                          <tr key={hIdx} className="hover:bg-slate-50/50">
-                                            <td className="p-2 font-medium text-slate-700">{h.AuditGroup}</td>
-                                            <td className="p-2 font-semibold text-rose-600">{h.HoldType}</td>
-                                            <td className="p-2 font-mono text-[11px]">{h.PartID}</td>
-                                            <td className="p-2 font-mono text-[11px] text-slate-600">{h.PartBatchID}</td>
-                                            <td className="p-2 font-mono text-[11px]">{h.PlanID}</td>
-                                            <td className="p-2 font-mono font-bold text-slate-900">{h.EngineNo}</td>
-                                            <td className="p-2 text-right font-bold text-slate-800">{h.ForwardQty}</td>
-                                            <td className="p-2 text-right font-bold text-slate-800">{h.BackwardQty}</td>
-                                            <td className="p-2 text-right font-bold text-emerald-600">{h.OkQty}</td>
-                                            <td className="p-2 text-right font-bold text-rose-600">{h.RejectedQty}</td>
-                                            <td className="p-2 text-center">
-                                              <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                                                h.Status === 'Active Hold' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
-                                              }`}>
-                                                {h.Status}
-                                              </span>
-                                            </td>
+                                  {isHoldOpen && (
+                                    <div className="overflow-x-auto">
+                                      <table className="w-full text-left text-xs">
+                                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                                          <tr>
+                                            <th className="p-2">Audit Group</th>
+                                            <th className="p-2">HoldType</th>
+                                            <th className="p-2">PartID</th>
+                                            <th className="p-2">PartBatch ID</th>
+                                            <th className="p-2">PlanID</th>
+                                            <th className="p-2">Engine No</th>
+                                            <th className="p-2 text-right">Forward Qty</th>
+                                            <th className="p-2 text-right">Backward Qty</th>
+                                            <th className="p-2 text-right">OkQty</th>
+                                            <th className="p-2 text-right">RejectedQty</th>
+                                            <th className="p-2 text-center">Status</th>
                                           </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </div>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                          {ticket.engineHold.holdSummary.map((h, hIdx) => (
+                                            <tr key={hIdx} className="hover:bg-slate-50/50">
+                                              <td className="p-2 font-medium text-slate-700">{h.AuditGroup}</td>
+                                              <td className="p-2 font-semibold text-rose-600">{h.HoldType}</td>
+                                              <td className="p-2 font-mono text-[11px]">{h.PartID}</td>
+                                              <td className="p-2 font-mono text-[11px] text-slate-600">{h.PartBatchID}</td>
+                                              <td className="p-2 font-mono text-[11px]">{h.PlanID}</td>
+                                              <td className="p-2 font-mono font-bold text-slate-900">{h.EngineNo}</td>
+                                              <td className="p-2 text-right font-bold text-slate-800">{h.ForwardQty}</td>
+                                              <td className="p-2 text-right font-bold text-slate-800">{h.BackwardQty}</td>
+                                              <td className="p-2 text-right font-bold text-emerald-600">{h.OkQty}</td>
+                                              <td className="p-2 text-right font-bold text-rose-600">{h.RejectedQty}</td>
+                                              <td className="p-2 text-center">
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                                                  h.Status === 'Active Hold' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
+                                                }`}>
+                                                  {h.Status}
+                                                </span>
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )}
                                 </div>
                               )}
 
-                              {/* Defect Points & Inspection Logs (Only rendered if data exists; NO Section identifier) */}
+                              {/* Defect Points & Inspection Logs (Collapsible - Collapsed by default) */}
                               {hasDefects && (
                                 <div className="rounded-lg border border-slate-200 overflow-hidden shadow-2xs bg-white">
-                                  <div className="bg-[#fed7aa]/30 px-3.5 py-1.5 border-b border-orange-200 flex items-center justify-between">
-                                    <h3 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleSubSection(`defect_${ticket.TicketID}`);
+                                    }}
+                                    className={`w-full bg-[#fed7aa]/30 hover:bg-[#fed7aa]/50 px-3.5 py-2 flex items-center justify-between transition-colors text-left ${
+                                      isDefectOpen ? 'border-b border-orange-200' : ''
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-1.5">
                                       <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                                      <span>Defect Points & Inspection Logs</span>
-                                    </h3>
-                                    <span className="text-[11px] text-slate-500 font-semibold">
-                                      {ticket.engineHold.defectDetails.length} Defect Points
-                                    </span>
-                                  </div>
+                                      <span className="text-xs font-black text-slate-800">Defect Points & Inspection Logs</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[11px] text-slate-600 font-semibold bg-white/90 px-2 py-0.5 rounded border border-orange-200">
+                                        {ticket.engineHold.defectDetails.length} Defect Points
+                                      </span>
+                                      <span className="w-5 h-5 rounded bg-white/90 border border-orange-200 inline-flex items-center justify-center text-slate-600">
+                                        {isDefectOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                      </span>
+                                    </div>
+                                  </button>
 
-                                  <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-xs">
-                                      <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                                        <tr>
-                                          <th className="p-2">Inspection Point</th>
-                                          <th className="p-2">Defect Point</th>
-                                          <th className="p-2">Engine No</th>
-                                          <th className="p-2">Remark</th>
-                                          <th className="p-2">Date & Time</th>
-                                          <th className="p-2">Engine Status</th>
-                                          <th className="p-2">Defect Status</th>
-                                          <th className="p-2">Updated By</th>
-                                          <th className="p-2">Last Updated Time</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody className="divide-y divide-slate-100">
-                                        {ticket.engineHold.defectDetails.map((d, dIdx) => (
-                                          <tr key={dIdx} className="hover:bg-slate-50/50">
-                                            <td className="p-2 font-medium text-slate-800">{d.InspectionPoint}</td>
-                                            <td className="p-2 font-bold text-rose-700">{d.DefectPoint}</td>
-                                            <td className="p-2 font-mono font-bold text-indigo-700">{d.EngineNo}</td>
-                                            <td className="p-2 text-slate-600 italic">"{d.Remark}"</td>
-                                            <td className="p-2 text-slate-500 font-mono text-[11px]">
-                                              {d.DateTime ? new Date(d.DateTime).toLocaleString('en-IN') : '-'}
-                                            </td>
-                                            <td className="p-2 font-medium text-amber-700">{d.EngineStatus}</td>
-                                            <td className="p-2">
-                                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                                d.DefectStatus === 'Pending' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
-                                              }`}>
-                                                {d.DefectStatus}
-                                              </span>
-                                            </td>
-                                            <td className="p-2 text-slate-700">{d.UpdatedBy}</td>
-                                            <td className="p-2 text-slate-500 font-mono text-[11px]">
-                                              {d.LastUpdatedTime ? new Date(d.LastUpdatedTime).toLocaleString('en-IN') : '-'}
-                                            </td>
+                                  {isDefectOpen && (
+                                    <div className="overflow-x-auto">
+                                      <table className="w-full text-left text-xs">
+                                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                                          <tr>
+                                            <th className="p-2">Inspection Point</th>
+                                            <th className="p-2">Defect Point</th>
+                                            <th className="p-2">Engine No</th>
+                                            <th className="p-2">Remark</th>
+                                            <th className="p-2">Date & Time</th>
+                                            <th className="p-2">Engine Status</th>
+                                            <th className="p-2">Defect Status</th>
+                                            <th className="p-2">Updated By</th>
+                                            <th className="p-2">Last Updated Time</th>
                                           </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </div>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                          {ticket.engineHold.defectDetails.map((d, dIdx) => (
+                                            <tr key={dIdx} className="hover:bg-slate-50/50">
+                                              <td className="p-2 font-medium text-slate-800">{d.InspectionPoint}</td>
+                                              <td className="p-2 font-bold text-rose-700">{d.DefectPoint}</td>
+                                              <td className="p-2 font-mono font-bold text-indigo-700">{d.EngineNo}</td>
+                                              <td className="p-2 text-slate-600 italic">"{d.Remark}"</td>
+                                              <td className="p-2 text-slate-500 font-mono text-[11px]">
+                                                {d.DateTime ? new Date(d.DateTime).toLocaleString('en-IN') : '-'}
+                                              </td>
+                                              <td className="p-2 font-medium text-amber-700">{d.EngineStatus}</td>
+                                              <td className="p-2">
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                                  d.DefectStatus === 'Pending' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                                                }`}>
+                                                  {d.DefectStatus}
+                                                </span>
+                                              </td>
+                                              <td className="p-2 text-slate-700">{d.UpdatedBy}</td>
+                                              <td className="p-2 text-slate-500 font-mono text-[11px]">
+                                                {d.LastUpdatedTime ? new Date(d.LastUpdatedTime).toLocaleString('en-IN') : '-'}
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )}
                                 </div>
                               )}
 
