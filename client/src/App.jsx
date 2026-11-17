@@ -5,6 +5,10 @@ import { AuthProvider } from './context/AuthContext'
 import LoginPage from './pages/Auth/LoginPage'
 
 // Production Module
+const EngineProductionReport = lazy(() => import('./pages/Production/EngineProductionReport'))
+const EngineWIPStatusReport  = lazy(() => import('./pages/Production/EngineWIPStatusReport'))
+const SAProductionReport     = lazy(() => import('./pages/Production/SAProductionReport'))
+const SAWIPStatusReport      = lazy(() => import('./pages/Production/SAWIPStatusReport'))
 import Production from './pages/Production'
 import StraightPassReport from './pages/Production/StraightPassReport'
 
@@ -82,13 +86,17 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/production/report" replace />} />
+          <Route index element={<Navigate to="/production/engine-production" replace />} />
 
           {/* Production Module */}
           <Route path="production">
-            <Route index element={<Navigate to="report" replace />} />
-            <Route path="report" element={<Production />} />
-            <Route path="straight-pass" element={<Navigate to="/production/report" replace />} />
+            <Route index element={<Navigate to="engine-production" replace />} />
+            <Route path="report" element={<Suspense fallback={<Loading />}><EngineProductionReport /></Suspense>} />
+            <Route path="engine-production" element={<Suspense fallback={<Loading />}><EngineProductionReport /></Suspense>} />
+            <Route path="engine-wip" element={<Suspense fallback={<Loading />}><EngineWIPStatusReport /></Suspense>} />
+            <Route path="sa-production" element={<Suspense fallback={<Loading />}><SAProductionReport /></Suspense>} />
+            <Route path="sa-wip" element={<Suspense fallback={<Loading />}><SAWIPStatusReport /></Suspense>} />
+            <Route path="straight-pass" element={<Navigate to="/production/engine-production" replace />} />
             <Route path="rework" element={<Suspense fallback={<Loading />}><ReworkStatusReport /></Suspense>} />
           </Route>
 

@@ -23,7 +23,10 @@ const navItems = [
     name: 'Production Management', 
     icon: LayoutDashboard,
     subItems: [
-      { path: '/production/report', name: 'Production Report' },
+      { path: '/production/engine-production', name: 'Engine Production Report' },
+      { path: '/production/engine-wip', name: 'Engine WIP Status Report' },
+      { path: '/production/sa-production', name: 'SA Production Report' },
+      { path: '/production/sa-wip', name: 'SA WIP Status Report' },
       { path: '/production/rework', name: 'Rework Status Report' },
     ]
   },
