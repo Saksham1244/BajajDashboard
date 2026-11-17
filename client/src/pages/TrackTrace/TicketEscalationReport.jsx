@@ -715,16 +715,16 @@ export default function TicketEscalationReport() {
                                       isHoldOpen ? 'border-b border-orange-200' : ''
                                     }`}
                                   >
-                                    <div className="flex items-center gap-1.5">
-                                      <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+                                    <div className="flex items-center gap-2">
+                                      <span className="w-5 h-5 rounded bg-white/90 border border-orange-200 inline-flex items-center justify-center text-slate-600 shrink-0">
+                                        {isHoldOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                      </span>
+                                      <ShieldAlert className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                                       <span className="text-xs font-black text-slate-800">Hold Summary</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <span className="text-[11px] text-slate-600 font-semibold bg-white/90 px-2 py-0.5 rounded border border-orange-200">
                                         {ticket.engineHold.holdSummary.length} Hold Records
-                                      </span>
-                                      <span className="w-5 h-5 rounded bg-white/90 border border-orange-200 inline-flex items-center justify-center text-slate-600">
-                                        {isHoldOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                                       </span>
                                     </div>
                                   </button>
@@ -789,16 +789,16 @@ export default function TicketEscalationReport() {
                                       isDefectOpen ? 'border-b border-orange-200' : ''
                                     }`}
                                   >
-                                    <div className="flex items-center gap-1.5">
-                                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                                    <div className="flex items-center gap-2">
+                                      <span className="w-5 h-5 rounded bg-white/90 border border-orange-200 inline-flex items-center justify-center text-slate-600 shrink-0">
+                                        {isDefectOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                      </span>
+                                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                                       <span className="text-xs font-black text-slate-800">Defect Points & Inspection Logs</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <span className="text-[11px] text-slate-600 font-semibold bg-white/90 px-2 py-0.5 rounded border border-orange-200">
                                         {ticket.engineHold.defectDetails.length} Defect Points
-                                      </span>
-                                      <span className="w-5 h-5 rounded bg-white/90 border border-orange-200 inline-flex items-center justify-center text-slate-600">
-                                        {isDefectOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                                       </span>
                                     </div>
                                   </button>
