@@ -8,26 +8,27 @@ import {
   ChevronDown, 
   ChevronUp, 
   Search, 
-  X,
+  X, 
   RefreshCw,
   ShieldAlert,
   MessageSquare,
   Check,
-  Copy
+  Copy,
+  LayoutDashboard
 } from 'lucide-react';
+import StandardFilterBar from '../../components/StandardFilterBar';
 import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
 import useReportFilters from '../../hooks/useReportFilters';
 
 export default function TicketEscalationReport() {
-  const { period, shift, startDate, endDate, setPeriod, setShift, setStartDate, setEndDate } = useReportFilters();
+  const { period, shift, startDate, endDate, getBaseFilters } = useReportFilters();
 
   // Filters (Line filter is completely removed)
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [selectedCreatedBy, setSelectedCreatedBy] = useState('All');
   const [selectedActionBy, setSelectedActionBy] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [liveShiftActive, setLiveShiftActive] = useState(true);
 
   // Data & State
   const [data, setData] = useState({ kpis: {}, tickets: [], filterOptions: {} });
@@ -267,199 +268,67 @@ export default function TicketEscalationReport() {
   };
 
   return (
-    <div className="space-y-4 pb-12">
-      {/* Executive Printable Banner */}
-      <div className="hidden print:flex items-center justify-between pb-3 mb-4 border-b-2 border-orange-500 w-full">
-        <div>
-          <h1 className="text-2xl font-black text-slate-800">BAJAJ AUTO LIMITED • PPMS</h1>
-          <p className="text-xs font-semibold text-slate-600">Track & Trace • Ticket Escalation & Communication Report</p>
-        </div>
-        <div className="text-right text-xs text-slate-500">
-          <div>Generated: {new Date().toLocaleString('en-IN')}</div>
-          <div className="font-bold text-rose-600">CONFIDENTIAL • HIGHER MANAGEMENT AUDIT</div>
-        </div>
-      </div>
-
-      {/* Screen Interactive Filter Bar */}
-      <div className="print:hidden w-full bg-white border border-slate-200 rounded-xl shadow-sm px-4 py-3 sticky top-0 z-20">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          
-          {/* Left Title & Primary Header Filters */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 pr-3 border-r border-slate-200">
-              <div className="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center text-white shadow-sm">
-                <ShieldAlert className="w-5 h-5" />
-              </div>
-              <div>
-                <h1 className="text-base font-black text-slate-900 leading-tight">Ticket Escalation Report</h1>
-                <span className="text-[10.5px] font-bold text-orange-600 tracking-wider uppercase">Track & Trace</span>
-              </div>
-            </div>
-
-            {/* Period Pills (Shift / Day / Week / Month) */}
-            <div className="inline-flex rounded-lg bg-slate-100 p-0.5 border border-slate-200">
-              {['Shift', 'Day', 'Week', 'Month'].map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPeriod(p)}
-                  className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
-                    period === p 
-                      ? 'bg-white text-orange-600 shadow-sm border border-slate-200/60' 
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-
-            {/* Date Range Inputs */}
-            <div className="flex items-center gap-1.5 text-xs bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
-              <span className="text-slate-400 font-semibold">From:</span>
-              <input 
-                type="date" 
-                value={startDate || ''} 
-                onChange={(e) => setStartDate(e.target.value)}
-                className="bg-transparent text-slate-800 font-medium focus:outline-none text-xs" 
-              />
-              <span className="text-slate-400 font-semibold ml-1">To:</span>
-              <input 
-                type="date" 
-                value={endDate || ''} 
-                onChange={(e) => setEndDate(e.target.value)}
-                className="bg-transparent text-slate-800 font-medium focus:outline-none text-xs" 
-              />
-            </div>
-
-            {/* Shift Dropdown */}
-            <div className="flex items-center gap-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1">
-              <span className="font-semibold text-slate-600">Shift:</span>
-              <select
-                value={shift || 'All'}
-                onChange={(e) => setShift(e.target.value)}
-                className="bg-transparent font-medium text-slate-800 focus:outline-none text-xs"
-              >
-                <option value="All">All Shifts</option>
-                <option value="Shift A">Shift A</option>
-                <option value="Shift B">Shift B</option>
-                <option value="Shift C">Shift C</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Right Action Buttons */}
-          <div className="flex items-center gap-2">
-            {/* Live Shift Indicator */}
-            <div 
-              onClick={() => setLiveShiftActive(!liveShiftActive)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-bold cursor-pointer hover:bg-emerald-100 transition-colors"
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Live Shift</span>
-            </div>
-
-            {/* Excel Export Button */}
+    <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
+      {/* Standard Filter Bar (Matches Application Standard - Image 1) */}
+      <StandardFilterBar
+        title="Ticket Escalation Report"
+        icon={LayoutDashboard}
+        onExcelClick={handleExportExcel}
+        onPrintClick={handlePrint}
+        filters={[
+          ...getBaseFilters(),
+          { 
+            type: 'dropdown', 
+            label: 'Created By', 
+            options: ['All', 'Quality', 'Production', 'Maintenance'], 
+            value: selectedCreatedBy, 
+            onChange: setSelectedCreatedBy 
+          },
+          { 
+            type: 'dropdown', 
+            label: 'Action By', 
+            options: ['All', 'Higher Management', 'Quality', 'Production', 'Maintenance'], 
+            value: selectedActionBy, 
+            onChange: setSelectedActionBy 
+          },
+          { 
+            type: 'search', 
+            label: 'Search', 
+            value: searchQuery, 
+            onChange: setSearchQuery, 
+            placeholder: 'Ticket ID, Engine, Reason...' 
+          }
+        ]}
+        extraActions={(
+          <div className="flex items-center gap-1.5 mr-1">
             <button
-              onClick={handleExportExcel}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm transition-all"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-              <span>Excel</span>
-            </button>
-
-            {/* Print / PDF Button */}
-            <button
-              onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold shadow-sm transition-all"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>PDF / Print</span>
-            </button>
-
-            {/* Refresh */}
-            <button
-              onClick={fetchData}
-              disabled={loading}
-              className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition-colors"
-              title="Refresh Data"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        </div>
-
-        {/* Row 2: Secondary Filter Dropdowns & Working Search */}
-        <div className="flex flex-wrap items-center gap-3 mt-2.5 pt-2.5 border-t border-slate-100">
-          
-          {/* Created By Filter */}
-          <div className="flex items-center gap-1.5 text-xs">
-            <span className="font-semibold text-slate-600">Created By:</span>
-            <select
-              value={selectedCreatedBy}
-              onChange={(e) => setSelectedCreatedBy(e.target.value)}
-              className="bg-white border border-slate-300 font-medium rounded px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
-            >
-              <option value="All">All Departments</option>
-              <option value="Quality">Quality</option>
-              <option value="Production">Production</option>
-              <option value="Maintenance">Maintenance</option>
-            </select>
-          </div>
-
-          {/* Action By Filter */}
-          <div className="flex items-center gap-1.5 text-xs">
-            <span className="font-semibold text-slate-600">Action By:</span>
-            <select
-              value={selectedActionBy}
-              onChange={(e) => setSelectedActionBy(e.target.value)}
-              className="bg-white border border-slate-300 font-medium rounded px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-orange-500"
-            >
-              <option value="All">All Action Roles</option>
-              <option value="Higher Management">Higher Management</option>
-              <option value="Quality">Quality</option>
-              <option value="Production">Production</option>
-              <option value="Maintenance">Maintenance</option>
-            </select>
-          </div>
-
-          {/* Search Box with instant client filtering & clear button */}
-          <div className="relative flex-1 min-w-[240px] max-w-[360px] ml-auto">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search Ticket ID, Engine#, Reason, Station, Remark..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-md pl-8 pr-7 py-1 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:bg-white"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
-          {/* Expand / Collapse All */}
-          <div className="flex items-center gap-1">
-            <button
+              type="button"
               onClick={expandAll}
-              className="px-2 py-1 text-[11px] font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded transition-colors"
+              className="px-2.5 py-1 text-[11px] font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded transition-colors whitespace-nowrap"
+              title="Expand All Ticket Sub-Details"
             >
               Expand All
             </button>
             <button
+              type="button"
               onClick={collapseAll}
-              className="px-2 py-1 text-[11px] font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded transition-colors"
+              className="px-2.5 py-1 text-[11px] font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded transition-colors whitespace-nowrap"
+              title="Collapse All Ticket Sub-Details"
             >
               Collapse All
             </button>
+            <button
+              type="button"
+              onClick={fetchData}
+              disabled={loading}
+              className="p-1.5 text-slate-500 hover:text-slate-800 rounded hover:bg-slate-100 transition-colors"
+              title="Refresh Data"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            </button>
           </div>
-        </div>
-      </div>
+        )}
+      />
 
       {/* Top Row: KPI Summary Cards (Total Created, Total Opened, Total Closed, Total Escalated) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
