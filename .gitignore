@@ -7,3 +7,27 @@ dist/
 
 ~$*
 scratch/
+
+# Excel spreadsheets, Word & PDF documentation
+*.xlsx
+*.docx
+*.pdf
+
+# SQL dumps, schemas and stored procedure scripts
+*.sql
+docs/
+server/stored_procedures_backup/
+server/scripts/
+
+# Temporary planning and design markdown files
+decision.md
+descision.md
+design_doc.md
+flow.md
+quote_fallbacks.js
+
+# Temporary test scripts
+server/check.js
+server/check_columns.js
+server/list_tables.js
+server/test_db.js
