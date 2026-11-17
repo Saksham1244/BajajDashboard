@@ -31,3 +31,8 @@ server/check.js
 server/check_columns.js
 server/list_tables.js
 server/test_db.js
+
+# Service directory and batch / PowerShell launch scripts
+service/
+*.bat
+*.ps1
