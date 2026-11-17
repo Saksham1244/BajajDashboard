@@ -62,7 +62,7 @@ const navItems = [
     icon: CheckCircle2,
     subItems: [
       { path: '/quality/defect', name: 'Defect Report' },
-      { path: '/quality/pqca', name: 'PQCA Report' },
+      // { path: '/quality/pqca', name: 'PQCA Report' },
       { path: '/quality/iqc-checklist', name: 'IQC Report' },
       { path: '/quality/ipqc-checklist', name: 'IPQC Report' },
       { path: '/quality/fqc-checklist', name: 'FQC Report' },
