@@ -32,7 +32,7 @@ export default function TicketEscalationReport() {
   // Data & State
   const [data, setData] = useState({ kpis: {}, tickets: [], filterOptions: {} });
   const [loading, setLoading] = useState(true);
-  const [expandedTicketIds, setExpandedTicketIds] = useState(new Set([5, 8])); // Expand escalated tickets by default
+  const [expandedTicketIds, setExpandedTicketIds] = useState(new Set()); // All tickets collapsed by default
   const [copiedId, setCopiedId] = useState(null);
 
   // Fetch Data from API
