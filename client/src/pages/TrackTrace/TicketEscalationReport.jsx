@@ -275,7 +275,7 @@ export default function TicketEscalationReport() {
       sheets.push({ name: 'Hold Defect Logs', rows: defectRows });
     }
 
-    exportToXLSX(sheets, `Bajaj_Ticket_Escalation_Report_${new Date().toISOString().split('T')[0]}`);
+    exportToXLSX(sheets, `Bajaj_Ticket_Details_${new Date().toISOString().split('T')[0]}`);
   };
 
   const handlePrint = () => {
@@ -286,7 +286,7 @@ export default function TicketEscalationReport() {
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
       {/* Standard Filter Bar (Matches Application Standard - Image 1) */}
       <StandardFilterBar
-        title="Ticket Escalation Report"
+        title="Ticket Details"
         icon={LayoutDashboard}
         onExcelClick={handleExportExcel}
         onPrintClick={handlePrint}
