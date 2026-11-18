@@ -55,7 +55,7 @@ const navItems = [
       { path: '/trace/genealogy', name: 'Genealogy Report' },
       { path: '/trace/wip', name: 'WIP Report' },
       { path: '/trace/engine-rework', name: 'Engine Wise Rework Summary' },
-      { path: '/trace/ticket-escalation', name: 'Ticket Details' },
+      { path: '/trace/ticket-escalation', name: 'Ticket Details Report' },
     ]
   },
   { 

@@ -184,98 +184,110 @@ export default function TicketEscalationReport() {
     if (!filteredTickets || filteredTickets.length === 0) return;
 
     // Sheet 1: Ticket Details
-    const ticketRows = filteredTickets.map(t => ({
-      'Ticket ID': `TKT-${t.TicketID}`,
-      'Reason': t.Reason,
-      'Date & Time': t.TimeDate ? new Date(t.TimeDate).toLocaleString('en-IN') : '-',
-      'Line Name': t.LineName,
-      'Station Name': t.StationName,
-      'Activity Description': t.ActivityDesc,
-      'Part Name': t.PartName,
-      'Equipment Name': t.EquipmentName,
-      'Breakdown ID': t.BreakdownID,
-      'Engine No': t.EngineNo,
-      'Raised By': t.RaiseBy,
-      'Action By': t.ActionBy,
-      'Remark': t.Remark,
-      'Expected Closure': t.ExpectedClosure ? new Date(t.ExpectedClosure).toLocaleDateString('en-IN') : '-',
-      'Status': t.statusText,
-      'Escalated': t.isEscalated ? 'YES' : 'NO'
-    }));
+    const ticketRows = [
+      ['Ticket ID', 'Reason', 'Date & Time', 'Line Name', 'Station Name', 'Activity Description', 'Part Name', 'Equipment Name', 'Breakdown ID', 'Engine No', 'Raised By', 'Action By', 'Remark', 'Expected Closure', 'Status', 'Escalated'],
+      ...filteredTickets.map(t => [
+        `TKT-${t.TicketID}`,
+        t.Reason,
+        t.TimeDate ? new Date(t.TimeDate).toLocaleString('en-IN') : '-',
+        t.LineName,
+        t.StationName,
+        t.ActivityDesc,
+        t.PartName,
+        t.EquipmentName,
+        t.BreakdownID,
+        t.EngineNo,
+        t.RaiseBy,
+        t.ActionBy,
+        t.Remark,
+        t.ExpectedClosure ? new Date(t.ExpectedClosure).toLocaleDateString('en-IN') : '-',
+        t.statusText,
+        t.isEscalated ? 'YES' : 'NO'
+      ])
+    ];
 
     const sheets = [{ name: 'Ticket Details', rows: ticketRows }];
 
     // Sheet 2: Communication Details (only if communications exist)
-    const commRows = [];
+    const commData = [];
     filteredTickets.forEach(t => {
       if (t.communications && t.communications.length > 0) {
         t.communications.forEach((c, idx) => {
-          commRows.push({
-            'Ticket ID': `TKT-${t.TicketID}`,
-            'Seq': idx + 1,
-            'Department': c.Department,
-            'Role': c.Role,
-            'Remark / Message': c.Remark,
-            'Date & Time': c.TimeDate ? new Date(c.TimeDate).toLocaleString('en-IN') : '-'
-          });
+          commData.push([
+            `TKT-${t.TicketID}`,
+            idx + 1,
+            c.Department,
+            c.Role,
+            c.Remark,
+            c.TimeDate ? new Date(c.TimeDate).toLocaleString('en-IN') : '-'
+          ]);
         });
       }
     });
-    if (commRows.length > 0) {
-      sheets.push({ name: 'Communication Details', rows: commRows });
+    if (commData.length > 0) {
+      sheets.push({
+        name: 'Communication Details',
+        rows: [['Ticket ID', 'Seq', 'Department', 'Role', 'Remark / Message', 'Date & Time'], ...commData]
+      });
     }
 
     // Sheet 3: Engine Hold Details (only if holds exist)
-    const holdRows = [];
+    const holdData = [];
     filteredTickets.forEach(t => {
       if (t.engineHold?.holdSummary && t.engineHold.holdSummary.length > 0) {
         t.engineHold.holdSummary.forEach(h => {
-          holdRows.push({
-            'Ticket ID': `TKT-${t.TicketID}`,
-            'Audit Group': h.AuditGroup,
-            'Hold Type': h.HoldType,
-            'Part ID': h.PartID,
-            'Part Batch ID': h.PartBatchID,
-            'Plan ID': h.PlanID,
-            'Engine No': h.EngineNo,
-            'Forward Qty': h.ForwardQty,
-            'Backward Qty': h.BackwardQty,
-            'OK Qty': h.OkQty,
-            'Rejected Qty': h.RejectedQty,
-            'Hold Status': h.Status
-          });
+          holdData.push([
+            `TKT-${t.TicketID}`,
+            h.AuditGroup,
+            h.HoldType,
+            h.PartID,
+            h.PartBatchID,
+            h.PlanID,
+            h.EngineNo,
+            h.ForwardQty,
+            h.BackwardQty,
+            h.OkQty,
+            h.RejectedQty,
+            h.Status
+          ]);
         });
       }
     });
-    if (holdRows.length > 0) {
-      sheets.push({ name: 'Engine Hold Details', rows: holdRows });
+    if (holdData.length > 0) {
+      sheets.push({
+        name: 'Engine Hold Details',
+        rows: [['Ticket ID', 'Audit Group', 'Hold Type', 'Part ID', 'Part Batch ID', 'Plan ID', 'Engine No', 'Forward Qty', 'Backward Qty', 'OK Qty', 'Rejected Qty', 'Hold Status'], ...holdData]
+      });
     }
 
     // Sheet 4: Hold Defect Logs (only if defects exist)
-    const defectRows = [];
+    const defectData = [];
     filteredTickets.forEach(t => {
       if (t.engineHold?.defectDetails && t.engineHold.defectDetails.length > 0) {
         t.engineHold.defectDetails.forEach(d => {
-          defectRows.push({
-            'Ticket ID': `TKT-${t.TicketID}`,
-            'Inspection Point': d.InspectionPoint,
-            'Defect Point': d.DefectPoint,
-            'Engine No': d.EngineNo,
-            'Remark': d.Remark,
-            'Date & Time': d.DateTime ? new Date(d.DateTime).toLocaleString('en-IN') : '-',
-            'Engine Status': d.EngineStatus,
-            'Defect Status': d.DefectStatus,
-            'Updated By': d.UpdatedBy,
-            'Last Updated Time': d.LastUpdatedTime ? new Date(d.LastUpdatedTime).toLocaleString('en-IN') : '-'
-          });
+          defectData.push([
+            `TKT-${t.TicketID}`,
+            d.InspectionPoint,
+            d.DefectPoint,
+            d.EngineNo,
+            d.Remark,
+            d.DateTime ? new Date(d.DateTime).toLocaleString('en-IN') : '-',
+            d.EngineStatus,
+            d.DefectStatus,
+            d.UpdatedBy,
+            d.LastUpdatedTime ? new Date(d.LastUpdatedTime).toLocaleString('en-IN') : '-'
+          ]);
         });
       }
     });
-    if (defectRows.length > 0) {
-      sheets.push({ name: 'Hold Defect Logs', rows: defectRows });
+    if (defectData.length > 0) {
+      sheets.push({
+        name: 'Hold Defect Logs',
+        rows: [['Ticket ID', 'Inspection Point', 'Defect Point', 'Engine No', 'Remark', 'Date & Time', 'Engine Status', 'Defect Status', 'Updated By', 'Last Updated Time'], ...defectData]
+      });
     }
 
-    exportToXLSX(sheets, `Bajaj_Ticket_Details_${new Date().toISOString().split('T')[0]}`);
+    exportToXLSX(`Bajaj_Ticket_Details_Report_${new Date().toISOString().split('T')[0]}.xlsx`, sheets);
   };
 
   const handlePrint = () => {
@@ -286,7 +298,7 @@ export default function TicketEscalationReport() {
     <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
       {/* Standard Filter Bar (Matches Application Standard - Image 1) */}
       <StandardFilterBar
-        title="Ticket Details"
+        title="Ticket Details Report"
         icon={LayoutDashboard}
         onExcelClick={handleExportExcel}
         onPrintClick={handlePrint}
