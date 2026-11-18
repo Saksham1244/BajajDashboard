@@ -18,12 +18,30 @@ export function useReportFilters(allowedPeriods = ['Shift', 'Day', 'Week', 'Mont
   const [period, setPeriod] = useState(allowedPeriods[0] || 'Shift');
   const [startDate, setStartDate] = useState(getToday());
   const [endDate, setEndDate] = useState(getToday());
-  
+  const [isDateCustom, setIsDateCustom] = useState(false);
+
   const activeShift = getActiveShift();
   const [shift, setShift] = useState('All');
 
+  const handleStartDateChange = (newDate) => {
+    setStartDate(newDate);
+    if (!isDateCustom && period === 'Shift') {
+      setShift('All');
+    }
+    setIsDateCustom(true);
+  };
+
+  const handleEndDateChange = (newDate) => {
+    setEndDate(newDate);
+    if (!isDateCustom && period === 'Shift') {
+      setShift('All');
+    }
+    setIsDateCustom(true);
+  };
+
   const handlePeriodChange = (newPeriod) => {
     setPeriod(newPeriod);
+    setIsDateCustom(false);
     const today = new Date();
     const todayStr = getToday();
     if (newPeriod === 'Shift') {
@@ -49,14 +67,17 @@ export function useReportFilters(allowedPeriods = ['Shift', 'Day', 'Week', 'Mont
     }
   };
 
+  const todayStr = getToday();
+  const showShiftFilter = period !== 'Shift' || isDateCustom || startDate !== todayStr || endDate !== todayStr;
+
   const getBaseFilters = () => {
     const base = [
       { type: 'period', value: period, onChange: handlePeriodChange, periods: allowedPeriods },
-      { type: 'daterange', from: startDate, onFromChange: setStartDate, to: endDate, onToChange: setEndDate }
+      { type: 'daterange', from: startDate, onFromChange: handleStartDateChange, to: endDate, onToChange: handleEndDateChange }
     ];
 
-    // Only show Shift dropdown when period is NOT 'Shift' (e.g. Day, Week, Month)
-    if (period !== 'Shift') {
+    // Show Shift dropdown when period is NOT 'Shift' OR as soon as user changes Start/End date
+    if (showShiftFilter) {
       base.push({
         type: 'dropdown',
         label: 'Shift',
@@ -70,16 +91,16 @@ export function useReportFilters(allowedPeriods = ['Shift', 'Day', 'Week', 'Mont
     return base;
   };
 
-  // When period is 'Shift', effective shift is always current activeShift
-  const effectiveShift = period === 'Shift' ? activeShift : shift;
+  // When period is 'Shift' and date has not been changed, effective shift is always current activeShift
+  const effectiveShift = showShiftFilter ? shift : activeShift;
 
   return {
     period,
     setPeriod,
     startDate,
-    setStartDate,
+    setStartDate: handleStartDateChange,
     endDate,
-    setEndDate,
+    setEndDate: handleEndDateChange,
     shift: effectiveShift,
     setShift,
     activeShift,
@@ -88,5 +109,3 @@ export function useReportFilters(allowedPeriods = ['Shift', 'Day', 'Week', 'Mont
 }
 
 export default useReportFilters;
-
-
