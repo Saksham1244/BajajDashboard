@@ -2265,82 +2265,444 @@ app.get('/api/trace/wip', async (req, res) => {
   });
 });
 
-app.get('/api/trace/rework', async (req, res) => {
-  const { period, shift, startDate, endDate, line, station, model, sku, status } = req.query;
-  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+app.get(['/api/trace/rework', '/api/trace/rework-summary'], async (req, res) => {
+  const { line, model, sku, status, scope = 'all' } = req.query;
 
   try {
     const pool = await poolPromise;
     if (pool) {
-      const request = createSqlRequest(pool, {
-        StartDate: { type: sql.Date, value: effectiveStartDate },
-        EndDate: { type: sql.Date, value: effectiveEndDate },
+      // 1. Fetch Engine WIP records
+      const engReq = createSqlRequest(pool, {
         Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
         Model: { type: sql.VarChar(50), value: (model && model !== 'All') ? model : null },
         SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
       });
 
-      const result = await request.query(`
+      const engRes = await engReq.query(`
         SELECT 
-          D.UID as id,
-          D.EngineNo as engineNo,
-          ISNULL(M.ModelName, 'Pulsar 150') as model,
-          ISNULL(S.SKUName, 'UG5') as sku,
-          ISNULL(L.LineName, 'Line 1') as line,
-          'Demo (Block Assembly)' as station,
-          ISNULL(D.Remark, 'Defect Detected') as reason,
-          CONVERT(VARCHAR(5), D.Timestamp, 108) as detectedTime,
-          CONVERT(VARCHAR(5), DATEADD(minute, 15, D.Timestamp), 108) as reworkStart,
-          CONVERT(VARCHAR(5), DATEADD(minute, 35, D.Timestamp), 108) as reworkEnd,
-          CASE 
-            WHEN D.Status = 1 THEN 'Completed'
-            WHEN D.Status = 2 THEN 'In-Progress'
-            WHEN D.Status = 3 THEN 'Rejected'
-            ELSE 'Pending'
-          END as [status],
-          ISNULL(D.UpdatedBy, 'Operator') as operator,
-          'Rework Bay 1' as [location]
-        FROM Prod_Defect_Log D
-        LEFT JOIN Prod_Engine_WIP W ON D.EngineNo = W.EngineNo
+          W.EngineNo as engineNo,
+          W.PlanID as planId,
+          ISNULL(L.LineName, 'Line ' + CAST(W.LineID as varchar)) as lineName,
+          ISNULL(S.SKUName, 'SKU-' + CAST(W.SKUID as varchar)) as skuName,
+          ISNULL(M.ModelName, 'Pulsar 150') as modelName,
+          CONVERT(VARCHAR(19), W.StartTime, 120) as startTime,
+          W.Status as statusCode,
+          CASE W.Status
+            WHEN 1 THEN 'Plan'
+            WHEN 2 THEN 'Kit Started'
+            WHEN 3 THEN 'Kit Inspected'
+            WHEN 4 THEN 'VR Engine on Main Line'
+            WHEN 5 THEN 'EIN Engine on Main Line'
+            WHEN 8 THEN 'OK Bypass'
+            WHEN 9 THEN 'Completed Engine'
+            WHEN 10 THEN 'FG Engine'
+            WHEN 11 THEN 'Engine Scrapped/dismantled'
+            WHEN 12 THEN 'Material Hold'
+            WHEN 13 THEN 'Material Hold cleared'
+            WHEN 14 THEN 'For Prod Rework'
+            WHEN 15 THEN 'Prod Rework OK'
+            WHEN 16 THEN 'Prod Hold'
+            WHEN 17 THEN 'Prod Hold Cleared'
+            WHEN 18 THEN 'Prod Rejected'
+            WHEN 19 THEN 'For IPQC rework'
+            WHEN 20 THEN 'IPQC Rework OK'
+            WHEN 21 THEN 'IPQC Hold'
+            WHEN 22 THEN 'IPQC Hold Cleared'
+            WHEN 23 THEN 'IPQC Rejected'
+            WHEN 24 THEN 'FQC Rework'
+            WHEN 25 THEN 'FG Rework OK'
+            WHEN 26 THEN 'FQC Hold'
+            WHEN 27 THEN 'FQC Hold Cleared'
+            WHEN 28 THEN 'FG Rejected'
+            ELSE 'Active WIP'
+          END as [status]
+        FROM Prod_Engine_WIP W
+        LEFT JOIN Config_Line L ON W.LineID = L.LineID
         LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
         LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
-        LEFT JOIN Config_Line L ON W.LineID = L.LineID
-        WHERE (@StartDate IS NULL OR CAST(D.Timestamp AS DATE) >= @StartDate)
-          AND (@EndDate IS NULL OR CAST(D.Timestamp AS DATE) <= @EndDate)
-          AND (@Line IS NULL OR L.LineName = @Line OR CAST(W.LineID AS VARCHAR) = @Line)
+        WHERE (@Line IS NULL OR L.LineName = @Line OR CAST(W.LineID AS VARCHAR) = @Line)
           AND (@Model IS NULL OR M.ModelName = @Model)
           AND (@SKU IS NULL OR S.SKUName = @SKU)
-        ORDER BY D.Timestamp DESC
+        ORDER BY W.StartTime DESC
       `);
 
-      let rows = result.recordset || [];
-      if (status && status !== 'All') {
-        rows = rows.filter(r => r.status.toLowerCase() === status.toLowerCase());
-      }
+      // 2. Fetch SA WIP records
+      const saReq = createSqlRequest(pool, {
+        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
+        Model: { type: sql.VarChar(50), value: (model && model !== 'All') ? model : null },
+        SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
+      });
 
-      const totalRework = rows.length;
-      const inProgress = rows.filter(r => r.status === 'In-Progress').length;
-      const completed = rows.filter(r => r.status === 'Completed').length;
-      const rejected = rows.filter(r => r.status === 'Rejected').length;
+      const saRes = await saReq.query(`
+        SELECT 
+          W.SA_SerialNo as saSerialNo,
+          W.SubAsslyLineID as subAsslyLineId,
+          ISNULL(SL.SubAsslyLineName, 'Sub Assembly ' + CAST(W.SubAsslyLineID as varchar)) as subAsslyLineName,
+          W.PlanID as planId,
+          ISNULL(L.LineName, 'Line ' + CAST(ISNULL(SL.LineID, 1) as varchar)) as lineName,
+          ISNULL(S.SKUName, 'SKU-' + CAST(W.SKUID as varchar)) as skuName,
+          ISNULL(M.ModelName, 'Pulsar 150') as modelName,
+          CONVERT(VARCHAR(19), W.StartTime, 120) as startTime,
+          W.Status as statusCode,
+          CASE W.Status
+            WHEN 1 THEN 'Plan'
+            WHEN 5 THEN 'SA In-Process'
+            WHEN 9 THEN 'Completed'
+            WHEN 10 THEN 'FG OK'
+            WHEN 11 THEN 'Scrapped'
+            WHEN 12 THEN 'Material Hold'
+            WHEN 13 THEN 'Material Hold cleared'
+            WHEN 14 THEN 'For Prod Rework'
+            WHEN 15 THEN 'Prod Rework OK'
+            WHEN 16 THEN 'Prod Hold'
+            WHEN 17 THEN 'Prod Hold Cleared'
+            WHEN 18 THEN 'Prod Rejected'
+            WHEN 19 THEN 'For IPQC rework'
+            WHEN 20 THEN 'IPQC Rework OK'
+            WHEN 21 THEN 'IPQC Hold'
+            WHEN 22 THEN 'IPQC Hold Cleared'
+            WHEN 23 THEN 'IPQC Rejected'
+            WHEN 24 THEN 'FQC Rework'
+            WHEN 25 THEN 'FG Rework OK'
+            WHEN 26 THEN 'FQC Hold'
+            WHEN 27 THEN 'FQC Hold Cleared'
+            WHEN 28 THEN 'FG Rejected'
+            ELSE 'SA WIP'
+          END as [status]
+        FROM Prod_SA_WIP W
+        LEFT JOIN Config_SubAssemblyLine SL ON W.SubAsslyLineID = SL.SubAsslyLineID
+        LEFT JOIN Config_Line L ON SL.LineID = L.LineID
+        LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
+        LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+        WHERE (@Line IS NULL OR L.LineName = @Line OR CAST(ISNULL(SL.LineID, 1) AS VARCHAR) = @Line)
+          AND (@Model IS NULL OR M.ModelName = @Model)
+          AND (@SKU IS NULL OR S.SKUName = @SKU)
+        ORDER BY W.StartTime DESC
+      `);
+
+      // 3. Fetch Hold records from Prod_EngineHold for drilldown
+      const holdRes = await pool.request().query(`
+        SELECT 
+          H.UID as uid,
+          H.TicketID as ticketId,
+          H.PartID as partId,
+          COALESCE(PV.PartName, H.PartID, 'Engine Sub-Component') as partName,
+          H.PartBatchID as partBatchId,
+          H.PlanID as planId,
+          H.ForwardQty as forwardQty,
+          H.BackwordQty as backwordQty,
+          H.OkQty as okQty,
+          H.RejectedQty as rejectedQty,
+          H.HoldType as holdTypeCode,
+          CASE H.HoldType
+            WHEN 1 THEN 'Quality Hold'
+            WHEN 2 THEN 'Production Hold'
+            ELSE 'Material Hold'
+          END as holdType,
+          CASE H.Status
+            WHEN 1 THEN 'Active Hold'
+            WHEN 2 THEN 'Cleared / Released'
+            ELSE 'Under Inspection'
+          END as [status],
+          ISNULL(L.LineName, 'Line C') as lineName
+        FROM Prod_EngineHold H
+        LEFT JOIN Config_PartVariant PV ON H.PartID = PV.PartID
+        LEFT JOIN Config_Line L ON 1 = L.LineID
+      `);
+
+      const rawEngines = engRes.recordset || [];
+      const rawSAs = saRes.recordset || [];
+      const holdDrilldown = holdRes.recordset || [];
+
+      // Helper to categorize status into standard groups
+      const getCategory = (c) => {
+        if ([12, 21, 26].includes(c)) return 'Quality Hold';
+        if (c === 16) return 'Production Hold';
+        if ([13, 22, 27].includes(c)) return 'Quality Hold Cleared';
+        if (c === 17) return 'Production Hold Cleared';
+        if ([14, 19, 24].includes(c)) return 'Total Rework';
+        if ([15, 20, 25].includes(c)) return 'Total Rework OK';
+        if ([11, 18, 23, 28].includes(c)) return 'Total Rework NOK/Scrapped';
+        return 'Normal WIP';
+      };
+
+      const mapRow = (r) => ({
+        ...r,
+        category: getCategory(r.statusCode)
+      });
+
+      const enginesWithCat = rawEngines.map(mapRow);
+      const sasWithCat = rawSAs.map(mapRow);
+
+      // Filter function based on status parameter
+      const applyStatusFilter = (rows) => {
+        if (!status || status === 'All') return rows;
+        const sLower = status.toLowerCase();
+        return rows.filter(r => {
+          if (sLower === 'total hold') return ['Quality Hold', 'Production Hold'].includes(r.category);
+          if (sLower === 'quality hold') return r.category === 'Quality Hold';
+          if (sLower === 'production hold') return r.category === 'Production Hold';
+          if (sLower === 'total hold cleared') return ['Quality Hold Cleared', 'Production Hold Cleared'].includes(r.category);
+          if (sLower === 'quality hold cleared') return r.category === 'Quality Hold Cleared';
+          if (sLower === 'production hold cleared') return r.category === 'Production Hold Cleared';
+          if (sLower === 'total rework') return r.category === 'Total Rework';
+          if (sLower === 'total rework ok' || sLower === 'rework ok') return r.category === 'Total Rework OK';
+          if (sLower.includes('nok') || sLower.includes('scrapped') || sLower.includes('rejected')) return r.category === 'Total Rework NOK/Scrapped';
+          return r.status.toLowerCase().includes(sLower) || r.category.toLowerCase().includes(sLower);
+        });
+      };
+
+      const filteredEngines = applyStatusFilter(enginesWithCat);
+      const filteredSAs = applyStatusFilter(sasWithCat);
+
+      // Calculate combined KPI metrics across active floor
+      const countMetric = (arr, cat) => arr.filter(r => r.category === cat).length;
+      
+      const allActiveRows = [...enginesWithCat, ...sasWithCat];
+
+      const qualityHold = countMetric(allActiveRows, 'Quality Hold');
+      const prodHold = countMetric(allActiveRows, 'Production Hold');
+      const totalHold = qualityHold + prodHold;
+
+      const qualityCleared = countMetric(allActiveRows, 'Quality Hold Cleared');
+      const prodCleared = countMetric(allActiveRows, 'Production Hold Cleared');
+      const totalHoldCleared = qualityCleared + prodCleared;
+
+      const totalRework = countMetric(allActiveRows, 'Total Rework');
+      const totalReworkOk = countMetric(allActiveRows, 'Total Rework OK');
+      const totalReworkNok = countMetric(allActiveRows, 'Total Rework NOK/Scrapped');
+
+      // Main Engine vs Sub-Assembly breakdown cards
+      const mainEngineCard = {
+        name: 'Main Engine',
+        type: 'Engine',
+        totalHold: enginesWithCat.filter(r => ['Quality Hold', 'Production Hold'].includes(r.category)).length,
+        totalRework: countMetric(enginesWithCat, 'Total Rework'),
+        reworkOk: countMetric(enginesWithCat, 'Total Rework OK'),
+        scrapped: countMetric(enginesWithCat, 'Total Rework NOK/Scrapped'),
+        totalUnits: enginesWithCat.length
+      };
+
+      // Individual cards for each Sub-Assembly line
+      const subLineNames = [
+        'CCRH Assembly',
+        'CCLH Assembly',
+        'Body Balancer Assembly',
+        'Cylinder Head Assembly',
+        'InTake Assembly'
+      ];
+
+      const subAssemblyCards = subLineNames.map(name => {
+        const rows = sasWithCat.filter(r => r.subAsslyLineName && r.subAsslyLineName.toLowerCase().includes(name.toLowerCase().split(' ')[0]));
+        return {
+          name,
+          type: 'Sub-Assembly',
+          totalHold: rows.filter(r => ['Quality Hold', 'Production Hold'].includes(r.category)).length,
+          totalRework: countMetric(rows, 'Total Rework'),
+          reworkOk: countMetric(rows, 'Total Rework OK'),
+          scrapped: countMetric(rows, 'Total Rework NOK/Scrapped'),
+          totalUnits: rows.length
+        };
+      });
+
+      // Individual cards for each SKU with three: Rework, ReworkOk, Hold
+      const skuMap = new Map();
+      allActiveRows.forEach(r => {
+        if (!r.skuName) return;
+        if (!skuMap.has(r.skuName)) {
+          skuMap.set(r.skuName, {
+            skuName: r.skuName,
+            modelName: r.modelName || 'Pulsar',
+            totalHold: 0,
+            totalRework: 0,
+            reworkOk: 0,
+            scrapped: 0,
+            totalUnits: 0
+          });
+        }
+        const item = skuMap.get(r.skuName);
+        item.totalUnits++;
+        if (['Quality Hold', 'Production Hold'].includes(r.category)) item.totalHold++;
+        if (r.category === 'Total Rework') item.totalRework++;
+        if (r.category === 'Total Rework OK') item.reworkOk++;
+        if (r.category === 'Total Rework NOK/Scrapped') item.scrapped++;
+      });
+      const skuCards = Array.from(skuMap.values());
 
       return res.json({
-        kpis: {
-          totalRework,
-          inProgress,
-          completed,
-          rejected
+        liveShift: {
+          shift: 'Shift A',
+          timeRange: '06:00 - 14:30',
+          isActive: true
         },
-        table: rows
+        kpis: {
+          totalHold,
+          qualityHold,
+          prodHold,
+          totalHoldCleared,
+          qualityCleared,
+          prodCleared,
+          totalRework,
+          totalReworkOk,
+          totalReworkNok
+        },
+        cards: {
+          mainEngine: mainEngineCard,
+          subAssemblies: subAssemblyCards,
+          skus: skuCards
+        },
+        engineDetails: filteredEngines,
+        saDetails: filteredSAs,
+        holdDrilldown
       });
     }
   } catch (err) {
-    console.error('Trace Rework DB error:', err.message);
+    console.error('Trace Rework Summary DB error:', err.message);
+    return res.status(500).json({ error: err.message });
   }
 
   res.json({
-    kpis: { totalRework: 0, inProgress: 0, completed: 0, rejected: 0 },
-    table: []
+    liveShift: { shift: 'Shift A', timeRange: '06:00 - 14:30', isActive: true },
+    kpis: {
+      totalHold: 0,
+      qualityHold: 0,
+      prodHold: 0,
+      totalHoldCleared: 0,
+      qualityCleared: 0,
+      prodCleared: 0,
+      totalRework: 0,
+      totalReworkOk: 0,
+      totalReworkNok: 0
+    },
+    cards: {
+      mainEngine: { name: 'Main Engine', totalHold: 0, totalRework: 0, reworkOk: 0, scrapped: 0, totalUnits: 0 },
+      subAssemblies: [],
+      skus: []
+    },
+    engineDetails: [],
+    saDetails: [],
+    holdDrilldown: []
   });
+});
+
+// Status Genealogy Query Endpoint
+app.get('/api/trace/status-geneology', async (req, res) => {
+  const { serialNo } = req.query;
+  if (!serialNo) {
+    return res.status(400).json({ error: 'serialNo required' });
+  }
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const result = await pool.request()
+        .input('SerialNo', serialNo.trim())
+        .query(`
+          SELECT 
+            RowID as rowId,
+            CONVERT(VARCHAR(19), Timestamp, 120) as timestamp,
+            EngineNo as serialNo,
+            Status as statusCode,
+            CASE Status
+              WHEN 1 THEN 'Plan'
+              WHEN 2 THEN 'Kit Started'
+              WHEN 3 THEN 'Kit Inspected'
+              WHEN 4 THEN 'Pre-Assembly (Kit on Line)'
+              WHEN 5 THEN 'In-Process (Assembly Started)'
+              WHEN 8 THEN 'OK Bypass'
+              WHEN 9 THEN 'Assembly Completed'
+              WHEN 10 THEN 'Finished Goods (FG)'
+              WHEN 11 THEN 'Engine Scrapped/dismantled'
+              WHEN 12 THEN 'Material Hold'
+              WHEN 13 THEN 'Material Hold cleared'
+              WHEN 14 THEN 'For Prod Rework'
+              WHEN 15 THEN 'Prod Rework OK'
+              WHEN 16 THEN 'Prod Hold'
+              WHEN 17 THEN 'Prod Hold Cleared'
+              WHEN 18 THEN 'Prod Rejected'
+              WHEN 19 THEN 'For IPQC rework'
+              WHEN 20 THEN 'IPQC Rework OK'
+              WHEN 21 THEN 'IPQC Hold'
+              WHEN 22 THEN 'IPQC Hold Cleared'
+              WHEN 23 THEN 'IPQC Rejected'
+              WHEN 24 THEN 'FQC Rework'
+              WHEN 25 THEN 'FG Rework OK'
+              WHEN 26 THEN 'FQC Hold'
+              WHEN 27 THEN 'FQC Hold Cleared'
+              WHEN 28 THEN 'FG Rejected'
+              ELSE 'Status ' + CAST(Status as varchar)
+            END as statusName,
+            CONVERT(VARCHAR(10), ProdDate, 120) as prodDate,
+            ISNULL(ProdShift, 'A') as prodShift
+          FROM Prod_Status_Geneology
+          WHERE EngineNo = @SerialNo OR EngineNo LIKE '%' + @SerialNo + '%'
+          ORDER BY Timestamp ASC, RowID ASC
+        `);
+
+      return res.json({
+        serialNo,
+        history: result.recordset || []
+      });
+    }
+  } catch (err) {
+    console.error('Status genealogy query error:', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+
+  res.json({ serialNo, history: [] });
+});
+
+// Status Genealogy Update Endpoint (Verify status genealogy update works)
+app.post('/api/trace/status-geneology/update', async (req, res) => {
+  const { serialNo, type = 'engine', statusCode, prodShift = 'A', note = '' } = req.body;
+  if (!serialNo || statusCode === undefined) {
+    return res.status(400).json({ error: 'Missing serialNo or statusCode' });
+  }
+
+  const sCode = parseInt(statusCode, 10);
+
+  try {
+    const pool = await poolPromise;
+    if (!pool) return res.status(500).json({ error: 'Database unavailable' });
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    // 1. Log update directly to Prod_Status_Geneology
+    await pool.request()
+      .input('Time', new Date())
+      .input('EngineNo', serialNo)
+      .input('Status', sCode)
+      .input('ProdDate', today)
+      .input('ProdShift', prodShift || 'A')
+      .query(`
+        INSERT INTO Prod_Status_Geneology (Timestamp, EngineNo, Status, ProdDate, ProdShift)
+        VALUES (@Time, @EngineNo, @Status, @ProdDate, @ProdShift)
+      `);
+
+    // 2. Update status in Prod_Engine_WIP or Prod_SA_WIP
+    if (type === 'sa' || serialNo.startsWith('SA') || serialNo.startsWith('VR-SA') || serialNo.startsWith('VSA')) {
+      await pool.request()
+        .input('Status', sCode)
+        .input('SA', serialNo)
+        .query(`UPDATE Prod_SA_WIP SET Status = @Status WHERE SA_SerialNo = @SA OR VSA_SerialNo = @SA`);
+    } else {
+      await pool.request()
+        .input('Status', sCode)
+        .input('EngineNo', serialNo)
+        .query(`UPDATE Prod_Engine_WIP SET Status = @Status WHERE EngineNo = @EngineNo OR VREngineNo = @EngineNo`);
+    }
+
+    return res.json({
+      success: true,
+      message: `Status successfully updated to ${sCode} and logged in Status Genealogy for ${serialNo}`,
+      serialNo,
+      statusCode: sCode,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Status genealogy update error:', err);
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 app.get('/api/trace/engine-rework', async (req, res) => {

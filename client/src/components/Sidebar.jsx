@@ -27,7 +27,7 @@ const navItems = [
       { path: '/production/engine-wip', name: 'Engine WIP Status Report' },
       { path: '/production/sa-production', name: 'SA Production Report' },
       { path: '/production/sa-wip', name: 'SA WIP Status Report' },
-      { path: '/production/rework', name: 'Rework Status Report' },
+      { path: '/production/rework', name: 'Rework Summary Report' },
     ]
   },
   { 
