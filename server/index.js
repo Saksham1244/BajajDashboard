@@ -3667,6 +3667,104 @@ app.get('/api/quality/checklist', async (req, res) => {
 });
 
 // ==========================================
+// CHECKLIST → CHECKPOINT DRILL-DOWN (IQC, IPQC, FQC)
+// GET /api/quality/checklist/checkpoints?checklistId=CHK-IQC-0005&type=IQC
+// ==========================================
+app.get('/api/quality/checklist/checkpoints', (req, res) => {
+  const { checklistId = '', type = 'IQC' } = req.query;
+  const baseType = type.replace('_CP', '').toUpperCase();
+
+  // Per-type checkpoint definitions: 10 checkpoints per checklist
+  const checkpointMap = {
+    IQC: [
+      { name: 'Crankcase Hardness Test',                  category: 'Material Quality',        std: '60–65 HRC',          actOk: '62 HRC',            actFail: '56 HRC (Low)' },
+      { name: 'Piston Crown Surface Roughness',           category: 'Surface Finish',          std: '< 0.80 µm Ra',       actOk: '0.65 µm',           actFail: '1.12 µm (High)' },
+      { name: 'Cylinder Head Bore Roundness',             category: 'Dimensional Tolerance',   std: '54.00 ± 0.01 mm',    actOk: '54.005 mm',         actFail: '54.019 mm (OOT)' },
+      { name: 'Millipore Cleanliness Particle Weight',    category: 'Cleanliness',             std: '< 15 mg',            actOk: '9.2 mg',            actFail: '17.4 mg (Fail)' },
+      { name: 'Thread Pitch Gauge Accuracy',              category: 'Thread Quality',          std: 'M8 × 1.25 6H',       actOk: 'Pass',              actFail: 'Go-No-Go Fail' },
+      { name: 'Crankshaft Bearing Journal OD',            category: 'Dimensional Tolerance',   std: '31.98–32.00 mm',     actOk: '31.994 mm',         actFail: '31.971 mm (Low)' },
+      { name: 'Connecting Rod Big-End Clearance',         category: 'Assembly Clearance',      std: '0.025–0.058 mm',     actOk: '0.038 mm',          actFail: '0.071 mm (High)' },
+      { name: 'Incoming Material Hardness (Brinell)',     category: 'Material Quality',        std: '180–220 HB',         actOk: '196 HB',            actFail: '162 HB (Low)' },
+      { name: 'Gasket Compression Set %',                 category: 'Sealing & Adhesive',      std: '< 20%',              actOk: '12%',               actFail: '26% (High)' },
+      { name: 'Surface Coating Thickness (PVD)',          category: 'Surface Finish',          std: '2–4 µm',             actOk: '3.1 µm',            actFail: '1.6 µm (Low)' },
+    ],
+    IPQC: [
+      { name: 'Main Bearing Fastening Torque',            category: 'Torque & Tightening',     std: '45.0 ± 2.0 Nm',      actOk: '45.2 Nm',           actFail: '41.3 Nm (Low)' },
+      { name: 'Cylinder Head Bolt Torque',                category: 'Torque & Tightening',     std: '38.0 ± 1.5 Nm',      actOk: '38.4 Nm',           actFail: '36.1 Nm (Low)' },
+      { name: 'Station 1 Poka-Yoke Sensor Status',        category: 'Interlock & Sensor',      std: 'Active (1)',         actOk: 'Active (1)',        actFail: 'Inactive (0)' },
+      { name: 'Piston Press Fit Depth',                   category: 'Assembly Clearance',      std: '12.50 ± 0.20 mm',    actOk: '12.55 mm',          actFail: '12.78 mm (High)' },
+      { name: 'Sealant Dispense Bead Width',              category: 'Sealing & Adhesive',      std: '2.0 ± 0.3 mm',       actOk: '2.1 mm',            actFail: '2.5 mm (High)' },
+      { name: 'Crankcase Joining Torque Check',           category: 'Torque & Tightening',     std: '28.0 ± 1.5 Nm',      actOk: '28.3 Nm',           actFail: '25.4 Nm (Low)' },
+      { name: 'Gear Selector Fork Clearance',             category: 'Assembly Clearance',      std: '0.10–0.25 mm',       actOk: '0.17 mm',           actFail: '0.30 mm (High)' },
+      { name: 'Stator Coil Resistance Check',             category: 'Interlock & Sensor',      std: '0.52–0.60 Ω',        actOk: '0.56 Ω',            actFail: '0.48 Ω (Low)' },
+      { name: 'Oil Seal Fitment Depth',                   category: 'Assembly Clearance',      std: '2.0 ± 0.5 mm below flush', actOk: '1.9 mm',      actFail: '0.5 mm (High)' },
+      { name: 'Chain Tensioner Spring Load',              category: 'Torque & Tightening',     std: '12.0 ± 1.0 N',       actOk: '12.4 N',            actFail: '10.1 N (Low)' },
+    ],
+    FQC: [
+      { name: 'Engine Idling RPM Stability',              category: 'Firing & Performance',    std: '1400 ± 50 RPM',      actOk: '1410 RPM',          actFail: '1510 RPM (High)' },
+      { name: 'Exhaust CO Gas Emission',                  category: 'Emissions & Fuel',        std: '< 0.50%',            actOk: '0.32%',             actFail: '0.68% (High)' },
+      { name: 'Engine Vibration Velocity RMS',            category: 'Vibration & NVH',         std: '< 2.2 mm/s',         actOk: '1.8 mm/s',          actFail: '2.7 mm/s (High)' },
+      { name: 'Crankcase Chamber Oil Pressure',           category: 'Oil Pressure',            std: '3.2 ± 0.3 bar',      actOk: '3.25 bar',          actFail: '2.8 bar (Low)' },
+      { name: 'Cold Helium Leak Rate',                    category: 'Leak Testing',            std: '0.00 sccm',          actOk: '0.00 sccm',         actFail: '0.03 sccm (Fail)' },
+      { name: 'Peak Dyno Torque @ 5500 RPM',             category: 'Firing & Performance',    std: '14.5 ± 0.5 Nm',      actOk: '14.7 Nm',           actFail: '13.8 Nm (Low)' },
+      { name: 'Engine Temperature Rise Rate',             category: 'Thermal Management',      std: '< 8°C / min',        actOk: '6.1°C / min',       actFail: '10.4°C / min (High)' },
+      { name: 'Gear Shift Force (1→2)',                   category: 'Mechanical Ergonomics',   std: '15–25 N',            actOk: '19 N',              actFail: '28 N (High)' },
+      { name: 'Intake Air Noise Level',                   category: 'Vibration & NVH',         std: '< 72 dB(A)',         actOk: '68 dB(A)',          actFail: '75 dB(A) (High)' },
+      { name: 'Engine Stall Count During Warm-Up',        category: 'Firing & Performance',    std: '0',                  actOk: '0',                 actFail: '2 stalls' },
+    ],
+  };
+
+  const defs = checkpointMap[baseType] || checkpointMap.IQC;
+
+  // Derive a numeric seed from checklistId so the same ID always gets same pass/fail pattern
+  const seed = checklistId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const failIdx = seed % 10; // which checkpoint (0-9) is FAIL for NOK checklists
+
+  // Determine if the parent checklist was NOK: CHK-IQC-0005 → uid 5, odd = NOK
+  const uidMatch = checklistId.match(/(\d+)$/);
+  const uid = uidMatch ? parseInt(uidMatch[1]) : 1;
+  const parentOk = uid % 7 !== 0; // roughly 1-in-7 is NOK (matches seeder pattern)
+
+  const inspectors = ['Inspector Rahul', 'Inspector Amit', 'Inspector Vikas', 'QA Lead Priya', 'Inspector Suresh'];
+  const inspector = inspectors[uid % inspectors.length];
+
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} 09:${String((uid * 3) % 60).padStart(2,'0')}:00`;
+
+  const checkpoints = defs.map((cp, i) => {
+    const isOk = parentOk || i !== failIdx;
+    return {
+      seq:         i + 1,
+      checklistId,
+      checkpointName: cp.name,
+      category:    cp.category,
+      stdValue:    cp.std,
+      actValue:    isOk ? cp.actOk : cp.actFail,
+      result:      isOk ? 'PASS' : 'FAIL',
+      inspector,
+      date:        dateStr,
+    };
+  });
+
+  const passed = checkpoints.filter(c => c.result === 'PASS').length;
+  const failed = checkpoints.length - passed;
+
+  res.json({
+    checklistId,
+    type: baseType,
+    inspector,
+    date: dateStr,
+    kpis: {
+      total: checkpoints.length,
+      passed,
+      failed,
+      passRate: Number(((passed / checkpoints.length) * 100).toFixed(1)),
+    },
+    checkpoints,
+  });
+});
+
+// ==========================================
 // 6. MAINTENANCE MODULE ENDPOINTS
 // ==========================================
 app.get('/api/maintenance/dashboard', async (req, res) => {
