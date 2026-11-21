@@ -2483,19 +2483,46 @@ app.get(['/api/trace/rework', '/api/trace/rework-summary'], async (req, res) => 
         totalUnits: enginesWithCat.length
       };
 
-      // Individual cards for each Sub-Assembly line
-      const subLineNames = [
-        'CCRH Assembly',
-        'CCLH Assembly',
-        'Body Balancer Assembly',
-        'Cylinder Head Assembly',
-        'InTake Assembly'
-      ];
+      // DYNAMIC: Query all sub-assemblies directly from Config_SubAssemblyLine
+      const subConfigRes = await pool.request().query(`
+        SELECT 
+          SL.SubAsslyLineID as subAsslyLineId,
+          SL.LineID as lineId,
+          SL.SubAsslyLineName as subAsslyLineName,
+          SL.SubAsslyLineDesc as subAsslyLineDesc,
+          ISNULL(L.LineName, 'Line ' + CAST(SL.LineID as varchar)) as lineName
+        FROM Config_SubAssemblyLine SL
+        LEFT JOIN Config_Line L ON SL.LineID = L.LineID
+        ORDER BY CAST(SL.SubAsslyLineID AS INT)
+      `);
+      const allSubConfigs = subConfigRes.recordset || [];
 
-      const subAssemblyCards = subLineNames.map(name => {
-        const rows = sasWithCat.filter(r => r.subAsslyLineName && r.subAsslyLineName.toLowerCase().includes(name.toLowerCase().split(' ')[0]));
+      // Filter by Line if a specific Line is selected
+      const filteredSubConfigs = allSubConfigs.filter(cfg => {
+        if (!line || line === 'All') return true;
+        return (cfg.lineName && cfg.lineName.toLowerCase() === line.toLowerCase()) || 
+               String(cfg.lineId) === String(line);
+      });
+
+      // Exclude 'Engine Assembly' (handled as Main Engine) and 'Rework'
+      const activeSubAssemblies = filteredSubConfigs.filter(cfg => 
+        !cfg.subAsslyLineName.toLowerCase().includes('engine assembly') &&
+        cfg.subAsslyLineName.toLowerCase() !== 'rework'
+      );
+
+      // Dynamically generate individual cards for each Sub-Assembly line configured in DB
+      const subAssemblyCards = activeSubAssemblies.map(cfg => {
+        const rows = sasWithCat.filter(r => 
+          String(r.subAsslyLineId) === String(cfg.subAsslyLineId) ||
+          (r.subAsslyLineName && r.subAsslyLineName.trim().toLowerCase() === cfg.subAsslyLineName.trim().toLowerCase())
+        );
+
         return {
-          name,
+          subAsslyLineId: cfg.subAsslyLineId,
+          lineId: cfg.lineId,
+          lineName: cfg.lineName,
+          name: cfg.subAsslyLineName,
+          desc: cfg.subAsslyLineDesc,
           type: 'Sub-Assembly',
           totalHold: rows.filter(r => ['Quality Hold', 'Production Hold'].includes(r.category)).length,
           totalRework: countMetric(rows, 'Total Rework'),
@@ -2503,6 +2530,34 @@ app.get(['/api/trace/rework', '/api/trace/rework-summary'], async (req, res) => 
           scrapped: countMetric(rows, 'Total Rework NOK/Scrapped'),
           totalUnits: rows.length
         };
+      });
+
+      // Also ensure any sub-assemblies present in Prod_SA_WIP not explicitly in config are included
+      sasWithCat.forEach(r => {
+        if (!r.subAsslyLineName) return;
+        const exists = subAssemblyCards.some(c => 
+          String(c.subAsslyLineId) === String(r.subAsslyLineId) ||
+          c.name.trim().toLowerCase() === r.subAsslyLineName.trim().toLowerCase()
+        );
+        if (!exists && !r.subAsslyLineName.toLowerCase().includes('engine assembly')) {
+          const matchingRows = sasWithCat.filter(x => 
+            String(x.subAsslyLineId) === String(r.subAsslyLineId) ||
+            x.subAsslyLineName.trim().toLowerCase() === r.subAsslyLineName.trim().toLowerCase()
+          );
+          subAssemblyCards.push({
+            subAsslyLineId: r.subAsslyLineId,
+            lineId: r.lineId || 1,
+            lineName: r.lineName || 'Line C',
+            name: r.subAsslyLineName,
+            desc: r.subAsslyLineName,
+            type: 'Sub-Assembly',
+            totalHold: matchingRows.filter(x => ['Quality Hold', 'Production Hold'].includes(x.category)).length,
+            totalRework: countMetric(matchingRows, 'Total Rework'),
+            reworkOk: countMetric(matchingRows, 'Total Rework OK'),
+            scrapped: countMetric(matchingRows, 'Total Rework NOK/Scrapped'),
+            totalUnits: matchingRows.length
+          });
+        }
       });
 
       // Individual cards for each SKU with three: Rework, ReworkOk, Hold

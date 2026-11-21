@@ -48,6 +48,7 @@ export default function ReworkStatusReport() {
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
   const [status, setStatus] = useState('All');
+  const [selectedSubAssly, setSelectedSubAssly] = useState('All');
   const [wipScope, setWipScope] = useState('all'); // 'all' | 'engine' | 'sa'
   const [breakdownView, setBreakdownView] = useState('assemblies'); // 'assemblies' | 'skus'
 
@@ -185,17 +186,26 @@ export default function ReworkStatusReport() {
   // SA Details Table
   const rawSAs = data?.saDetails || [];
   const filteredSAs = useMemo(() => {
-    if (!saSearch.trim()) return rawSAs;
-    const term = saSearch.toLowerCase();
-    return rawSAs.filter(r => 
-      (r.saSerialNo && r.saSerialNo.toLowerCase().includes(term)) ||
-      (r.subAsslyLineName && r.subAsslyLineName.toLowerCase().includes(term)) ||
-      (r.planId && String(r.planId).includes(term)) ||
-      (r.skuName && r.skuName.toLowerCase().includes(term)) ||
-      (r.lineName && r.lineName.toLowerCase().includes(term)) ||
-      (r.status && r.status.toLowerCase().includes(term))
-    );
-  }, [rawSAs, saSearch]);
+    let result = rawSAs;
+    if (selectedSubAssly && selectedSubAssly !== 'All') {
+      result = result.filter(r => 
+        (r.subAsslyLineName && r.subAsslyLineName.toLowerCase().includes(selectedSubAssly.toLowerCase())) ||
+        String(r.subAsslyLineId) === String(selectedSubAssly)
+      );
+    }
+    if (saSearch.trim()) {
+      const term = saSearch.toLowerCase();
+      result = result.filter(r => 
+        (r.saSerialNo && r.saSerialNo.toLowerCase().includes(term)) ||
+        (r.subAsslyLineName && r.subAsslyLineName.toLowerCase().includes(term)) ||
+        (r.planId && String(r.planId).includes(term)) ||
+        (r.skuName && r.skuName.toLowerCase().includes(term)) ||
+        (r.lineName && r.lineName.toLowerCase().includes(term)) ||
+        (r.status && r.status.toLowerCase().includes(term))
+      );
+    }
+    return result;
+  }, [rawSAs, saSearch, selectedSubAssly]);
 
   // Hold Drilldown
   const holdDrilldown = data?.holdDrilldown || [];
@@ -360,12 +370,19 @@ export default function ReworkStatusReport() {
     ]);
   };
 
+  // Dynamic Sub-Assembly options from API
+  const subAsslyOptions = useMemo(() => {
+    const list = (data?.cards?.subAssemblies || []).map(s => s.name);
+    return ['All', ...list];
+  }, [data]);
+
   // Custom filters for StandardFilterBar
   const customFilters = [
     { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
     { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
     { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
-    { type: 'dropdown', label: 'Status', options: STATUS_FILTER_OPTIONS, value: status, onChange: setStatus }
+    { type: 'dropdown', label: 'Status', options: STATUS_FILTER_OPTIONS, value: status, onChange: setStatus },
+    { type: 'dropdown', label: 'Sub-Assembly', options: subAsslyOptions, value: selectedSubAssly, onChange: setSelectedSubAssly }
   ];
 
   return (
@@ -502,31 +519,39 @@ export default function ReworkStatusReport() {
             <h3 className="text-xs font-bold text-brand-dark uppercase tracking-wider">
               Floor Summary Cards (Main Engine & Sub-Assemblies)
             </h3>
+            {data?.cards?.subAssemblies && (
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 font-semibold border border-purple-200">
+                {data.cards.subAssemblies.length} Sub-Assemblies Configured
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg text-xs font-medium">
             <button
               onClick={() => setBreakdownView('assemblies')}
               className={`px-2.5 py-1 rounded-md transition ${breakdownView === 'assemblies' ? 'bg-white text-brand-dark shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'}`}
             >
-              By Assembly Line
+              By Assembly Line ({data?.cards?.subAssemblies?.length || 0})
             </button>
             <button
               onClick={() => setBreakdownView('skus')}
               className={`px-2.5 py-1 rounded-md transition ${breakdownView === 'skus' ? 'bg-white text-brand-dark shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'}`}
             >
-              Individual Cards for Each SKU
+              Individual Cards for Each SKU ({data?.cards?.skus?.length || 0})
             </button>
           </div>
         </div>
 
         {breakdownView === 'assemblies' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
             {/* Main Engine Card */}
             {data?.cards?.mainEngine && (
-              <div className="p-3 rounded-lg border border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-white flex flex-col justify-between">
+              <div 
+                onClick={() => setWipScope(wipScope === 'engine' ? 'all' : 'engine')}
+                className={`cursor-pointer p-3 rounded-lg border transition flex flex-col justify-between group ${wipScope === 'engine' ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200' : 'border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-white hover:border-indigo-400 hover:shadow-xs'}`}
+              >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-indigo-900">Main Engine</span>
+                    <span className="text-xs font-bold text-indigo-900 group-hover:text-indigo-600 transition">Main Engine</span>
                     <span className="text-[10px] px-1.5 py-0.2 bg-indigo-100 text-indigo-700 rounded font-semibold">Engine</span>
                   </div>
                   <div className="text-[11px] text-slate-500 mt-0.5">Total: {data.cards.mainEngine.totalUnits} Units</div>
@@ -540,24 +565,40 @@ export default function ReworkStatusReport() {
               </div>
             )}
 
-            {/* Sub-Assembly Cards */}
-            {data?.cards?.subAssemblies?.map((sa, idx) => (
-              <div key={idx} className="p-3 rounded-lg border border-slate-200 bg-white hover:border-cyan-300 transition flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-800 truncate" title={sa.name}>{sa.name}</span>
-                    <span className="text-[10px] px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded font-semibold">SA</span>
+            {/* Sub-Assembly Cards (100% Dynamic from Config_SubAssemblyLine) */}
+            {data?.cards?.subAssemblies?.map((sa, idx) => {
+              const isSelected = selectedSubAssly === sa.name;
+              return (
+                <div 
+                  key={idx} 
+                  onClick={() => {
+                    if (isSelected) {
+                      setSelectedSubAssly('All');
+                    } else {
+                      setSelectedSubAssly(sa.name);
+                      setWipScope('sa');
+                    }
+                  }}
+                  className={`cursor-pointer p-3 rounded-lg border transition flex flex-col justify-between group ${isSelected ? 'border-cyan-500 bg-cyan-50/70 ring-2 ring-cyan-200 shadow-xs' : 'border-slate-200 bg-white hover:border-cyan-400 hover:shadow-xs'}`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs font-bold text-slate-800 truncate group-hover:text-cyan-700 transition" title={sa.name}>{sa.name}</span>
+                      <span className="text-[9px] px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded font-semibold shrink-0">Line {sa.lineId || sa.subAsslyLineId}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      Active: <b className="text-slate-800">{sa.totalUnits}</b> Units
+                    </div>
                   </div>
-                  <div className="text-[11px] text-slate-500 mt-0.5">Active: {sa.totalUnits} Units</div>
+                  <div className="grid grid-cols-2 gap-1.5 mt-2.5 pt-2 border-t border-slate-100 text-[11px]">
+                    <div className="text-orange-700 font-medium">Hold: <b className="text-slate-800">{sa.totalHold}</b></div>
+                    <div className="text-amber-700 font-medium">Rework: <b className="text-slate-800">{sa.totalRework}</b></div>
+                    <div className="text-emerald-700 font-medium">Rework OK: <b className="text-slate-800">{sa.reworkOk}</b></div>
+                    <div className="text-rose-700 font-medium">Scrapped: <b className="text-slate-800">{sa.scrapped}</b></div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-1.5 mt-2.5 pt-2 border-t border-slate-100 text-[11px]">
-                  <div className="text-orange-700 font-medium">Hold: <b className="text-slate-800">{sa.totalHold}</b></div>
-                  <div className="text-amber-700 font-medium">Rework: <b className="text-slate-800">{sa.totalRework}</b></div>
-                  <div className="text-emerald-700 font-medium">Rework OK: <b className="text-slate-800">{sa.reworkOk}</b></div>
-                  <div className="text-rose-700 font-medium">Scrapped: <b className="text-slate-800">{sa.scrapped}</b></div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
