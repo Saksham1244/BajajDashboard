@@ -9,17 +9,13 @@ import {
   FileSpreadsheet, 
   Printer, 
   Search, 
-  History, 
   CheckCircle, 
   XCircle, 
-  AlertOctagon, 
-  ExternalLink,
   X,
   Filter,
   Package,
   Wrench,
-  ShieldAlert,
-  ArrowRight
+  ShieldAlert
 } from 'lucide-react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
@@ -58,12 +54,6 @@ export default function ReworkStatusReport() {
 
   // Modals state
   const [showHoldDrilldown, setShowHoldDrilldown] = useState(false);
-  const [selectedSerial, setSelectedSerial] = useState(null); // { serialNo, type: 'engine' | 'sa', currentStatus }
-  const [genealogyHistory, setGenealogyHistory] = useState([]);
-  const [loadingGenealogy, setLoadingGenealogy] = useState(false);
-  const [genealogyMessage, setGenealogyMessage] = useState(null);
-  const [updateStatusCode, setUpdateStatusCode] = useState('15'); // default: Prod Rework OK
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Main report data
   const [data, setData] = useState(null);
@@ -95,64 +85,6 @@ export default function ReworkStatusReport() {
   useEffect(() => {
     fetchData();
   }, [line, model, sku, status, wipScope]);
-
-  // Open Status Genealogy modal
-  const handleOpenGenealogy = (serialNo, type, currentStatus) => {
-    setSelectedSerial({ serialNo, type, currentStatus });
-    setGenealogyHistory([]);
-    setGenealogyMessage(null);
-    setLoadingGenealogy(true);
-
-    fetch(`/api/trace/status-geneology?serialNo=${encodeURIComponent(serialNo)}`)
-      .then(res => res.json())
-      .then(json => {
-        setGenealogyHistory(json.history || []);
-        setLoadingGenealogy(false);
-      })
-      .catch(err => {
-        console.error('Error loading genealogy:', err);
-        setLoadingGenealogy(false);
-      });
-  };
-
-  // Perform Status Genealogy update
-  const handleUpdateStatus = (e) => {
-    e.preventDefault();
-    if (!selectedSerial) return;
-
-    setIsUpdatingStatus(true);
-    setGenealogyMessage(null);
-
-    fetch('/api/trace/status-geneology/update', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        serialNo: selectedSerial.serialNo,
-        type: selectedSerial.type,
-        statusCode: parseInt(updateStatusCode, 10),
-        prodShift: data?.liveShift?.shift || 'A'
-      })
-    })
-      .then(res => res.json())
-      .then(result => {
-        setIsUpdatingStatus(false);
-        if (result.success) {
-          setGenealogyMessage({ type: 'success', text: result.message });
-          // Refresh genealogy history
-          fetch(`/api/trace/status-geneology?serialNo=${encodeURIComponent(selectedSerial.serialNo)}`)
-            .then(res => res.json())
-            .then(json => setGenealogyHistory(json.history || []));
-          // Refresh main report data
-          fetchData();
-        } else {
-          setGenealogyMessage({ type: 'error', text: result.error || 'Update failed' });
-        }
-      })
-      .catch(err => {
-        setIsUpdatingStatus(false);
-        setGenealogyMessage({ type: 'error', text: err.message });
-      });
-  };
 
   // KPIs
   const kpis = data?.kpis || {
@@ -235,17 +167,8 @@ export default function ReworkStatusReport() {
     { 
       header: 'Engine No', 
       accessor: 'engineNo',
-      render: (val, row) => (
-        <div className="flex items-center gap-1.5 font-semibold text-brand-dark">
-          <span>{val}</span>
-          <button 
-            onClick={() => handleOpenGenealogy(val, 'engine', row.status)}
-            title="Inspect Status Genealogy"
-            className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-indigo-600 transition"
-          >
-            <History className="w-3.5 h-3.5" />
-          </button>
-        </div>
+      render: (val) => (
+        <span className="font-semibold text-brand-dark">{val}</span>
       )
     },
     { header: 'Plan ID', accessor: 'planId' },
@@ -260,19 +183,6 @@ export default function ReworkStatusReport() {
           {val}
         </span>
       )
-    },
-    {
-      header: 'Genealogy',
-      accessor: 'engineNo',
-      render: (val, row) => (
-        <button
-          onClick={() => handleOpenGenealogy(val, 'engine', row.status)}
-          className="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded border border-indigo-200 flex items-center gap-1 transition"
-        >
-          <History className="w-3 h-3" />
-          Trace
-        </button>
-      )
     }
   ];
 
@@ -281,21 +191,12 @@ export default function ReworkStatusReport() {
     { 
       header: 'SA Serial No', 
       accessor: 'saSerialNo',
-      render: (val, row) => (
-        <div className="flex items-center gap-1.5 font-semibold text-brand-dark">
-          <span>{val}</span>
-          <button 
-            onClick={() => handleOpenGenealogy(val, 'sa', row.status)}
-            title="Inspect Status Genealogy"
-            className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-indigo-600 transition"
-          >
-            <History className="w-3.5 h-3.5" />
-          </button>
-        </div>
+      render: (val) => (
+        <span className="font-semibold text-brand-dark">{val}</span>
       )
     },
     { 
-      header: 'Sub-Assembly Line', 
+      header: 'SubAsslyLineID', 
       accessor: 'subAsslyLineName',
       render: (val, row) => (
         <span className="inline-flex items-center gap-1 text-xs text-slate-700 font-medium">
@@ -315,19 +216,6 @@ export default function ReworkStatusReport() {
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getStatusBadge(val, row.category)}`}>
           {val}
         </span>
-      )
-    },
-    {
-      header: 'Genealogy',
-      accessor: 'saSerialNo',
-      render: (val, row) => (
-        <button
-          onClick={() => handleOpenGenealogy(val, 'sa', row.status)}
-          className="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded border border-indigo-200 flex items-center gap-1 transition"
-        >
-          <History className="w-3 h-3" />
-          Trace
-        </button>
       )
     }
   ];
@@ -813,125 +701,6 @@ export default function ReworkStatusReport() {
         </div>
       )}
 
-      {/* STATUS GENEALOGY INSPECTION & UPDATE MODAL */}
-      {selectedSerial && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-indigo-50/50">
-              <div className="flex items-center gap-2">
-                <History className="w-5 h-5 text-indigo-600" />
-                <div>
-                  <h3 className="text-base font-bold text-brand-dark">Status Genealogy Trace</h3>
-                  <p className="text-xs text-slate-500">
-                    Serial: <b className="text-indigo-900 font-mono">{selectedSerial.serialNo}</b> ({selectedSerial.type === 'engine' ? 'Engine' : 'Sub-Assembly'})
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedSerial(null)}
-                className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-5 flex-1 overflow-y-auto flex flex-col gap-4">
-              {genealogyMessage && (
-                <div className={`p-3 rounded-lg text-xs font-semibold flex items-center gap-2 ${genealogyMessage.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`}>
-                  {genealogyMessage.type === 'success' ? <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" /> : <XCircle className="w-4 h-4 text-rose-600 shrink-0" />}
-                  <span>{genealogyMessage.text}</span>
-                </div>
-              )}
-
-              {/* Status Genealogy Timeline */}
-              <div>
-                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                  Historical Status Audit Log (Prod_Status_Geneology)
-                </h4>
-
-                {loadingGenealogy ? (
-                  <div className="text-center py-6 text-slate-400 text-xs">Loading genealogy history...</div>
-                ) : genealogyHistory.length === 0 ? (
-                  <div className="text-center py-6 text-slate-400 text-xs">No genealogy records found for this serial.</div>
-                ) : (
-                  <div className="relative border-l-2 border-indigo-200 ml-3.5 pl-4 space-y-3">
-                    {genealogyHistory.map((step, idx) => (
-                      <div key={idx} className="relative group">
-                        <span className="absolute -left-[23px] top-1 w-3.5 h-3.5 rounded-full bg-indigo-600 border-2 border-white ring-2 ring-indigo-200"></span>
-                        <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 hover:border-indigo-300 transition">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-800">{step.statusName}</span>
-                            <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded font-mono font-semibold">
-                              Code {step.statusCode}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-1">
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3 text-slate-400" />
-                              {step.timestamp}
-                            </span>
-                            <span>Shift {step.prodShift}</span>
-                            <span>Date: {step.prodDate}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Interactive Status Update Form to Test Status Genealogy */}
-              <div className="mt-2 p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col gap-2.5">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-brand-dark">
-                  <Wrench className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Verify Status Genealogy Update (Live Floor Test)</span>
-                </div>
-                <p className="text-[11px] text-slate-500">
-                  Select a new floor status to test and confirm real-time status recording into <code className="font-mono bg-white px-1 py-0.5 rounded border border-slate-200">Prod_Status_Geneology</code>:
-                </p>
-
-                <form onSubmit={handleUpdateStatus} className="flex items-center gap-2 flex-wrap">
-                  <select
-                    value={updateStatusCode}
-                    onChange={(e) => setUpdateStatusCode(e.target.value)}
-                    className="text-xs px-3 py-1.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-600"
-                  >
-                    <option value="15">Prod Rework OK (15)</option>
-                    <option value="17">Prod Hold Cleared (17)</option>
-                    <option value="13">Material Hold Cleared (13)</option>
-                    <option value="20">IPQC Rework OK (20)</option>
-                    <option value="22">IPQC Hold Cleared (22)</option>
-                    <option value="25">FG Rework OK (25)</option>
-                    <option value="27">FQC Hold Cleared (27)</option>
-                    <option value="14">For Prod Rework (14)</option>
-                    <option value="16">Prod Hold (16)</option>
-                    <option value="18">Prod Rejected (18)</option>
-                    <option value="28">FG Rejected / Scrapped (28)</option>
-                  </select>
-
-                  <button
-                    type="submit"
-                    disabled={isUpdatingStatus}
-                    className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-xs transition flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    {isUpdatingStatus ? 'Updating...' : 'Update & Verify Genealogy'}
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-end">
-              <button
-                onClick={() => setSelectedSerial(null)}
-                className="px-4 py-1.5 bg-brand-dark text-white rounded-lg text-xs font-semibold hover:bg-slate-800 transition"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
