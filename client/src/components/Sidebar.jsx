@@ -28,7 +28,6 @@ const navItems = [
       { path: '/production/sa-production', name: 'SA Production Report' },
       { path: '/production/sa-wip', name: 'SA WIP Status Report' },
       { path: '/production/rework', name: 'Rework Summary Report' },
-      { path: '/production/rework-analysis', name: 'Rework Analysis Report' },
     ]
   },
   { 
@@ -55,7 +54,6 @@ const navItems = [
     subItems: [
       { path: '/trace/genealogy', name: 'Genealogy Report' },
       { path: '/trace/wip', name: 'WIP Report' },
-      { path: '/trace/rework-analysis', name: 'Rework Analysis Report' },
       { path: '/trace/ticket-escalation', name: 'Ticket Details Report' },
     ]
   },
@@ -64,6 +62,7 @@ const navItems = [
     icon: CheckCircle2,
     subItems: [
       { path: '/quality/defect', name: 'Defect Report' },
+      { path: '/quality/rework-analysis', name: 'Rework Analysis Report' },
       // { path: '/quality/pqca', name: 'PQCA Report' },
       { path: '/quality/iqc-checklist', name: 'IQC Report' },
       { path: '/quality/ipqc-checklist', name: 'IPQC Report' },

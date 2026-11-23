@@ -31,7 +31,7 @@ const ConveyorReport         = lazy(() => import('./pages/ProcessMonitoring/Conv
 const GenealogyReport        = lazy(() => import('./pages/TrackTrace/GenealogyReport'))
 const WIPReport              = lazy(() => import('./pages/TrackTrace/WIPReport'))
 const ReworkStatusReport     = lazy(() => import('./pages/TrackTrace/ReworkStatusReport'))
-const ReworkAnalysisReport   = lazy(() => import('./pages/Production/ReworkAnalysisReport'))
+const ReworkAnalysisReport   = lazy(() => import('./pages/Quality/ReworkAnalysisReport'))
 const EngineReworkReport     = lazy(() => import('./pages/TrackTrace/EngineReworkReport'))
 const TicketEscalationReport = lazy(() => import('./pages/TrackTrace/TicketEscalationReport'))
 
@@ -101,7 +101,7 @@ function App() {
             <Route path="straight-pass" element={<Navigate to="/production/engine-production" replace />} />
             <Route path="rework" element={<Suspense fallback={<Loading />}><ReworkStatusReport /></Suspense>} />
             <Route path="rework-summary" element={<Navigate to="/production/rework" replace />} />
-            <Route path="rework-analysis" element={<Suspense fallback={<Loading />}><ReworkAnalysisReport /></Suspense>} />
+            <Route path="rework-analysis" element={<Navigate to="/quality/rework-analysis" replace />} />
           </Route>
 
           {/* Performance Module */}
@@ -123,8 +123,8 @@ function App() {
             <Route path="genealogy" element={<Suspense fallback={<Loading />}><GenealogyReport /></Suspense>} />
             <Route path="wip" element={<Suspense fallback={<Loading />}><WIPReport /></Suspense>} />
             <Route path="rework" element={<Navigate to="/production/rework" replace />} />
-            <Route path="rework-analysis" element={<Suspense fallback={<Loading />}><ReworkAnalysisReport /></Suspense>} />
-            <Route path="engine-rework" element={<Suspense fallback={<Loading />}><ReworkAnalysisReport /></Suspense>} />
+            <Route path="rework-analysis" element={<Navigate to="/quality/rework-analysis" replace />} />
+            <Route path="engine-rework" element={<Navigate to="/quality/rework-analysis" replace />} />
             <Route path="ticket-escalation" element={<Suspense fallback={<Loading />}><TicketEscalationReport /></Suspense>} />
             <Route path="ticket-report" element={<Navigate to="/trace/ticket-escalation" replace />} />
           </Route>
@@ -133,6 +133,7 @@ function App() {
           <Route path="quality">
             <Route index element={<Navigate to="defect" replace />} />
             <Route path="defect" element={<Suspense fallback={<Loading />}><DefectReport /></Suspense>} />
+            <Route path="rework-analysis" element={<Suspense fallback={<Loading />}><ReworkAnalysisReport /></Suspense>} />
             {/* <Route path="pqca" element={<Suspense fallback={<Loading />}><PQCAReport /></Suspense>} /> */}
             <Route path="iqc-checklist" element={<Suspense fallback={<Loading />}><IQCChecklistReport /></Suspense>} />
             <Route path="ipqc-checklist" element={<Suspense fallback={<Loading />}><IPQCChecklistReport /></Suspense>} />
