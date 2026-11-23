@@ -28,6 +28,7 @@ const navItems = [
       { path: '/production/sa-production', name: 'SA Production Report' },
       { path: '/production/sa-wip', name: 'SA WIP Status Report' },
       { path: '/production/rework', name: 'Rework Summary Report' },
+      { path: '/production/rework-analysis', name: 'Rework Analysis Report' },
     ]
   },
   { 
@@ -54,7 +55,7 @@ const navItems = [
     subItems: [
       { path: '/trace/genealogy', name: 'Genealogy Report' },
       { path: '/trace/wip', name: 'WIP Report' },
-      { path: '/trace/engine-rework', name: 'Engine Wise Rework Summary' },
+      { path: '/trace/rework-analysis', name: 'Rework Analysis Report' },
       { path: '/trace/ticket-escalation', name: 'Ticket Details Report' },
     ]
   },
