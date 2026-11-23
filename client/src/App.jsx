@@ -36,7 +36,7 @@ const EngineReworkReport     = lazy(() => import('./pages/TrackTrace/EngineRewor
 const TicketEscalationReport = lazy(() => import('./pages/TrackTrace/TicketEscalationReport'))
 
 const DefectReport           = lazy(() => import('./pages/Quality/DefectReport'))
-const PQCAReport             = lazy(() => import('./pages/Quality/PQCAReport'))
+// const PQCAReport             = lazy(() => import('./pages/Quality/PQCAReport'))
 const IQCChecklistReport     = lazy(() => import('./pages/Quality/IQCChecklistReport'))
 const IPQCChecklistReport    = lazy(() => import('./pages/Quality/IPQCChecklistReport'))
 const FQCChecklistReport     = lazy(() => import('./pages/Quality/FQCChecklistReport'))
@@ -133,13 +133,13 @@ function App() {
           <Route path="quality">
             <Route index element={<Navigate to="defect" replace />} />
             <Route path="defect" element={<Suspense fallback={<Loading />}><DefectReport /></Suspense>} />
-            <Route path="pqca" element={<Suspense fallback={<Loading />}><PQCAReport /></Suspense>} />
+            {/* <Route path="pqca" element={<Suspense fallback={<Loading />}><PQCAReport /></Suspense>} /> */}
             <Route path="iqc-checklist" element={<Suspense fallback={<Loading />}><IQCChecklistReport /></Suspense>} />
             <Route path="ipqc-checklist" element={<Suspense fallback={<Loading />}><IPQCChecklistReport /></Suspense>} />
             <Route path="fqc-checklist" element={<Suspense fallback={<Loading />}><FQCChecklistReport /></Suspense>} />
-            <Route path="iqc-checkpoint" element={<Suspense fallback={<Loading />}><IQCCheckpointReport /></Suspense>} />
-            <Route path="ipqc-checkpoint" element={<Suspense fallback={<Loading />}><IPQCCheckpointReport /></Suspense>} />
-            <Route path="fqc-checkpoint" element={<Suspense fallback={<Loading />}><FQCCheckpointReport /></Suspense>} />
+            <Route path="iqc-checkpoint" element={<Navigate to="/quality/iqc-checklist" replace />} />
+            <Route path="ipqc-checkpoint" element={<Navigate to="/quality/ipqc-checklist" replace />} />
+            <Route path="fqc-checkpoint" element={<Navigate to="/quality/fqc-checklist" replace />} />
           </Route>
 
           {/* Maintenance Module */}

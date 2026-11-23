@@ -1,38 +1,78 @@
+# ==========================================
+# Dependencies & Build Output
+# ==========================================
 node_modules/
-.env
 dist/
+build/
 .DS_Store
+Thumbs.db
 .agents/
-*.rar
 
-~$*
-scratch/
+# ==========================================
+# Environment & Secrets
+# ==========================================
+.env
+.env.*
+!.env.example
 
-# Excel spreadsheets, Word & PDF documentation
-*.xlsx
-*.docx
-*.pdf
-
-# SQL dumps, schemas and stored procedure scripts
-*.sql
+# ==========================================
+# Documentation & Specifications
+# ==========================================
 docs/
-server/stored_procedures_backup/
-server/scripts/
-
-# Temporary planning and design markdown files
 decision.md
 descision.md
 design_doc.md
 flow.md
-quote_fallbacks.js
 
-# Temporary test scripts
+# ==========================================
+# Office Documents & Data Files (Excel, Word, PDF)
+# ==========================================
+*.xlsx
+*.xls
+*.csv
+*.docx
+*.doc
+*.pdf
+*.rar
+*.zip
+*.7z
+~$*
+
+# ==========================================
+# Database Dumps, SP Backups & Raw SQL Scripts
+# ==========================================
+*.sql
+*.bak
+stored_procedures_backup/
+docs/stored_procedures_backup/
+server/stored_procedures_backup/
+DEPLOY_DASHBOARD_STORED_PROCEDURES.sql
+server/create_dashboard_sps.sql
+server/create_dashboard_sps_fixed.sql
+server/db_schema.sql
+server/sp_GetEngineStatusCountBySKU.sql
+
+# ==========================================
+# Scratch, One-off & Temporary Utility Scripts
+# ==========================================
+scratch/
+quote_fallbacks.js
 server/check.js
 server/check_columns.js
 server/list_tables.js
 server/test_db.js
+server/scripts/
 
-# Service directory and batch / PowerShell launch scripts
+# ==========================================
+# Logs & Diagnostic Files
+# ==========================================
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# ==========================================
+# Service & Launcher Scripts
+# ==========================================
 service/
 *.bat
 *.ps1
