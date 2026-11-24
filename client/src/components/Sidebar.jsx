@@ -85,7 +85,7 @@ const navItems = [
     subItems: [
       { path: '/material/dashboard', name: 'Material Dashboard' },
       { path: '/material/request', name: 'Material Request Report' },
-      { path: '/material/stock', name: 'Stock Status Report' },
+      { path: '/material/stock', name: 'Material Stock' },
       { path: '/material/engine-stock', name: 'Engine Stock Status Report' },
       { path: '/material/kitting-dashboard', name: 'Kitting Dashboard' },
       { path: '/material/kit-inspection', name: 'Kit Inspection Report' },

@@ -69,6 +69,11 @@ export default function StandardFilterBar({ title, icon: Icon, onExcelClick, fil
 
             {/* Filters */}
             {filters.filter(f => f && !f.hidden).map((f, i) => {
+              if (f.type === 'custom') return (
+                <div key={i} className="flex flex-col gap-1">
+                  {f.render ? f.render() : f.content}
+                </div>
+              )
               if (f.type === 'period') return (
                 <div key={i} className="flex flex-col gap-1">
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none">Period</span>

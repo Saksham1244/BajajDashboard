@@ -4570,41 +4570,350 @@ app.get('/api/material/dashboard', async (req, res) => {
 });
 
 app.get('/api/material/stock', async (req, res) => {
-  const { matType, location } = req.query;
+  const { sku, partLevel, partId, vendor, location } = req.query;
 
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
+      // 1. Fetch all stock items with details
+      const stockResult = await pool.request().query(`
         SELECT 
-          s.PartID as id,
-          COALESCE(v.PartName, v.PartDesc, s.PartID) as material,
-          'Raw' as matType,
-          'Main Store' as [location],
-          (s.StoreQty + s.LineCKitRackQty + s.LineDKitRackQty + s.LinesideCQty + s.LinesideDQty) as available,
+          s.PartID,
+          COALESCE(v.PartName, v.PartDesc, ep.EnginePartDesc, s.PartID) as PartName,
+          COALESCE(vpm.PartLevel, ep.EnginePartLevel, 1) as PartLevel,
+          COALESCE(ven.VendorID, 0) as VendorID,
+          COALESCE(ven.VendorName, 'Endurance Technologies Ltd') as VendorName,
+          COALESCE(s.IncomingQty, 0) as IncomingQty,
+          COALESCE(s.StoreQty, 0) as StoreQty,
+          COALESCE(s.StoreHoldQty, 0) as StoreHoldQty,
+          COALESCE(s.LineCKitRackQty, 0) as LineCKitRackQty,
+          COALESCE(s.LineCHoldKitRackQty, 0) as LineCHoldKitRackQty,
+          COALESCE(s.LineDKitRackQty, 0) as LineDKitRackQty,
+          COALESCE(s.LineDHoldKitRackQty, 0) as LineDHoldKitRackQty,
+          COALESCE(s.LineCMaterialOnKit, 0) as LineCMaterialOnKit,
+          COALESCE(s.LineCHoldMaterialOnKit, 0) as LineCHoldMaterialOnKit,
+          COALESCE(s.LineDMaterialOnKit, 0) as LineDMaterialOnKit,
+          COALESCE(s.LineDHoldMaterialOnKit, 0) as LineDHoldMaterialOnKit,
+          COALESCE(s.LineCQty, 0) as LineCQty,
+          COALESCE(s.LineCHoldQty, 0) as LineCHoldQty,
+          COALESCE(s.LineDQty, 0) as LineDQty,
+          COALESCE(s.LineDHoldQty, 0) as LineDHoldQty,
+          COALESCE(s.LinesideCQty, 0) as LinesideCQty,
+          COALESCE(s.LinesideCHoldQty, 0) as LinesideCHoldQty,
+          COALESCE(s.LinesideDQty, 0) as LinesideDQty,
+          COALESCE(s.LinesideDHoldQty, 0) as LinesideDHoldQty,
           COALESCE(loc.MinAreaCapacity, 50) as minLevel,
-          COALESCE(loc.MaxAreaCapacity, 400) as maxLevel,
-          CASE 
-            WHEN (s.StoreQty + s.LineCKitRackQty + s.LineDKitRackQty + s.LinesideCQty + s.LinesideDQty) <= COALESCE(loc.MinAreaCapacity, 50) THEN 'Critical'
-            WHEN (s.StoreQty + s.LineCKitRackQty + s.LineDKitRackQty + s.LinesideCQty + s.LinesideDQty) >= COALESCE(loc.MaxAreaCapacity, 400) THEN 'Excess'
-            ELSE 'Safe'
-          END as [status]
+          COALESCE(loc.MaxAreaCapacity, 400) as maxLevel
         FROM Material_Stock s
         LEFT JOIN Config_PartVariant v ON s.PartID = v.PartID
+        LEFT JOIN Config_EnginePart ep ON s.PartID = ep.EnginePartID
+        LEFT JOIN Config_Vendor_Part_Mapping vpm ON s.PartID = vpm.PartID
+        LEFT JOIN Config_Vendor ven ON vpm.VendorID = ven.VendorID
         LEFT JOIN Config_MaterialLocationMapping loc ON s.PartID = loc.PartID
       `);
 
-      let table = result.recordset || [];
-      if (matType && matType !== 'All') table = table.filter(d => d.matType.toLowerCase() === matType.toLowerCase());
-      if (location && location !== 'All') table = table.filter(d => d.location.toLowerCase() === location.toLowerCase());
+      let rawParts = (stockResult.recordset || []).map(s => {
+        const kitRackQty = s.LineCKitRackQty + s.LineDKitRackQty;
+        const kitRackHoldQty = s.LineCHoldKitRackQty + s.LineDHoldKitRackQty;
+        const lineQty = s.LineCQty + s.LineDQty + s.LineCMaterialOnKit + s.LineDMaterialOnKit;
+        const lineHoldQty = s.LineCHoldQty + s.LineDHoldQty + s.LineCHoldMaterialOnKit + s.LineDHoldMaterialOnKit;
+        const linesideQty = s.LinesideCQty + s.LinesideDQty;
+        const linesideHoldQty = s.LinesideCHoldQty + s.LinesideDHoldQty;
+        const onLineCQty = s.LineCKitRackQty + s.LineCMaterialOnKit + s.LineCQty + s.LinesideCQty;
+        const totalHoldQty = s.StoreHoldQty + kitRackHoldQty + lineHoldQty + linesideHoldQty;
+        const totalQty = s.IncomingQty + s.StoreQty + kitRackQty + lineQty + linesideQty + totalHoldQty;
 
-      return res.json({ table });
+        return {
+          ...s,
+          KitRackQty: kitRackQty,
+          KitRackHoldQty: kitRackHoldQty,
+          LineQty: lineQty,
+          LineHoldQty: lineHoldQty,
+          LinesideQty: linesideQty,
+          LinesideHoldQty: linesideHoldQty,
+          OnLineCQty: onLineCQty,
+          TotalHoldQty: totalHoldQty,
+          TotalQty: totalQty
+        };
+      });
+
+      // 2. Fetch Filter Options
+      const skuResult = await pool.request().query(`
+        SELECT DISTINCT SKUID, SKUName, SKUDesc 
+        FROM Config_SKU 
+        WHERE SKUName IS NOT NULL AND SKUName NOT LIKE 'All%'
+        ORDER BY SKUName
+      `);
+      const skus = skuResult.recordset || [];
+
+      const skuGeneologyRes = await pool.request().query(`
+        SELECT DISTINCT g.SKUID, s.SKUName, g.PartID
+        FROM Prod_Engine_Part_Geneology g
+        JOIN Config_SKU s ON g.SKUID = s.SKUID
+      `);
+      const skuGeneology = skuGeneologyRes.recordset || [];
+
+      const vendorResult = await pool.request().query(`
+        SELECT DISTINCT VendorID, VendorName 
+        FROM Config_Vendor 
+        WHERE VendorStatus = 1
+        ORDER BY VendorName
+      `);
+      const vendors = vendorResult.recordset || [];
+
+      // 3. Batch-wise Hold / Blocked info
+      const batchResult = await pool.request().query(`
+        SELECT 
+          b.UID,
+          b.PartID,
+          COALESCE(v.PartName, ep.EnginePartDesc, b.PartID) as PartName,
+          b.BatchID,
+          COALESCE(ven.VendorName, 'Endurance Technologies Ltd') as VendorName,
+          COALESCE(b.OpenQty, 0) as BatchQty,
+          COALESCE(b.Rejected, 0) as RejectedQty,
+          b.Status,
+          CASE 
+            WHEN b.Status = 1 THEN 'Quality Hold / Quarantine'
+            WHEN b.Status = 2 THEN 'Running / In-Process'
+            ELSE 'Available'
+          END as StatusDesc,
+          CASE 
+            WHEN b.Status = 1 THEN 'Quarantine / Blocked Batch'
+            WHEN b.Rejected > 0 THEN 'Visual Defect / Rejected'
+            ELSE 'Active Production Batch'
+          END as Reason,
+          'Central Store & Line Staging' as AreaName
+        FROM Material_BatchWiseQty b
+        LEFT JOIN Config_PartVariant v ON b.PartID = v.PartID
+        LEFT JOIN Config_EnginePart ep ON b.PartID = ep.EnginePartID
+        LEFT JOIN Config_Vendor ven ON b.VendorID = ven.VendorID
+        ORDER BY b.OpenQty DESC
+      `);
+      const allBatches = batchResult.recordset || [];
+
+      // 4. Rejections
+      const rejectionsRes = await pool.request().query(`
+        SELECT PartID, SUM(Quantity) as RejectedQty 
+        FROM Material_Rejected 
+        GROUP BY PartID
+      `);
+      const rejectionMap = {};
+      (rejectionsRes.recordset || []).forEach(r => {
+        rejectionMap[r.PartID] = r.RejectedQty;
+      });
+
+      // Filter parts if SKU filter applied
+      let filteredParts = [...rawParts];
+      if (sku && sku !== 'All') {
+        const allowedPartIds = new Set(
+          skuGeneology.filter(sg => sg.SKUName === sku || String(sg.SKUID) === String(sku)).map(sg => sg.PartID)
+        );
+        if (allowedPartIds.size > 0) {
+          filteredParts = filteredParts.filter(p => allowedPartIds.has(p.PartID));
+        }
+      }
+
+      if (partLevel && partLevel !== 'All') {
+        filteredParts = filteredParts.filter(p => String(p.PartLevel) === String(partLevel));
+      }
+
+      if (vendor && vendor !== 'All') {
+        filteredParts = filteredParts.filter(p => p.VendorName === vendor || String(p.VendorID) === String(vendor));
+      }
+
+      // Identify selected part (Part filter will NOT contain 'All' as value)
+      // Defaults to the requested partId, or the first available in filteredParts, or rawParts[0]
+      let activePart = null;
+      if (partId) {
+        activePart = rawParts.find(p => p.PartID === partId);
+      }
+      if (!activePart && filteredParts.length > 0) {
+        activePart = filteredParts[0];
+      }
+      if (!activePart && rawParts.length > 0) {
+        activePart = rawParts[0];
+      }
+
+      // Selected part's batch-wise hold items for the hover popover
+      const selectedPartBatches = allBatches.filter(b => 
+        activePart ? b.PartID === activePart.PartID : true
+      );
+      const batchWiseHold = selectedPartBatches.filter(b => b.Status === 1 || b.RejectedQty > 0);
+
+      // Unallocated stock through blocking material in batch wise qty
+      const unallocatedStock = batchWiseHold
+        .filter(b => b.Status === 1)
+        .reduce((acc, b) => acc + (b.BatchQty || 0), 0);
+
+      // Total rejected for active part
+      const activePartRejections = activePart 
+        ? (rejectionMap[activePart.PartID] || 0) + (selectedPartBatches.reduce((acc, b) => acc + (b.RejectedQty || 0), 0))
+        : (rejectionsRes.recordset || []).reduce((acc, r) => acc + (r.RejectedQty || 0), 0);
+
+      // KPIs for active part (or overall if activePart is null)
+      const kpis = {
+        selectedPartId: activePart ? activePart.PartID : '',
+        selectedPartName: activePart ? activePart.PartName : '',
+        incoming: activePart ? activePart.IncomingQty : rawParts.reduce((a, b) => a + b.IncomingQty, 0),
+        inStore: activePart ? activePart.StoreQty : rawParts.reduce((a, b) => a + b.StoreQty, 0),
+        onLineC: activePart ? activePart.OnLineCQty : rawParts.reduce((a, b) => a + b.OnLineCQty, 0),
+        lineSide: activePart ? activePart.LinesideQty : rawParts.reduce((a, b) => a + b.LinesideQty, 0),
+        totalHold: activePart ? activePart.TotalHoldQty : rawParts.reduce((a, b) => a + b.TotalHoldQty, 0),
+        totalRejected: activePartRejections,
+        unallocatedStock: unallocatedStock,
+        batchWiseHold: batchWiseHold.length > 0 ? batchWiseHold : [
+          {
+            BatchID: 'BAT-HOLD-01',
+            PartID: activePart ? activePart.PartID : '',
+            VendorName: activePart ? activePart.VendorName : 'Endurance Technologies Ltd',
+            BatchQty: activePart ? activePart.TotalHoldQty : 0,
+            RejectedQty: activePartRejections,
+            StatusDesc: 'Hold for QA Inspection',
+            Reason: 'Quarantine & Visual Inspection',
+            AreaName: 'Central Warehouse Staging'
+          }
+        ]
+      };
+
+      // Visualizations:
+      // Left: Stock by location (OK vs Hold)
+      const stockByLocation = [
+        {
+          location: 'Incoming',
+          ok: activePart ? activePart.IncomingQty : 0,
+          hold: 0
+        },
+        {
+          location: 'In Store',
+          ok: activePart ? activePart.StoreQty : 0,
+          hold: activePart ? activePart.StoreHoldQty : 0
+        },
+        {
+          location: 'Kit Rack',
+          ok: activePart ? activePart.KitRackQty : 0,
+          hold: activePart ? activePart.KitRackHoldQty : 0
+        },
+        {
+          location: 'Line Assembly',
+          ok: activePart ? activePart.LineQty : 0,
+          hold: activePart ? activePart.LineHoldQty : 0
+        },
+        {
+          location: 'LineSide',
+          ok: activePart ? activePart.LinesideQty : 0,
+          hold: activePart ? activePart.LinesideHoldQty : 0
+        }
+      ];
+
+      // Right: Top 5 parts by total stock
+      const sortedByTotal = [...rawParts].sort((a, b) => b.TotalQty - a.TotalQty);
+      const top5Parts = sortedByTotal.slice(0, 5).map(p => ({
+        partId: p.PartID,
+        partName: p.PartName,
+        totalStock: p.TotalQty,
+        incoming: p.IncomingQty,
+        store: p.StoreQty,
+        kitRack: p.KitRackQty,
+        line: p.LineQty,
+        lineSide: p.LinesideQty,
+        hold: p.TotalHoldQty
+      }));
+
+      // Section 4 Table: Stock by part
+      // Columns: Part, Incoming Qty, Store Qty, KitRack Qty, Line Qty, Lineside Qty, Hold Qty, Total Qty
+      const table = filteredParts.map(p => {
+        let status = 'Safe';
+        if (p.TotalQty <= p.minLevel) status = 'Critical';
+        else if (p.TotalQty >= p.maxLevel) status = 'Excess';
+
+        return {
+          id: p.PartID,
+          partId: p.PartID,
+          partName: p.PartName,
+          material: p.PartName,
+          partLevel: p.PartLevel,
+          vendorName: p.VendorName,
+          incomingQty: p.IncomingQty,
+          storeQty: p.StoreQty,
+          kitRackQty: p.KitRackQty,
+          lineQty: p.LineQty,
+          linesideQty: p.LinesideQty,
+          holdQty: p.TotalHoldQty,
+          totalQty: p.TotalQty,
+          available: p.StoreQty + p.KitRackQty + p.LinesideQty,
+          minLevel: p.minLevel,
+          maxLevel: p.maxLevel,
+          status: status,
+          matType: 'Raw',
+          location: 'Main Store'
+        };
+      });
+
+      // Filter Options list for front-end smart search
+      const partOptions = rawParts.map(p => ({
+        partId: p.PartID,
+        partName: p.PartName,
+        partLevel: p.PartLevel,
+        vendorName: p.VendorName,
+        displayText: `${p.PartID} - ${p.PartName}`
+      }));
+
+      return res.json({
+        kpis,
+        stockByLocation,
+        top5Parts,
+        table,
+        filterOptions: {
+          skus: skus.map(s => ({ value: s.SKUName, label: `${s.SKUName} (${s.SKUDesc || 'Model'})` })),
+          partLevels: ['All', '1', '2', '3'],
+          parts: partOptions,
+          vendors: vendors.map(v => ({ value: v.VendorName, label: v.VendorName })),
+          locations: [
+            'All',
+            'Incoming Area',
+            'Central Store',
+            'Line C Kit Rack',
+            'Line D Kit Rack',
+            'Line C Assembly',
+            'Line D Assembly',
+            'LineSide C',
+            'LineSide D'
+          ],
+          liveShift: {
+            shift: 'Shift 1',
+            timeRange: '06:00 - 14:00',
+            date: new Date().toISOString().split('T')[0]
+          }
+        }
+      });
     }
   } catch (err) {
     console.error('Material Stock DB error:', err.message);
   }
 
-  res.json({ table: [] });
+  res.json({
+    kpis: {
+      incoming: 0,
+      inStore: 0,
+      onLineC: 0,
+      lineSide: 0,
+      totalHold: 0,
+      totalRejected: 0,
+      unallocatedStock: 0,
+      batchWiseHold: []
+    },
+    stockByLocation: [],
+    top5Parts: [],
+    table: [],
+    filterOptions: {
+      skus: [],
+      partLevels: ['All', '1', '2', '3'],
+      parts: [],
+      vendors: [],
+      locations: [],
+      liveShift: { shift: 'Shift 1', timeRange: '06:00 - 14:00' }
+    }
+  });
 });
 
 app.get('/api/material/request', async (req, res) => {
