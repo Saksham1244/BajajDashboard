@@ -1,114 +1,183 @@
-import { matchFilter } from '../../utils/filterUtils';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
 import DataTable from '../../components/DataTable';
-import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
-import { Cpu } from 'lucide-react';
-import { useReportFilters } from '../../hooks/useReportFilters';
-import { useFilterOptions } from '../../hooks/useFilterOptions';
-
-const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
+import { Cpu, Search } from 'lucide-react';
 
 export default function EngineStockReport() {
-  const { period, shift, getBaseFilters } = useReportFilters();
-  const filterOptions = useFilterOptions();
-  const [modelFamily, setModelFamily] = useState('All');
+  const [line, setLine] = useState('All');
+  const [subAssemblyLine, setSubAssemblyLine] = useState('All');
   const [model, setModel] = useState('All');
   const [sku, setSku] = useState('All');
+  const [tableSearch, setTableSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
 
-  const [dbData, setDbData] = useState(null);
-
-  React.useEffect(() => {
-    fetch(`/api/material/engine-stock?period=${period}&shift=${shift}&modelFamily=${encodeURIComponent(modelFamily)}&model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}`)
+  useEffect(() => {
+    setLoading(true);
+    const params = new URLSearchParams({ line, subAssemblyLine, model, sku });
+    fetch(`/api/material/engine-sa-stock?${params.toString()}`)
       .then(res => res.json())
-      .then(data => setDbData(data))
-      .catch(err => console.error(err));
-  }, [period, shift, modelFamily, model, sku]);
+      .then(json => {
+        setData(json);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Engine and SA Stock fetch error:', err);
+        setLoading(false);
+      });
+  }, [line, subAssemblyLine, model, sku]);
 
-  const customFilters = [
-    { type: 'dropdown', label: 'Model Family', options: filterOptions.modelFamilies, value: modelFamily, onChange: setModelFamily },
-    { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
-    { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
-  ];
+  const rawTable = data?.table || [];
+  const filterOptions = data?.filterOptions || { lines: [], subAssemblyLines: [], models: [], skus: [] };
 
-  const tableData = (dbData?.table || []).filter(d => 
-    (modelFamily === 'All' || !d.modelFamily || d.modelFamily === modelFamily) &&
-    matchFilter(d.model, model) &&
-    matchFilter(d.sku, sku)
-  );
+  const subAssemblyOptions = useMemo(() => {
+    const list = (filterOptions.subAssemblyLines || [])
+      .filter(s => line === 'All' || s.lineName === line)
+      .map(s => s.name);
+    return ['All', ...new Set(list)];
+  }, [filterOptions.subAssemblyLines, line]);
 
-  const pieData = useMemo(() => {
-    const counts = {};
-    tableData.forEach(d => {
-      const name = d.model || 'Unknown';
-      counts[name] = (counts[name] || 0) + 1;
-    });
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
-  }, [tableData]);
+  const skuOptions = useMemo(() => {
+    const list = (filterOptions.skus || [])
+      .filter(s => model === 'All' || s.modelName === model)
+      .map(s => s.skuName);
+    return ['All', ...new Set(list)];
+  }, [filterOptions.skus, model]);
 
-  const totalEngines = tableData.length;
-  const modelsCount = tableData.length > 0 ? new Set(tableData.map(d => d.model)).size : 0;
+  const handleLineChange = (val) => {
+    setLine(val);
+    setSubAssemblyLine('All');
+  };
 
-  const oldestEntryAge = useMemo(() => {
-    if (dbData?.kpi?.oldestEntryAge) return dbData.kpi.oldestEntryAge;
-    if (tableData.length === 0) return '0 Days';
-    const dates = tableData
-      .map(d => d.dateTime ? new Date(d.dateTime).getTime() : null)
-      .filter(t => t && !isNaN(t));
-    if (dates.length === 0) return '0 Days';
-    const oldest = Math.min(...dates);
-    const diffDays = Math.max(0, Math.floor((Date.now() - oldest) / (1000 * 60 * 60 * 24)));
-    return `${diffDays} Days`;
-  }, [tableData, dbData]);
+  const handleModelChange = (val) => {
+    setModel(val);
+    setSku('All');
+  };
 
-  const columns = [
-    { header: 'Model Family', accessor: 'modelFamily' },
-    { header: 'Model', accessor: 'model' },
-    { header: 'SKU', accessor: 'sku' },
-    { header: 'Engine No', accessor: 'engineNo' },
-    { header: 'Date/Time', accessor: 'dateTime' },
-  ];
+  const tableData = useMemo(() => {
+    if (!tableSearch.trim()) return rawTable;
+    const q = tableSearch.toLowerCase();
+    return rawTable.filter(
+      r =>
+        String(r.plan).toLowerCase().includes(q) ||
+        (r.subAssembly && r.subAssembly.toLowerCase().includes(q)) ||
+        (r.modelName && r.modelName.toLowerCase().includes(q)) ||
+        (r.skuName && r.skuName.toLowerCase().includes(q)) ||
+        (r.lineName && r.lineName.toLowerCase().includes(q))
+    );
+  }, [rawTable, tableSearch]);
 
-  const exportToExcel = () => {
-    exportToXLSX('EngineStockReport.xlsx', [
-      { name: 'KPI Summary', rows: [
-        ['Metric', 'Value'],
-        ['Total Engine Count', totalEngines],
-        ['Models Count', modelsCount],
-        ['Oldest Entry Age', oldestEntryAge]
-      ]},
-      { name: 'Engine Details', rows: [
-        ['Model Family', 'Model', 'SKU', 'Engine No', 'DateTime'],
-        ...tableData.map(d => [d.modelFamily, d.model, d.sku, d.engineNo, d.dateTime])
-      ]}
+  const handleExportExcel = () => {
+    exportToXLSX(`Engine_and_SubAssembly_Stock_${new Date().toISOString().split('T')[0]}.xlsx`, [
+      {
+        name: 'Engine & SubAssembly Stock',
+        rows: [
+          ['Plan', 'Line', 'SubAssembly', 'Model Name', 'SKU Name', 'Available Qty'],
+          ...tableData.map(r => [r.plan, r.lineName, r.subAssembly, r.modelName, r.skuName, r.availableQty])
+        ]
+      }
     ]);
   };
 
-  return (
-    <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
-      <StandardFilterBar title="Engine Stock Status" icon={Cpu} period={period} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
-      
-      <div className="flex-1 flex flex-col gap-3">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Engine Count" value={totalEngines} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Models Count" value={modelsCount} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Oldest Entry Age" value={oldestEntryAge} />
+  const columns = [
+    {
+      header: 'Plan',
+      accessor: 'plan',
+      render: (val, row) => (
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs font-bold bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-200">
+            {val === 'BUFFER' ? 'BUFFER' : `PLAN-${val}`}
+          </span>
+          <span className="text-[10px] text-slate-400 font-medium">{row.lineName}</span>
         </div>
+      )
+    },
+    { header: 'SubAssembly', accessor: 'subAssembly' },
+    { header: 'Model Name', accessor: 'modelName' },
+    {
+      header: 'SKU Name',
+      accessor: 'skuName',
+      render: val => <span className="font-mono text-xs font-bold text-[#0369a1]">{val}</span>
+    },
+    {
+      header: 'Available Qty',
+      accessor: 'availableQty',
+      align: 'right',
+      render: val => <span className="font-black text-emerald-700">{(val || 0).toLocaleString()}</span>
+    }
+  ];
 
-        <div className="card p-4">
-          <h3 className="text-sm font-bold text-brand-dark mb-3">Distribution by Model</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
-                  {pieData.map((entry, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+  const filters = [
+    {
+      type: 'dropdown',
+      label: 'Line',
+      options: ['All', ...filterOptions.lines],
+      value: line,
+      onChange: handleLineChange
+    },
+    {
+      type: 'dropdown',
+      label: 'SubAssemblyLine',
+      options: subAssemblyOptions,
+      value: subAssemblyLine,
+      onChange: setSubAssemblyLine
+    },
+    {
+      type: 'dropdown',
+      label: 'Model',
+      options: ['All', ...filterOptions.models],
+      value: model,
+      onChange: handleModelChange
+    },
+    {
+      type: 'dropdown',
+      label: 'SKU',
+      options: skuOptions,
+      value: sku,
+      onChange: setSku
+    }
+  ];
+
+  return (
+    <div className="pb-6 max-w-[1600px] mx-auto px-2 flex flex-col gap-3.5 h-full">
+      {/* SECTION 1: FILTERS (Line, SubAssemblyLine, Model, SKU, Live Shift, Excel, PDF) */}
+      <StandardFilterBar
+        title="Engine and SubAssembly Stock"
+        icon={Cpu}
+        onExcelClick={handleExportExcel}
+        onPrintClick={() => window.print()}
+        filters={filters}
+      />
+
+      {/* SECTION 2: ENGINE AND SUBASSEMBLY STOCK TABLE */}
+      <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col">
+        <div className="p-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-black text-slate-900 tracking-tight">Engine & SubAssembly Stock</h3>
+            <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">
+              {loading ? 'Loading...' : `${tableData.length} records`}
+            </span>
+          </div>
+
+          <div className="relative min-w-[240px]">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={tableSearch}
+              onChange={e => setTableSearch(e.target.value)}
+              placeholder="Search plan, subassembly, model, SKU..."
+              className="w-full pl-8 pr-6 py-1 text-xs border border-slate-200 rounded bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0369a1] font-medium"
+            />
+            {tableSearch && (
+              <button
+                type="button"
+                onClick={() => setTableSearch('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+              >
+                ×
+              </button>
+            )}
           </div>
         </div>
 

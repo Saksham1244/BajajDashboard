@@ -80,17 +80,15 @@ const navItems = [
     ]
   },
   {
-    name: 'Material & Kitting',
+    name: 'Material Management',
     icon: Package,
     subItems: [
-      { path: '/material/dashboard', name: 'Material Dashboard' },
-      { path: '/material/request', name: 'Material Request Report' },
       { path: '/material/stock', name: 'Material Stock' },
-      { path: '/material/engine-stock', name: 'Engine Stock Status Report' },
-      { path: '/material/kitting-dashboard', name: 'Kitting Dashboard' },
-      { path: '/material/kit-inspection', name: 'Kit Inspection Report' },
-      { path: '/material/kit-production', name: 'Kit vs Production Report' },
+      { path: '/material/rejection', name: 'Material Rejection' },
+      { path: '/material/batch-status', name: 'Batch Wise Material Status' },
+      { path: '/material/running-plan', name: 'Running Plan Material Status' },
       { path: '/material/consumption', name: 'Material Consumption Report' },
+      { path: '/material/engine-sa-stock', name: 'Engine and SubAssembly Stock' },
     ]
   },
   {

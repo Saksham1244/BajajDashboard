@@ -7,7 +7,7 @@ import { Database } from 'lucide-react';
  *   data: array of row objects
  *   totalRow: optional object for a bold TOTAL row
  */
-export default function DataTable({ columns = [], data = [], totalRow = null }) {
+export default function DataTable({ columns = [], data = [], totalRow = null, onRowClick = null }) {
   // Normalise — support both {key,label} and {accessor,header}
   const cols = columns.map(c => ({
     key:    c.key    ?? c.accessor,
@@ -42,7 +42,11 @@ export default function DataTable({ columns = [], data = [], totalRow = null }) 
               </tr>
             ) : (
               data.map((row, i) => (
-                <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                <tr
+                  key={i}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+                >
                   {cols.map(col => (
                     <td key={col.key}
                       className={`py-2.5 px-3 text-sm text-brand-dark ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}`}>

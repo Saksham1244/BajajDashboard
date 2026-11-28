@@ -1,151 +1,236 @@
-﻿import { matchFilter } from '../../utils/filterUtils';
-import React, { useState, useMemo, useEffect } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import StandardFilterBar from '../../components/StandardFilterBar';
+import SmartPartCombobox from '../../components/SmartPartCombobox';
 import DataTable from '../../components/DataTable';
-import StatCard from '../../components/StatCard';
 import { exportToXLSX } from '../../utils/exportExcel';
-import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { TrendingDown } from 'lucide-react';
-import { useReportFilters } from '../../hooks/useReportFilters';
-import { useFilterOptions } from '../../hooks/useFilterOptions';
-import { generateTimeLabels } from '../../utils/timeDataGenerator';
-
-const COLORS = ['#0369a1','#f97316','#10b981','#8b5cf6','#f43f5e','#06b6d4','#eab308'];
+import { TrendingDown, PackageCheck, Cpu, Scale, Layers, Search } from 'lucide-react';
 
 export default function MaterialConsumptionReport() {
-  const { period, shift, getBaseFilters } = useReportFilters();
-  const filterOptions = useFilterOptions();
-  const [line, setLine] = useState('All');
-  const [model, setModel] = useState('All');
-  const [sku, setSku] = useState('All');
-
-  const [dbData, setDbData] = useState(null);
+  const [partId, setPartId] = useState('All');
+  const [vendor, setVendor] = useState('All');
+  const [batch, setBatch] = useState('All');
+  const [tableSearch, setTableSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
 
   useEffect(() => {
-    fetch(`/api/material/consumption?period=${period}&shift=${shift}&line=${encodeURIComponent(line)}&model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}`)
+    setLoading(true);
+    const params = new URLSearchParams({ partId, vendor, batch });
+    fetch(`/api/material/consumption?${params.toString()}`)
       .then(res => res.json())
-      .then(data => setDbData(data))
-      .catch(err => console.error(err));
-  }, [period, shift, line, model, sku]);
+      .then(json => {
+        setData(json);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Material Consumption fetch error:', err);
+        setLoading(false);
+      });
+  }, [partId, vendor, batch]);
 
-  const customFilters = [
-    { type: 'dropdown', label: 'Line', options: filterOptions.lines, value: line, onChange: setLine },
-    { type: 'dropdown', label: 'Model', options: filterOptions.models, value: model, onChange: setModel },
-    { type: 'dropdown', label: 'SKU', options: filterOptions.skus, value: sku, onChange: setSku },
-  ];
+  const kpis = data?.kpis || { receivedQty: 0, consumedQty: 0, balanceQty: 0, enginesBuilt: 0 };
+  const rawTable = data?.table || [];
+  const filterOptions = data?.filterOptions || { parts: [], vendors: [], batches: [] };
 
-  const tableData = (dbData?.table || []).filter(d => 
-    matchFilter(d.line, line) &&
-    matchFilter(d.model, model) &&
-    matchFilter(d.sku, sku)
-  );
+  const tableData = useMemo(() => {
+    if (!tableSearch.trim()) return rawTable;
+    const q = tableSearch.toLowerCase();
+    return rawTable.filter(
+      r =>
+        String(r.plan).toLowerCase().includes(q) ||
+        (r.engineNo && r.engineNo.toLowerCase().includes(q)) ||
+        (r.consumedAt && r.consumedAt.toLowerCase().includes(q)) ||
+        (r.model && r.model.toLowerCase().includes(q)) ||
+        (r.sku && r.sku.toLowerCase().includes(q)) ||
+        (r.partId && r.partId.toLowerCase().includes(q)) ||
+        (r.batchId && r.batchId.toLowerCase().includes(q))
+    );
+  }, [rawTable, tableSearch]);
 
-  const varianceData = tableData.length > 0 ? tableData.map(d => ({
-    material: d.material,
-    variance: d.variancePct || 0
-  })) : [];
-
-  const trendData = useMemo(() => {
-    if (tableData.length === 0) return [];
-    return generateTimeLabels(period, shift).map((time) => ({
-      time,
-      expected: tableData.reduce((acc, d) => acc + (d.expected || 0), 0),
-      consumed: tableData.reduce((acc, d) => acc + (d.consumed || 0), 0),
-    }));
-  }, [period, shift, tableData]);
-
-  const totalMaterials = tableData.length;
-  const overConsumed = tableData.filter(d => (d.variance || 0) > 0).length;
-  const underConsumed = tableData.filter(d => (d.variance || 0) < 0).length;
-  const totalVariancePct = tableData.length > 0 ? (tableData.reduce((acc, d) => acc + (d.variancePct || 0), 0) / tableData.length).toFixed(1) : '0.0';
-  const avgVariance = `${totalVariancePct}%`;
-
-  const columns = [
-    { header: 'Material', accessor: 'material' },
-    { header: 'Line', accessor: 'line' },
-    { header: 'Model', accessor: 'model' },
-    { header: 'SKU', accessor: 'sku' },
-    { header: 'Consumed Qty', accessor: 'consumed' },
-    { header: 'Expected Qty', accessor: 'expected' },
-    { header: 'Variance', accessor: 'variance', render: (val) => {
-      let color = 'text-gray-600';
-      if(val < 0) color = 'text-green-600 font-bold';
-      if(val > 0) color = 'text-red-600 font-bold';
-      return <span className={color}>{val > 0 ? `+${val}` : val}</span>;
-    }},
-    { header: 'Variance %', accessor: 'variancePct', render: (val) => {
-      let color = 'text-gray-600';
-      if(val < 0) color = 'text-green-600 font-bold';
-      if(val > 0) color = 'text-red-600 font-bold';
-      return <span className={color}>{val > 0 ? `+${val}%` : `${val}%`}</span>;
-    }}
-  ];
-
-  const exportToExcel = () => {
-    exportToXLSX('MaterialConsumptionReport.xlsx', [
-      { name: 'KPI', rows: [
-        ['Metric', 'Value'],
-        ['Total Materials', totalMaterials],
-        ['Over-consumed', overConsumed],
-        ['Under-consumed', underConsumed],
-        ['Avg Variance %', avgVariance]
-      ]},
-      { name: 'Consumption Details', rows: [
-        ['Material', 'Line', 'Model', 'SKU', 'Consumed Qty', 'Expected Qty', 'Variance', 'Variance %'],
-        ...tableData.map(d => [d.material, d.line, d.model, d.sku, d.consumed, d.expected, d.variance, `${d.variancePct}%`])
-      ]}
+  const handleExportExcel = () => {
+    exportToXLSX(`Material_Consumption_Report_${new Date().toISOString().split('T')[0]}.xlsx`, [
+      {
+        name: 'KPI Summary',
+        rows: [
+          ['Metric', 'Value'],
+          ['Received Qty', kpis.receivedQty],
+          ['Consumed Qty', kpis.consumedQty],
+          ['Balance Qty', kpis.balanceQty],
+          ['Engines Built', kpis.enginesBuilt]
+        ]
+      },
+      {
+        name: 'Consumption Details',
+        rows: [
+          ['Plan', 'Engine No.', 'Consumed At', 'Qty Consumed', 'Model', 'SKU', 'Part ID', 'Batch ID', 'Vendor'],
+          ...tableData.map(r => [
+            r.plan,
+            r.engineNo,
+            r.consumedAt,
+            r.qtyConsumed,
+            r.model,
+            r.sku,
+            r.partId,
+            r.batchId,
+            r.vendorName
+          ])
+        ]
+      }
     ]);
   };
 
+  const columns = [
+    {
+      header: 'Plan',
+      accessor: 'plan',
+      render: val => <span className="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">PLAN-{val}</span>
+    },
+    {
+      header: 'Engine No.',
+      accessor: 'engineNo',
+      render: (val, row) => (
+        <div className="flex flex-col">
+          <span className="font-mono text-xs font-bold text-indigo-700">{val}</span>
+          <span className="text-[10px] text-slate-400">
+            {row.partId} • Batch: {row.batchId}
+          </span>
+        </div>
+      )
+    },
+    { header: 'Consumed At', accessor: 'consumedAt' },
+    {
+      header: 'Qty Consumed',
+      accessor: 'qtyConsumed',
+      align: 'right',
+      render: val => <span className="font-black text-emerald-700">{(val || 0).toLocaleString()}</span>
+    },
+    { header: 'Model', accessor: 'model' },
+    {
+      header: 'SKU',
+      accessor: 'sku',
+      render: val => <span className="font-mono text-xs font-bold text-[#0369a1]">{val}</span>
+    }
+  ];
+
+  const filters = [
+    {
+      type: 'custom',
+      render: () => (
+        <SmartPartCombobox
+          parts={filterOptions.parts}
+          selectedPartId={partId}
+          onSelectPart={setPartId}
+          allowAll={true}
+          label="Part"
+        />
+      )
+    },
+    {
+      type: 'dropdown',
+      label: 'Vendor',
+      options: ['All', ...filterOptions.vendors],
+      value: vendor,
+      onChange: setVendor
+    },
+    {
+      type: 'dropdown',
+      label: 'Batch',
+      options: ['All', ...filterOptions.batches],
+      value: batch,
+      onChange: setBatch
+    }
+  ];
+
   return (
-    <div className="pb-4 max-w-[1600px] mx-auto px-1 flex flex-col gap-3 h-full">
-      <StandardFilterBar title="Material Consumption Report" icon={TrendingDown} period={period} onExcelClick={exportToExcel} filters={[...getBaseFilters(), ...customFilters]} />
-      
-      <div className="flex-1 flex flex-col gap-3">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Total Materials"  value={totalMaterials} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Over-consumed"  value={overConsumed} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Under-consumed"  value={underConsumed} />
-          <StatCard period={typeof period !== "undefined" ? period : "Month"} title="Avg Variance %"  value={avgVariance} />
-        </div>
+    <div className="pb-6 max-w-[1600px] mx-auto px-2 flex flex-col gap-3.5 h-full">
+      {/* SECTION 1: FILTERS (Part, Vendor, Batch, Live Shift, Excel, PDF) */}
+      <StandardFilterBar
+        title="Material Consumption Report"
+        icon={TrendingDown}
+        onExcelClick={handleExportExcel}
+        onPrintClick={() => window.print()}
+        filters={filters}
+      />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="card p-4">
-            <h3 className="text-sm font-bold text-brand-dark mb-3">Material-wise Variance %</h3>
-            <div className="h-[240px]">
-              <ResponsiveContainer>
-                <BarChart data={varianceData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="material" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="variance" fill={COLORS[1]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+      {/* SECTION 2: 4 KPI CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm flex items-center justify-between">
+          <div>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Received Qty</span>
+            <div className="text-2xl font-black text-[#0369a1] mt-1">{(kpis.receivedQty || 0).toLocaleString()}</div>
+            <span className="text-[10px] font-semibold text-slate-500">Batch Opening / Received</span>
           </div>
-          <div className="card p-4">
-            <h3 className="text-sm font-bold text-brand-dark mb-3">Expected vs Consumed Trend</h3>
-            <div className="h-[240px]">
-              <ResponsiveContainer>
-                <LineChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="time" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="expected" stroke={COLORS[0]} strokeWidth={2} name="Expected" />
-                  <Line type="monotone" dataKey="consumed" stroke={COLORS[2]} strokeWidth={2} name="Consumed" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+          <div className="w-9 h-9 rounded-full bg-blue-50 text-[#0369a1] flex items-center justify-center">
+            <PackageCheck className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="card p-4">
-          <h3 className="text-sm font-bold text-brand-dark mb-3">Material Consumption Details</h3>
-          <DataTable columns={columns} data={tableData} />
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm flex items-center justify-between">
+          <div>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Consumed Qty</span>
+            <div className="text-2xl font-black text-emerald-700 mt-1">{(kpis.consumedQty || 0).toLocaleString()}</div>
+            <span className="text-[10px] font-semibold text-slate-500">Issued & Built into Engines</span>
+          </div>
+          <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <Layers className="w-5 h-5" />
+          </div>
         </div>
+
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm flex items-center justify-between">
+          <div>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Balance Qty</span>
+            <div className="text-2xl font-black text-amber-700 mt-1">{(kpis.balanceQty || 0).toLocaleString()}</div>
+            <span className="text-[10px] font-semibold text-slate-500">Remaining Batch Stock</span>
+          </div>
+          <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+            <Scale className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm flex items-center justify-between">
+          <div>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Engines Built</span>
+            <div className="text-2xl font-black text-indigo-700 mt-1">{(kpis.enginesBuilt || 0).toLocaleString()}</div>
+            <span className="text-[10px] font-semibold text-slate-500">Distinct Engines Traced</span>
+          </div>
+          <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <Cpu className="w-5 h-5" />
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 3: CONSUMPTION DETAIL TABLE */}
+      <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col">
+        <div className="p-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-black text-slate-900 tracking-tight">Consumption Traceability</h3>
+            <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">
+              {loading ? 'Loading...' : `${tableData.length} records`}
+            </span>
+          </div>
+
+          <div className="relative min-w-[240px]">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={tableSearch}
+              onChange={e => setTableSearch(e.target.value)}
+              placeholder="Search plan, engine no, model, SKU..."
+              className="w-full pl-8 pr-6 py-1 text-xs border border-slate-200 rounded bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0369a1] font-medium"
+            />
+            {tableSearch && (
+              <button
+                type="button"
+                onClick={() => setTableSearch('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
+
+        <DataTable columns={columns} data={tableData} />
       </div>
     </div>
   );

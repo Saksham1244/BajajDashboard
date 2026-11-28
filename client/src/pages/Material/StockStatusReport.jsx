@@ -1,5 +1,7 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import StandardFilterBar from '../../components/StandardFilterBar';
+import SmartPartCombobox from '../../components/SmartPartCombobox';
 import DataTable from '../../components/DataTable';
 import { exportToXLSX } from '../../utils/exportExcel';
 import {
@@ -21,145 +23,9 @@ import {
   ShieldAlert,
   XCircle,
   Search,
-  ChevronDown,
   Info,
-  Check,
-  Lock,
-  ArrowUpDown
+  Lock
 } from 'lucide-react';
-
-// ==========================================
-// SMART SEARCHABLE PART COMBOBOX
-// ==========================================
-function SmartPartCombobox({ parts, selectedPartId, onSelectPart }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const wrapperRef = useRef(null);
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const filteredParts = useMemo(() => {
-    if (!searchQuery.trim()) return parts;
-    const q = searchQuery.toLowerCase();
-    return parts.filter(
-      p =>
-        (p.partId && p.partId.toLowerCase().includes(q)) ||
-        (p.partName && p.partName.toLowerCase().includes(q))
-    );
-  }, [parts, searchQuery]);
-
-  const selectedPart = useMemo(() => {
-    return parts.find(p => p.partId === selectedPartId) || parts[0];
-  }, [parts, selectedPartId]);
-
-  return (
-    <div ref={wrapperRef} className="relative flex flex-col gap-1 min-w-[240px]">
-      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none flex items-center justify-between">
-        <span>Part (Smart Search)</span>
-        <span className="text-[9px] text-[#0369a1] font-semibold lowercase">no 'all'</span>
-      </span>
-
-      <button
-        type="button"
-        onClick={() => {
-          setIsOpen(!isOpen);
-          setTimeout(() => inputRef.current?.focus(), 50);
-        }}
-        className="text-xs font-bold text-brand-dark bg-slate-50 border border-slate-200 rounded px-2.5 h-[31px] focus:outline-none focus:ring-1 focus:ring-[#0369a1] flex items-center justify-between gap-2 shadow-xs hover:bg-slate-100 transition-colors text-left"
-      >
-        <span className="truncate">
-          {selectedPart ? (
-            <span className="flex items-center gap-1.5 truncate">
-              <span className="font-mono text-[11px] text-[#0369a1] font-bold bg-blue-50 px-1 py-0.2 rounded border border-blue-200">
-                {selectedPart.partId}
-              </span>
-              <span className="truncate text-slate-700">{selectedPart.partName}</span>
-            </span>
-          ) : (
-            <span className="text-slate-400 font-normal">Select Part...</span>
-          )}
-        </span>
-        <ChevronDown className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-      </button>
-
-      {isOpen && (
-        <div className="absolute top-[52px] left-0 z-50 w-[340px] bg-white border border-slate-200 rounded-lg shadow-xl p-2 flex flex-col gap-1.5 animate-in fade-in zoom-in-95 duration-100">
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-            <input
-              ref={inputRef}
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search part ID or description..."
-              className="w-full pl-8 pr-2 py-1.5 text-xs border border-slate-200 rounded bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0369a1] font-medium"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
-              >
-                ×
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between text-[10px] text-slate-400 px-1 font-semibold">
-            <span>{filteredParts.length} parts found</span>
-            <span>Click to select</span>
-          </div>
-
-          <div className="max-h-[220px] overflow-y-auto flex flex-col gap-0.5 divide-y divide-slate-100">
-            {filteredParts.length === 0 ? (
-              <div className="py-4 text-center text-xs text-slate-400">No matching parts</div>
-            ) : (
-              filteredParts.map(p => {
-                const isSelected = p.partId === selectedPartId;
-                return (
-                  <button
-                    key={p.partId}
-                    type="button"
-                    onClick={() => {
-                      onSelectPart(p.partId);
-                      setIsOpen(false);
-                      setSearchQuery('');
-                    }}
-                    className={`p-2 text-left rounded flex items-center justify-between gap-2 transition-colors ${
-                      isSelected ? 'bg-blue-50 text-[#0369a1]' : 'hover:bg-slate-50 text-slate-700'
-                    }`}
-                  >
-                    <div className="flex flex-col min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-xs font-bold text-slate-900">{p.partId}</span>
-                        {p.partLevel && (
-                          <span className="text-[9px] bg-slate-100 text-slate-600 px-1 py-0.2 rounded font-semibold">
-                            L{p.partLevel}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[11px] text-slate-500 truncate">{p.partName}</span>
-                    </div>
-                    {isSelected && <Check className="w-4 h-4 text-[#0369a1] flex-shrink-0" />}
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ==========================================
 // MAIN MATERIAL STOCK COMPONENT
@@ -457,17 +323,6 @@ export default function StockStatusReport() {
         onExcelClick={handleExportExcel}
         onPrintClick={() => window.print()}
         filters={filters}
-        extraActions={
-          kpis.unallocatedStock > 0 && (
-            <div
-              className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-bold px-2.5 py-1 rounded shadow-xs"
-              title="Blocked / Quarantine inventory in batch-wise quantities"
-            >
-              <Lock className="w-3.5 h-3.5 text-amber-600" />
-              <span>Unallocated Stock: {kpis.unallocatedStock} units</span>
-            </div>
-          )
-        }
       />
 
       {/* Active Part Info Strip */}
@@ -482,7 +337,17 @@ export default function StockStatusReport() {
           </span>
         </div>
         <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
-          <span>Click any row in the table below to inspect that part's stock & batch breakdown</span>
+          {kpis.unallocatedStock > 0 && (
+            <Link
+              to="/material/batch-status"
+              className="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-[11px] font-bold px-2.5 py-0.5 rounded shadow-xs transition-colors"
+              title="Click to manage blocked / unallocated batches in Batch Wise Material Status"
+            >
+              <Lock className="w-3 h-3 text-amber-600" />
+              <span>Unallocated Stock: {kpis.unallocatedStock} units</span>
+            </Link>
+          )}
+          <span className="hidden md:inline">Click any row below to inspect part stock & batch breakdown</span>
         </div>
       </div>
 
@@ -530,11 +395,11 @@ export default function StockStatusReport() {
           </div>
         </div>
 
-        {/* Card 3: On Line C (rack + kit + line + lineside) */}
+        {/* Card 3: On Line C (rack + kit + line) */}
         <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm hover:shadow transition-shadow flex flex-col justify-between">
           <div className="flex items-start justify-between gap-1 mb-2">
             <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider leading-tight">
-              On Line C <span className="font-normal lowercase text-[10px] text-slate-400 block">(rack+kit+line+lineside)</span>
+              On Line C <span className="font-normal lowercase text-[10px] text-slate-400 block">(rack + kit + line)</span>
             </span>
             <div className="w-7 h-7 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
               <Factory className="w-4 h-4" />
@@ -545,16 +410,16 @@ export default function StockStatusReport() {
               {(kpis.onLineC || 0).toLocaleString()}
             </div>
             <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full inline-block">
-              Line C Total WIP
+              Rack + Kit + Line
             </span>
           </div>
         </div>
 
-        {/* Card 4: LineSide (Shown separately as requested) */}
+        {/* Card 4: Lineside Qty (Shown separately as requested) */}
         <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm hover:shadow transition-shadow flex flex-col justify-between">
           <div className="flex items-start justify-between gap-1 mb-2">
             <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider leading-tight">
-              LineSide Stock
+              Lineside Qty
             </span>
             <div className="w-7 h-7 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
               <Layers className="w-4 h-4" />
@@ -594,45 +459,47 @@ export default function StockStatusReport() {
             </span>
           </div>
 
-          {/* HOVER POPOVER FOR BATCH-WISE HOLD DETAILS */}
+          {/* HOVER POPOVER FOR BATCH-WISE HOLD DETAILS (Opens downward cleanly below card with hover bridge) */}
           {showHoldPopover && (
-            <div className="absolute bottom-[calc(100%+8px)] right-0 md:left-0 z-50 w-[380px] bg-white border border-amber-300 rounded-xl shadow-2xl p-3 animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between pb-2 mb-2 border-b border-amber-100">
-                <div className="flex items-center gap-1.5">
-                  <ShieldAlert className="w-4 h-4 text-amber-600" />
-                  <span className="text-xs font-black text-slate-800">
-                    Batch-Wise Hold Breakdown ({partId})
+            <div className="absolute top-full left-0 md:left-auto md:right-0 pt-2 z-[100] w-[360px] max-w-[90vw]">
+              <div className="bg-white border border-amber-300 rounded-xl shadow-2xl p-3 ring-1 ring-amber-200/80">
+                <div className="flex items-center justify-between pb-2 mb-2 border-b border-amber-100">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span className="text-xs font-black text-slate-800 truncate">
+                      Batch-Wise Hold ({partId})
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full whitespace-nowrap">
+                    Total Hold: {kpis.totalHold}
                   </span>
                 </div>
-                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
-                  Total Hold: {kpis.totalHold}
-                </span>
-              </div>
 
-              <div className="max-h-[220px] overflow-y-auto divide-y divide-slate-100">
-                {(!kpis.batchWiseHold || kpis.batchWiseHold.length === 0) ? (
-                  <div className="py-4 text-center text-xs text-slate-400">
-                    No active hold batches for {partId}
-                  </div>
-                ) : (
-                  kpis.batchWiseHold.map((b, idx) => (
-                    <div key={idx} className="py-2 text-xs flex flex-col gap-0.5">
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono font-bold text-[#0369a1]">{b.BatchID}</span>
-                        <span className="font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                          {b.BatchQty} units
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-slate-600 flex items-center justify-between">
-                        <span>{b.AreaName || 'Central Staging'}</span>
-                        <span className="font-semibold text-slate-500">{b.VendorName}</span>
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-medium">
-                        Reason: {b.Reason || b.StatusDesc || 'Quality Quarantine'}
-                      </div>
+                <div className="max-h-[240px] overflow-y-auto divide-y divide-slate-100">
+                  {(!kpis.batchWiseHold || kpis.batchWiseHold.length === 0) ? (
+                    <div className="py-4 text-center text-xs text-slate-400">
+                      No active hold batches for {partId}
                     </div>
-                  ))
-                )}
+                  ) : (
+                    kpis.batchWiseHold.map((b, idx) => (
+                      <div key={idx} className="py-2 text-xs flex flex-col gap-0.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-mono font-bold text-[#0369a1]">{b.BatchID}</span>
+                          <span className="font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 whitespace-nowrap">
+                            {b.BatchQty} units
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-600 flex items-center justify-between gap-2">
+                          <span className="truncate">{b.AreaName || 'Central Store'}</span>
+                          <span className="font-semibold text-slate-500 truncate">{b.VendorName}</span>
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-medium">
+                          {b.StatusDesc || b.Reason || 'Quality Hold / Quarantine'}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           )}

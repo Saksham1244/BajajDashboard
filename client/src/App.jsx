@@ -51,14 +51,12 @@ const MTTRMTBFReport         = lazy(() => import('./pages/Maintenance/MTTRMTBFRe
 const PMDashboard            = lazy(() => import('./pages/Maintenance/PMDashboard'))
 const PMReport               = lazy(() => import('./pages/Maintenance/PMReport'))
 
-const MaterialDashboard      = lazy(() => import('./pages/Material/MaterialDashboard'))
-const MaterialRequestReport  = lazy(() => import('./pages/Material/MaterialRequestReport'))
 const StockStatusReport      = lazy(() => import('./pages/Material/StockStatusReport'))
-const EngineStockReport      = lazy(() => import('./pages/Material/EngineStockReport'))
-const KittingDashboard       = lazy(() => import('./pages/Material/KittingDashboard'))
-const KitInspectionReport    = lazy(() => import('./pages/Material/KitInspectionReport'))
-const KitVsProductionReport  = lazy(() => import('./pages/Material/KitVsProductionReport'))
+const MaterialRejectionReport = lazy(() => import('./pages/Material/MaterialRejectionReport'))
+const BatchWiseMaterialStatusReport = lazy(() => import('./pages/Material/BatchWiseMaterialStatusReport'))
+const RunningPlanMaterialStatusReport = lazy(() => import('./pages/Material/RunningPlanMaterialStatusReport'))
 const MaterialConsumptionReport = lazy(() => import('./pages/Material/MaterialConsumptionReport'))
+const EngineStockReport      = lazy(() => import('./pages/Material/EngineStockReport'))
 
 const WorkforceDashboard        = lazy(() => import('./pages/Workforce/WorkforceDashboard'))
 const SkillMatrixDashboard      = lazy(() => import('./pages/Workforce/SkillMatrixDashboard'))
@@ -156,17 +154,16 @@ function App() {
             <Route path="pm" element={<Suspense fallback={<Loading />}><PMDashboard /></Suspense>} />
           </Route>
 
-          {/* Material & Kitting Module */}
+          {/* Material Management Module */}
           <Route path="material">
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<Suspense fallback={<Loading />}><MaterialDashboard /></Suspense>} />
-            <Route path="request" element={<Suspense fallback={<Loading />}><MaterialRequestReport /></Suspense>} />
+            <Route index element={<Navigate to="stock" replace />} />
             <Route path="stock" element={<Suspense fallback={<Loading />}><StockStatusReport /></Suspense>} />
-            <Route path="engine-stock" element={<Suspense fallback={<Loading />}><EngineStockReport /></Suspense>} />
-            <Route path="kitting-dashboard" element={<Suspense fallback={<Loading />}><KittingDashboard /></Suspense>} />
-            <Route path="kit-inspection" element={<Suspense fallback={<Loading />}><KitInspectionReport /></Suspense>} />
-            <Route path="kit-production" element={<Suspense fallback={<Loading />}><KitVsProductionReport /></Suspense>} />
+            <Route path="rejection" element={<Suspense fallback={<Loading />}><MaterialRejectionReport /></Suspense>} />
+            <Route path="batch-status" element={<Suspense fallback={<Loading />}><BatchWiseMaterialStatusReport /></Suspense>} />
+            <Route path="running-plan" element={<Suspense fallback={<Loading />}><RunningPlanMaterialStatusReport /></Suspense>} />
             <Route path="consumption" element={<Suspense fallback={<Loading />}><MaterialConsumptionReport /></Suspense>} />
+            <Route path="engine-sa-stock" element={<Suspense fallback={<Loading />}><EngineStockReport /></Suspense>} />
+            <Route path="engine-stock" element={<Navigate to="/material/engine-sa-stock" replace />} />
           </Route>
 
           {/* Workforce Module */}

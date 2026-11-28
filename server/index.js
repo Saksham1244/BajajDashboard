@@ -4509,66 +4509,8 @@ app.get('/api/maintenance/pm-report', async (req, res) => {
 });
 
 // ==========================================
-// 7. MATERIAL & KITTING MODULE ENDPOINTS
+// 7. MATERIAL MANAGEMENT MODULE ENDPOINTS
 // ==========================================
-app.get('/api/material/dashboard', async (req, res) => {
-  const { line, model, sku } = req.query;
-
-  try {
-    const pool = await poolPromise;
-    if (pool) {
-      const result = await pool.request().query(`
-        SELECT 
-          s.PartID as id,
-          COALESCE(v.PartName, v.PartDesc, s.PartID) as material,
-          'Line 1' as line,
-          'Pulsar 150' as model,
-          'UG6' as sku,
-          'Main Store' as [location],
-          CASE 
-            WHEN (s.StoreQty + s.LineCKitRackQty + s.LineDKitRackQty + s.LinesideCQty + s.LinesideDQty) <= COALESCE(loc.MinAreaCapacity, 50) THEN 'Critical'
-            WHEN (s.StoreQty + s.LineCKitRackQty + s.LineDKitRackQty + s.LinesideCQty + s.LinesideDQty) >= COALESCE(loc.MaxAreaCapacity, 400) THEN 'Excess'
-            ELSE 'Safe'
-          END as [status],
-          (s.StoreQty + s.LineCKitRackQty + s.LineDKitRackQty + s.LinesideCQty + s.LinesideDQty) as currentStock,
-          COALESCE(loc.MinAreaCapacity, 50) as minLevel,
-          COALESCE(loc.MaxAreaCapacity, 400) as maxLevel,
-          'Engine Parts' as category
-        FROM Material_Stock s
-        LEFT JOIN Config_PartVariant v ON s.PartID = v.PartID
-        LEFT JOIN Config_MaterialLocationMapping loc ON s.PartID = loc.PartID
-      `);
-
-      const table = result.recordset || [];
-      const criticalCount = table.filter(d => d.status === 'Critical').length;
-      const safeCount = table.filter(d => d.status === 'Safe').length;
-      const totalStock = table.reduce((acc, d) => acc + (d.currentStock || 0), 0);
-
-      return res.json({
-        kpis: {
-          totalInventory: totalStock,
-          inventoryValue: totalStock > 0 ? '₹4.8 Cr' : '₹0',
-          criticalShortages: criticalCount,
-          stockoutRisk: criticalCount,
-          kitFulfillment: table.length > 0 ? `${Math.round((safeCount / table.length) * 100)}%` : '0%'
-        },
-        stockLevels: table.map(d => ({ material: d.material, current: d.currentStock, min: d.minLevel })),
-        shortages: [],
-        table
-      });
-    }
-  } catch (err) {
-    console.error('Material Dashboard DB error:', err.message);
-  }
-
-  res.json({
-    kpis: { totalInventory: 0, inventoryValue: '₹0', criticalShortages: 0, stockoutRisk: 0, kitFulfillment: '0%' },
-    stockLevels: [],
-    shortages: [],
-    table: []
-  });
-});
-
 app.get('/api/material/stock', async (req, res) => {
   const { sku, partLevel, partId, vendor, location } = req.query;
 
@@ -4619,7 +4561,7 @@ app.get('/api/material/stock', async (req, res) => {
         const lineHoldQty = s.LineCHoldQty + s.LineDHoldQty + s.LineCHoldMaterialOnKit + s.LineDHoldMaterialOnKit;
         const linesideQty = s.LinesideCQty + s.LinesideDQty;
         const linesideHoldQty = s.LinesideCHoldQty + s.LinesideDHoldQty;
-        const onLineCQty = s.LineCKitRackQty + s.LineCMaterialOnKit + s.LineCQty + s.LinesideCQty;
+        const onLineCQty = s.LineCKitRackQty + s.LineCMaterialOnKit + s.LineCQty;
         const totalHoldQty = s.StoreHoldQty + kitRackHoldQty + lineHoldQty + linesideHoldQty;
         const totalQty = s.IncomingQty + s.StoreQty + kitRackQty + lineQty + linesideQty + totalHoldQty;
 
@@ -4669,7 +4611,11 @@ app.get('/api/material/stock', async (req, res) => {
           COALESCE(v.PartName, ep.EnginePartDesc, b.PartID) as PartName,
           b.BatchID,
           COALESCE(ven.VendorName, 'Endurance Technologies Ltd') as VendorName,
-          COALESCE(b.OpenQty, 0) as BatchQty,
+          CASE 
+            WHEN COALESCE(b.OpenQty, 0) - COALESCE(b.Used, 0) - COALESCE(b.Moved, 0) > 0 
+            THEN COALESCE(b.OpenQty, 0) - COALESCE(b.Used, 0) - COALESCE(b.Moved, 0)
+            ELSE COALESCE(b.OpenQty, 0)
+          END as BatchQty,
           COALESCE(b.Rejected, 0) as RejectedQty,
           b.Status,
           CASE 
@@ -4682,11 +4628,12 @@ app.get('/api/material/stock', async (req, res) => {
             WHEN b.Rejected > 0 THEN 'Visual Defect / Rejected'
             ELSE 'Active Production Batch'
           END as Reason,
-          'Central Store & Line Staging' as AreaName
+          COALESCE(sa.AreaName, 'Central Store & Staging') as AreaName
         FROM Material_BatchWiseQty b
         LEFT JOIN Config_PartVariant v ON b.PartID = v.PartID
         LEFT JOIN Config_EnginePart ep ON b.PartID = ep.EnginePartID
         LEFT JOIN Config_Vendor ven ON b.VendorID = ven.VendorID
+        LEFT JOIN Config_StorageArea sa ON b.AreaID = sa.AreaID
         ORDER BY b.OpenQty DESC
       `);
       const allBatches = batchResult.recordset || [];
@@ -4734,11 +4681,11 @@ app.get('/api/material/stock', async (req, res) => {
         activePart = rawParts[0];
       }
 
-      // Selected part's batch-wise hold items for the hover popover
+      // Selected part's batch-wise hold items for the hover popover (strictly Hold/Blocked Status = 1)
       const selectedPartBatches = allBatches.filter(b => 
         activePart ? b.PartID === activePart.PartID : true
       );
-      const batchWiseHold = selectedPartBatches.filter(b => b.Status === 1 || b.RejectedQty > 0);
+      const batchWiseHold = selectedPartBatches.filter(b => b.Status === 1);
 
       // Unallocated stock through blocking material in batch wise qty
       const unallocatedStock = batchWiseHold
@@ -4777,7 +4724,7 @@ app.get('/api/material/stock', async (req, res) => {
 
       // Visualizations:
       // Left: Stock by location (OK vs Hold)
-      const stockByLocation = [
+      const allLocationsChart = [
         {
           location: 'Incoming',
           ok: activePart ? activePart.IncomingQty : 0,
@@ -4804,6 +4751,20 @@ app.get('/api/material/stock', async (req, res) => {
           hold: activePart ? activePart.LinesideHoldQty : 0
         }
       ];
+
+      let stockByLocation = allLocationsChart;
+      if (location && location !== 'All') {
+        const lq = location.toLowerCase();
+        const filteredLoc = allLocationsChart.filter(x => {
+          if (lq.includes('incoming')) return x.location === 'Incoming';
+          if (lq.includes('store')) return x.location === 'In Store';
+          if (lq.includes('kit')) return x.location === 'Kit Rack';
+          if (lq.includes('lineside')) return x.location === 'LineSide';
+          if (lq.includes('assembly') || lq.includes('line ')) return x.location === 'Line Assembly';
+          return true;
+        });
+        if (filteredLoc.length > 0) stockByLocation = filteredLoc;
+      }
 
       // Right: Top 5 parts by total stock
       const sortedByTotal = [...rawParts].sort((a, b) => b.TotalQty - a.TotalQty);
@@ -4916,330 +4877,638 @@ app.get('/api/material/stock', async (req, res) => {
   });
 });
 
-app.get('/api/material/request', async (req, res) => {
-  const { line, station } = req.query;
+app.get(['/api/material/engine-sa-stock', '/api/material/engine-stock'], async (req, res) => {
+  const { line, subAssemblyLine, model, sku } = req.query;
 
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
-        SELECT 
-          CONCAT('REQ-', m.UID) as reqId,
-          COALESCE(v.PartName, v.PartDesc, m.PartID) as material,
-          'Line 1' as line,
-          'Station 04' as station,
-          m.Quantity as requestedQty,
-          m.Quantity as issuedQty,
-          'Fulfilled' as [status],
-          CONVERT(VARCHAR(5), m.TimeStamp, 108) as reqTime,
-          CONVERT(VARCHAR(5), DATEADD(minute, 12, m.TimeStamp), 108) as fullTime
-        FROM Material_Movement_Log m
-        LEFT JOIN Config_PartVariant v ON m.PartID = v.PartID
-      `);
-
-      const table = result.recordset || [];
-      const fulfilled = table.filter(t => t.status === 'Fulfilled' || t.status === 'Approved').length;
-      const pending = table.filter(t => t.status === 'Pending').length;
-
-      return res.json({
-        kpis: {
-          totalRequests: table.length,
-          fulfilled,
-          pending,
-          fulfillmentRate: table.length > 0 ? `${Math.round((fulfilled / table.length) * 100)}%` : '0.0%'
-        },
-        table
-      });
-    }
-  } catch (err) {
-    console.error('Material Request DB error:', err.message);
-  }
-
-  res.json({
-    kpis: { totalRequests: 0, fulfilled: 0, pending: 0, fulfillmentRate: '0.0%' },
-    table: []
-  });
-});
-
-app.get('/api/material/kitting', async (req, res) => {
-  const { period, shift, startDate, endDate, line, model, sku } = req.query;
-  const dbShift = normalizeShift(shift, period);
-  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
-
-  try {
-    const pool = await poolPromise;
-    if (pool) {
-      const getReq = () => createSqlRequest(pool, {
-        StartDate: { type: sql.Date, value: effectiveStartDate },
-        EndDate: { type: sql.Date, value: effectiveEndDate },
-        Shift: { type: sql.VarChar(20), value: dbShift },
-        Line: { type: sql.VarChar(50), value: (line && line !== 'All') ? line : null },
-        Model: { type: sql.VarChar(50), value: (model && model !== 'All') ? model : null },
-        SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
-      });
-
-      const isSingleDay = effectiveStartDate && effectiveEndDate && effectiveStartDate === effectiveEndDate && period !== 'Month' && period !== 'Week';
-
-      const trendQuery = isSingleDay ? `
-        SELECT 
-          CONVERT(VARCHAR(2), K.InspectionTime, 108) + ':00' as [time],
-          COUNT(K.UID) as inspected,
-          SUM(CASE WHEN K.[Status] = 'NOK' THEN 1 ELSE 0 END) as defects,
-          SUM(CASE WHEN K.[Status] = 'OK' THEN 1 ELSE 0 END) as ok
-        FROM Prod_Kit_Inspection_Log K
-        LEFT JOIN Config_Model M ON K.ModelID = M.ModelID
-        LEFT JOIN Config_SKU S ON K.SKUID = S.SKUID
-        LEFT JOIN Config_Line L ON K.LineID = L.LineID
-        WHERE (@StartDate IS NULL OR K.ProdDate >= @StartDate)
-          AND (@EndDate IS NULL OR K.ProdDate <= @EndDate)
-          AND (@Shift IS NULL OR K.ProdShift = @Shift OR (@Shift = 'A' AND K.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift = 'B' AND K.ProdShift IN ('2', 'Shift 2', 'B')))
-          AND (@Line IS NULL OR L.LineName = @Line OR CAST(K.LineID AS VARCHAR) = @Line)
-          AND (@Model IS NULL OR M.ModelName = @Model)
-          AND (@SKU IS NULL OR S.SKUName = @SKU)
-        GROUP BY CONVERT(VARCHAR(2), K.InspectionTime, 108)
-        ORDER BY [time] ASC
-      ` : `
-        SELECT 
-          CONVERT(VARCHAR(10), K.ProdDate, 120) as [time],
-          COUNT(K.UID) as inspected,
-          SUM(CASE WHEN K.[Status] = 'NOK' THEN 1 ELSE 0 END) as defects,
-          SUM(CASE WHEN K.[Status] = 'OK' THEN 1 ELSE 0 END) as ok
-        FROM Prod_Kit_Inspection_Log K
-        LEFT JOIN Config_Model M ON K.ModelID = M.ModelID
-        LEFT JOIN Config_SKU S ON K.SKUID = S.SKUID
-        LEFT JOIN Config_Line L ON K.LineID = L.LineID
-        WHERE (@StartDate IS NULL OR K.ProdDate >= @StartDate)
-          AND (@EndDate IS NULL OR K.ProdDate <= @EndDate)
-          AND (@Shift IS NULL OR K.ProdShift = @Shift OR (@Shift = 'A' AND K.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift = 'B' AND K.ProdShift IN ('2', 'Shift 2', 'B')))
-          AND (@Line IS NULL OR L.LineName = @Line OR CAST(K.LineID AS VARCHAR) = @Line)
-          AND (@Model IS NULL OR M.ModelName = @Model)
-          AND (@SKU IS NULL OR S.SKUName = @SKU)
-        GROUP BY K.ProdDate
-        ORDER BY K.ProdDate ASC
-      `;
-
-      const [kpiRes, tableRes, defectRes, trendRes] = await Promise.allSettled([
-        getReq().query(`
+      const [saWipRes, saBufRes, engRes, linesRes, saLinesRes, modelsRes, skusRes] = await Promise.all([
+        pool.request().query(`
           SELECT 
-            COUNT(K.UID) as totalInspected,
-            SUM(CASE WHEN K.[Status] = 'OK' THEN 1 ELSE 0 END) as okCount,
-            SUM(CASE WHEN K.[Status] = 'NOK' THEN 1 ELSE 0 END) as nokCount,
-            ISNULL(AVG(CAST(K.Accuracy AS FLOAT)), 100) as avgAccuracy
-          FROM Prod_Kit_Inspection_Log K
-          LEFT JOIN Config_Model M ON K.ModelID = M.ModelID
-          LEFT JOIN Config_SKU S ON K.SKUID = S.SKUID
-          LEFT JOIN Config_Line L ON K.LineID = L.LineID
-          WHERE (@StartDate IS NULL OR K.ProdDate >= @StartDate)
-            AND (@EndDate IS NULL OR K.ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR K.ProdShift = @Shift OR (@Shift = 'A' AND K.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift = 'B' AND K.ProdShift IN ('2', 'Shift 2', 'B')))
-            AND (@Line IS NULL OR L.LineName = @Line OR CAST(K.LineID AS VARCHAR) = @Line)
-            AND (@Model IS NULL OR M.ModelName = @Model)
-            AND (@SKU IS NULL OR S.SKUName = @SKU)
+            CAST(W.PlanID AS VARCHAR) AS [plan],
+            ISNULL(L.LineName, 'Line C') AS lineName,
+            ISNULL(SA.SubAsslyLineName, 'SubAssembly') AS subAssembly,
+            ISNULL(M.ModelName, 'Pulsar N160') AS modelName,
+            ISNULL(S.SKUName, 'PD501163') AS skuName,
+            COUNT(*) AS availableQty
+          FROM Prod_SA_WIP W
+          LEFT JOIN Config_SubAssemblyLine SA ON W.SubAsslyLineID = SA.SubAsslyLineID
+          LEFT JOIN Config_Line L ON SA.LineID = L.LineID
+          LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
+          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+          GROUP BY W.PlanID, L.LineName, SA.SubAsslyLineName, M.ModelName, S.SKUName
         `),
-        getReq().query(`
-          SELECT TOP 200
-            K.KitID as kitId,
-            ISNULL(L.LineName, 'Line C') as line,
-            ISNULL(M.ModelName, 'Pulsar 150') as model,
-            ISNULL(S.SKUName, 'P150-TWIN') as sku,
-            CASE WHEN K.[Status] = 'OK' THEN 'Prepared' ELSE 'Rejected' END as [status],
-            CONVERT(VARCHAR(5), K.InspectionTime, 108) as preparedAt,
-            CAST(K.Accuracy AS VARCHAR) + '%' as accuracy,
-            ISNULL(K.DefectReason, '-') as defect,
-            K.InspectorName as operator,
-            CONVERT(VARCHAR(10), K.ProdDate, 120) as [date],
-            CONVERT(VARCHAR(5), K.InspectionTime, 108) as [time]
-          FROM Prod_Kit_Inspection_Log K
-          LEFT JOIN Config_Model M ON K.ModelID = M.ModelID
-          LEFT JOIN Config_SKU S ON K.SKUID = S.SKUID
-          LEFT JOIN Config_Line L ON K.LineID = L.LineID
-          WHERE (@StartDate IS NULL OR K.ProdDate >= @StartDate)
-            AND (@EndDate IS NULL OR K.ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR K.ProdShift = @Shift OR (@Shift = 'A' AND K.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift = 'B' AND K.ProdShift IN ('2', 'Shift 2', 'B')))
-            AND (@Line IS NULL OR L.LineName = @Line OR CAST(K.LineID AS VARCHAR) = @Line)
-            AND (@Model IS NULL OR M.ModelName = @Model)
-            AND (@SKU IS NULL OR S.SKUName = @SKU)
-          ORDER BY K.ProdDate DESC, K.InspectionTime DESC
-        `),
-        getReq().query(`
+        pool.request().query(`
           SELECT 
-            K.DefectReason as defect,
-            COUNT(K.UID) as [count]
-          FROM Prod_Kit_Inspection_Log K
-          LEFT JOIN Config_Model M ON K.ModelID = M.ModelID
-          LEFT JOIN Config_SKU S ON K.SKUID = S.SKUID
-          LEFT JOIN Config_Line L ON K.LineID = L.LineID
-          WHERE K.[Status] = 'NOK' 
-            AND K.DefectReason IS NOT NULL 
-            AND K.DefectReason != '-'
-            AND (@StartDate IS NULL OR K.ProdDate >= @StartDate)
-            AND (@EndDate IS NULL OR K.ProdDate <= @EndDate)
-            AND (@Shift IS NULL OR K.ProdShift = @Shift OR (@Shift = 'A' AND K.ProdShift IN ('1', 'Shift 1', 'A')) OR (@Shift = 'B' AND K.ProdShift IN ('2', 'Shift 2', 'B')))
-            AND (@Line IS NULL OR L.LineName = @Line OR CAST(K.LineID AS VARCHAR) = @Line)
-            AND (@Model IS NULL OR M.ModelName = @Model)
-            AND (@SKU IS NULL OR S.SKUName = @SKU)
-          GROUP BY K.DefectReason
-          ORDER BY [count] DESC
+            'BUFFER' AS [plan],
+            ISNULL(L.LineName, 'Line C') AS lineName,
+            ISNULL(SA.SubAsslyLineName, 'SubAssembly Buffer') AS subAssembly,
+            ISNULL(M.ModelName, 'Pulsar N160') AS modelName,
+            ISNULL(S.SKUName, 'PD501163') AS skuName,
+            ISNULL(B.Quantity, 0) AS availableQty
+          FROM Prod_SA_Buffer B
+          LEFT JOIN Config_SubAssemblyLine SA ON B.SubAsslyLineID = SA.SubAsslyLineID
+          LEFT JOIN Config_Line L ON SA.LineID = L.LineID
+          LEFT JOIN Config_SKU S ON B.SKUID = S.SKUID
+          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
         `),
-        getReq().query(trendQuery)
+        pool.request().query(`
+          SELECT 
+            CAST(W.PlanID AS VARCHAR) AS [plan],
+            ISNULL(L.LineName, 'Line C') AS lineName,
+            'Engine Assembly (Main Line)' AS subAssembly,
+            ISNULL(M.ModelName, 'Pulsar N160') AS modelName,
+            ISNULL(S.SKUName, 'PD501163') AS skuName,
+            COUNT(*) AS availableQty
+          FROM Prod_Engine_WIP W
+          LEFT JOIN Config_Line L ON W.LineID = L.LineID
+          LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
+          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+          GROUP BY W.PlanID, L.LineName, M.ModelName, S.SKUName
+        `),
+        pool.request().query(`SELECT DISTINCT LineID, LineName FROM Config_Line WHERE LineName IS NOT NULL ORDER BY LineName`),
+        pool.request().query(`
+          SELECT SA.SubAsslyLineID, SA.SubAsslyLineName, L.LineName
+          FROM Config_SubAssemblyLine SA
+          LEFT JOIN Config_Line L ON SA.LineID = L.LineID
+          ORDER BY SA.SubAsslyLineID
+        `),
+        pool.request().query(`SELECT DISTINCT ModelName FROM Config_Model WHERE ModelName IS NOT NULL ORDER BY ModelName`),
+        pool.request().query(`
+          SELECT DISTINCT S.SKUName, M.ModelName
+          FROM Config_SKU S
+          LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
+          WHERE S.SKUName IS NOT NULL AND S.SKUName NOT LIKE 'All%'
+          ORDER BY S.SKUName
+        `)
       ]);
 
-      const kpiRow = (kpiRes.status === 'fulfilled' && kpiRes.value?.recordset?.[0]) || {};
-      const table = (tableRes.status === 'fulfilled' && tableRes.value?.recordset) || [];
-      const defectBreakdown = (defectRes.status === 'fulfilled' && defectRes.value?.recordset) || [];
-      const trend = (trendRes.status === 'fulfilled' && trendRes.value?.recordset) || [];
+      let rows = [
+        ...(saWipRes.recordset || []),
+        ...(saBufRes.recordset || []),
+        ...(engRes.recordset || [])
+      ];
 
-      const totalInspected = kpiRow.totalInspected || table.length;
-      const okCount = kpiRow.okCount || table.filter(t => t.status === 'Prepared' || t.status === 'OK').length;
-      const nokCount = kpiRow.nokCount || table.filter(t => t.status === 'Rejected' || t.status === 'NOK').length;
-      const passRate = totalInspected > 0 ? `${((okCount / totalInspected) * 100).toFixed(1)}%` : '0.0%';
+      if (line && line !== 'All') {
+        rows = rows.filter(r => r.lineName === line);
+      }
+      if (subAssemblyLine && subAssemblyLine !== 'All') {
+        rows = rows.filter(r => r.subAssembly === subAssemblyLine);
+      }
+      if (model && model !== 'All') {
+        rows = rows.filter(r => r.modelName === model);
+      }
+      if (sku && sku !== 'All') {
+        rows = rows.filter(r => r.skuName === sku);
+      }
 
-      const barData = [
-        { model: 'Pulsar 150', prepared: table.filter(t => t.model === 'Pulsar 150' && t.status === 'Prepared').length },
-        { model: 'Pulsar NS200', prepared: table.filter(t => t.model === 'Pulsar NS200' && t.status === 'Prepared').length },
-        { model: 'Dominar 400', prepared: table.filter(t => t.model === 'Dominar 400' && t.status === 'Prepared').length },
-        { model: 'Platina 110', prepared: table.filter(t => t.model === 'Platina 110' && t.status === 'Prepared').length }
-      ].filter(d => d.prepared > 0);
+      rows.sort((a, b) => {
+        const pa = parseInt(a.plan) || 0;
+        const pb = parseInt(b.plan) || 0;
+        if (pb !== pa) return pb - pa;
+        return (a.subAssembly || '').localeCompare(b.subAssembly || '');
+      });
 
       return res.json({
-        kpis: {
-          planned: totalInspected,
-          prepared: okCount,
-          pending: Math.max(0, totalInspected - okCount - nokCount),
-          accuracy: passRate,
-          rejected: nokCount,
-          totalInspected,
-          okCount,
-          nokCount,
-          passRate,
-          status: totalInspected > 0 ? (nokCount === 0 ? 'On Track' : 'Action Required') : 'No Data'
-        },
-        barData,
-        defectBreakdown,
-        trend,
-        table
+        table: rows,
+        filterOptions: {
+          lines: (linesRes.recordset || []).map(l => l.LineName),
+          subAssemblyLines: [
+            ...(saLinesRes.recordset || []).map(s => ({ name: s.SubAsslyLineName, lineName: s.LineName || 'Line C' })),
+            { name: 'Engine Assembly (Main Line)', lineName: 'Line C' },
+            { name: 'Engine Assembly (Main Line)', lineName: 'Line D' }
+          ],
+          models: (modelsRes.recordset || []).map(m => m.ModelName),
+          skus: (skusRes.recordset || []).map(s => ({ skuName: s.SKUName, modelName: s.ModelName }))
+        }
       });
     }
   } catch (err) {
-    console.error('Kitting DB error:', err.message);
+    console.error('Engine and SA Stock DB error:', err.message);
   }
 
-  res.json({
-    kpis: { planned: 0, prepared: 0, pending: 0, accuracy: '0.0%', rejected: 0, totalInspected: 0, okCount: 0, nokCount: 0, passRate: '0.0%', status: 'No Data' },
-    barData: [],
-    defectBreakdown: [],
-    trend: [],
-    table: []
-  });
-});
-
-app.get('/api/material/engine-stock', async (req, res) => {
-  const { modelFamily, model, sku } = req.query;
-
-  try {
-    const pool = await poolPromise;
-    if (pool) {
-      const request = createSqlRequest(pool, {
-        ModelFamily: { type: sql.VarChar(50), value: (modelFamily && modelFamily !== 'All') ? modelFamily : null },
-        Model: { type: sql.VarChar(50), value: (model && model !== 'All') ? model : null },
-        SKU: { type: sql.VarChar(50), value: (sku && sku !== 'All') ? sku : null }
-      });
-
-      const result = await request.query(`
-        SELECT 
-          ISNULL(F.ModelFamilyName, 'Bike') as modelFamily,
-          ISNULL(M.ModelName, 'Pulsar 150') as model,
-          ISNULL(S.SKUName, 'SKU1') as sku,
-          W.EngineNo as engineNo,
-          CONVERT(VARCHAR(19), W.StartTime, 120) as dateTime
-        FROM Prod_Engine_WIP W
-        LEFT JOIN Config_SKU S ON W.SKUID = S.SKUID
-        LEFT JOIN Config_Model M ON S.ModelID = M.ModelID
-        LEFT JOIN Config_ModelFamily F ON M.ModelFamilyID = F.ModelFamilyID
-        WHERE (@ModelFamily IS NULL OR F.ModelFamilyName = @ModelFamily)
-          AND (@Model IS NULL OR M.ModelName = @Model)
-          AND (@SKU IS NULL OR S.SKUName = @SKU)
-        ORDER BY W.StartTime DESC
-      `);
-
-      const table = result.recordset || [];
-      const pieMap = {};
-      table.forEach(d => {
-        pieMap[d.model] = (pieMap[d.model] || 0) + 1;
-      });
-      const pie = Object.entries(pieMap).map(([name, value]) => ({ name, value }));
-
-      return res.json({
-        kpis: {
-          totalEngines: table.length,
-          modelsCount: pie.length
-        },
-        pie,
-        table
-      });
-    }
-  } catch (err) {
-    console.error('Engine Stock DB error:', err.message);
-  }
-
-  res.json({
-    kpis: { totalEngines: 0, modelsCount: 0 },
-    pie: [],
-    table: []
+  return res.json({
+    table: [],
+    filterOptions: { lines: [], subAssemblyLines: [], models: [], skus: [] }
   });
 });
 
 app.get('/api/material/consumption', async (req, res) => {
-  const { line, model, sku } = req.query;
+  const { partId, vendor, batch } = req.query;
 
   try {
     const pool = await poolPromise;
     if (pool) {
-      const result = await pool.request().query(`
-        SELECT 
-          COALESCE(v.PartName, v.PartDesc, s.PartID) as material,
-          'Line 1' as line,
-          'Pulsar 150' as model,
-          'UG6' as sku,
-          COALESCE(cons.ActualConsumed, 24) as consumed,
-          COALESCE(cons.ExpectedConsumed, 24) as expected,
-          COALESCE(cons.ActualConsumed, 24) - COALESCE(cons.ExpectedConsumed, 24) as variance,
-          CASE 
-            WHEN COALESCE(cons.ExpectedConsumed, 24) > 0 
-            THEN CAST(ROUND(((COALESCE(cons.ActualConsumed, 24) - COALESCE(cons.ExpectedConsumed, 24)) * 100.0) / cons.ExpectedConsumed, 1) AS FLOAT)
-            ELSE 0.0 
-          END as variancePct
-        FROM Material_Stock s
-        LEFT JOIN Config_PartVariant v ON s.PartID = v.PartID
-        LEFT JOIN (
-          SELECT PartID, SUM(Qty) as ActualConsumed, SUM(Qty) as ExpectedConsumed
-          FROM Prod_Engine_Part_Geneology
-          GROUP BY PartID
-        ) cons ON s.PartID = cons.PartID
-      `);
+      const [consRes, batchRes, partsRes, vendorsRes] = await Promise.all([
+        pool.request().query(`
+          SELECT 
+            CAST(G.PlanID AS VARCHAR) AS [plan],
+            G.EngineNo AS engineNo,
+            G.PartID AS partId,
+            COALESCE(PV.PartName, EP.EnginePartDesc, G.PartID) AS partName,
+            G.BatchID AS batchId,
+            ISNULL(Ven.VendorName, 'Endurance Technologies Ltd') AS vendorName,
+            ISNULL(L.LineName, 'Line C') AS lineName,
+            ISNULL(M.ModelName, 'Pulsar N160') AS model,
+            ISNULL(SK.SKUName, 'PD501163') AS sku,
+            ISNULL(G.Qty, 1) AS qtyConsumed,
+            CASE 
+              WHEN W.StartTime IS NOT NULL THEN ISNULL(L.LineName, 'Line C') + ' • ' + CONVERT(VARCHAR(16), W.StartTime, 120)
+              ELSE ISNULL(L.LineName, 'Line C')
+            END AS consumedAt
+          FROM Prod_Engine_Part_Geneology G
+          LEFT JOIN Config_PartVariant PV ON G.PartID = PV.PartID
+          LEFT JOIN Config_EnginePart EP ON G.PartID = EP.EnginePartID
+          LEFT JOIN Config_Vendor_Part_Mapping VPM ON G.PartID = VPM.PartID
+          LEFT JOIN Config_Vendor Ven ON VPM.VendorID = Ven.VendorID
+          LEFT JOIN Config_Line L ON G.LineID = L.LineID
+          LEFT JOIN Config_SKU SK ON G.SKUID = SK.SKUID
+          LEFT JOIN Config_Model M ON SK.ModelID = M.ModelID
+          LEFT JOIN Prod_Engine_WIP W ON G.EngineNo = W.EngineNo
+          ORDER BY G.PlanID DESC, G.EngineNo ASC
+        `),
+        pool.request().query(`
+          SELECT 
+            B.PartID AS partId,
+            COALESCE(PV.PartName, B.PartID) AS partName,
+            B.BatchID AS batchId,
+            ISNULL(Ven.VendorName, 'Endurance Technologies Ltd') AS vendorName,
+            ISNULL(B.OpenQty, 0) AS openQty,
+            ISNULL(B.Used, 0) AS usedQty
+          FROM Material_BatchWiseQty B
+          LEFT JOIN Config_PartVariant PV ON B.PartID = PV.PartID
+          LEFT JOIN Config_Vendor Ven ON B.VendorID = Ven.VendorID
+          ORDER BY B.BatchID
+        `),
+        pool.request().query(`
+          SELECT s.PartID AS partId, COALESCE(v.PartName, s.PartID) AS partName
+          FROM Material_Stock s
+          LEFT JOIN Config_PartVariant v ON s.PartID = v.PartID
+          ORDER BY s.PartID
+        `),
+        pool.request().query(`
+          SELECT DISTINCT VendorName FROM Config_Vendor WHERE VendorStatus = 1 ORDER BY VendorName
+        `)
+      ]);
 
-      const table = result.recordset || [];
-      const overConsumed = table.filter(d => (d.variance || 0) > 0).length;
-      const underConsumed = table.filter(d => (d.variance || 0) < 0).length;
-      const avgVariance = table.length > 0 ? (table.reduce((acc, d) => acc + (d.variancePct || 0), 0) / table.length).toFixed(1) : '0.0';
+      let rows = consRes.recordset || [];
+      let batches = batchRes.recordset || [];
+
+      if (partId && partId !== 'All') {
+        rows = rows.filter(r => r.partId === partId);
+        batches = batches.filter(b => b.partId === partId);
+      }
+      if (vendor && vendor !== 'All') {
+        rows = rows.filter(r => r.vendorName === vendor);
+        batches = batches.filter(b => b.vendorName === vendor);
+      }
+      if (batch && batch !== 'All') {
+        rows = rows.filter(r => r.batchId === batch);
+        batches = batches.filter(b => b.batchId === batch);
+      }
+
+      const receivedQty = batches.reduce((acc, b) => acc + (b.openQty || 0), 0);
+      const geneologyConsumed = rows.reduce((acc, r) => acc + (r.qtyConsumed || 0), 0);
+      const batchUsed = batches.reduce((acc, b) => acc + (b.usedQty || 0), 0);
+      const consumedQty = Math.max(geneologyConsumed, batchUsed);
+      const balanceQty = Math.max(0, receivedQty - consumedQty);
+      const enginesBuilt = new Set(rows.map(r => r.engineNo).filter(Boolean)).size;
 
       return res.json({
         kpis: {
-          totalMaterials: table.length,
-          variancePct: avgVariance,
-          overConsumed,
-          underConsumed
+          receivedQty,
+          consumedQty,
+          balanceQty,
+          enginesBuilt
         },
-        table
+        table: rows,
+        filterOptions: {
+          parts: (partsRes.recordset || []).map(p => ({ partId: p.partId, partName: p.partName })),
+          vendors: (vendorsRes.recordset || []).map(v => v.VendorName),
+          batches: [...new Set((batchRes.recordset || []).map(b => b.batchId).filter(Boolean))]
+        }
       });
     }
   } catch (err) {
     console.error('Material Consumption DB error:', err.message);
   }
 
-  res.json({
-    kpis: { totalMaterials: 0, variancePct: '0.0', overConsumed: 0, underConsumed: 0 },
-    table: []
+  return res.json({
+    kpis: { receivedQty: 0, consumedQty: 0, balanceQty: 0, enginesBuilt: 0 },
+    table: [],
+    filterOptions: { parts: [], vendors: [], batches: [] }
+  });
+});
+
+// ======================================================================================
+// REPORT 2: MATERIAL REJECTION (/api/material/rejection)
+// ======================================================================================
+app.get('/api/material/rejection', async (req, res) => {
+  const { period = 'Shift', shift, startDate, endDate, sku = 'All', partLevel = 'All', partId = 'All', vendor = 'All' } = req.query;
+  const dbShift = normalizeShift(shift, period);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const [rejRes, recRes, skuRes, skuMapRes, partRes, venRes] = await Promise.all([
+        pool.request().query(`
+          SELECT 
+            R.UID,
+            CONVERT(VARCHAR(19), R.Timestamp, 120) AS dateTimeStr,
+            CONVERT(VARCHAR(10), COALESCE(R.ProdDate, CAST(R.Timestamp AS DATE)), 23) AS prodDateStr,
+            ISNULL(R.ProdShift, CASE WHEN DATEPART(HOUR, R.Timestamp) >= 14 AND DATEPART(HOUR, R.Timestamp) < 23 THEN 'B' WHEN DATEPART(HOUR, R.Timestamp) >= 6 AND DATEPART(HOUR, R.Timestamp) < 14 THEN 'A' ELSE 'C' END) AS prodShift,
+            R.PartID AS partId,
+            COALESCE(PV.PartName, EP.EnginePartDesc, R.PartID) AS partName,
+            COALESCE(VPM.PartLevel, EP.EnginePartLevel, 1) AS partLevel,
+            COALESCE(Ven.VendorID, MR.VendorID, 0) AS vendorId,
+            COALESCE(Ven.VendorName, MRVen.VendorName, 'Endurance Technologies Ltd') AS vendorName,
+            R.RejectionSource AS sourceCode,
+            CASE R.RejectionSource
+              WHEN 1 THEN 'IQC'
+              WHEN 2 THEN 'IPQC'
+              WHEN 3 THEN 'Store'
+              WHEN 4 THEN 'Production'
+              ELSE 'IQC'
+            END AS source,
+            ISNULL(R.EDINumber, '-') AS ediNo,
+            ISNULL(R.BatchID, '-') AS batch,
+            ISNULL(R.Quantity, 0) AS qty,
+            CASE R.Status
+              WHEN 2 THEN 'Scrapped'
+              WHEN 3 THEN 'Returned to Vendor (RTV)'
+              ELSE 'Pending Disposition'
+            END AS [status]
+          FROM Material_Rejected R
+          LEFT JOIN Config_PartVariant PV ON R.PartID = PV.PartID
+          LEFT JOIN Config_EnginePart EP ON R.PartID = EP.EnginePartID
+          LEFT JOIN Config_Vendor_Part_Mapping VPM ON R.PartID = VPM.PartID
+          LEFT JOIN Config_Vendor Ven ON R.VendorID = Ven.VendorID
+          OUTER APPLY (
+            SELECT TOP 1 VendorID FROM Material_Receiving MR0
+            WHERE MR0.EDINumber = R.EDINumber AND MR0.PartID = R.PartID
+          ) MR
+          LEFT JOIN Config_Vendor MRVen ON MR.VendorID = MRVen.VendorID
+          ORDER BY R.Timestamp DESC
+        `),
+        pool.request().query(`
+          SELECT 
+            ISNULL(Ven.VendorName, 'Endurance Technologies Ltd') AS vendorName,
+            SUM(ISNULL(MR.Quantity, 0)) AS incomingQty,
+            SUM(ISNULL(MR.RejectedQty, 0)) AS receivingRejQty
+          FROM Material_Receiving MR
+          LEFT JOIN Config_Vendor Ven ON MR.VendorID = Ven.VendorID
+          GROUP BY Ven.VendorName
+        `),
+        pool.request().query(`SELECT DISTINCT SKUName, SKUDesc FROM Config_SKU WHERE SKUName IS NOT NULL AND SKUName NOT LIKE 'All%' ORDER BY SKUName`),
+        pool.request().query(`SELECT DISTINCT S.SKUName, G.PartID FROM Prod_Engine_Part_Geneology G JOIN Config_SKU S ON G.SKUID = S.SKUID`),
+        pool.request().query(`
+          SELECT s.PartID AS partId, COALESCE(v.PartName, s.PartID) AS partName, COALESCE(vpm.PartLevel, 1) AS partLevel
+          FROM Material_Stock s
+          LEFT JOIN Config_PartVariant v ON s.PartID = v.PartID
+          LEFT JOIN Config_Vendor_Part_Mapping vpm ON s.PartID = vpm.PartID
+          ORDER BY s.PartID
+        `),
+        pool.request().query(`SELECT DISTINCT VendorName FROM Config_Vendor WHERE VendorStatus = 1 ORDER BY VendorName`)
+      ]);
+
+      let rows = (rejRes.recordset || []).map(r => ({
+        ...r,
+        dateTime: r.dateTimeStr ? r.dateTimeStr.replace(' ', 'T') : null
+      }));
+
+      // Apply Date & Shift filters
+      if (effectiveStartDate && effectiveEndDate) {
+        rows = rows.filter(r => r.prodDateStr >= effectiveStartDate && r.prodDateStr <= effectiveEndDate);
+      }
+      if (dbShift) {
+        rows = rows.filter(r => {
+          const ps = String(r.prodShift || '').trim();
+          if (dbShift === 'A') return ps === 'A' || ps === '1' || ps === 'Shift 1';
+          if (dbShift === 'B') return ps === 'B' || ps === '2' || ps === 'Shift 2';
+          if (dbShift === 'C') return ps === 'C' || ps === '3' || ps === 'Shift 3';
+          return true;
+        });
+      }
+
+      // Apply SKU, Part Level, Part, Vendor filters
+      const skuMap = skuMapRes.recordset || [];
+      if (sku && sku !== 'All') {
+        const allowed = new Set(skuMap.filter(m => m.SKUName === sku).map(m => m.PartID));
+        if (allowed.size > 0) rows = rows.filter(r => allowed.has(r.partId));
+      }
+      if (partLevel && partLevel !== 'All') {
+        rows = rows.filter(r => String(r.partLevel) === String(partLevel));
+      }
+      if (partId && partId !== 'All') {
+        rows = rows.filter(r => r.partId === partId);
+      }
+      if (vendor && vendor !== 'All') {
+        rows = rows.filter(r => r.vendorName === vendor);
+      }
+
+      // Section 2: 5 KPIs
+      const totalRejected = rows.reduce((a, b) => a + (b.qty || 0), 0);
+      const iqc = rows.filter(r => r.source === 'IQC').reduce((a, b) => a + (b.qty || 0), 0);
+      const ipqc = rows.filter(r => r.source === 'IPQC').reduce((a, b) => a + (b.qty || 0), 0);
+      const store = rows.filter(r => r.source === 'Store').reduce((a, b) => a + (b.qty || 0), 0);
+      const production = rows.filter(r => r.source === 'Production').reduce((a, b) => a + (b.qty || 0), 0);
+
+      // Section 3 Left: Rejection by source (Horizontal Bar Chart)
+      const rejectionBySource = [
+        { source: 'IQC', qty: iqc },
+        { source: 'IPQC', qty: ipqc },
+        { source: 'Store', qty: store },
+        { source: 'Production', qty: production }
+      ];
+
+      // Section 3 Right: Top vendors by rejection (on basis of incoming)
+      const incomingByVendor = {};
+      (recRes.recordset || []).forEach(v => {
+        incomingByVendor[v.vendorName] = v.incomingQty || 0;
+      });
+      const venRejMap = {};
+      rows.forEach(r => {
+        venRejMap[r.vendorName] = (venRejMap[r.vendorName] || 0) + (r.qty || 0);
+      });
+      const topVendorsByRejection = Object.entries(venRejMap)
+        .map(([vendorName, rejectedQty]) => {
+          const incomingQty = incomingByVendor[vendorName] || 0;
+          const rejectionRatePct = incomingQty > 0 ? Number(((rejectedQty / incomingQty) * 100).toFixed(2)) : 0;
+          return { vendor: vendorName, rejectedQty, incomingQty, rejectionRatePct };
+        })
+        .sort((a, b) => b.rejectedQty - a.rejectedQty)
+        .slice(0, 6);
+
+      return res.json({
+        kpis: { totalRejected, iqc, ipqc, store, production },
+        rejectionBySource,
+        topVendorsByRejection,
+        table: rows,
+        filterOptions: {
+          skus: (skuRes.recordset || []).map(s => ({ value: s.SKUName, label: `${s.SKUName}${s.SKUDesc ? ` (${s.SKUDesc})` : ''}` })),
+          partLevels: ['All', '1', '2', '3'],
+          parts: (partRes.recordset || []).map(p => ({ partId: p.partId, partName: p.partName, partLevel: p.partLevel })),
+          vendors: (venRes.recordset || []).map(v => v.VendorName)
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Material Rejection DB error:', err.message);
+  }
+
+  return res.json({
+    kpis: { totalRejected: 0, iqc: 0, ipqc: 0, store: 0, production: 0 },
+    rejectionBySource: [],
+    topVendorsByRejection: [],
+    table: [],
+    filterOptions: { skus: [], partLevels: ['All', '1', '2', '3'], parts: [], vendors: [] }
+  });
+});
+
+// ======================================================================================
+// REPORT 3: BATCH WISE MATERIAL STATUS (/api/material/batch-status)
+// ======================================================================================
+app.get('/api/material/batch-status', async (req, res) => {
+  const { sku = 'All', partLevel = 'All', partId = 'All', vendor = 'All', location = 'All' } = req.query;
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const [batchRes, skuRes, skuMapRes, partRes, venRes, areaRes] = await Promise.all([
+        pool.request().query(`
+          SELECT 
+            B.UID AS uid,
+            B.PartID AS partId,
+            COALESCE(PV.PartName, EP.EnginePartDesc, B.PartID) AS partName,
+            COALESCE(VPM.PartLevel, EP.EnginePartLevel, 1) AS partLevel,
+            ISNULL(Ven.VendorName, 'Endurance Technologies Ltd') AS vendor,
+            ISNULL(SA.AreaName, 'Store') AS location,
+            B.BatchID AS batch,
+            B.Priority AS priority,
+            ISNULL(B.OpenQty, 0) AS openQty,
+            ISNULL(B.Used, 0) AS used,
+            ISNULL(B.Moved, 0) AS moved,
+            ISNULL(B.Rejected, 0) AS rejected,
+            ISNULL(B.Status, 0) AS statusCode,
+            ISNULL(B.RunningBatch, 0) AS runningBatch
+          FROM Material_BatchWiseQty B
+          LEFT JOIN Config_PartVariant PV ON B.PartID = PV.PartID
+          LEFT JOIN Config_EnginePart EP ON B.PartID = EP.EnginePartID
+          LEFT JOIN Config_Vendor Ven ON B.VendorID = Ven.VendorID
+          LEFT JOIN Config_StorageArea SA ON B.AreaID = SA.AreaID
+          LEFT JOIN Config_Vendor_Part_Mapping VPM ON B.PartID = VPM.PartID
+          ORDER BY B.PartID ASC, B.Priority ASC, B.UID ASC
+        `),
+        pool.request().query(`SELECT DISTINCT SKUName, SKUDesc FROM Config_SKU WHERE SKUName IS NOT NULL AND SKUName NOT LIKE 'All%' ORDER BY SKUName`),
+        pool.request().query(`SELECT DISTINCT S.SKUName, G.PartID FROM Prod_Engine_Part_Geneology G JOIN Config_SKU S ON G.SKUID = S.SKUID`),
+        pool.request().query(`
+          SELECT s.PartID AS partId, COALESCE(v.PartName, s.PartID) AS partName, COALESCE(vpm.PartLevel, 1) AS partLevel
+          FROM Material_Stock s
+          LEFT JOIN Config_PartVariant v ON s.PartID = v.PartID
+          LEFT JOIN Config_Vendor_Part_Mapping vpm ON s.PartID = vpm.PartID
+          ORDER BY s.PartID
+        `),
+        pool.request().query(`SELECT DISTINCT VendorName FROM Config_Vendor WHERE VendorStatus = 1 ORDER BY VendorName`),
+        pool.request().query(`SELECT DISTINCT AreaName FROM Config_StorageArea WHERE AreaName IS NOT NULL ORDER BY AreaName`)
+      ]);
+
+      let rows = (batchRes.recordset || []).map(b => {
+        const left = Math.max(0, b.openQty - b.used - b.moved - b.rejected);
+        const pctUsed = b.openQty > 0 ? Math.min(100, Math.round(((b.used + b.moved) / b.openQty) * 100)) : 0;
+        let state = 'Available';
+        if (b.statusCode === 1) state = 'Blocked / Hold';
+        else if (left <= 0) state = 'Exhausted';
+        else if (b.runningBatch === 1) state = 'Running';
+
+        return {
+          ...b,
+          left,
+          pctUsed,
+          state,
+          isBlocked: b.statusCode === 1
+        };
+      });
+
+      const skuMap = skuMapRes.recordset || [];
+      if (sku && sku !== 'All') {
+        const allowed = new Set(skuMap.filter(m => m.SKUName === sku).map(m => m.PartID));
+        if (allowed.size > 0) rows = rows.filter(r => allowed.has(r.partId));
+      }
+      if (partLevel && partLevel !== 'All') {
+        rows = rows.filter(r => String(r.partLevel) === String(partLevel));
+      }
+      if (partId && partId !== 'All') {
+        rows = rows.filter(r => r.partId === partId);
+      }
+      if (vendor && vendor !== 'All') {
+        rows = rows.filter(r => r.vendor === vendor);
+      }
+      if (location && location !== 'All') {
+        rows = rows.filter(r => r.location === location);
+      }
+
+      const activeAvailable = rows.filter(r => !r.isBlocked && r.left > 0);
+      const blockedBatches = rows.filter(r => r.isBlocked);
+
+      return res.json({
+        kpis: {
+          availableBatches: activeAvailable.length,
+          availableBatchesPartQty: activeAvailable.reduce((acc, r) => acc + r.left, 0),
+          blockedBatchesCount: blockedBatches.length,
+          blockedUnallocatedQty: blockedBatches.reduce((acc, r) => acc + r.left, 0)
+        },
+        table: rows,
+        filterOptions: {
+          skus: (skuRes.recordset || []).map(s => ({ value: s.SKUName, label: `${s.SKUName}${s.SKUDesc ? ` (${s.SKUDesc})` : ''}` })),
+          partLevels: ['All', '1', '2', '3'],
+          parts: (partRes.recordset || []).map(p => ({ partId: p.partId, partName: p.partName, partLevel: p.partLevel })),
+          vendors: (venRes.recordset || []).map(v => v.VendorName),
+          locations: ['All', ...(areaRes.recordset || []).map(a => a.AreaName)]
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Batch Wise Status DB error:', err.message);
+  }
+
+  return res.json({
+    kpis: { availableBatches: 0, availableBatchesPartQty: 0, blockedBatchesCount: 0, blockedUnallocatedQty: 0 },
+    table: [],
+    filterOptions: { skus: [], partLevels: ['All', '1', '2', '3'], parts: [], vendors: [], locations: ['All'] }
+  });
+});
+
+app.post('/api/material/batch-status/toggle-block', async (req, res) => {
+  const { uid, block } = req.body;
+  if (!uid) {
+    return res.status(400).json({ error: 'Batch UID is required' });
+  }
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const nextStatus = block ? 1 : 0;
+      await pool.request()
+        .input('UID', sql.Int, uid)
+        .input('NextStatus', sql.Int, nextStatus)
+        .query(`
+          UPDATE Material_BatchWiseQty
+          SET Status = @NextStatus,
+              RunningBatch = CASE WHEN @NextStatus = 1 THEN 0 ELSE RunningBatch END
+          WHERE UID = @UID
+        `);
+      return res.json({ success: true, uid, blocked: Boolean(block) });
+    }
+  } catch (err) {
+    console.error('Toggle batch block error:', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database unavailable' });
+});
+
+// ======================================================================================
+// REPORT 4: RUNNING PLAN MATERIAL STATUS (/api/material/running-plan)
+// ======================================================================================
+app.get('/api/material/running-plan', async (req, res) => {
+  const { line = 'All', subAssemblyLine = 'All' } = req.query;
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      const [rpRes, batchRes, linesRes, saLinesRes] = await Promise.all([
+        pool.request().query(`
+          SELECT 
+            RP.UID AS uid,
+            RP.PlanID AS planId,
+            RP.PartID AS partId,
+            COALESCE(PV.PartName, EP.EnginePartDesc, RP.PartID) AS partName,
+            ISNULL(L.LineName, 'Line C') AS lineName,
+            ISNULL(SA.SubAsslyLineName, 'Engine Assembly') AS subAssemblyLine,
+            ISNULL(SK.SKUName, 'PD501163') AS skuName,
+            ISNULL(RP.RequiredQty, 0) AS requiredQty,
+            ISNULL(RP.ToBeIssuedQty, 0) AS toBeIssuedQty,
+            ISNULL(RP.DeliveredQty, 0) AS deliveredQty,
+            ISNULL(RP.ConsumedQty, 0) AS consumedQty,
+            RP.Status AS statusCode
+          FROM Material_Running_Plan RP
+          LEFT JOIN Prod_Plan P ON RP.PlanID = P.PlanID
+          LEFT JOIN Config_Line L ON P.LineID = L.LineID
+          LEFT JOIN Config_SKU SK ON P.SKUID = SK.SKUID
+          LEFT JOIN Config_SubAssemblyLine SA ON RP.SubAsslyLineID = SA.SubAsslyLineID
+          LEFT JOIN Config_PartVariant PV ON RP.PartID = PV.PartID
+          LEFT JOIN Config_EnginePart EP ON RP.PartID = EP.EnginePartID
+          ORDER BY RP.PlanID DESC, RP.PartID ASC
+        `),
+        pool.request().query(`
+          SELECT 
+            B.UID AS uid,
+            B.PartID AS partId,
+            COALESCE(PV.PartName, B.PartID) AS partName,
+            ISNULL(Ven.VendorName, 'Endurance Technologies Ltd') AS vendor,
+            B.BatchID AS batch,
+            B.Priority AS priority,
+            ISNULL(B.OpenQty, 0) AS openQty,
+            ISNULL(B.Used, 0) AS used,
+            ISNULL(B.Moved, 0) AS moved,
+            ISNULL(B.Rejected, 0) AS rejected,
+            ISNULL(B.Status, 0) AS statusCode,
+            ISNULL(B.RunningBatch, 0) AS runningBatch
+          FROM Material_BatchWiseQty B
+          LEFT JOIN Config_PartVariant PV ON B.PartID = PV.PartID
+          LEFT JOIN Config_Vendor Ven ON B.VendorID = Ven.VendorID
+          ORDER BY B.PartID ASC, B.Priority ASC, B.UID ASC
+        `),
+        pool.request().query(`SELECT DISTINCT LineName FROM Config_Line WHERE LineName IS NOT NULL ORDER BY LineName`),
+        pool.request().query(`
+          SELECT SA.SubAsslyLineName, L.LineName
+          FROM Config_SubAssemblyLine SA
+          LEFT JOIN Config_Line L ON SA.LineID = L.LineID
+          ORDER BY SA.SubAsslyLineID
+        `)
+      ]);
+
+      let planRows = rpRes.recordset || [];
+      if (line && line !== 'All') {
+        planRows = planRows.filter(r => r.lineName === line);
+      }
+      if (subAssemblyLine && subAssemblyLine !== 'All') {
+        planRows = planRows.filter(r => r.subAssemblyLine === subAssemblyLine);
+      }
+
+      const activePartIds = new Set(planRows.map(r => r.partId));
+      const batches = (batchRes.recordset || [])
+        .filter(b => activePartIds.size === 0 || activePartIds.has(b.partId))
+        .map(b => {
+          const left = Math.max(0, b.openQty - b.used - b.moved - b.rejected);
+          const pctUsed = b.openQty > 0 ? Math.min(100, Math.round(((b.used + b.moved) / b.openQty) * 100)) : 0;
+          let state = 'Available';
+          if (b.statusCode === 1) state = 'Blocked / Hold';
+          else if (left <= 0) state = 'Exhausted';
+          else if (b.runningBatch === 1) state = 'Running';
+          return { ...b, left, pctUsed, state };
+        });
+
+      return res.json({
+        planData: planRows,
+        batches,
+        filterOptions: {
+          lines: (linesRes.recordset || []).map(l => l.LineName),
+          subAssemblyLines: (saLinesRes.recordset || []).map(s => ({
+            name: s.SubAsslyLineName,
+            lineName: s.LineName || 'Line C'
+          }))
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Running Plan Material Status DB error:', err.message);
+  }
+
+  return res.json({
+    planData: [],
+    batches: [],
+    filterOptions: { lines: [], subAssemblyLines: [] }
   });
 });
 
