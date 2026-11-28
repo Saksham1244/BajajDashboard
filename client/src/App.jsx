@@ -34,6 +34,7 @@ const ReworkStatusReport     = lazy(() => import('./pages/TrackTrace/ReworkStatu
 const ReworkAnalysisReport   = lazy(() => import('./pages/Quality/ReworkAnalysisReport'))
 const EngineReworkReport     = lazy(() => import('./pages/TrackTrace/EngineReworkReport'))
 const TicketEscalationReport = lazy(() => import('./pages/TrackTrace/TicketEscalationReport'))
+const TicketEscalatedReport  = lazy(() => import('./pages/TrackTrace/TicketEscalatedReport'))
 
 const DefectReport           = lazy(() => import('./pages/Quality/DefectReport'))
 // const PQCAReport             = lazy(() => import('./pages/Quality/PQCAReport'))
@@ -126,6 +127,7 @@ function App() {
             <Route path="rework-analysis" element={<Navigate to="/quality/rework-analysis" replace />} />
             <Route path="engine-rework" element={<Navigate to="/quality/rework-analysis" replace />} />
             <Route path="ticket-escalation" element={<Suspense fallback={<Loading />}><TicketEscalationReport /></Suspense>} />
+            <Route path="ticket-escalated" element={<Suspense fallback={<Loading />}><TicketEscalatedReport /></Suspense>} />
             <Route path="ticket-report" element={<Navigate to="/trace/ticket-escalation" replace />} />
           </Route>
 

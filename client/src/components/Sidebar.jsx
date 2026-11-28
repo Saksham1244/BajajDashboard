@@ -55,6 +55,7 @@ const navItems = [
       { path: '/trace/genealogy', name: 'Genealogy Report' },
       { path: '/trace/wip', name: 'WIP Report' },
       { path: '/trace/ticket-escalation', name: 'Ticket Details Report' },
+      { path: '/trace/ticket-escalated', name: 'Ticket Escalated Report' },
     ]
   },
   { 

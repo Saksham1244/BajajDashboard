@@ -88,20 +88,24 @@ app.post('/api/auth/login', async (req, res) => {
 
       const result = await request.query(`
         SELECT TOP 1
-          UserID,
-          DepartmentID,
-          DepartmentRoleID,
-          UserName,
-          EmailID,
-          MobileNo,
-          [Password],
-          AadharNo
-        FROM Config_User
+          U.UserID,
+          U.DepartmentID,
+          U.DepartmentRoleID,
+          COALESCE(D.DepartmentName, 'Production') AS DepartmentName,
+          COALESCE(R.RoleName, 'Operator') AS RoleName,
+          U.UserName,
+          U.EmailID,
+          U.MobileNo,
+          U.[Password],
+          U.AadharNo
+        FROM Config_User U
+        LEFT JOIN Config_Department D ON U.DepartmentID = D.DepartmentID
+        LEFT JOIN Config_Role R ON U.DepartmentRoleID = R.RoleID
         WHERE (
-          LOWER(UserName) = LOWER(@Username) OR 
-          LOWER(EmailID) = LOWER(@Username) OR 
-          CAST(MobileNo AS VARCHAR) = @Username
-        ) AND [Password] = @Password
+          LOWER(U.UserName) = LOWER(@Username) OR 
+          LOWER(U.EmailID) = LOWER(@Username) OR 
+          CAST(U.MobileNo AS VARCHAR) = @Username
+        ) AND U.[Password] = @Password
       `);
 
       if (result.recordset && result.recordset.length > 0) {
@@ -3218,6 +3222,473 @@ app.post('/api/trace/ticket-escalation/email', async (req, res) => {
     });
   } catch (err) {
     console.error('Email dispatch error:', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================================================================
+// 3.5. [dbo].[TicketManagement] - TICKET ESCALATED REPORT (User-Scoped via EscalationTo)
+// Used by: GET /api/trace/ticket-escalated & POST /api/trace/ticket-escalated/comment
+// Filters strictly by logged-in user's UserID matching TicketManagement.EscalationTo
+// ======================================================================================
+app.get('/api/trace/ticket-escalated', async (req, res) => {
+  const { userId, period = 'Shift', shift, startDate, endDate, status = 'All', search } = req.query;
+  const dbShift = normalizeShift(shift, period);
+  const { effectiveStartDate, effectiveEndDate } = computeDateRange(period, startDate, endDate);
+  const trimmedUserId = userId ? String(userId).trim() : '';
+
+  if (!trimmedUserId) {
+    return res.json({
+      loggedInUserId: null,
+      tickets: [],
+      filterOptions: { statuses: ['All', 'Escalated', 'Open', 'Closed'] }
+    });
+  }
+
+  try {
+    const pool = await poolPromise;
+    if (pool) {
+      // Fetch all tracking rows for tickets assigned/escalated to this logged-in user
+      const reqTickets = pool.request();
+      reqTickets.input('UserID', sql.NVarChar(50), trimmedUserId);
+
+      const ticketQuery = `
+        SELECT 
+          TM.UID,
+          TM.TicketID,
+          TM.TimeStamp,
+          CONVERT(VARCHAR(19), TM.TimeStamp, 120) AS TimeStampStr,
+          CONVERT(VARCHAR(10), TM.TimeStamp, 23) AS DateStr,
+          DATEPART(HOUR, TM.TimeStamp) AS HourVal,
+          TM.LineID,
+          L.LineName,
+          TM.StationID,
+          S.StationName,
+          S.StationDesc,
+          TM.ActivityID,
+          A.ActivityDesc,
+          TM.PartID,
+          COALESCE(PV.PartName, B.PartDesc, EP.EnginePartDesc, TM.PartID) AS PartName,
+          TM.EquipmentID,
+          E.EquipmentName,
+          TM.BreakdownID,
+          TM.EngineNo,
+          TM.RaiseBy,
+          TM.Reason,
+          TM.ActionBy,
+          TM.Remark,
+          TM.TrackingSeqNo,
+          TM.ExpectedClosure,
+          CONVERT(VARCHAR(10), TM.ExpectedClosure, 23) AS ExpectedClosureStr,
+          TM.TicketStatus,
+          TM.EscalationTo,
+          EU.UserName AS EscalationToName
+        FROM TicketManagement TM
+        LEFT JOIN Config_Line L ON TM.LineID = L.LineID
+        LEFT JOIN Config_Station S ON TM.StationID = S.StationID
+        LEFT JOIN Config_Activity A ON TM.ActivityID = A.ActivityID
+        LEFT JOIN Config_Equipment E ON TM.EquipmentID = E.EquipmentID
+        LEFT JOIN Config_PartVariant PV ON LTRIM(RTRIM(TM.PartID)) = LTRIM(RTRIM(PV.PartID))
+        LEFT JOIN Config_BOM B ON LTRIM(RTRIM(TM.PartID)) = LTRIM(RTRIM(B.PartID))
+        LEFT JOIN Config_EnginePart EP ON LTRIM(RTRIM(TM.PartID)) = LTRIM(RTRIM(EP.EnginePartID))
+        LEFT JOIN Config_User EU ON LTRIM(RTRIM(TM.EscalationTo)) = LTRIM(RTRIM(EU.UserID))
+        WHERE TM.TicketID IN (
+          SELECT DISTINCT TicketID
+          FROM TicketManagement
+          WHERE EscalationTo IS NOT NULL
+            AND LTRIM(RTRIM(CAST(EscalationTo AS NVARCHAR(50)))) = @UserID
+        )
+        ORDER BY TM.TicketID DESC, TM.TrackingSeqNo ASC
+      `;
+
+      const [ticketRes, holdRes, defectRes, notifRes] = await Promise.all([
+        reqTickets.query(ticketQuery),
+        pool.request().query(`
+          SELECT 
+            EH.UID,
+            EH.TicketID,
+            EH.AuditGroup,
+            EH.HoldType,
+            EH.PartID,
+            COALESCE(PV.PartName, LTRIM(RTRIM(EH.PartID))) AS PartName,
+            EH.PartBatchID,
+            EH.PlanID,
+            EH.ForwardQty,
+            EH.BackwordQty,
+            EH.OkQty,
+            EH.RejectedQty,
+            EH.Status
+          FROM Prod_EngineHold EH
+          LEFT JOIN Config_PartVariant PV ON LTRIM(RTRIM(EH.PartID)) = LTRIM(RTRIM(PV.PartID))
+        `),
+        pool.request().query(`
+          SELECT 
+            DL.DefectLogID,
+            DL.TicketID,
+            CONVERT(VARCHAR(19), DL.TimeStamp, 120) AS TimeStampStr,
+            DL.InspectionRefID,
+            DL.DefectRefID,
+            DL.EngineNo,
+            DL.Remark,
+            DL.EngineStatus,
+            DL.DefectStatus,
+            U.UserName AS UpdatedBy,
+            CONVERT(VARCHAR(19), DL.LastUpdatedTime, 120) AS LastUpdatedTimeStr,
+            DL.QAlert,
+            COALESCE(IP.InspectionPointName, 'Station ' + CAST(DL.InspectionRefID as varchar)) AS InspectionPoint,
+            COALESCE(ID.DefectName, DL.Remark) AS DefectPoint
+          FROM Prod_Defect_Log DL
+          LEFT JOIN Config_User U ON DL.UpdatedBy = U.UserID
+          LEFT JOIN Config_Inspection_Point IP ON DL.InspectionRefID = IP.InspectionPointID
+          LEFT JOIN Config_Inspection_Defect ID ON DL.DefectRefID = ID.DefectID
+        `),
+        pool.request().query(`
+          SELECT 
+            NM.NotificationID,
+            NM.TicketID,
+            NM.NotificationDesc,
+            CONVERT(VARCHAR(19), NM.TimeStamp, 120) AS TimeStampStr,
+            U.UserName as RaiseByName,
+            NM.LineID,
+            NM.StationID,
+            NM.Category as Department,
+            NM.Role,
+            NM.Status
+          FROM NotificationManagement NM
+          LEFT JOIN Config_User U ON NM.RaiseBy = U.UserID
+          ORDER BY NM.TimeStamp ASC
+        `)
+      ]);
+
+      const ticketRows = ticketRes.recordset || [];
+      const holdRows = holdRes.recordset || [];
+      const defectRows = defectRes.recordset || [];
+      const notifRows = notifRes.recordset || [];
+
+      const ticketMap = new Map();
+      ticketRows.forEach(row => {
+        if (!ticketMap.has(row.TicketID)) {
+          ticketMap.set(row.TicketID, {
+            TicketID: row.TicketID,
+            Reason: row.Reason || 'Engine Defect',
+            TimeDate: row.TimeStampStr ? row.TimeStampStr.replace(' ', 'T') : row.TimeStamp,
+            DateStr: row.DateStr,
+            HourVal: row.HourVal,
+            LatestDateStr: row.DateStr,
+            LatestHourVal: row.HourVal,
+            LineName: row.LineName || `Line ${row.LineID}`,
+            StationName: row.StationName ? `${row.StationName}${row.StationDesc ? ` (${row.StationDesc})` : ''}` : `Station ${row.StationID}`,
+            ActivityDesc: row.ActivityDesc || '-',
+            PartName: row.PartName || '-',
+            EquipmentName: row.EquipmentName || '-',
+            BreakdownID: row.BreakdownID ? `BD-${row.BreakdownID}` : '-',
+            EngineNo: row.EngineNo || '-',
+            RaiseBy: row.RaiseBy || 'Quality',
+            ActionBy: row.ActionBy || 'Production',
+            Remark: row.Remark || '-',
+            ExpectedClosure: row.ExpectedClosureStr || null,
+            TicketStatus: row.TicketStatus,
+            EscalationTo: row.EscalationTo ? String(row.EscalationTo).trim() : null,
+            EscalationToName: row.EscalationToName || null,
+            trackingHistory: []
+          });
+        }
+        const tkt = ticketMap.get(row.TicketID);
+        tkt.trackingHistory.push(row);
+        tkt.ActionBy = row.ActionBy || tkt.ActionBy;
+        tkt.Remark = row.Remark || tkt.Remark;
+        tkt.TicketStatus = row.TicketStatus;
+        tkt.LatestDateStr = row.DateStr || tkt.LatestDateStr;
+        tkt.LatestHourVal = row.HourVal ?? tkt.LatestHourVal;
+        if (row.ExpectedClosureStr) tkt.ExpectedClosure = row.ExpectedClosureStr;
+        if (row.EscalationTo) {
+          tkt.EscalationTo = String(row.EscalationTo).trim();
+          tkt.EscalationToName = row.EscalationToName || tkt.EscalationToName;
+        }
+      });
+
+      const todayLocal = new Date();
+      const todayStr = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, '0')}-${String(todayLocal.getDate()).padStart(2, '0')}`;
+
+      const matchShiftHour = (hour, s) => {
+        if (!s) return true;
+        if (s === 'A') return hour >= 6 && hour < 14;
+        if (s === 'B') return hour >= 14 && hour < 23;
+        if (s === 'C') return hour >= 23 || hour < 6;
+        return true;
+      };
+
+      let allTickets = [];
+
+      for (const [tktId, tkt] of ticketMap.entries()) {
+        // Strict check: latest/effective EscalationTo must match logged-in userId
+        if (!tkt.EscalationTo || tkt.EscalationTo !== trimmedUserId) continue;
+
+        // Date & Shift filter on ticket timestamp (checks initial or latest activity timestamp)
+        if (effectiveStartDate && effectiveEndDate) {
+          const initInDate = tkt.DateStr >= effectiveStartDate && tkt.DateStr <= effectiveEndDate;
+          const latestInDate = tkt.LatestDateStr >= effectiveStartDate && tkt.LatestDateStr <= effectiveEndDate;
+          if (!initInDate && !latestInDate) continue;
+        }
+        if (dbShift) {
+          const initInShift = matchShiftHour(tkt.HourVal, dbShift);
+          const latestInShift = matchShiftHour(tkt.LatestHourVal, dbShift);
+          if (!initInShift && !latestInShift) continue;
+        }
+
+        let statusText = 'Open';
+        if (tkt.TicketStatus === 2) statusText = 'Escalated';
+        else if (tkt.TicketStatus === 3) statusText = 'Closed';
+        else if (tkt.TicketStatus === 4) statusText = 'Under Review';
+
+        const isOverdue = tkt.ExpectedClosure && tkt.ExpectedClosure < todayStr && statusText !== 'Closed';
+        const isEscalated = statusText === 'Escalated' || isOverdue;
+
+        const comms = [];
+        tkt.trackingHistory.forEach(tr => {
+          const roleLabel =
+            tr.ActionBy === 'Higher Management'
+              ? 'Supervisor / Management'
+              : tr.ActionBy === 'Quality'
+              ? 'QA Lead'
+              : tr.ActionBy === 'Maintenance'
+              ? 'Maint. Engineer'
+              : 'Supervisor';
+          comms.push({
+            Department: tr.RaiseBy || tr.ActionBy || 'Production',
+            Role: roleLabel,
+            Remark: tr.Remark,
+            TimeDate: tr.TimeStampStr ? tr.TimeStampStr.replace(' ', 'T') : tr.TimeStamp
+          });
+        });
+
+        notifRows
+          .filter(n => n.TicketID === tktId)
+          .forEach(n => {
+            if (!comms.some(c => c.Remark === n.NotificationDesc)) {
+              comms.push({
+                Department: n.Department || 'Management',
+                Role: n.Role || 'User',
+                Remark: n.NotificationDesc,
+                TimeDate: n.TimeStampStr ? n.TimeStampStr.replace(' ', 'T') : null
+              });
+            }
+          });
+
+        const holds = holdRows
+          .filter(h => h.TicketID === tktId)
+          .map(h => ({
+            AuditGroup: `Group ${h.AuditGroup}`,
+            HoldType: h.HoldType === 1 ? 'Line Hold' : h.HoldType === 2 ? 'Quality Hold' : 'Material Hold',
+            PartID: h.PartID ? h.PartID.trim() : tkt.PartName || '-',
+            PartBatchID: h.PartBatchID || '-',
+            PlanID: h.PlanID ? `PLAN-${h.PlanID}` : '-',
+            EngineNo: tkt.EngineNo,
+            ForwardQty: h.ForwardQty ?? 0,
+            BackwardQty: h.BackwordQty ?? 0,
+            OkQty: h.OkQty ?? 0,
+            RejectedQty: h.RejectedQty ?? 0,
+            Status: h.Status === 1 ? 'Active Hold' : h.Status === 2 ? 'Under Inspection' : 'Released'
+          }));
+
+        const defects = defectRows
+          .filter(d => d.TicketID === tktId || (tkt.EngineNo !== '-' && d.EngineNo === tkt.EngineNo))
+          .map(d => ({
+            InspectionPoint: d.InspectionPoint,
+            DefectPoint: d.DefectPoint,
+            EngineNo: d.EngineNo || tkt.EngineNo,
+            Remark: d.Remark,
+            DateTime: d.TimeStampStr ? d.TimeStampStr.replace(' ', 'T') : null,
+            EngineStatus: d.EngineStatus === 21 ? 'Rework OK' : d.EngineStatus === 22 ? 'Quality Hold' : 'Inspection Pending',
+            DefectStatus: d.DefectStatus === 1 ? 'Pending' : 'Resolved',
+            UpdatedBy: d.UpdatedBy || 'QA Inspector',
+            LastUpdatedTime: d.LastUpdatedTimeStr ? d.LastUpdatedTimeStr.replace(' ', 'T') : null
+          }));
+
+        allTickets.push({
+          ...tkt,
+          statusText,
+          isEscalated,
+          communications: comms,
+          engineHold: {
+            holdSummary: holds,
+            defectDetails: defects
+          }
+        });
+      }
+
+      if (status && status !== 'All') {
+        const lowerStatus = status.toLowerCase();
+        if (lowerStatus === 'escalated') {
+          allTickets = allTickets.filter(t => t.isEscalated);
+        } else if (lowerStatus === 'open') {
+          allTickets = allTickets.filter(t => t.statusText === 'Open' || t.statusText === 'Under Review');
+        } else {
+          allTickets = allTickets.filter(t => t.statusText.toLowerCase() === lowerStatus);
+        }
+      }
+
+      if (search && search.trim()) {
+        const q = search.trim().toLowerCase();
+        const idNum = q.replace(/^tkt-?/i, '').trim();
+        allTickets = allTickets.filter(t =>
+          String(t.TicketID).includes(q) ||
+          (idNum && String(t.TicketID) === idNum) ||
+          `tkt-${t.TicketID}`.toLowerCase().includes(q) ||
+          t.EngineNo?.toLowerCase().includes(q) ||
+          t.Reason?.toLowerCase().includes(q) ||
+          t.Remark?.toLowerCase().includes(q) ||
+          t.PartName?.toLowerCase().includes(q) ||
+          t.EquipmentName?.toLowerCase().includes(q) ||
+          t.RaiseBy?.toLowerCase().includes(q) ||
+          t.ActionBy?.toLowerCase().includes(q) ||
+          t.statusText?.toLowerCase().includes(q)
+        );
+      }
+
+      return res.json({
+        loggedInUserId: trimmedUserId,
+        tickets: allTickets,
+        filterOptions: {
+          statuses: ['All', 'Escalated', 'Open', 'Closed']
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Ticket Escalated DB error:', err.message);
+  }
+
+  return res.json({
+    loggedInUserId: trimmedUserId,
+    tickets: [],
+    filterOptions: {
+      statuses: ['All', 'Escalated', 'Open', 'Closed']
+    }
+  });
+});
+
+app.post('/api/trace/ticket-escalated/comment', async (req, res) => {
+  const { ticketId, comment, userId, statusAction } = req.body;
+  if (!ticketId || !comment || !comment.trim() || !userId) {
+    return res.status(400).json({ error: 'ticketId, comment, and userId are required' });
+  }
+
+  try {
+    const pool = await poolPromise;
+    if (!pool) {
+      return res.status(503).json({ error: 'Database unavailable' });
+    }
+
+    // Lookup user department and role
+    const userRes = await pool.request()
+      .input('UserID', sql.NVarChar(50), String(userId).trim())
+      .query(`
+        SELECT TOP 1
+          U.UserID,
+          U.UserName,
+          COALESCE(D.DepartmentName, 'Production') AS DepartmentName,
+          COALESCE(R.RoleName, 'Supervisor') AS RoleName
+        FROM Config_User U
+        LEFT JOIN Config_Department D ON U.DepartmentID = D.DepartmentID
+        LEFT JOIN Config_Role R ON U.DepartmentRoleID = R.RoleID
+        WHERE LTRIM(RTRIM(U.UserID)) = @UserID
+      `);
+    const userInfo = userRes.recordset[0] || {
+      UserID: String(userId),
+      UserName: `User #${userId}`,
+      DepartmentName: 'Higher Management',
+      RoleName: 'Supervisor'
+    };
+
+    // Fetch current ticket metadata
+    const maxSeqRes = await pool.request()
+      .input('TicketID', sql.Int, ticketId)
+      .query(`
+        SELECT 
+          ISNULL(MAX(TrackingSeqNo), 0) AS maxSeq,
+          MAX(LineID) AS lineId,
+          MAX(StationID) AS stationId,
+          MAX(ActivityID) AS activityId,
+          MAX(PartID) AS partId,
+          MAX(EquipmentID) AS equipmentId,
+          MAX(BreakdownID) AS breakdownId,
+          MAX(Reason) AS reason,
+          MAX(EngineNo) AS engineNo,
+          MAX(ExpectedClosure) AS expectedClosure,
+          MAX(EscalationTo) AS escalationTo,
+          (SELECT TOP 1 TicketStatus FROM TicketManagement WHERE TicketID = @TicketID ORDER BY TrackingSeqNo DESC) AS currentStatus
+        FROM TicketManagement
+        WHERE TicketID = @TicketID
+      `);
+
+    const meta = maxSeqRes.recordset[0];
+    if (!meta || meta.maxSeq === 0) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    if (meta.escalationTo && String(meta.escalationTo).trim() !== String(userId).trim()) {
+      return res.status(403).json({ error: 'Ticket is not escalated to the current logged-in user' });
+    }
+
+    let nextStatus = meta.currentStatus || 2;
+    if (statusAction === 'Closed') nextStatus = 3;
+    else if (statusAction === 'Open') nextStatus = 1;
+    else if (statusAction === 'Escalated') nextStatus = 2;
+    else if (statusAction === 'Under Review') nextStatus = 4;
+
+    const nextSeq = meta.maxSeq + 1;
+    const cleanComment = comment.trim();
+
+    await pool.request()
+      .input('TicketID', sql.Int, ticketId)
+      .input('LineID', sql.Int, meta.lineId || 1)
+      .input('StationID', sql.Int, meta.stationId || 487)
+      .input('ActivityID', sql.Int, meta.activityId || null)
+      .input('PartID', sql.NVarChar(20), meta.partId || null)
+      .input('EquipmentID', sql.Int, meta.equipmentId || null)
+      .input('BreakdownID', sql.Int, meta.breakdownId || null)
+      .input('EngineNo', sql.NVarChar(14), meta.engineNo || null)
+      .input('RaiseBy', sql.NVarChar(50), userInfo.DepartmentName)
+      .input('Reason', sql.NVarChar(sql.MAX), meta.reason || 'Escalation Comment')
+      .input('ActionBy', sql.NVarChar(50), userInfo.UserName)
+      .input('Remark', sql.NVarChar(sql.MAX), cleanComment)
+      .input('TrackingSeqNo', sql.Int, nextSeq)
+      .input('ExpectedClosure', sql.Date, meta.expectedClosure || null)
+      .input('TicketStatus', sql.Int, nextStatus)
+      .input('EscalationTo', sql.NVarChar(50), meta.escalationTo || String(userId).trim())
+      .query(`
+        INSERT INTO TicketManagement (
+          TicketID, TimeStamp, LineID, StationID, ActivityID, PartID, EquipmentID, BreakdownID,
+          EngineNo, RaiseBy, Reason, ActionBy, Remark, TrackingSeqNo, ExpectedClosure, TicketStatus, EscalationTo
+        )
+        VALUES (
+          @TicketID, GETDATE(), @LineID, @StationID, @ActivityID, @PartID, @EquipmentID, @BreakdownID,
+          @EngineNo, @RaiseBy, @Reason, @ActionBy, @Remark, @TrackingSeqNo, @ExpectedClosure, @TicketStatus, @EscalationTo
+        )
+      `);
+
+    await pool.request()
+      .input('TicketID', sql.Int, ticketId)
+      .input('Desc', sql.NVarChar(sql.MAX), cleanComment)
+      .input('RaiseBy', sql.NVarChar(50), String(userId).trim())
+      .input('LineID', sql.Int, meta.lineId || 1)
+      .input('StationID', sql.Int, meta.stationId || 487)
+      .input('Category', sql.NVarChar(50), userInfo.DepartmentName)
+      .input('Role', sql.NVarChar(50), userInfo.RoleName)
+      .input('Status', sql.Int, nextStatus)
+      .query(`
+        INSERT INTO NotificationManagement (TicketID, NotificationDesc, TimeStamp, RaiseBy, LineID, StationID, Category, Role, Status)
+        VALUES (@TicketID, @Desc, GETDATE(), @RaiseBy, @LineID, @StationID, @Category, @Role, @Status)
+      `);
+
+    return res.json({
+      success: true,
+      message: 'Comment recorded successfully',
+      ticketId,
+      nextStatus
+    });
+  } catch (err) {
+    console.error('Escalated comment insertion error:', err.message);
     return res.status(500).json({ error: err.message });
   }
 });
